@@ -10979,6 +10979,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotExportDone => 'Data exported';
 
   @override
+  String get depotReportPdf => 'PDF report';
+
+  @override
+  String get depotReportFailed => 'Could not create the PDF report';
+
+  @override
+  String get depotReportTitle => 'Portfolio report';
+
+  @override
+  String depotReportCreated(String time) {
+    return 'Created $time';
+  }
+
+  @override
+  String get depotReportWithSold => 'incl. sold';
+
+  @override
+  String depotReportSorted(String sort) {
+    return 'sorted by $sort';
+  }
+
+  @override
+  String depotReportMovers(String period) {
+    return 'Biggest movers ($period)';
+  }
+
+  @override
+  String depotReportHoldings(int count, String period) {
+    return 'Holdings ($count) · $period';
+  }
+
+  @override
+  String get depotReportDetails => 'All-time figures per holding';
+
+  @override
+  String get depotReportColHolding => 'Holding';
+
+  @override
+  String get depotReportColPrice => 'Price';
+
+  @override
+  String get depotReportColUnrealized => 'Unrealized';
+
+  @override
+  String get depotReportColRealized => 'Realized';
+
+  @override
+  String get depotReportColSince => 'Since';
+
+  @override
+  String get depotReportTotal => 'Total';
+
+  @override
+  String get depotReportDisclaimer =>
+      'Figures from Parqet as of the last sync, in the portfolio currency. Gain and return per holding cover the selected period; the all-time table covers the whole history. Not investment advice.';
+
+  @override
+  String depotReportPage(int page, int pages) {
+    return 'Page $page of $pages';
+  }
+
+  @override
   String get depotLogosTitle => 'Holding logos';
 
   @override

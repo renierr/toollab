@@ -375,6 +375,11 @@ class DepotPortfolioState extends ChangeNotifier {
         .toList();
   }
 
+  /// Base of every holding's weight, whatever the filter shows.
+  double get openValue => _holdings
+      .where((h) => !h.isSold)
+      .fold<double>(0, (sum, h) => sum + h.currentValue);
+
   /// Current value per holding kind, open positions only.
   Map<DepotHoldingKind, double> get allocation {
     final result = <DepotHoldingKind, double>{};

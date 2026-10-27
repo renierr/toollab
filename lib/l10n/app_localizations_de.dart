@@ -11058,6 +11058,68 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotExportDone => 'Daten exportiert';
 
   @override
+  String get depotReportPdf => 'PDF-Bericht';
+
+  @override
+  String get depotReportFailed => 'PDF-Bericht konnte nicht erstellt werden';
+
+  @override
+  String get depotReportTitle => 'Depotbericht';
+
+  @override
+  String depotReportCreated(String time) {
+    return 'Erstellt $time';
+  }
+
+  @override
+  String get depotReportWithSold => 'inkl. verkaufter';
+
+  @override
+  String depotReportSorted(String sort) {
+    return 'sortiert nach $sort';
+  }
+
+  @override
+  String depotReportMovers(String period) {
+    return 'Größte Bewegungen ($period)';
+  }
+
+  @override
+  String depotReportHoldings(int count, String period) {
+    return 'Positionen ($count) · $period';
+  }
+
+  @override
+  String get depotReportDetails => 'Gesamtwerte je Position';
+
+  @override
+  String get depotReportColHolding => 'Position';
+
+  @override
+  String get depotReportColPrice => 'Kurs';
+
+  @override
+  String get depotReportColUnrealized => 'Unrealisiert';
+
+  @override
+  String get depotReportColRealized => 'Realisiert';
+
+  @override
+  String get depotReportColSince => 'Seit';
+
+  @override
+  String get depotReportTotal => 'Summe';
+
+  @override
+  String get depotReportDisclaimer =>
+      'Werte von Parqet zum Stand der letzten Synchronisierung, in Depotwährung. Gewinn und Rendite je Position gelten für den gewählten Zeitraum; die Gesamtwerte-Tabelle umfasst die gesamte Historie. Keine Anlageberatung.';
+
+  @override
+  String depotReportPage(int page, int pages) {
+    return 'Seite $page von $pages';
+  }
+
+  @override
   String get depotLogosTitle => 'Logos der Positionen';
 
   @override

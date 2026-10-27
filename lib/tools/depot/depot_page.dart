@@ -15,6 +15,7 @@ import 'widgets/depot_activities_view.dart';
 import 'widgets/depot_dividends_view.dart';
 import 'widgets/depot_import_view.dart';
 import 'widgets/depot_overview_view.dart';
+import 'widgets/depot_report_button.dart';
 import 'widgets/depot_settings_page.dart';
 import 'widgets/depot_tabs.dart';
 
@@ -74,6 +75,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
         DepotTab.pdfImport => l10n.depotTabImport,
       },
       actions: [
+        if (tab == DepotTab.overview) const DepotReportButton(),
         if (tab != DepotTab.pdfImport)
           IconButton(
             icon: const Icon(Icons.settings_outlined),

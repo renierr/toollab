@@ -19607,6 +19607,108 @@ abstract class AppLocalizations {
   /// **'Data exported'**
   String get depotExportDone;
 
+  /// No description provided for @depotReportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF report'**
+  String get depotReportPdf;
+
+  /// No description provided for @depotReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the PDF report'**
+  String get depotReportFailed;
+
+  /// No description provided for @depotReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio report'**
+  String get depotReportTitle;
+
+  /// No description provided for @depotReportCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created {time}'**
+  String depotReportCreated(String time);
+
+  /// No description provided for @depotReportWithSold.
+  ///
+  /// In en, this message translates to:
+  /// **'incl. sold'**
+  String get depotReportWithSold;
+
+  /// No description provided for @depotReportSorted.
+  ///
+  /// In en, this message translates to:
+  /// **'sorted by {sort}'**
+  String depotReportSorted(String sort);
+
+  /// No description provided for @depotReportMovers.
+  ///
+  /// In en, this message translates to:
+  /// **'Biggest movers ({period})'**
+  String depotReportMovers(String period);
+
+  /// No description provided for @depotReportHoldings.
+  ///
+  /// In en, this message translates to:
+  /// **'Holdings ({count}) · {period}'**
+  String depotReportHoldings(int count, String period);
+
+  /// No description provided for @depotReportDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'All-time figures per holding'**
+  String get depotReportDetails;
+
+  /// No description provided for @depotReportColHolding.
+  ///
+  /// In en, this message translates to:
+  /// **'Holding'**
+  String get depotReportColHolding;
+
+  /// No description provided for @depotReportColPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get depotReportColPrice;
+
+  /// No description provided for @depotReportColUnrealized.
+  ///
+  /// In en, this message translates to:
+  /// **'Unrealized'**
+  String get depotReportColUnrealized;
+
+  /// No description provided for @depotReportColRealized.
+  ///
+  /// In en, this message translates to:
+  /// **'Realized'**
+  String get depotReportColRealized;
+
+  /// No description provided for @depotReportColSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Since'**
+  String get depotReportColSince;
+
+  /// No description provided for @depotReportTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get depotReportTotal;
+
+  /// No description provided for @depotReportDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Figures from Parqet as of the last sync, in the portfolio currency. Gain and return per holding cover the selected period; the all-time table covers the whole history. Not investment advice.'**
+  String get depotReportDisclaimer;
+
+  /// No description provided for @depotReportPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {pages}'**
+  String depotReportPage(int page, int pages);
+
   /// No description provided for @depotLogosTitle.
   ///
   /// In en, this message translates to:

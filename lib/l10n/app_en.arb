@@ -5465,6 +5465,64 @@
   "depotExportTitle": "Export all data",
   "depotExportSubtitle": "All synced tables as a SQLite database and CSV files in one ZIP, usable without Parqet",
   "depotExportDone": "Data exported",
+  "depotReportPdf": "PDF report",
+  "depotReportFailed": "Could not create the PDF report",
+  "depotReportTitle": "Portfolio report",
+  "depotReportCreated": "Created {time}",
+  "@depotReportCreated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "depotReportWithSold": "incl. sold",
+  "depotReportSorted": "sorted by {sort}",
+  "@depotReportSorted": {
+    "placeholders": {
+      "sort": {
+        "type": "String"
+      }
+    }
+  },
+  "depotReportMovers": "Biggest movers ({period})",
+  "@depotReportMovers": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "depotReportHoldings": "Holdings ({count}) · {period}",
+  "@depotReportHoldings": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "depotReportDetails": "All-time figures per holding",
+  "depotReportColHolding": "Holding",
+  "depotReportColPrice": "Price",
+  "depotReportColUnrealized": "Unrealized",
+  "depotReportColRealized": "Realized",
+  "depotReportColSince": "Since",
+  "depotReportTotal": "Total",
+  "depotReportDisclaimer": "Figures from Parqet as of the last sync, in the portfolio currency. Gain and return per holding cover the selected period; the all-time table covers the whole history. Not investment advice.",
+  "depotReportPage": "Page {page} of {pages}",
+  "@depotReportPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
   "depotLogosTitle": "Holding logos",
   "depotLogosDescription": "Download Parqet logos once for offline use. Only this button downloads images; normal sync and scrolling never fetch them.",
   "depotLogosDownload": "Download missing logos",

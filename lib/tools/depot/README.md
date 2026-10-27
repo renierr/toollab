@@ -147,6 +147,24 @@ when and how much money went in, so it can be positive while the money gain is n
 (e.g. most shares bought later at higher prices). Fully sold positions have no cost basis
 left and show no Max percentage. Portfolio-level KPIs still show TTWROR and IRR.
 
+## PDF report
+
+The PDF icon on the Overview tab saves the current selection as an A4 report: the
+selected portfolio and period, and the holdings exactly as the filter and sort show them.
+
+1. Header: portfolio, period, active filter and sort, creation and sync time.
+2. KPI box: the same figures as the overview tiles.
+3. Value chart (value filled, invested capital dashed) next to the allocation by kind.
+   On **Today** the chart has a single point, so the biggest movers take its place.
+4. Biggest movers: up to five gains and five losses of the period as diverging bars.
+5. Holdings table: shares, price, value, weight (with a small bar), and the period's gain
+   and return, with a total row. Sold holdings are muted.
+6. All-time table per holding: average buy price, cost basis, unrealized (amount and
+   percent), realized, dividends, fees and taxes, IRR and date of the first activity.
+
+Logos appear when they were downloaded from the settings and are PNG or JPEG; otherwise
+the initials badge from the app is drawn.
+
 ## Importing statements
 
 1. Add DKB or ING PDF statements (file picker or Android share sheet). They are parsed

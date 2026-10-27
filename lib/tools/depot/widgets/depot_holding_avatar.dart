@@ -18,6 +18,17 @@ class DepotHoldingAvatar extends StatelessWidget {
     this.size = 36,
   });
 
+  static String initials(String name) {
+    final words = name
+        .split(RegExp(r'[\s\-&.,/]+'))
+        .where((w) => w.isNotEmpty)
+        .toList();
+    if (words.isEmpty) return '?';
+    final first = words.first.characters.first;
+    if (words.length == 1) return first.toUpperCase();
+    return (first + words[1].characters.first).toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final bytes = context.select<DepotLogoState, Uint8List?>(
@@ -62,17 +73,6 @@ class _InitialsBadge extends StatelessWidget {
     required this.size,
   });
 
-  static String _initials(String name) {
-    final words = name
-        .split(RegExp(r'[\s\-&.,/]+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
-    if (words.isEmpty) return '?';
-    final first = words.first.characters.first;
-    if (words.length == 1) return first.toUpperCase();
-    return (first + words[1].characters.first).toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     final color = DepotColors.holding(colorSeed);
@@ -86,7 +86,7 @@ class _InitialsBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.6)),
       ),
       child: Text(
-        _initials(name),
+        DepotHoldingAvatar.initials(name),
         style: TextStyle(
           color: color,
           fontSize: size * 0.375,

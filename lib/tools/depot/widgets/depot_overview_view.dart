@@ -31,9 +31,7 @@ class DepotOverviewView extends StatelessWidget {
     final summary = state.summary;
     final format = DepotFormat.of(context, state.currency);
     final holdings = state.visibleHoldings;
-    final openValue = state.holdings
-        .where((h) => !h.isSold)
-        .fold<double>(0, (sum, h) => sum + h.currentValue);
+    final openValue = state.openValue;
 
     return RefreshIndicator(
       onRefresh: state.sync,
