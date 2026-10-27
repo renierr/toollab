@@ -131,7 +131,27 @@ class _DepotImportViewState extends State<DepotImportView> {
       return;
     }
 
-    final portfolios = portfolio.portfolios;
+    final api = ParqetApi(clientId: portfolio.clientId);
+    var portfolios = portfolio.portfolios;
+    try {
+      final writable = await api.writablePortfolioIds();
+      if (!mounted) return;
+      if (writable != null) {
+        portfolios = [
+          for (final p in portfolios)
+            if (writable.contains(p.id)) p,
+        ];
+        if (portfolios.isEmpty) {
+          await _askForWrite(connected: true);
+          return;
+        }
+      }
+    } on ParqetException catch (e) {
+      // Parqet judges the upload itself, so a failed check does not block it.
+      errorLog('[DepotImportView] Permission check failed: $e');
+      if (!mounted) return;
+    }
+
     final target = await DepotUploadDialog.show(
       context,
       portfolios: portfolios,
@@ -144,7 +164,7 @@ class _DepotImportViewState extends State<DepotImportView> {
 
     try {
       final summary = await importState.uploadToParqet(
-        api: ParqetApi(clientId: portfolio.clientId),
+        api: api,
         portfolioId: target.portfolioId,
         existing: target.existing,
       );

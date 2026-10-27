@@ -142,7 +142,8 @@ class _InteractiveChartState extends State<_InteractiveChart> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          '${FormatHelper.dateTime(point.date, style: _dateStyle(widget.points))}  '
+                          '${FormatHelper.dateTime(point.date, style: _dateStyle(widget.points))}'
+                          '${point.live ? ' (${AppLocalizations.of(context).depotChartLive})' : ''}  '
                           '${widget.format.money(point.value)} / '
                           '${widget.format.money(point.capital)}',
                           style: theme.textTheme.labelSmall,

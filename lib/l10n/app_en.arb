@@ -5595,6 +5595,30 @@
   "depotDetailRealized": "Realized (total)",
   "depotDetailDividends": "Dividends (total)",
   "depotDetailFirstActivity": "First activity",
+  "depotDetailExchange": "Exchange",
+  "depotDetailPreviousClose": "Previous close",
+  "depotDetailStartPrice": "Price at start ({period})",
+  "@depotDetailStartPrice": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "depotChartLive": "now",
+  "depotYearTitle": "Realized per year",
+  "depotYearRealized": "Realized gains ({count, plural, =1{1 sale} other{{count} sales}})",
+  "@depotYearRealized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotYearIncomeTotal": "Total realized",
+  "depotYearTaxes": "Taxes paid",
+  "depotYearFees": "Fees paid",
+  "depotYearNote": "Net amounts as booked in Parqet; not a tax statement.",
   "depotAssetSecurity": "Securities",
   "depotAssetCrypto": "Crypto",
   "depotAssetCommodity": "Commodities",

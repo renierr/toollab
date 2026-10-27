@@ -135,11 +135,15 @@ class DepotChartPoint {
   final double capital;
   final double drawdown;
 
+  /// Today's latest values rather than a day's open or close.
+  final bool live;
+
   const DepotChartPoint({
     required this.date,
     required this.value,
     required this.capital,
     required this.drawdown,
+    this.live = false,
   });
 
   static DepotChartPoint? fromJson(Map<String, dynamic> json) {
@@ -151,6 +155,7 @@ class DepotChartPoint {
       value: ParqetJson.number(values['history']),
       capital: ParqetJson.number(values['capitalHistory']),
       drawdown: ParqetJson.number(values['drawdown']),
+      live: json['mark'] == 'most_recent',
     );
   }
 
@@ -159,6 +164,7 @@ class DepotChartPoint {
     value: map['value'] as double,
     capital: map['capital'] as double,
     drawdown: map['drawdown'] as double,
+    live: map['live'] == 1,
   );
 
   Map<String, Object?> toMap(DepotPeriodKey key) => {
@@ -168,5 +174,6 @@ class DepotChartPoint {
     'value': value,
     'capital': capital,
     'drawdown': drawdown,
+    'live': live ? 1 : 0,
   };
 }

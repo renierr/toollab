@@ -34,6 +34,8 @@ class DepotHoldingDetails extends StatelessWidget {
     final returnPercent = performance?.returnPercent;
     final xirr = h.xirr;
     final quoteAt = h.quoteAt;
+    final exchange = h.quoteExchange;
+    final startPrice = performance?.startPrice;
     final earliest = h.earliestActivity;
 
     final rows = <(String, String)>[
@@ -46,8 +48,17 @@ class DepotHoldingDetails extends StatelessWidget {
         (l10n.depotDetailPurchasePrice, format.money(h.purchasePrice)),
       if (h.currentPrice != 0)
         (l10n.depotDetailCurrentPrice, format.money(h.currentPrice)),
+      if (startPrice != null && startPrice != 0)
+        (
+          period == DepotPeriod.today
+              ? l10n.depotDetailPreviousClose
+              : l10n.depotDetailStartPrice(periodLabel),
+          format.money(startPrice),
+        ),
       if (quoteAt != null)
         (l10n.depotDetailQuoteAt, FormatHelper.dateTime(quoteAt)),
+      if (exchange != null && exchange.isNotEmpty)
+        (l10n.depotDetailExchange, exchange),
       (l10n.depotDetailPurchaseValue, format.money(h.purchaseValue)),
       (l10n.depotDetailCurrentValue, format.money(h.currentValue)),
       if (weight > 0)

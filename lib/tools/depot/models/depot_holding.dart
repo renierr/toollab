@@ -85,6 +85,7 @@ class DepotHolding {
   final double? ttwror;
   final DateTime? earliestActivity;
   final DateTime? quoteAt;
+  final String? quoteExchange;
 
   const DepotHolding({
     required this.id,
@@ -110,6 +111,7 @@ class DepotHolding {
     this.ttwror,
     this.earliestActivity,
     this.quoteAt,
+    this.quoteExchange,
   });
 
   double get totalGain => unrealizedGain + realizedGain + dividends;
@@ -126,6 +128,7 @@ class DepotHolding {
     final unrealized = ParqetJson.inInterval(performance, 'unrealizedGains');
     final kpis = ParqetJson.inInterval(performance, 'kpis');
     final nickname = json['nickname'] as String?;
+    final quote = ParqetJson.object(json['quote']);
     return DepotHolding(
       id: json['id'] as String,
       portfolioId: portfolioId,
@@ -159,7 +162,8 @@ class DepotHolding {
       xirr: ParqetJson.numberOrNull(kpis['xirr']),
       ttwror: ParqetJson.numberOrNull(kpis['ttwror']),
       earliestActivity: ParqetJson.date(json['earliestActivityDate']),
-      quoteAt: ParqetJson.date(ParqetJson.object(json['quote'])['datetime']),
+      quoteAt: ParqetJson.date(quote['datetime']),
+      quoteExchange: quote['exchange'] as String?,
     );
   }
 
@@ -187,6 +191,7 @@ class DepotHolding {
     ttwror: map['ttwror'] as double?,
     earliestActivity: ParqetJson.fromEpoch(map['earliest_activity']),
     quoteAt: ParqetJson.fromEpoch(map['quote_at']),
+    quoteExchange: map['quote_exchange'] as String?,
   );
 
   Map<String, Object?> toMap() => {
@@ -213,6 +218,7 @@ class DepotHolding {
     'ttwror': ttwror,
     'earliest_activity': earliestActivity?.millisecondsSinceEpoch,
     'quote_at': quoteAt?.millisecondsSinceEpoch,
+    'quote_exchange': quoteExchange,
   };
 }
 
@@ -225,9 +231,12 @@ class DepotHoldingPerformance {
   /// Unrealized and realized gains plus dividends, net, within the period.
   final double gain;
 
-  /// Time-weighted return in percent; null when Parqet has none, e.g. for a
-  /// position that did not exist during the period.
+  /// [gain] in percent of the money at stake, so both always share a sign;
+  /// null when there is no base, e.g. for a position closed before the period.
   final double? returnPercent;
+
+  /// Quote at the start of the period; for today, the previous close.
+  final double? startPrice;
 
   const DepotHoldingPerformance({
     required this.portfolioId,
@@ -235,6 +244,7 @@ class DepotHoldingPerformance {
     required this.period,
     required this.gain,
     this.returnPercent,
+    this.startPrice,
   });
 
   static String keyOf(String portfolioId, String holdingId) =>
@@ -249,22 +259,33 @@ class DepotHoldingPerformance {
   ) {
     final performance = ParqetJson.object(json['performance']);
     final unrealized = ParqetJson.inInterval(performance, 'unrealizedGains');
-    final kpis = ParqetJson.inInterval(performance, 'kpis');
+    final gain =
+        ParqetJson.number(unrealized['gainNet']) +
+        ParqetJson.number(
+          ParqetJson.inInterval(performance, 'realizedGains')['gainNet'],
+        ) +
+        ParqetJson.number(
+          ParqetJson.inInterval(performance, 'dividends')['gainNet'],
+        );
+    // Not TTWROR, which can be positive on a loss. Base: value at the period
+    // start, or the cost basis for a position opened within it (always Max).
+    final startValue = ParqetJson.number(
+      ParqetJson.object(performance['valuation'])['atIntervalStart'],
+    );
+    final base = startValue > 0
+        ? startValue
+        : ParqetJson.number(
+            ParqetJson.object(json['position'])['purchaseValue'],
+          );
     return DepotHoldingPerformance(
       portfolioId: portfolioId,
       holdingId: json['id'] as String,
       period: period,
-      gain:
-          ParqetJson.number(unrealized['gainNet']) +
-          ParqetJson.number(
-            ParqetJson.inInterval(performance, 'realizedGains')['gainNet'],
-          ) +
-          ParqetJson.number(
-            ParqetJson.inInterval(performance, 'dividends')['gainNet'],
-          ),
-      returnPercent:
-          ParqetJson.numberOrNull(kpis['ttwror']) ??
-          ParqetJson.numberOrNull(unrealized['returnNet']),
+      gain: gain,
+      returnPercent: base > 0 ? gain / base * 100 : null,
+      startPrice: ParqetJson.numberOrNull(
+        ParqetJson.object(json['startQuote'])['price'],
+      ),
     );
   }
 
@@ -275,6 +296,7 @@ class DepotHoldingPerformance {
         period: DepotPeriod.fromWire(map['period']),
         gain: map['gain'] as double,
         returnPercent: map['return_percent'] as double?,
+        startPrice: map['start_price'] as double?,
       );
 
   Map<String, Object?> toMap() => {
@@ -283,5 +305,6 @@ class DepotHoldingPerformance {
     'period': period.wire,
     'gain': gain,
     'return_percent': returnPercent,
+    'start_price': startPrice,
   };
 }

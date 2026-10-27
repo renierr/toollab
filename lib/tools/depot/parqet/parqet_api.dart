@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 
 import '../models/depot_holding.dart';
@@ -21,11 +19,15 @@ class ParqetPerformance {
   final List<DepotHoldingPerformance> holdingPerformance;
   final List<DepotChartPoint> chart;
 
+  /// Parqet's activity count per holding id; holdings without one are absent.
+  final Map<String, int> activityCounts;
+
   const ParqetPerformance({
     required this.summary,
     required this.holdings,
     required this.holdingPerformance,
     required this.chart,
+    this.activityCounts = const {},
   });
 }
 
@@ -75,12 +77,6 @@ class ParqetApi {
         'interval': _interval(key.period),
       },
     );
-    if (kDebugMode && key.period == DepotPeriod.today) {
-      debugLog(
-        '[ParqetApi] today ${key.scope}: interval ${json['interval']}, '
-        'performance ${json['performance']}',
-      );
-    }
     final syncedAt = DateTime.now();
     final holdings = [
       for (final item in json['holdings'] as List? ?? const [])
@@ -104,7 +100,31 @@ class ParqetApi {
         for (final item in json['charts'] as List? ?? const [])
           ?DepotChartPoint.fromJson(item as Map<String, dynamic>),
       ],
+      activityCounts: {
+        for (final item in holdings)
+          if (item['activityCount'] case final num count)
+            item['id'] as String: count.toInt(),
+      },
     );
+  }
+
+  /// Portfolio ids this login may create activities in; null when Parqet
+  /// lists no portfolio permission at all, so nothing can be concluded.
+  Future<Set<String>?> writablePortfolioIds() async {
+    final json = await _send('GET', '/user');
+    final writable = <String>{};
+    var listed = false;
+    for (final item in json['permissions'] as List? ?? const []) {
+      if (item case {
+        'action': final String action,
+        'resourceType': 'portfolio',
+        'resourceId': final String id,
+      }) {
+        listed = true;
+        if (action == 'write') writable.add(id);
+      }
+    }
+    return listed ? writable : null;
   }
 
   /// Parqet's relative `1d` starts at the close before yesterday, so today is
@@ -121,10 +141,12 @@ class ParqetApi {
   /// Activities of [portfolioId], newest page first. With [since] the walk
   /// stops once a page runs past it, so a routine sync only downloads what
   /// was added. That needs the feed to be newest first; if it is not, every
-  /// page is read and [ParqetActivities.complete] stays true.
+  /// page is read and [ParqetActivities.complete] stays true. [holdingId]
+  /// limits the read to one holding.
   Future<ParqetActivities> activities(
     String portfolioId, {
     DateTime? since,
+    String? holdingId,
   }) async {
     final result = <DepotTransaction>[];
     String? cursor;
@@ -133,7 +155,11 @@ class ParqetApi {
       final json = await _send(
         'GET',
         '/portfolios/$portfolioId/activities',
-        query: {'limit': '$_activityPageSize', 'cursor': ?cursor},
+        query: {
+          'limit': '$_activityPageSize',
+          'cursor': ?cursor,
+          'holdingId': ?holdingId,
+        },
       );
       final page = <DepotTransaction>[];
       for (final item in json['activities'] as List? ?? const []) {

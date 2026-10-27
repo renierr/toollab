@@ -4458,6 +4458,30 @@
   "depotDetailRealized": "Realisiert (gesamt)",
   "depotDetailDividends": "Dividenden (gesamt)",
   "depotDetailFirstActivity": "Erste Aktivität",
+  "depotDetailExchange": "Börse",
+  "depotDetailPreviousClose": "Schlusskurs Vortag",
+  "depotDetailStartPrice": "Kurs zu Beginn ({period})",
+  "@depotDetailStartPrice": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "depotChartLive": "aktuell",
+  "depotYearTitle": "Realisiert pro Jahr",
+  "depotYearRealized": "Realisierte Gewinne ({count, plural, =1{1 Verkauf} other{{count} Verkäufe}})",
+  "@depotYearRealized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotYearIncomeTotal": "Summe realisiert",
+  "depotYearTaxes": "Gezahlte Steuern",
+  "depotYearFees": "Gezahlte Gebühren",
+  "depotYearNote": "Nettobeträge wie in Parqet gebucht; keine Steuerbescheinigung.",
   "depotAssetSecurity": "Wertpapiere",
   "depotAssetCrypto": "Krypto",
   "depotAssetCommodity": "Rohstoffe",

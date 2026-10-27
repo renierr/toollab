@@ -17,6 +17,9 @@ class DepotParqetSync {
   static const _maxConcurrent = 4;
   static const _activityOverlap = Duration(days: 3);
 
+  /// Beyond this many changed holdings one portfolio-wide read is cheaper.
+  static const _maxHoldingReads = 10;
+
   static Future<bool> isConnected() async {
     final clientId = await DepotStore.instance.clientId();
     if (clientId == null || clientId.isEmpty) return false;
@@ -42,6 +45,7 @@ class DepotParqetSync {
     final store = DepotStore.instance;
     final client = api ?? await _api();
     final portfolios = await client.portfolios();
+    final knownCounts = await store.activityCounts();
     final priority = _PerformancePull(client, portfolios);
     await _runPooled(priority.jobs({period}, combined: true));
     await store.savePerformance(
@@ -53,45 +57,46 @@ class DepotParqetSync {
     );
     await onPeriodReady?.call();
 
-    final transactions = <DepotTransaction>[];
-    final completeActivities = <String>{};
     final remaining = _PerformancePull(client, portfolios);
     final periods = full
         ? DepotPeriod.values.where((p) => p != period).toSet()
         : {if (period != DepotPeriod.max) DepotPeriod.max};
-    final jobs = [
-      ...remaining.jobs(periods, combined: full),
+    // Activity counts come with Max, which decides what activities to read.
+    await _runPooled(remaining.jobs(periods, combined: full));
+
+    final counts = {...priority.activityCounts, ...remaining.activityCounts};
+    final activities = _ActivityPull(client);
+    await _runPooled([
       for (final portfolio in portfolios)
-        () async {
-          final since = full
-              ? null
-              : (await store.newestTransactionAt(
-                  portfolio.id,
-                ))?.subtract(_activityOverlap);
-          final activities = await client.activities(
-            portfolio.id,
-            since: since,
-          );
-          transactions.addAll(activities.items);
-          if (activities.complete) completeActivities.add(portfolio.id);
-        },
-    ];
-    await _runPooled(jobs);
+        ...activities.jobs(
+          portfolio.id,
+          full: full,
+          known: knownCounts[portfolio.id],
+          current: counts[portfolio.id] ?? const {},
+        ),
+    ]);
 
     final holdings = [...priority.holdings, ...remaining.holdings];
     await store.replaceAll(
       portfolios: portfolios,
       holdings: holdings,
       holdingPerformance: remaining.holdingPerformance,
-      transactions: transactions,
+      transactions: activities.transactions,
       summaries: remaining.summaries,
       charts: remaining.charts,
-      completeActivityPortfolios: completeActivities,
+      completeActivityPortfolios: activities.complete,
+      reloadedHoldings: activities.reloaded,
+      activityCounts: {
+        for (final MapEntry(:key, :value) in counts.entries)
+          if (value.isNotEmpty) key: value,
+      },
     );
 
     final detail =
         '${portfolios.length} portfolios, ${holdings.length} holdings, '
-        '${transactions.length} activities';
+        '${activities.transactions.length} activities, '
+        '${activities.reloaded.values.fold(0, (n, ids) => n + ids.length)} '
+        'holdings reconciled';
     debugLog('[DepotParqetSync] $detail');
     return detail;
   }
@@ -148,10 +153,69 @@ class DepotParqetSync {
   }
 }
 
+/// Reads activities by comparing Parqet's per-holding activity counts with
+/// those of the last read, which also catches backdated and deleted bookings.
+class _ActivityPull {
+  final ParqetApi api;
+  final transactions = <DepotTransaction>[];
+  final complete = <String>{};
+  final reloaded = <String, Set<String>>{};
+
+  _ActivityPull(this.api);
+
+  List<Future<void> Function()> jobs(
+    String portfolioId, {
+    required bool full,
+    required Map<String, int>? known,
+    required Map<String, int> current,
+  }) {
+    if (full) return [() => _readAll(portfolioId)];
+    // Without counts from Parqet only the newest bookings can be found.
+    if (current.isEmpty) return [() => _readNewest(portfolioId)];
+    if (known == null) return [() => _readAll(portfolioId)];
+    final changed = {
+      for (final MapEntry(:key, :value) in current.entries)
+        if (known[key] != value) key,
+      for (final id in known.keys)
+        if (!current.containsKey(id)) id,
+    };
+    if (changed.length > DepotParqetSync._maxHoldingReads) {
+      return [() => _readAll(portfolioId)];
+    }
+    reloaded[portfolioId] = changed;
+    return [
+      // Bookings of holdings Parqet does not list, e.g. cash, have no count.
+      () => _readNewest(portfolioId),
+      for (final id in changed)
+        if (current.containsKey(id))
+          () async => transactions.addAll(
+            (await api.activities(portfolioId, holdingId: id)).items,
+          ),
+    ];
+  }
+
+  Future<void> _readAll(String portfolioId) async {
+    final activities = await api.activities(portfolioId);
+    transactions.addAll(activities.items);
+    if (activities.complete) complete.add(portfolioId);
+  }
+
+  Future<void> _readNewest(String portfolioId) async {
+    final newest = await DepotStore.instance.newestTransactionAt(portfolioId);
+    final activities = await api.activities(
+      portfolioId,
+      since: newest?.subtract(DepotParqetSync._activityOverlap),
+    );
+    transactions.addAll(activities.items);
+    if (activities.complete) complete.add(portfolioId);
+  }
+}
+
 class _PerformancePull {
   final ParqetApi api;
   final List<DepotPortfolio> portfolios;
   final holdings = <DepotHolding>[];
+  final activityCounts = <String, Map<String, int>>{};
   final holdingPerformance = <DepotHoldingPerformance>[];
   final summaries = <DepotSummary>[];
   final charts = <DepotPeriodKey, List<DepotChartPoint>>{};
@@ -180,7 +244,10 @@ class _PerformancePull {
       currency: portfolios.first.currency,
     );
     if (ids.length == 1) {
-      if (period == DepotPeriod.max) holdings.addAll(performance.holdings);
+      if (period == DepotPeriod.max) {
+        holdings.addAll(performance.holdings);
+        activityCounts[scope] = performance.activityCounts;
+      }
       holdingPerformance.addAll(performance.holdingPerformance);
     }
     summaries.add(performance.summary);

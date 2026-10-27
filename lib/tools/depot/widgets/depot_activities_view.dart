@@ -9,6 +9,7 @@ import 'depot_activity_filter_bar.dart';
 import 'depot_connect_card.dart';
 import 'depot_sync_header.dart';
 import 'depot_transaction_tile.dart';
+import 'depot_year_report_card.dart';
 
 class DepotActivitiesView extends StatelessWidget {
   const DepotActivitiesView({super.key});
@@ -25,6 +26,7 @@ class DepotActivitiesView extends StatelessWidget {
     if (!state.isConnected && !state.hasData) return const DepotConnectCard();
 
     final transactions = state.visibleTransactions;
+    final report = state.yearReport;
     final locale = Localizations.localeOf(context).toString();
     // Activities keep their own currency; one formatter per currency.
     final formats = <String, DepotFormat>{};
@@ -35,14 +37,22 @@ class DepotActivitiesView extends StatelessWidget {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            const SliverPadding(
-              padding: EdgeInsets.fromLTRB(12, 4, 12, 8),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate.fixed([
-                  DepotSyncHeader(),
-                  SizedBox(height: 8),
-                  DepotActivityFilterBar(),
-                ]),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+              sliver: SliverList.list(
+                children: [
+                  const DepotSyncHeader(),
+                  if (report != null) ...[
+                    const SizedBox(height: 8),
+                    DepotYearReportCard(
+                      reports: state.yearReports,
+                      report: report,
+                      format: DepotFormat.of(context, state.currency),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  const DepotActivityFilterBar(),
+                ],
               ),
             ),
             if (transactions.isEmpty)

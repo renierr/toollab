@@ -10,6 +10,7 @@ import 'models/depot_period.dart';
 import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
 import 'models/depot_transaction.dart';
+import 'models/depot_year_report.dart';
 import 'parqet/parqet_auth.dart';
 import 'parqet/parqet_api.dart';
 import 'parqet/parqet_exception.dart';
@@ -51,6 +52,8 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotHolding> _holdings = const [];
   Map<String, DepotHoldingPerformance> _holdingPerformance = const {};
   List<DepotTransaction> _transactions = const [];
+  List<DepotYearReport> _yearReports = const [];
+  int? _reportYear;
 
   /// Bumped per period load, so a slow read for an earlier selection cannot
   /// overwrite the current one.
@@ -84,6 +87,25 @@ class DepotPortfolioState extends ChangeNotifier {
   DepotRangeChange? get rangeChange => _rangeChange;
   List<DepotHolding> get holdings => _holdings;
   List<DepotTransaction> get transactions => _transactions;
+
+  /// One report per year with bookings, newest first.
+  List<DepotYearReport> get yearReports => _yearReports;
+
+  /// The selected entry of [yearReports]; the newest year until one is picked.
+  DepotYearReport? get yearReport {
+    final reports = _yearReports;
+    if (reports.isEmpty) return null;
+    return reports.firstWhere(
+      (r) => r.year == _reportYear,
+      orElse: () => reports.first,
+    );
+  }
+
+  void setReportYear(int year) {
+    if (year == _reportYear) return;
+    _reportYear = year;
+    _notify();
+  }
 
   DepotHoldingFilter get holdingFilter => _holdingFilter;
   DepotActivityFilter get activityFilter => _activityFilter;
@@ -133,6 +155,7 @@ class DepotPortfolioState extends ChangeNotifier {
     if (_disposed || load != _scopeLoad || scope != _scope) return;
     _holdings = holdings;
     _transactions = transactions;
+    _yearReports = _reportsOf(transactions);
     _refilterTransactions();
     await _loadPeriod();
   }
@@ -152,7 +175,7 @@ class DepotPortfolioState extends ChangeNotifier {
     _summary = summary;
     _chart = chart;
     _holdingPerformance = performance;
-    _rangeChange = _changeOf(chart);
+    _rangeChange = _changeOf(chart) ?? _changeOfSummary(summary);
     _refilterHoldings();
   }
 
@@ -209,6 +232,15 @@ class DepotPortfolioState extends ChangeNotifier {
       gain: valueChange - (last.capital - first.capital),
     );
   }
+
+  /// Today's chart holds a single point, so the change comes from the summary.
+  static DepotRangeChange? _changeOfSummary(DepotSummary? summary) =>
+      summary == null
+      ? null
+      : DepotRangeChange(
+          valueChange: summary.valueEnd - summary.valueStart,
+          gain: summary.totalGain,
+        );
 
   /// Also picks up what a scheduled background run stored meanwhile.
   Future<void> syncIfStale() async {
@@ -387,6 +419,34 @@ class DepotPortfolioState extends ChangeNotifier {
           interest: interest[i],
         ),
     ];
+  }
+
+  static List<DepotYearReport> _reportsOf(List<DepotTransaction> transactions) {
+    final reports = <int, DepotYearReport>{};
+    for (final t in transactions) {
+      final year = t.datetime.year;
+      final report = reports[year] ?? DepotYearReport(year: year);
+      reports[year] = switch (t.type) {
+        DepotTransactionType.sell => report.add(
+          realizedGain: t.realizedGain ?? 0,
+          taxes: t.tax,
+          fees: t.fee,
+          sells: 1,
+        ),
+        DepotTransactionType.dividend => report.add(
+          dividends: t.amountNet,
+          taxes: t.tax,
+          fees: t.fee,
+        ),
+        DepotTransactionType.interest => report.add(
+          interest: t.amountNet,
+          taxes: t.tax,
+          fees: t.fee,
+        ),
+        _ => report.add(taxes: t.tax, fees: t.fee),
+      };
+    }
+    return reports.values.toList()..sort((a, b) => b.year.compareTo(a.year));
   }
 
   void _notify() {

@@ -39,9 +39,17 @@ class DepotHoldingTile extends StatelessWidget {
         : holding.name;
     final gain = performance?.gain;
     final returnPercent = performance?.returnPercent;
-    final kindColor = DepotColors.kind(kind);
+    final sold = holding.isSold;
+    final kindColor = sold ? theme.hintColor : DepotColors.kind(kind);
+    final mainColor = sold ? theme.hintColor : null;
 
     return ExpansionTile(
+      // Sold positions only show when the filter asks for them; tint them so
+      // they never read as part of the open portfolio.
+      backgroundColor: sold ? theme.colorScheme.surfaceContainerLow : null,
+      collapsedBackgroundColor: sold
+          ? theme.colorScheme.surfaceContainerLow
+          : null,
       // Keeps the expanded state while the row scrolls out and back in.
       key: PageStorageKey('depot-holding-${holding.portfolioId}/${holding.id}'),
       tilePadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -49,9 +57,12 @@ class DepotHoldingTile extends StatelessWidget {
       shape: const Border(),
       collapsedShape: const Border(),
       dense: true,
-      leading: DepotHoldingAvatar(
-        name: name,
-        colorSeed: holding.identifier ?? holding.id,
+      leading: Opacity(
+        opacity: sold ? 0.4 : 1,
+        child: DepotHoldingAvatar(
+          name: name,
+          colorSeed: holding.identifier ?? holding.id,
+        ),
       ),
       title: Text(
         name,
@@ -59,13 +70,26 @@ class DepotHoldingTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w600,
+          color: mainColor,
         ),
       ),
       subtitle: Text.rich(
         TextSpan(
           children: [
+            if (sold)
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Icon(
+                    Icons.sell_outlined,
+                    size: 14,
+                    color: theme.hintColor,
+                  ),
+                ),
+              ),
             TextSpan(
-              text: holding.isSold
+              text: sold
                   ? l10n.depotHoldingSold
                   : DepotPortfolioLabels.kind(l10n, kind),
               style: TextStyle(color: kindColor, fontWeight: FontWeight.w600),
@@ -89,6 +113,7 @@ class DepotHoldingTile extends StatelessWidget {
             format.money(holding.currentValue),
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
+              color: mainColor,
             ),
           ),
           if (returnPercent != null || holding.currentPrice != 0)

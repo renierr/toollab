@@ -11216,6 +11216,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotDetailFirstActivity => 'First activity';
 
   @override
+  String get depotDetailExchange => 'Exchange';
+
+  @override
+  String get depotDetailPreviousClose => 'Previous close';
+
+  @override
+  String depotDetailStartPrice(String period) {
+    return 'Price at start ($period)';
+  }
+
+  @override
+  String get depotChartLive => 'now';
+
+  @override
+  String get depotYearTitle => 'Realized per year';
+
+  @override
+  String depotYearRealized(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sales',
+      one: '1 sale',
+    );
+    return 'Realized gains ($_temp0)';
+  }
+
+  @override
+  String get depotYearIncomeTotal => 'Total realized';
+
+  @override
+  String get depotYearTaxes => 'Taxes paid';
+
+  @override
+  String get depotYearFees => 'Fees paid';
+
+  @override
+  String get depotYearNote =>
+      'Net amounts as booked in Parqet; not a tax statement.';
+
+  @override
   String get depotAssetSecurity => 'Securities';
 
   @override

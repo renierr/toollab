@@ -20021,6 +20021,66 @@ abstract class AppLocalizations {
   /// **'First activity'**
   String get depotDetailFirstActivity;
 
+  /// No description provided for @depotDetailExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange'**
+  String get depotDetailExchange;
+
+  /// No description provided for @depotDetailPreviousClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous close'**
+  String get depotDetailPreviousClose;
+
+  /// No description provided for @depotDetailStartPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price at start ({period})'**
+  String depotDetailStartPrice(String period);
+
+  /// No description provided for @depotChartLive.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get depotChartLive;
+
+  /// No description provided for @depotYearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Realized per year'**
+  String get depotYearTitle;
+
+  /// No description provided for @depotYearRealized.
+  ///
+  /// In en, this message translates to:
+  /// **'Realized gains ({count, plural, =1{1 sale} other{{count} sales}})'**
+  String depotYearRealized(int count);
+
+  /// No description provided for @depotYearIncomeTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total realized'**
+  String get depotYearIncomeTotal;
+
+  /// No description provided for @depotYearTaxes.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxes paid'**
+  String get depotYearTaxes;
+
+  /// No description provided for @depotYearFees.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees paid'**
+  String get depotYearFees;
+
+  /// No description provided for @depotYearNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Net amounts as booked in Parqet; not a tax statement.'**
+  String get depotYearNote;
+
   /// No description provided for @depotAssetSecurity.
   ///
   /// In en, this message translates to:

@@ -11295,6 +11295,47 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDetailFirstActivity => 'Erste Aktivität';
 
   @override
+  String get depotDetailExchange => 'Börse';
+
+  @override
+  String get depotDetailPreviousClose => 'Schlusskurs Vortag';
+
+  @override
+  String depotDetailStartPrice(String period) {
+    return 'Kurs zu Beginn ($period)';
+  }
+
+  @override
+  String get depotChartLive => 'aktuell';
+
+  @override
+  String get depotYearTitle => 'Realisiert pro Jahr';
+
+  @override
+  String depotYearRealized(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Verkäufe',
+      one: '1 Verkauf',
+    );
+    return 'Realisierte Gewinne ($_temp0)';
+  }
+
+  @override
+  String get depotYearIncomeTotal => 'Summe realisiert';
+
+  @override
+  String get depotYearTaxes => 'Gezahlte Steuern';
+
+  @override
+  String get depotYearFees => 'Gezahlte Gebühren';
+
+  @override
+  String get depotYearNote =>
+      'Nettobeträge wie in Parqet gebucht; keine Steuerbescheinigung.';
+
+  @override
   String get depotAssetSecurity => 'Wertpapiere';
 
   @override

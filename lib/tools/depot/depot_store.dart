@@ -28,6 +28,9 @@ class DepotStore {
   static const _holdingPerformance = 'holding_performance';
   static const _holdingLogos = 'holding_logos';
 
+  /// Parqet's activity count per holding when its activities were last read.
+  static const _activityCounts = 'activity_counts';
+
   static const _dividendAssets = 'dividend_assets';
   static const _dividendEvents = 'dividend_events';
 
@@ -55,7 +58,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 5,
+        currentVersion: 6,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -221,6 +224,25 @@ class DepotStore {
               )
             ''');
           }
+          if (oldVersion < 6) {
+            for (final column in [
+              '${txn.nameTable(_holdings)} ADD COLUMN quote_exchange TEXT',
+              '${txn.nameTable(_holdingPerformance)} '
+                  'ADD COLUMN start_price REAL',
+              '${txn.nameTable(_chartPoints)} '
+                  'ADD COLUMN live INTEGER NOT NULL DEFAULT 0',
+            ]) {
+              await txn.execute('ALTER TABLE $column');
+            }
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_activityCounts)} (
+                portfolio_id TEXT NOT NULL,
+                holding_id TEXT NOT NULL,
+                count INTEGER NOT NULL,
+                PRIMARY KEY (portfolio_id, holding_id)
+              )
+            ''');
+          }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {
             await txn.executor.delete(
@@ -265,6 +287,19 @@ class DepotStore {
     );
     final newest = rows.first['newest'] as int?;
     return newest == null ? null : DateTime.fromMillisecondsSinceEpoch(newest);
+  }
+
+  /// Holding id to activity count, per portfolio id.
+  Future<Map<String, Map<String, int>>> activityCounts() async {
+    final db = await _getDb();
+    final result = <String, Map<String, int>>{};
+    for (final row in await db.query(_activityCounts)) {
+      result.putIfAbsent(
+        row['portfolio_id'] as String,
+        () => {},
+      )[row['holding_id'] as String] = row['count'] as int;
+    }
+    return result;
   }
 
   Future<List<DepotPortfolio>> portfolios() async {
@@ -368,6 +403,9 @@ class DepotStore {
   }
 
   /// Commits holdings and activities without discarding unrequested periods.
+  /// [reloadedHoldings] names, per portfolio, the holdings whose activities
+  /// were read in full; [activityCounts] replaces the stored counts of the
+  /// portfolios it names.
   Future<void> replaceAll({
     required List<DepotPortfolio> portfolios,
     required List<DepotHolding> holdings,
@@ -376,13 +414,43 @@ class DepotStore {
     required List<DepotSummary> summaries,
     required Map<DepotPeriodKey, List<DepotChartPoint>> charts,
     required Set<String> completeActivityPortfolios,
+    Map<String, Set<String>> reloadedHoldings = const {},
+    Map<String, Map<String, int>> activityCounts = const {},
   }) async {
     final db = await _getDb();
     await db.transaction((txn) async {
       await _replacePortfolios(txn, portfolios);
       await txn.delete(_holdings);
       await _pruneTransactions(txn, portfolios, completeActivityPortfolios);
+      for (final MapEntry(key: portfolioId, value: ids)
+          in reloadedHoldings.entries) {
+        if (ids.isEmpty) continue;
+        final list = ids.toList();
+        await txn.delete(
+          _transactions,
+          where:
+              'portfolio_id = ? AND holding_id IN (${_placeholders(list.length)})',
+          whereArgs: [portfolioId, ...list],
+        );
+      }
+      for (final portfolioId in activityCounts.keys) {
+        await txn.delete(
+          _activityCounts,
+          where: 'portfolio_id = ?',
+          whereArgs: [portfolioId],
+        );
+      }
       final batch = txn.batch();
+      for (final MapEntry(key: portfolioId, value: counts)
+          in activityCounts.entries) {
+        for (final MapEntry(key: holdingId, value: count) in counts.entries) {
+          batch.insert(_activityCounts, {
+            'portfolio_id': portfolioId,
+            'holding_id': holdingId,
+            'count': count,
+          });
+        }
+      }
       for (final h in holdings) {
         batch.insert(
           _holdings,
@@ -504,6 +572,7 @@ class DepotStore {
       _holdingPerformance,
       _holdings,
       _transactions,
+      _activityCounts,
     ]) {
       final column = table == _summaries || table == _chartPoints
           ? 'scope'
@@ -598,6 +667,7 @@ class DepotStore {
       for (final table in [
         ..._tables,
         _transactions,
+        _activityCounts,
         _dividendAssets,
         _dividendEvents,
         _holdingLogos,

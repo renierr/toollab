@@ -22,21 +22,26 @@ const _secondPortfolio = DepotPortfolio(id: 'p2', name: 'Two', currency: 'EUR');
 DepotPeriodKey _key(DepotPeriod period, [String scope = DepotStore.allScope]) =>
     (scope: scope, period: period);
 
-DepotTransaction _transaction(String id, DateTime date) =>
-    DepotTransaction.fromJson(_portfolio.id, {
-      'id': id,
-      'type': 'dividend',
-      'datetime': date.toIso8601String(),
-      'amountNet': 10,
-      'currency': 'EUR',
-    })!;
+DepotTransaction _transaction(
+  String id,
+  DateTime date, {
+  String holdingId = 'holding',
+}) => DepotTransaction.fromJson(_portfolio.id, {
+  'id': id,
+  'type': 'dividend',
+  'datetime': date.toIso8601String(),
+  'amountNet': 10,
+  'currency': 'EUR',
+  'holdingId': holdingId,
+})!;
 
 class _FakeApi extends ParqetApi {
   _FakeApi() : super(clientId: 'test-client');
 
   List<DepotPortfolio> portfolioList = [_portfolio];
   final calls = <DepotPeriodKey>[];
-  final activityCalls = <({String id, DateTime? since})>[];
+  final activityCalls = <({String id, DateTime? since, String? holdingId})>[];
+  Map<String, int> activityCounts = {};
   final periodGates = <DepotPeriod, Completer<void>>{};
   final periodStarted = <DepotPeriod, Completer<void>>{};
   Completer<void>? activitiesGate;
@@ -97,6 +102,7 @@ class _FakeApi extends ParqetApi {
             drawdown: 0,
           ),
       ],
+      activityCounts: emptyHoldings ? const {} : activityCounts,
     );
   }
 
@@ -104,14 +110,21 @@ class _FakeApi extends ParqetApi {
   Future<ParqetActivities> activities(
     String portfolioId, {
     DateTime? since,
+    String? holdingId,
   }) async {
-    activityCalls.add((id: portfolioId, since: since));
+    activityCalls.add((id: portfolioId, since: since, holdingId: holdingId));
     if (!activitiesStarted.isCompleted) activitiesStarted.complete();
     await activitiesGate?.future;
     if (failActivities) {
       throw const ParqetException(ParqetErrorKind.network);
     }
-    return ParqetActivities(items: transactions, complete: complete);
+    return ParqetActivities(
+      items: [
+        for (final t in transactions)
+          if (holdingId == null || t.holdingId == holdingId) t,
+      ],
+      complete: since == null || complete,
+    );
   }
 }
 
@@ -231,6 +244,44 @@ void main() {
       expect(await store.transactions(), hasLength(3));
     },
   );
+
+  test('activity counts re-read only changed holdings, catching backdated and '
+      'deleted bookings', () async {
+    final a = _transaction('a', DateTime(2025, 1));
+    final b = _transaction('b', DateTime(2026, 1, 20));
+    final first = _FakeApi()
+      ..activityCounts = {'holding': 2}
+      ..transactions = [a, b];
+    await DepotParqetSync.run(api: first);
+    expect(first.activityCalls.single.since, isNull);
+    expect(await store.transactions(), hasLength(2));
+
+    final unchanged = _FakeApi()
+      ..activityCounts = {'holding': 2}
+      ..complete = false;
+    await DepotParqetSync.run(api: unchanged);
+    expect(unchanged.activityCalls.single.holdingId, isNull);
+    expect(unchanged.activityCalls.single.since, isNotNull);
+    expect(await store.transactions(), hasLength(2));
+
+    final backdated = _FakeApi()
+      ..activityCounts = {'holding': 3}
+      ..complete = false
+      ..transactions = [a, b, _transaction('late', DateTime(2025, 6))];
+    await DepotParqetSync.run(api: backdated);
+    expect(
+      backdated.activityCalls.map((c) => c.holdingId),
+      containsAll([null, 'holding']),
+    );
+    expect(await store.transactions(), hasLength(3));
+
+    final deleted = _FakeApi()
+      ..activityCounts = {'holding': 1}
+      ..complete = false
+      ..transactions = [b];
+    await DepotParqetSync.run(api: deleted);
+    expect((await store.transactions()).map((t) => t.id), ['b']);
+  });
 
   test(
     'only explicit full sync rereads all periods and reconciles deletions',
