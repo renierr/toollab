@@ -10,12 +10,14 @@ class DepotHoldingAvatar extends StatelessWidget {
   final String name;
   final String colorSeed;
   final double size;
+  final Uint8List? logoBytes;
 
   const DepotHoldingAvatar({
     super.key,
     required this.name,
     required this.colorSeed,
     this.size = 36,
+    this.logoBytes,
   });
 
   static String initials(String name) {
@@ -31,9 +33,10 @@ class DepotHoldingAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bytes = context.select<DepotLogoState, Uint8List?>(
+    final cached = context.select<DepotLogoState, Uint8List?>(
       (state) => state.bytesFor(colorSeed),
     );
+    final bytes = logoBytes ?? cached;
     final fallback = _InitialsBadge(
       name: name,
       colorSeed: colorSeed,

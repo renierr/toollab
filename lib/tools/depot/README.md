@@ -203,8 +203,16 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 | `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | Latest quote and one year of daily closes per wishlist entry |
 
 Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
-Wishlist avatars use initials unless a matching logo is already in the local holding cache;
-public Parqet asset enrichment is not implemented.
+The selected Yahoo listing determines the exchange and trading currency. The wishlist's
+saved currency switch selects native prices or an approximate EUR price, marked `≈`, using
+Yahoo's latest currency rate; it falls back to native currency if no rate is available.
+Details retain the listing currency for the chart, historical prices and returns; the EUR
+price is a current conversion, not a historical EUR return.
+Wishlist logos are fetched by symbol from Financial Modeling Prep, cached locally and
+fall back to initials when unavailable. No account credentials are sent to that provider.
+An ISIN search also checks Parqet's public asset data and stores the ISIN only for Yahoo
+symbols explicitly listed on the matching asset. Existing entries can be linked from the
+search result; if Parqet cannot confirm the match, the ISIN remains unknown.
 
 ## Local data
 
@@ -215,7 +223,7 @@ the settings), and the wishlist. Summaries and charts exist per portfolio and fo
 portfolios combined (scope `_all`).
 
 The wishlist is the only table written by the user: it is keyed by Yahoo symbol and stores
-name, type, exchange, currency, the price when added and the date. It is never sent to
+name, type, exchange, currency, verified ISIN when available, the price when added and the date. It is never sent to
 Parqet and survives both a sync and **Disconnect**; only removing an entry deletes it.
 
 ### Exporting the data

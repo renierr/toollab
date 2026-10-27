@@ -19451,6 +19451,24 @@ abstract class AppLocalizations {
   /// **'Search by name, ticker or ISIN'**
   String get depotWishlistSearchHint;
 
+  /// No description provided for @depotWishlistShowEuro.
+  ///
+  /// In en, this message translates to:
+  /// **'Show prices in euros'**
+  String get depotWishlistShowEuro;
+
+  /// No description provided for @depotWishlistEuroSwitchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted prices are estimates (≈).'**
+  String get depotWishlistEuroSwitchHint;
+
+  /// No description provided for @depotWishlistLinkIsin.
+  ///
+  /// In en, this message translates to:
+  /// **'Add ISIN to existing entry'**
+  String get depotWishlistLinkIsin;
+
   /// No description provided for @depotWishlistEmpty.
   ///
   /// In en, this message translates to:
@@ -19522,6 +19540,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Price'**
   String get depotWishlistPrice;
+
+  /// No description provided for @depotWishlistOriginalPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Listing price'**
+  String get depotWishlistOriginalPrice;
+
+  /// No description provided for @depotWishlistEuroPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Approx. price in EUR'**
+  String get depotWishlistEuroPrice;
+
+  /// No description provided for @depotWishlistNativeHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart and returns use the listing currency'**
+  String get depotWishlistNativeHistory;
+
+  /// No description provided for @depotWishlistFxNote.
+  ///
+  /// In en, this message translates to:
+  /// **'EUR price uses the latest exchange rate. Historical prices and returns are in the listing currency.'**
+  String get depotWishlistFxNote;
+
+  /// No description provided for @depotWishlistFxUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'EUR exchange rate unavailable; showing the listing currency.'**
+  String get depotWishlistFxUnavailable;
 
   /// No description provided for @depotWishlistToday.
   ///

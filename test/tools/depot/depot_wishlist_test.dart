@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -14,6 +17,7 @@ import 'package:tool_lab/tools/depot/depot_wishlist_state.dart';
 import 'package:tool_lab/tools/depot/dividends/yahoo_finance_api.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_wishlist.dart';
+import 'package:tool_lab/tools/depot/parqet/parqet_asset_lookup.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_add_dialog.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_chart.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_row.dart';
@@ -110,6 +114,27 @@ void main() {
     expect(wishlistKind('FUTURE', 'Apple Futures'), DepotHoldingKind.other);
   });
 
+  test('ISIN lookup only accepts symbols from the matching asset', () async {
+    final client = MockClient((request) async {
+      expect(request.url.host, 'api.parqet.com');
+      expect(request.url.path, startsWith('/v1/assets/'));
+      return http.Response('''
+        {"asset":{"security":{"isin":"US0378331005","symbols":[
+          {"symbol":"AAPL"},{"symbol":"APC.DE"},{"symbol":null}
+        ]}}}
+      ''', 200);
+    });
+    expect(
+      await ParqetAssetLookup(client: client).symbolsForIsin('US0378331005'),
+      {'AAPL', 'APC.DE'},
+    );
+    expect(
+      await ParqetAssetLookup(client: client).symbolsForIsin('US0378331006'),
+      isEmpty,
+    );
+    client.close();
+  });
+
   test('pence quotes normalize prices but not percentages', () {
     final quote = YahooFinanceApi.parseWishlistQuote({
       'chart': {
@@ -137,6 +162,54 @@ void main() {
     expect(quote.points.first.close, 12);
     expect(quote.dayChangePercent, 2.5);
   });
+
+  test(
+    'currency preference persists and ISIN links to an existing item',
+    () async {
+      await store.deleteWishlistItem('AAPL');
+      await store.deleteWishlistLogo('AAPL');
+      await store.setWishlistEuroDisplay(true);
+      final state = DepotWishlistState(
+        quoteLoader: (_) async => const DepotWishlistQuote(
+          price: 100,
+          previousClose: 90,
+          currency: 'USD',
+          exchange: 'NASDAQ',
+          points: [],
+        ),
+        fxLoader: (_, _) async => 0.9,
+        logoLoader: (_) async => throw const FormatException('offline'),
+      );
+      addTearDown(state.dispose);
+      await state.ensureLoaded();
+      const result = DepotWishlistSearchResult(
+        symbol: 'AAPL',
+        name: 'Apple',
+        quoteType: 'EQUITY',
+        exchange: 'NASDAQ',
+      );
+      expect(await state.add(result), isTrue);
+      final addedAt = state.items.single.addedAt;
+      const linked = DepotWishlistSearchResult(
+        symbol: 'AAPL',
+        name: 'Apple',
+        quoteType: 'EQUITY',
+        exchange: 'NASDAQ',
+        isin: 'US0378331005',
+      );
+      expect(state.canLinkIsin(linked), isTrue);
+      expect(await state.add(linked), isTrue);
+      expect(state.items.single.isin, 'US0378331005');
+      expect(state.items.single.addedAt, addedAt);
+      expect((await store.wishlistItems()).single.isin, 'US0378331005');
+      await state.setShowEuro(false);
+      expect(state.displayEuroRate('USD'), isNull);
+      expect(await store.wishlistEuroDisplay(), isFalse);
+      await state.setShowEuro(true);
+      expect(await store.wishlistEuroDisplay(), isTrue);
+      await state.remove('AAPL');
+    },
+  );
 
   Widget app(Widget child) => MaterialApp(
     locale: const Locale('de'),
@@ -172,6 +245,7 @@ void main() {
       final pending = Completer<DepotWishlistQuote>();
       var appleCalls = 0;
       final state = DepotWishlistState(
+        logoLoader: (_) async => throw const FormatException('No logo'),
         quoteLoader: (symbol) async {
           if (symbol == 'AAPL' && ++appleCalls == 2) return pending.future;
           return quote();
@@ -203,6 +277,117 @@ void main() {
       await state.remove('MSFT');
     },
   );
+
+  test('converts current quotes to EUR and caches wishlist logos', () async {
+    await store.deleteWishlistItem('EURTEST');
+    await store.deleteWishlistLogo('EURTEST');
+    final rateGate = Completer<double>();
+    final ready = Completer<void>();
+    var rateCalls = 0;
+    var logoCalls = 0;
+    final state = DepotWishlistState(
+      quoteLoader: (_) async => const DepotWishlistQuote(
+        price: 100,
+        previousClose: 90,
+        currency: 'USD',
+        exchange: 'NASDAQ',
+        points: [],
+      ),
+      fxLoader: (from, to) {
+        expect((from, to), ('USD', 'EUR'));
+        rateCalls++;
+        return rateGate.future;
+      },
+      logoLoader: (_) async {
+        logoCalls++;
+        return Uint8List.fromList([1, 2, 3]);
+      },
+    );
+    addTearDown(state.dispose);
+    state.addListener(() {
+      if (!ready.isCompleted &&
+          state.euroRate('USD') != null &&
+          state.logoFor('EURTEST') != null) {
+        ready.complete();
+      }
+    });
+    await state.ensureLoaded();
+    expect(
+      await state.add(
+        const DepotWishlistSearchResult(
+          symbol: 'EURTEST',
+          name: 'Test',
+          quoteType: 'EQUITY',
+          exchange: 'NASDAQ',
+        ),
+      ),
+      isTrue,
+    );
+    final refreshing = state.refresh();
+    await Future<void>.delayed(Duration.zero);
+    rateGate.complete(0.9);
+    await refreshing;
+    await ready.future.timeout(const Duration(seconds: 5));
+    expect(state.euroRate('USD'), 0.9);
+    expect(state.quoteFor('EURTEST')!.price * state.euroRate('USD')!, 90);
+    expect(state.euroRate('EUR'), 1);
+    expect(rateCalls, 1);
+    expect(logoCalls, 1);
+    await store.clear();
+    expect((await store.wishlistLogos()).single.key, 'EURTEST');
+    expect(
+      (await store.dumpTables()).any((table) => table.name == 'wishlist_logos'),
+      isTrue,
+    );
+    final restored = DepotWishlistState(
+      quoteLoader: (_) async => const DepotWishlistQuote(
+        price: 100,
+        previousClose: 90,
+        currency: 'EUR',
+        exchange: 'NASDAQ',
+        points: [],
+      ),
+      logoLoader: (_) async => throw StateError('Cached logo was not used'),
+    );
+    await restored.ensureLoaded();
+    expect(restored.logoFor('EURTEST'), [1, 2, 3]);
+    restored.dispose();
+    expect(await state.remove('EURTEST'), isTrue);
+    expect(await store.wishlistLogos(), isEmpty);
+  });
+
+  test('failed EUR rates leave the original quote available', () async {
+    await store.deleteWishlistItem('FXFAIL');
+    final state = DepotWishlistState(
+      quoteLoader: (_) async => const DepotWishlistQuote(
+        price: 100,
+        previousClose: 90,
+        currency: 'USD',
+        exchange: 'NASDAQ',
+        points: [],
+      ),
+      fxLoader: (_, _) async => throw const FormatException('offline'),
+      logoLoader: (_) async => throw const FormatException('offline'),
+    );
+    addTearDown(state.dispose);
+    await state.ensureLoaded();
+    expect(
+      await state.add(
+        const DepotWishlistSearchResult(
+          symbol: 'FXFAIL',
+          name: 'Test',
+          quoteType: 'EQUITY',
+          exchange: 'NASDAQ',
+        ),
+      ),
+      isTrue,
+    );
+    await state.refresh();
+    expect(state.euroRate('USD'), isNull);
+    expect(state.quoteFor('FXFAIL')!.price, 100);
+    expect(state.quoteFor('FXFAIL')!.currency, 'USD');
+    await state.remove('FXFAIL');
+  });
 
   for (final width in [320.0, 800.0]) {
     testWidgets('wishlist row and chart fit ${width.toInt()} px', (
@@ -245,6 +430,42 @@ void main() {
     });
   }
 
+  testWidgets('row shows converted euros or the original currency', (
+    tester,
+  ) async {
+    final logos = DepotLogoState();
+    await tester.runAsync(logos.ensureLoaded);
+    addTearDown(logos.dispose);
+    const usdQuote = DepotWishlistQuote(
+      price: 100,
+      previousClose: 90,
+      currency: 'USD',
+      exchange: 'NASDAQ',
+      points: [],
+    );
+    Future<void> show(double? rate) => tester.pumpWidget(
+      app(
+        ChangeNotifierProvider.value(
+          value: logos,
+          child: DepotWishlistRow(
+            item: _item(),
+            quote: usdQuote,
+            failed: false,
+            euroRate: rate,
+            onTap: () {},
+          ),
+        ),
+      ),
+    );
+    await show(0.9);
+    expect(
+      find.text('≈ ${DepotFormat('de', 'EUR').money(90)}'),
+      findsOneWidget,
+    );
+    await show(null);
+    expect(find.text(DepotFormat('de', 'USD').money(100)), findsOneWidget);
+  });
+
   testWidgets('empty wishlist view fits a narrow screen', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
@@ -270,6 +491,80 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Deine Wunschliste ist leer'), findsOneWidget);
+  });
+
+  testWidgets('currency switch and ISIN are visible on the wishlist', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final state = DepotWishlistState(
+      quoteLoader: (_) async => const DepotWishlistQuote(
+        price: 100,
+        previousClose: 90,
+        currency: 'USD',
+        exchange: 'NASDAQ',
+        points: [],
+      ),
+      fxLoader: (_, _) async => 0.9,
+      logoLoader: (_) async => throw const FormatException('offline'),
+    );
+    late final DepotLogoState logos;
+    addTearDown(state.dispose);
+    await tester.runAsync(() async {
+      logos = DepotLogoState();
+      await store.deleteWishlistItem('AAPL');
+      await store.setWishlistEuroDisplay(true);
+      await logos.ensureLoaded();
+      await state.ensureLoaded();
+      await state.add(
+        const DepotWishlistSearchResult(
+          symbol: 'AAPL',
+          name: 'Apple',
+          quoteType: 'EQUITY',
+          exchange: 'NASDAQ',
+          isin: 'US0378331005',
+        ),
+      );
+      await state.refresh();
+    });
+    addTearDown(logos.dispose);
+    await tester.pumpWidget(
+      app(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: state),
+            ChangeNotifierProvider.value(value: logos),
+          ],
+          child: const DepotWishlistView(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text('≈ ${DepotFormat('de', 'EUR').money(90)}'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('US0378331005'), findsOneWidget);
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isTrue,
+    );
+    await tester.runAsync(() => state.setShowEuro(false));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isFalse,
+    );
+    expect(find.text(DepotFormat('de', 'USD').money(100)), findsOneWidget);
+    await tester.runAsync(() async {
+      expect(await store.wishlistEuroDisplay(), isFalse);
+      await state.setShowEuro(true);
+      await state.remove('AAPL');
+    });
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('search dialog fits a narrow screen with large text', (

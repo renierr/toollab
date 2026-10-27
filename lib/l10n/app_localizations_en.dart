@@ -10894,6 +10894,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotWishlistSearchHint => 'Search by name, ticker or ISIN';
 
   @override
+  String get depotWishlistShowEuro => 'Show prices in euros';
+
+  @override
+  String get depotWishlistEuroSwitchHint =>
+      'Converted prices are estimates (≈).';
+
+  @override
+  String get depotWishlistLinkIsin => 'Add ISIN to existing entry';
+
+  @override
   String get depotWishlistEmpty => 'Your wishlist is empty';
 
   @override
@@ -10933,6 +10943,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotWishlistPrice => 'Price';
+
+  @override
+  String get depotWishlistOriginalPrice => 'Listing price';
+
+  @override
+  String get depotWishlistEuroPrice => 'Approx. price in EUR';
+
+  @override
+  String get depotWishlistNativeHistory =>
+      'Chart and returns use the listing currency';
+
+  @override
+  String get depotWishlistFxNote =>
+      'EUR price uses the latest exchange rate. Historical prices and returns are in the listing currency.';
+
+  @override
+  String get depotWishlistFxUnavailable =>
+      'EUR exchange rate unavailable; showing the listing currency.';
 
   @override
   String get depotWishlistToday => 'Today';

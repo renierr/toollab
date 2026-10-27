@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -13,6 +15,8 @@ class DepotWishlistRow extends StatelessWidget {
   final DepotWishlistItem item;
   final DepotWishlistQuote? quote;
   final bool failed;
+  final double? euroRate;
+  final Uint8List? logoBytes;
   final VoidCallback onTap;
 
   const DepotWishlistRow({
@@ -20,6 +24,8 @@ class DepotWishlistRow extends StatelessWidget {
     required this.item,
     required this.quote,
     required this.failed,
+    this.euroRate,
+    this.logoBytes,
     required this.onTap,
   });
 
@@ -27,7 +33,10 @@ class DepotWishlistRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final format = DepotFormat.of(context, quote?.currency ?? item.currency);
+    final format = DepotFormat.of(
+      context,
+      euroRate == null ? (quote?.currency ?? item.currency) : 'EUR',
+    );
     final trend = quote?.pointsSince(const Duration(days: 31)) ?? const [];
     final trendChange = quote?.changeSince(const Duration(days: 30));
     final dayChange = quote?.dayChangePercent;
@@ -50,7 +59,11 @@ class DepotWishlistRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                DepotHoldingAvatar(name: item.name, colorSeed: item.symbol),
+                DepotHoldingAvatar(
+                  name: item.name,
+                  colorSeed: item.symbol,
+                  logoBytes: logoBytes,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -66,8 +79,9 @@ class DepotWishlistRow extends StatelessWidget {
                       ),
                       Text(
                         '${item.symbol} · '
-                        '${DepotPortfolioLabels.kind(l10n, item.kind)}',
-                        maxLines: 1,
+                        '${DepotPortfolioLabels.kind(l10n, item.kind)}'
+                        '${item.isin == null ? '' : ' · ${item.isin}'}',
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.hintColor,
@@ -116,7 +130,8 @@ class DepotWishlistRow extends StatelessWidget {
                             ),
                           ),
                         Text(
-                          format.money(quote!.price),
+                          '${euroRate != null && quote!.currency != 'EUR' ? '≈ ' : ''}'
+                          '${format.money(quote!.price * (euroRate ?? 1))}',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),

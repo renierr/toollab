@@ -7,6 +7,7 @@ class DepotWishlistItem {
   final String quoteType;
   final String exchange;
   final String currency;
+  final String? isin;
   final double? addedPrice;
   final DateTime addedAt;
 
@@ -18,6 +19,7 @@ class DepotWishlistItem {
     required this.currency,
     required this.addedAt,
     this.addedPrice,
+    this.isin,
   });
 
   DepotHoldingKind get kind => wishlistKind(quoteType, name);
@@ -29,6 +31,7 @@ class DepotWishlistItem {
         quoteType: map['quote_type'] as String,
         exchange: map['exchange'] as String,
         currency: map['currency'] as String,
+        isin: map['isin'] as String?,
         addedPrice: map['added_price'] as double?,
         addedAt: DateTime.fromMillisecondsSinceEpoch(map['added_at'] as int),
       );
@@ -39,9 +42,21 @@ class DepotWishlistItem {
     'quote_type': quoteType,
     'exchange': exchange,
     'currency': currency,
+    'isin': isin,
     'added_price': addedPrice,
     'added_at': addedAt.millisecondsSinceEpoch,
   };
+
+  DepotWishlistItem withIsin(String isin) => DepotWishlistItem(
+    symbol: symbol,
+    name: name,
+    quoteType: quoteType,
+    exchange: exchange,
+    currency: currency,
+    addedPrice: addedPrice,
+    addedAt: addedAt,
+    isin: isin,
+  );
 }
 
 class DepotWishlistSearchResult {
@@ -49,12 +64,14 @@ class DepotWishlistSearchResult {
   final String name;
   final String quoteType;
   final String exchange;
+  final String? isin;
 
   const DepotWishlistSearchResult({
     required this.symbol,
     required this.name,
     required this.quoteType,
     required this.exchange,
+    this.isin,
   });
 
   DepotHoldingKind get kind => wishlistKind(quoteType, name);

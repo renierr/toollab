@@ -50,7 +50,9 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
               ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              sliver: SliverList.list(children: const [_LocalOnlyNote()]),
+              sliver: SliverList.list(
+                children: const [_LocalOnlyNote(), _CurrencySwitch()],
+              ),
             ),
             if (items.isEmpty)
               SliverFillRemaining(
@@ -101,6 +103,10 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
                     return DepotWishlistRow(
                       item: item,
                       quote: state.quoteFor(item.symbol),
+                      euroRate: state.displayEuroRate(
+                        state.quoteFor(item.symbol)?.currency ?? item.currency,
+                      ),
+                      logoBytes: state.logoFor(item.symbol),
                       failed: state.failed.contains(item.symbol),
                       onTap: () =>
                           DepotWishlistDetailDialog.show(context, item),
@@ -111,6 +117,23 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CurrencySwitch extends StatelessWidget {
+  const _CurrencySwitch();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final state = context.watch<DepotWishlistState>();
+    return SwitchListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      title: Text(l10n.depotWishlistShowEuro),
+      subtitle: Text(l10n.depotWishlistEuroSwitchHint),
+      value: state.showEuro,
+      onChanged: state.setShowEuro,
     );
   }
 }

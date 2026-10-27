@@ -7,6 +7,8 @@ import 'package:tool_lab/services/app_http_client.dart';
 
 import '../models/depot_dividend.dart';
 import '../models/depot_wishlist.dart';
+import '../parqet/parqet_asset_lookup.dart';
+import '../parsing/security_parser.dart';
 
 class YahooFinanceException implements Exception {
   final String message;
@@ -54,11 +56,18 @@ class YahooFinanceApi {
   static Future<List<DepotWishlistSearchResult>> searchWishlist(
     String query,
   ) async {
+    final isin = query.trim().toUpperCase();
+    final matchingSymbols = SecurityParser.isValidIsin(isin)
+        ? const ParqetAssetLookup()
+              .symbolsForIsin(isin)
+              .catchError((_) => <String>{})
+        : Future.value(<String>{});
     final json = await _getJson('/v1/finance/search', {
       'q': query,
       'quotesCount': '20',
       'newsCount': '0',
     });
+    final isinSymbols = await matchingSymbols;
     final results = <DepotWishlistSearchResult>[];
     for (final item in json['quotes'] as List? ?? const []) {
       if (item is! Map) continue;
@@ -82,6 +91,7 @@ class YahooFinanceApi {
               (item['exchDisp'] as String?) ??
               (item['exchange'] as String?) ??
               '',
+          isin: isinSymbols.contains(symbol.toUpperCase()) ? isin : null,
         ),
       );
     }

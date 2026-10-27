@@ -45,9 +45,11 @@ class DepotWishlistDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final quote = context.select<DepotWishlistState, DepotWishlistQuote?>(
-      (state) => state.quoteFor(item.symbol),
-    );
+    final state = context.watch<DepotWishlistState>();
+    final quote = state.quoteFor(item.symbol);
+    final euroRate = quote == null
+        ? null
+        : state.displayEuroRate(quote.currency);
     final format = DepotFormat.of(context, quote?.currency ?? item.currency);
     final locale = Localizations.localeOf(context).toString();
     final addedOn = DateFormat.yMMMd(locale).format(item.addedAt);
@@ -77,7 +79,11 @@ class DepotWishlistDetailDialog extends StatelessWidget {
       scrollable: true,
       title: Row(
         children: [
-          DepotHoldingAvatar(name: item.name, colorSeed: item.symbol),
+          DepotHoldingAvatar(
+            name: item.name,
+            colorSeed: item.symbol,
+            logoBytes: state.logoFor(item.symbol),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -112,6 +118,12 @@ class DepotWishlistDetailDialog extends StatelessWidget {
             )
           else ...[
             Text(l10n.depotWishlistChart, style: theme.textTheme.labelMedium),
+            Text(
+              '${l10n.depotWishlistNativeHistory} (${quote.currency})',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
             const SizedBox(height: 4),
             DepotWishlistChart(
               points: quote.points,
@@ -122,8 +134,16 @@ class DepotWishlistDetailDialog extends StatelessWidget {
           ],
           for (final (label, value) in [
             (l10n.depotDetailExchange, item.exchange),
+            if (item.isin != null) (l10n.depotDetailIsin, item.isin!),
+            if (quote != null && quote.currency != 'EUR' && euroRate != null)
+              (
+                l10n.depotWishlistEuroPrice,
+                '≈ ${DepotFormat.of(context, 'EUR').money(quote.price * euroRate)}',
+              ),
             (
-              l10n.depotWishlistPrice,
+              quote != null && quote.currency != 'EUR'
+                  ? l10n.depotWishlistOriginalPrice
+                  : l10n.depotWishlistPrice,
               quote == null ? '' : format.money(quote.price),
             ),
             (
@@ -174,6 +194,18 @@ class DepotWishlistDetailDialog extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: InfoRow(label: label, value: value),
               ),
+          if (state.showEuro && quote != null && quote.currency != 'EUR')
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                euroRate == null
+                    ? l10n.depotWishlistFxUnavailable
+                    : l10n.depotWishlistFxNote,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
+            ),
         ],
       ),
       actions: [

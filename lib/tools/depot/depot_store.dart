@@ -56,6 +56,7 @@ class DepotStore {
   static const _dividendAssets = 'dividend_assets';
   static const _dividendEvents = 'dividend_events';
   static const _wishlist = 'wishlist_items';
+  static const _wishlistLogos = 'wishlist_logos';
 
   /// Parqet mirror only; the dividend cache survives a sync.
   static const _tables = [
@@ -70,6 +71,7 @@ class DepotStore {
   static const _lastSyncKey = 'parqet_last_sync_at';
   static const _activityFullSyncKey = 'parqet_activity_full_sync_at';
   static const _holdingSortKey = 'holding_sort';
+  static const _wishlistEuroKey = 'wishlist_euro_display';
 
   String get _toolId => DepotTool.config.id;
 
@@ -81,7 +83,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 7,
+        currentVersion: 9,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -279,6 +281,21 @@ class DepotStore {
               )
             ''');
           }
+          if (oldVersion < 8) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_wishlistLogos)} (
+                asset_key TEXT PRIMARY KEY,
+                source_url TEXT NOT NULL,
+                data BLOB NOT NULL,
+                fetched_at INTEGER NOT NULL
+              )
+            ''');
+          }
+          if (oldVersion < 9) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(_wishlist)} ADD COLUMN isin TEXT',
+            );
+          }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {
             await txn.executor.delete(
@@ -375,6 +392,38 @@ class DepotStore {
     final db = await _getDb();
     final rows = await db.query(_wishlist, orderBy: 'added_at DESC');
     return rows.map(DepotWishlistItem.fromMap).toList();
+  }
+
+  Future<bool> wishlistEuroDisplay() async =>
+      (await DatabaseService.instance.getSetting(_toolId, _wishlistEuroKey)) !=
+      'false';
+
+  Future<void> setWishlistEuroDisplay(bool value) => DatabaseService.instance
+      .setSetting(_toolId, _wishlistEuroKey, value.toString());
+
+  Future<List<DepotHoldingLogo>> wishlistLogos() async {
+    final db = await _getDb();
+    return (await db.query(
+      _wishlistLogos,
+    )).map(DepotHoldingLogo.fromMap).toList();
+  }
+
+  Future<void> saveWishlistLogo(DepotHoldingLogo logo) async {
+    final db = await _getDb();
+    await db.insert(
+      _wishlistLogos,
+      logo.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> deleteWishlistLogo(String symbol) async {
+    final db = await _getDb();
+    await db.delete(
+      _wishlistLogos,
+      where: 'asset_key = ?',
+      whereArgs: [symbol],
+    );
   }
 
   Future<void> saveWishlistItem(DepotWishlistItem item) async {
@@ -729,6 +778,7 @@ class DepotStore {
       _dividendEvents,
       _holdingLogos,
       _wishlist,
+      _wishlistLogos,
     ]) {
       final stored = db.nameTable(table);
       final info = await db.rawQuery('PRAGMA table_info($stored)');

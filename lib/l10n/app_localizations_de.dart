@@ -10973,6 +10973,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotWishlistSearchHint => 'Nach Name, Kürzel oder ISIN suchen';
 
   @override
+  String get depotWishlistShowEuro => 'Kurse in Euro anzeigen';
+
+  @override
+  String get depotWishlistEuroSwitchHint =>
+      'Umgerechnete Kurse sind Schätzwerte (≈).';
+
+  @override
+  String get depotWishlistLinkIsin => 'ISIN zum bestehenden Eintrag hinzufügen';
+
+  @override
   String get depotWishlistEmpty => 'Deine Wunschliste ist leer';
 
   @override
@@ -11013,6 +11023,24 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotWishlistPrice => 'Kurs';
+
+  @override
+  String get depotWishlistOriginalPrice => 'Börsenkurs';
+
+  @override
+  String get depotWishlistEuroPrice => 'Kurs in EUR (ca.)';
+
+  @override
+  String get depotWishlistNativeHistory =>
+      'Diagramm und Renditen in der Börsenwährung';
+
+  @override
+  String get depotWishlistFxNote =>
+      'Der EUR-Kurs verwendet den aktuellen Wechselkurs. Historische Kurse und Renditen sind in der Börsenwährung.';
+
+  @override
+  String get depotWishlistFxUnavailable =>
+      'EUR-Wechselkurs nicht verfügbar; angezeigt wird die Börsenwährung.';
 
   @override
   String get depotWishlistToday => 'Heute';

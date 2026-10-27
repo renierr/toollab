@@ -154,6 +154,7 @@ class _SearchResults extends StatelessWidget {
         return _SearchResultTile(
           result: result,
           added: added,
+          canLinkIsin: state.canLinkIsin(result),
           pending: state.isAdding(result.symbol),
           onAdd: () => onAdd(result),
         );
@@ -165,12 +166,14 @@ class _SearchResults extends StatelessWidget {
 class _SearchResultTile extends StatelessWidget {
   final DepotWishlistSearchResult result;
   final bool added;
+  final bool canLinkIsin;
   final bool pending;
   final VoidCallback onAdd;
 
   const _SearchResultTile({
     required this.result,
     required this.added,
+    required this.canLinkIsin,
     required this.pending,
     required this.onAdd,
   });
@@ -197,13 +200,14 @@ class _SearchResultTile extends StatelessWidget {
       subtitle: Text(
         [
           result.symbol,
+          if (result.isin != null) result.isin!,
           if (result.exchange.isNotEmpty) result.exchange,
           DepotPortfolioLabels.kind(l10n, result.kind),
         ].join(' · '),
-        maxLines: 1,
+        maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: added
+      trailing: added && !canLinkIsin
           ? Tooltip(
               message: l10n.depotWishlistAlreadyAdded,
               child: const Icon(Icons.check_circle_outline),
@@ -215,11 +219,13 @@ class _SearchResultTile extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              tooltip: l10n.depotWishlistAdd,
+              icon: Icon(canLinkIsin ? Icons.link : Icons.add_circle_outline),
+              tooltip: canLinkIsin
+                  ? l10n.depotWishlistLinkIsin
+                  : l10n.depotWishlistAdd,
               onPressed: onAdd,
             ),
-      onTap: added || pending ? null : onAdd,
+      onTap: (added && !canLinkIsin) || pending ? null : onAdd,
     );
   }
 }

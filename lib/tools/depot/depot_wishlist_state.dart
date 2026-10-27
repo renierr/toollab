@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
+import 'depot_logo_downloader.dart';
 import 'dividends/yahoo_finance_api.dart';
+import 'models/depot_holding_logo.dart';
 import 'models/depot_wishlist.dart';
 
 /// Local-only watchlist. Nothing here is written to Parqet, so a sync and a
@@ -13,8 +15,12 @@ class DepotWishlistState extends ChangeNotifier {
   DepotWishlistState({
     Future<DepotWishlistQuote> Function(String)? quoteLoader,
     Future<List<DepotWishlistSearchResult>> Function(String)? searchLoader,
+    Future<double> Function(String, String)? fxLoader,
+    Future<Uint8List> Function(String)? logoLoader,
   }) : _quoteLoader = quoteLoader ?? YahooFinanceApi.wishlistQuote,
-       _searchLoader = searchLoader ?? YahooFinanceApi.searchWishlist;
+       _searchLoader = searchLoader ?? YahooFinanceApi.searchWishlist,
+       _fxLoader = fxLoader ?? YahooFinanceApi.fxRate,
+       _logoLoader = logoLoader ?? _downloadLogo;
 
   static const _parallelRequests = 4;
   static const _searchDebounce = Duration(milliseconds: 350);
@@ -22,10 +28,14 @@ class DepotWishlistState extends ChangeNotifier {
   final DepotStore _store = DepotStore.instance;
   final Future<DepotWishlistQuote> Function(String) _quoteLoader;
   final Future<List<DepotWishlistSearchResult>> Function(String) _searchLoader;
+  final Future<double> Function(String, String) _fxLoader;
+  final Future<Uint8List> Function(String) _logoLoader;
 
   Future<void>? _loading;
   bool _disposed = false;
   bool _isLoaded = false;
+  bool _showEuro = true;
+  Future<void> _settingsWrite = Future.value();
   bool _loadFailed = false;
   bool _isRefreshing = false;
   bool _isSearching = false;
@@ -39,8 +49,21 @@ class DepotWishlistState extends ChangeNotifier {
   Set<String> _failed = const {};
   final Set<String> _pending = {};
   List<DepotWishlistSearchResult> _results = const [];
+  final Map<String, double> _eurRates = {};
+  final Map<String, Future<void>> _fxLoads = {};
+  final Map<String, Uint8List> _logos = {};
+  final Map<String, Future<void>> _logoLoads = {};
+
+  static String logoUrl(String symbol) => Uri.https(
+    'financialmodelingprep.com',
+    '/image-stock/${Uri.encodeComponent(symbol)}.png',
+  ).toString();
+
+  static Future<Uint8List> _downloadLogo(String symbol) =>
+      const DepotLogoDownloader().download(logoUrl(symbol));
 
   bool get isLoaded => _isLoaded;
+  bool get showEuro => _showEuro;
   bool get loadFailed => _loadFailed;
   bool get isRefreshing => _isRefreshing;
   bool get isSearching => _isSearching;
@@ -53,9 +76,38 @@ class DepotWishlistState extends ChangeNotifier {
   Set<String> get failed => _failed;
 
   DepotWishlistQuote? quoteFor(String symbol) => _quotes[symbol];
+  Uint8List? logoFor(String symbol) => _logos[symbol];
+  double? euroRate(String currency) =>
+      currency == 'EUR' ? 1 : _eurRates[currency];
+  double? displayEuroRate(String currency) =>
+      _showEuro ? euroRate(currency) : null;
 
   bool contains(String symbol) => _items.any((item) => item.symbol == symbol);
+  bool canLinkIsin(DepotWishlistSearchResult result) =>
+      result.isin != null &&
+      _items.any((item) => item.symbol == result.symbol && item.isin == null);
   bool isAdding(String symbol) => _pending.contains(symbol);
+
+  Future<void> setShowEuro(bool value) {
+    if (_showEuro == value) return _settingsWrite;
+    _showEuro = value;
+    _notify();
+    _settingsWrite = _settingsWrite.then((_) async {
+      try {
+        await _store.setWishlistEuroDisplay(value);
+      } catch (e) {
+        errorLog('[DepotWishlistState] Saving currency setting failed: $e');
+      }
+    });
+    if (value) {
+      unawaited(
+        Future.wait(
+          {for (final quote in _quotes.values) quote.currency}.map(_loadRate),
+        ),
+      );
+    }
+    return _settingsWrite;
+  }
 
   Future<void> ensureLoaded() => _loading ??= _load();
 
@@ -66,10 +118,84 @@ class DepotWishlistState extends ChangeNotifier {
       errorLog('[DepotWishlistState] Loading failed: $e');
       _loadFailed = true;
     }
+    try {
+      _showEuro = await _store.wishlistEuroDisplay();
+    } catch (e) {
+      errorLog('[DepotWishlistState] Loading currency setting failed: $e');
+    }
+    try {
+      final logos = await _store.wishlistLogos();
+      _logos.addEntries(logos.map((logo) => MapEntry(logo.key, logo.bytes)));
+    } catch (e) {
+      errorLog('[DepotWishlistState] Loading logos failed: $e');
+    }
     if (_disposed) return;
     _isLoaded = true;
     _notify();
-    if (_items.isNotEmpty) unawaited(refresh());
+    if (_items.isNotEmpty) {
+      unawaited(refresh());
+    }
+  }
+
+  Future<void> _loadMissingLogos(List<DepotWishlistItem> items) async {
+    for (var start = 0; start < items.length; start += _parallelRequests) {
+      await Future.wait(
+        items.skip(start).take(_parallelRequests).map(_loadLogo),
+      );
+    }
+  }
+
+  Future<void> _loadLogo(DepotWishlistItem item) {
+    if (_disposed ||
+        !_items.contains(item) ||
+        _logos.containsKey(item.symbol)) {
+      return Future.value();
+    }
+    return _logoLoads.putIfAbsent(item.symbol, () async {
+      try {
+        final bytes = await _logoLoader(item.symbol);
+        if (_disposed || !_items.contains(item)) return;
+        await _store.saveWishlistLogo(
+          DepotHoldingLogo(
+            key: item.symbol,
+            sourceUrl: logoUrl(item.symbol),
+            bytes: bytes,
+            fetchedAt: DateTime.now(),
+          ),
+        );
+        if (_disposed || !_items.contains(item)) return;
+        _logos[item.symbol] = bytes;
+        _notify();
+      } catch (e) {
+        debugLog(
+          '[DepotWishlistState] Logo unavailable for ${item.symbol}: $e',
+        );
+      } finally {
+        _logoLoads.remove(item.symbol);
+      }
+    });
+  }
+
+  Future<void> _loadRate(String currency) {
+    if (currency.isEmpty || currency == 'EUR' || _disposed) {
+      return Future.value();
+    }
+    return _fxLoads.putIfAbsent(currency, () async {
+      try {
+        final rate = await _fxLoader(currency, 'EUR');
+        if (_disposed) return;
+        if (!rate.isFinite || rate <= 0) {
+          throw const FormatException('Invalid FX rate');
+        }
+        _eurRates[currency] = rate;
+      } catch (e) {
+        _eurRates.remove(currency);
+        debugLog('[DepotWishlistState] EUR rate unavailable for $currency: $e');
+      } finally {
+        _fxLoads.remove(currency);
+        _notify();
+      }
+    });
   }
 
   /// Re-reads every quote. Pull-to-refresh calls this.
@@ -77,6 +203,7 @@ class DepotWishlistState extends ChangeNotifier {
     if (_isRefreshing || _disposed) return;
     _isRefreshing = true;
     _notify();
+    unawaited(_loadMissingLogos(_items));
 
     final snapshot = {for (final item in _items) item.symbol: item};
     final symbols = snapshot.keys.toList();
@@ -118,6 +245,12 @@ class DepotWishlistState extends ChangeNotifier {
       ..._failed.where((symbol) => !snapshot.containsKey(symbol)),
       ...failed.where(unchanged),
     };
+    if (_showEuro) {
+      await Future.wait(
+        {for (final quote in quotes.values) quote.currency}.map(_loadRate),
+      );
+    }
+    if (_disposed) return;
     _isRefreshing = false;
     _notify();
   }
@@ -172,7 +305,7 @@ class DepotWishlistState extends ChangeNotifier {
   Future<bool> add(DepotWishlistSearchResult result) async {
     await ensureLoaded();
     if (_disposed || _loadFailed) return false;
-    if (contains(result.symbol)) return true;
+    if (contains(result.symbol) && !canLinkIsin(result)) return true;
     if (!_pending.add(result.symbol)) return false;
     _notify();
     try {
@@ -184,6 +317,27 @@ class DepotWishlistState extends ChangeNotifier {
   }
 
   Future<bool> _add(DepotWishlistSearchResult result) async {
+    if (canLinkIsin(result)) {
+      final old = _items.firstWhere((item) => item.symbol == result.symbol);
+      final updated = old.withIsin(result.isin!);
+      try {
+        await _store.saveWishlistItem(updated);
+      } catch (e) {
+        errorLog('[DepotWishlistState] Saving ISIN failed: $e');
+        return false;
+      }
+      if (!_disposed) {
+        _items = [
+          for (final item in _items) identical(item, old) ? updated : item,
+        ];
+        _notify();
+        unawaited(() async {
+          await _logoLoads[result.symbol];
+          await _loadLogo(updated);
+        }());
+      }
+      return true;
+    }
     final DepotWishlistQuote quote;
     try {
       quote = await _quoteLoader(result.symbol);
@@ -199,6 +353,7 @@ class DepotWishlistState extends ChangeNotifier {
       currency: quote.currency,
       addedPrice: quote.price,
       addedAt: DateTime.now(),
+      isin: result.isin,
     );
     try {
       await _store.saveWishlistItem(item);
@@ -211,6 +366,8 @@ class DepotWishlistState extends ChangeNotifier {
     _quotes = {..._quotes, item.symbol: quote};
     _failed = {..._failed}..remove(item.symbol);
     _notify();
+    if (_showEuro) unawaited(_loadRate(quote.currency));
+    unawaited(_loadLogo(item));
     return true;
   }
 
@@ -228,7 +385,19 @@ class DepotWishlistState extends ChangeNotifier {
     ];
     _quotes = {..._quotes}..remove(symbol);
     _failed = {..._failed}..remove(symbol);
+    _logos.remove(symbol);
     _notify();
+    await _logoLoads[symbol];
+    final current = _items.where((item) => item.symbol == symbol).firstOrNull;
+    if (current != null) {
+      unawaited(_loadLogo(current));
+    } else {
+      try {
+        await _store.deleteWishlistLogo(symbol);
+      } catch (e) {
+        errorLog('[DepotWishlistState] Deleting logo failed: $e');
+      }
+    }
     return true;
   }
 
