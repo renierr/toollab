@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import '../../../helpers/wav_decoder.dart';
+import 'sleep_audio_file.dart';
 import 'db_scale.dart';
 import 'fft.dart';
 
@@ -229,9 +228,7 @@ class SleepChunkAnalyzer {
   static const double _bandHighHz = 12000;
 
   static SleepChunkAnalysis? analyzeFile(String path, {double? noiseFloorDb}) {
-    final file = File(path);
-    if (!file.existsSync()) return null;
-    final wav = WavDecoder.decode(file.readAsBytesSync());
+    final wav = readSleepAudio(path);
     if (wav == null || wav.samples.isEmpty) return null;
     return analyze(wav.samples, wav.sampleRate, noiseFloorDb: noiseFloorDb);
   }

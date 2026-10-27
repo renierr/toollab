@@ -42,6 +42,10 @@ abstract class SyncDelegate {
   Future<void> publishToHealthConnect();
 }
 
+abstract interface class VerifiedSyncDelegate {
+  Future<void> verifiedRemoteRecords(Map<String, int> records);
+}
+
 mixin DefaultSyncDelegate implements SyncDelegate {
   @override
   Future<List<Map<String, dynamic>>> getLocalSyncRecordsByIds(
@@ -327,6 +331,22 @@ class SyncService {
     final List<String> toPullIds = [];
     final List<_LocalMeta> toPush = [];
 
+    Future<void> verifyUnchangedRecords() async {
+      if (delegate is! VerifiedSyncDelegate || truncatedMetadata) return;
+      final verified = <String, int>{};
+      for (final entry in serverMetaMap.entries) {
+        final local = localMetaMap[entry.key];
+        final remote = entry.value;
+        if (local != null &&
+            !local.deleted &&
+            !remote.deleted &&
+            local.updatedAt == remote.updatedAt) {
+          verified[entry.key] = remote.updatedAt;
+        }
+      }
+      await (delegate as VerifiedSyncDelegate).verifiedRemoteRecords(verified);
+    }
+
     for (final sMeta in serverMetaMap.values) {
       final lMeta = localMetaMap[sMeta.id];
 
@@ -364,6 +384,7 @@ class SyncService {
     }
 
     if (toPullIds.isEmpty && toPush.isEmpty) {
+      await verifyUnchangedRecords();
       if (nextCursor != null && !truncatedMetadata) {
         await delegate.saveSyncCursor(toolId, nextCursor);
       }
@@ -462,6 +483,7 @@ class SyncService {
     if (nextCursor != null && !truncatedMetadata) {
       await delegate.saveSyncCursor(toolId, nextCursor);
     }
+    await verifyUnchangedRecords();
     return {
       'pulled': pulledCount,
       'pushed': pushedCount,

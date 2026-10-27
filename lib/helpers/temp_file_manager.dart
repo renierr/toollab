@@ -40,11 +40,36 @@ Future<void> _rawDeleteFile(String name) async {
 /// Call [cleanTracked] on dispose to remove only this scope's files.
 class TempFileScope {
   final List<String> _tracked = [];
+  final List<Directory> _adjacent = [];
 
   Future<String> createFile(String name, {Uint8List? bytes}) async {
     final path = await _rawCreateFile(name, bytes: bytes);
     if (!_tracked.contains(name)) _tracked.add(name);
     return path;
+  }
+
+  /// Stages next to the destination so replacement works across filesystems.
+  Future<void> replaceAtomically(File destination, Uint8List bytes) async {
+    final dir = await destination.parent.createTemp('.tool_lab_atomic_');
+    _adjacent.add(dir);
+    try {
+      final staged = File('${dir.path}/data');
+      await staged.writeAsBytes(bytes, flush: true);
+      await staged.rename(destination.path);
+    } finally {
+      try {
+        await _cleanAdjacent(dir);
+        _adjacent.remove(dir);
+      } catch (e) {
+        errorLog('TempFileScope: atomic staging cleanup: $e');
+      }
+    }
+  }
+
+  Future<void> _cleanAdjacent(Directory dir) async {
+    final staged = File('${dir.path}/data');
+    if (await staged.exists()) await staged.delete();
+    if (await dir.exists()) await dir.delete();
   }
 
   /// Registers a file already written into the session dir by native code
@@ -67,15 +92,25 @@ class TempFileScope {
       await _rawDeleteFile(name);
     }
     _tracked.clear();
+    for (final dir in _adjacent.toList()) {
+      await _cleanAdjacent(dir);
+      _adjacent.remove(dir);
+    }
   }
 
-  int get trackedCount => _tracked.length;
+  int get trackedCount => _tracked.length + _adjacent.length;
 
   Future<int> trackedBytes() async {
     int total = 0;
     for (final name in _tracked) {
       try {
         final file = await _rawResolveFile(name);
+        if (await file.exists()) total += await file.length();
+      } catch (_) {}
+    }
+    for (final dir in _adjacent) {
+      try {
+        final file = File('${dir.path}/data');
         if (await file.exists()) total += await file.length();
       } catch (_) {}
     }

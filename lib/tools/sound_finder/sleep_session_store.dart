@@ -7,9 +7,11 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/helpers/wav_decoder.dart';
 
 import 'audio/sleep_chunk_analyzer.dart';
+import 'audio/sleep_wav_compressor.dart';
 import 'sleep_session_data.dart';
 
 /// One session directory on disk plus what it occupies.
@@ -23,7 +25,7 @@ class SleepSession {
 
   final SleepSessionData data;
 
-  /// Bytes per WAV file present on disk, keyed by file name.
+  /// Bytes per audio file present on disk, keyed by file name.
   final Map<String, int> fileSizes;
   final int jsonBytes;
 
@@ -34,14 +36,17 @@ class SleepSession {
   String get path => data.path;
   String get id => data.id;
   DateTime get startedAt => data.startedAt;
-  int get wavBytes => fileSizes.values.fold(0, (a, b) => a + b);
-  int get totalBytes => wavBytes + jsonBytes;
-  bool hasFile(SleepEvent e) => fileSizes.containsKey(e.fileName);
-  int? sizeOf(SleepEvent e) => fileSizes[e.fileName];
+  int get audioBytes => fileSizes.values.fold(0, (a, b) => a + b);
+  int get totalBytes => audioBytes + jsonBytes;
+  bool hasFile(SleepEvent e) =>
+      fileSizes.containsKey(e.fileName) ||
+      fileSizes.containsKey(e.syncFileName);
+  int? sizeOf(SleepEvent e) =>
+      fileSizes[e.fileName] ?? fileSizes[e.syncFileName];
 }
 
 /// File-backed storage for sleep sessions: one directory per session holding
-/// `session.json` and the kept WAV chunks.
+/// `session.json` and the kept audio chunks.
 class SleepSessionStore {
   SleepSessionStore._();
 
@@ -54,9 +59,14 @@ class SleepSessionStore {
   /// Analysis progress (0..1) per session id while a run is in flight.
   static final ValueNotifier<Map<String, double>> analysisProgress =
       ValueNotifier(const {});
+  static final ValueNotifier<Map<String, double>> compressionProgress =
+      ValueNotifier(const {});
 
   static final Map<String, Future<void>> _locks = {};
   static String? _rootPath;
+
+  @visibleForTesting
+  static void overrideRootForTest(String? path) => _rootPath = path;
 
   static void notifyChanged() => revision.value++;
 
@@ -93,7 +103,9 @@ class SleepSessionStore {
   static Future<SleepSession?> _read(Directory dir) async {
     final sizes = <String, int>{};
     await for (final f in dir.list()) {
-      if (f is File && f.path.toLowerCase().endsWith('.wav')) {
+      if (f is File &&
+          (f.path.toLowerCase().endsWith('.wav') ||
+              f.path.toLowerCase().endsWith('.flac'))) {
         sizes[f.uri.pathSegments.last] = await f.length();
       }
     }
@@ -110,7 +122,7 @@ class SleepSessionStore {
     final files = sizes.keys.toList()..sort();
     final durations = <String, Duration>{};
     for (final name in files) {
-      final duration = await _wavDuration(File('${dir.path}/$name'));
+      final duration = await _audioDuration(File('${dir.path}/$name'));
       if (duration != null) durations[name] = duration;
     }
     return SleepSession(
@@ -121,14 +133,22 @@ class SleepSessionStore {
     );
   }
 
-  /// Chunk length from a WAV header, so sessions rebuilt from file names keep
+  /// Chunk length from its header, so sessions rebuilt from file names keep
   /// their real timing after the chunk length became configurable.
-  static Future<Duration?> _wavDuration(File file) async {
+  static Future<Duration?> _audioDuration(File file) async {
     try {
       final handle = await file.open();
       try {
         final header = await handle.read(4096);
-        final seconds = WavDecoder.durationSeconds(header);
+        double? seconds;
+        if (file.path.toLowerCase().endsWith('.flac') && header.length >= 26) {
+          final info = ByteData.sublistView(header).getUint64(18, Endian.big);
+          final rate = info >> 44;
+          final samples = info & 0xfffffffff;
+          if (rate > 0 && samples > 0) seconds = samples / rate;
+        } else {
+          seconds = WavDecoder.durationSeconds(header);
+        }
         if (seconds == null) return null;
         return Duration(milliseconds: (seconds * 1000).round());
       } finally {
@@ -219,7 +239,10 @@ class SleepSessionStore {
           e.analysis = r;
           if (r.peakAmplitude > 0) e.peakAmplitude = r.peakAmplitude;
         }
-        data.analysisVersion = SleepChunkAnalyzer.version;
+        data.analysisVersion =
+            data.events.every((event) => results.containsKey(event.fileName))
+            ? SleepChunkAnalyzer.version
+            : 0;
       });
     } finally {
       final next = Map.of(analysisProgress.value)..remove(id);
@@ -231,13 +254,153 @@ class SleepSessionStore {
     analysisProgress.value = {...analysisProgress.value, id: v};
   }
 
+  static Future<int> compress(SleepSession session) async {
+    final id = session.id;
+    if (compressionProgress.value.containsKey(id) || session.synthetic) {
+      return 0;
+    }
+    final events = session.data.events
+        .where((e) => e.fileName.endsWith('.wav') && session.hasFile(e))
+        .toList();
+    if (events.isEmpty) return 0;
+    compressionProgress.value = {...compressionProgress.value, id: 0};
+    final scope = TempFileManager.createScope();
+    var converted = 0;
+    try {
+      final staged = await scope.createFile(
+        'sleep-compress-${DateTime.now().microsecondsSinceEpoch}.flac',
+      );
+      for (var i = 0; i < events.length; i++) {
+        final event = events[i];
+        final original = '${session.path}/${event.fileName}';
+        final nextName =
+            '${event.fileName.substring(0, event.fileName.length - 4)}.flac';
+        final target = File('${session.path}/$nextName');
+        try {
+          final alreadyExists = await target.exists();
+          final valid = alreadyExists
+              ? await target.length() < await File(original).length() &&
+                    await Isolate.run(
+                      () => sleepWavMatchesFlac((original, target.path)),
+                    )
+              : await Isolate.run(() => compressSleepWav((original, staged)));
+          if (valid) {
+            var committed = false;
+            await _serialized(session.path, () async {
+              final current = await SleepSessionData.load(session.path);
+              final currentEvent = current?.events
+                  .where((e) => e.fileName == event.fileName)
+                  .firstOrNull;
+              if (current == null ||
+                  currentEvent == null ||
+                  !await File(original).exists()) {
+                return;
+              }
+              if (await target.exists()) {
+                if (!await Isolate.run(
+                  () => sleepWavMatchesFlac((original, target.path)),
+                )) {
+                  return;
+                }
+              } else {
+                if (alreadyExists) return;
+                await File(staged).copy(target.path);
+                if (!await Isolate.run(
+                  () => sleepWavMatchesFlac((original, target.path)),
+                )) {
+                  return;
+                }
+              }
+              final now = DateTime.now().millisecondsSinceEpoch;
+              final updated = math.max(
+                now,
+                math.max(
+                      current.updatedAt,
+                      currentEvent.endedAt.millisecondsSinceEpoch,
+                    ) +
+                    1,
+              );
+              currentEvent.replaceAudio(nextName, updated);
+              current.updatedAt = updated;
+              await scope.replaceAtomically(
+                current.jsonFile,
+                Uint8List.fromList(
+                  utf8.encode(
+                    const JsonEncoder.withIndent(
+                      '  ',
+                    ).convert(current.toJson()),
+                  ),
+                ),
+              );
+              committed = true;
+            });
+            if (committed) converted++;
+          }
+        } catch (e) {
+          errorLog('$_logPrefix compress $original: $e');
+        }
+        compressionProgress.value = {
+          ...compressionProgress.value,
+          id: (i + 1) / events.length,
+        };
+      }
+      if (converted > 0) notifyChanged();
+      return converted;
+    } finally {
+      await scope.cleanTracked();
+      compressionProgress.value = Map.of(compressionProgress.value)..remove(id);
+    }
+  }
+
+  static Future<void> removeConfirmedOriginal(
+    SleepSession session,
+    SleepEvent event,
+  ) async {
+    var removed = false;
+    await _serialized(session.path, () async {
+      final current = await SleepSessionData.load(session.path);
+      if (current == null || current.updatedAt != session.data.updatedAt) {
+        return;
+      }
+      final entry = current.events
+          .where((e) => e.syncFileName == event.syncFileName)
+          .firstOrNull;
+      if (entry == null ||
+          entry.fileName != event.fileName ||
+          entry.audioUpdatedAt != event.audioUpdatedAt) {
+        return;
+      }
+      final wav = File('${session.path}/${event.syncFileName}');
+      final flac = File('${session.path}/${event.fileName}');
+      if (!await wav.exists() || !await flac.exists()) return;
+      final beforeWav = await wav.stat();
+      final beforeFlac = await flac.stat();
+      if (!await Isolate.run(
+        () => sleepWavMatchesFlac((wav.path, flac.path)),
+      )) {
+        return;
+      }
+      final afterWav = await wav.stat();
+      final afterFlac = await flac.stat();
+      if (beforeWav.size != afterWav.size ||
+          beforeWav.modified != afterWav.modified ||
+          beforeFlac.size != afterFlac.size ||
+          beforeFlac.modified != afterFlac.modified) {
+        return;
+      }
+      await wav.delete();
+      removed = true;
+    });
+    if (removed) notifyChanged();
+  }
+
   /// Removes the session and leaves tombstones so sync deletes it elsewhere.
   static Future<void> delete(SleepSession session) async {
     if (!session.synthetic) {
       await addTombstones([
         session.id,
         for (final e in session.data.events)
-          chunkSyncId(session.id, e.fileName),
+          chunkSyncId(session.id, e.syncFileName),
       ]);
     }
     final dir = Directory(session.path);

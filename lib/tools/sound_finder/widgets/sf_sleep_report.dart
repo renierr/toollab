@@ -25,7 +25,7 @@ class SfSleepReport extends StatelessWidget {
         (l10n.sfSleepFirstEvent, sleepClock(events.first.startedAt)),
         (l10n.sfSleepLastEvent, sleepClock(events.last.startedAt)),
       ],
-      (l10n.sfSleepAudioData, FormatHelper.fileSize(session.wavBytes)),
+      (l10n.sfSleepAudioData, FormatHelper.fileSize(session.audioBytes)),
       (l10n.sfSleepJsonData, FormatHelper.fileSize(session.jsonBytes)),
       (l10n.sfSleepTotalData, FormatHelper.fileSize(session.totalBytes)),
     ];

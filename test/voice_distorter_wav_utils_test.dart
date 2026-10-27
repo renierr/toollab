@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tool_lab/tools/voice_distorter/engine/wav_utils.dart';
+import 'package:tool_lab/helpers/wav_utils.dart';
 
 Uint8List _monoWav(List<int> samples, {int sampleRate = 44100}) {
   final pcm = Uint8List(samples.length * 2);

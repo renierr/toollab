@@ -5,7 +5,7 @@ import 'package:record/record.dart';
 
 import '../../../helpers/debug_log.dart';
 import '../../../helpers/temp_file_manager.dart';
-import 'wav_utils.dart';
+import '../../../helpers/wav_utils.dart';
 
 enum RecordStartResult { ok, denied, unavailable }
 

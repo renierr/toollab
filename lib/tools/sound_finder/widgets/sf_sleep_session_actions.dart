@@ -10,6 +10,7 @@ import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 
 import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
+import 'sf_sleep_compress_button.dart';
 
 class SfSleepSessionActions extends StatelessWidget {
   const SfSleepSessionActions({super.key, required this.session});
@@ -38,7 +39,7 @@ class SfSleepSessionActions extends StatelessWidget {
         'chunkCount': data.events.length,
         'avgPeakDb': data.avgPeakDb,
         'loudestDb': data.loudestDb,
-        'wavBytes': session.wavBytes,
+        'audioBytes': session.audioBytes,
         'jsonBytes': session.jsonBytes,
       },
     };
@@ -90,12 +91,13 @@ class SfSleepSessionActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.read<SleepSessionsState>();
-    final (analyzing, healthLoading, reportBusy) = context
-        .select<SleepSessionsState, (bool, bool, bool)>(
+    final (analyzing, healthLoading, reportBusy, compressing) = context
+        .select<SleepSessionsState, (bool, bool, bool, bool)>(
           (s) => (
             s.analysisProgress(session.id) != null,
             s.healthLoading(session.id),
             s.reportBusy(session.id),
+            s.compressionProgress(session.id) != null,
           ),
         );
     return Wrap(
@@ -111,8 +113,13 @@ class SfSleepSessionActions extends StatelessWidget {
           OutlinedButton.icon(
             icon: const Icon(Icons.auto_awesome_outlined),
             label: Text(l10n.sfSleepReanalyze),
-            onPressed: analyzing ? null : () => state.analyze(session),
+            onPressed: analyzing || compressing
+                ? null
+                : () => state.analyze(session),
           ),
+        if (!session.synthetic &&
+            session.data.events.any((e) => e.fileName.endsWith('.wav')))
+          SfSleepCompressButton(session: session),
         OutlinedButton.icon(
           icon: const Icon(Icons.picture_as_pdf_outlined),
           label: Text(l10n.sfSleepPdfReport),
@@ -126,7 +133,7 @@ class SfSleepSessionActions extends StatelessWidget {
         TextButton.icon(
           icon: const Icon(Icons.delete_outline),
           label: Text(l10n.commonDelete),
-          onPressed: () => _delete(context),
+          onPressed: compressing ? null : () => _delete(context),
         ),
       ],
     );

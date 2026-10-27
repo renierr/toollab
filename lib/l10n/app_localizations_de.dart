@@ -6582,6 +6582,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSleepDeleteTitle => 'Sitzung löschen?';
 
   @override
+  String get sfSleepCompress => 'Audio komprimieren';
+
+  @override
+  String get sfSleepCompressAll => 'Alle Audiodateien komprimieren';
+
+  @override
+  String get sfSleepCompressing => 'Komprimieren…';
+
+  @override
+  String get sfSleepCompressTitle => 'Diese Sitzung komprimieren?';
+
+  @override
+  String get sfSleepCompressAllTitle => 'Alle Sitzungen komprimieren?';
+
+  @override
+  String get sfSleepCompressBody =>
+      'WAV-Abschnitte verlustfrei in FLAC umwandeln. Die WAV-Originale bleiben erhalten, bis die Synchronisierung die Ersatzdateien bestätigt. Aktualisiere vor der Synchronisierung deine anderen Geräte; ältere Versionen können diese Abschnitte nicht lesen. Schlafsitzungen können mit anderen Builds auf diesem Gerät geteilt werden.';
+
+  @override
+  String sfSleepCompressed(int count) {
+    return '$count Abschnitte komprimiert. Die Originaldateien bleiben erhalten, bis eine spätere Synchronisierung sie überprüft.';
+  }
+
+  @override
+  String get sfSleepCompressNone =>
+      'Keine Abschnitte komprimiert. Sie werden möglicherweise nicht unterstützt, fehlen oder sind bereits kleiner als FLAC.';
+
+  @override
+  String get sfSleepCompressFailed =>
+      'Diese Sitzung konnte nicht komprimiert werden.';
+
+  @override
   String sfSleepDeleteBody(Object count) {
     return 'Diese Sitzung und ihre $count Abschnitte löschen? Synchronisierte Kopien werden bei der nächsten Synchronisierung entfernt.';
   }

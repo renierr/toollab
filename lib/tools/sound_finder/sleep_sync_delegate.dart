@@ -8,11 +8,13 @@ import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
 
 /// Syncs finished sleep sessions: one small record per session (metadata,
-/// events, analysis) and one blob record per WAV chunk, so a whole night never
+/// events, analysis) and one blob record per audio chunk, so a whole night never
 /// has to fit in a single request.
-class SleepSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
+class SleepSyncDelegate
+    with DefaultSyncDelegate
+    implements SyncDelegate, VerifiedSyncDelegate {
   static final _sessionId = RegExp(r'^session-[A-Za-z0-9_-]+$');
-  static final _chunkFile = RegExp(r'^[A-Za-z0-9_.-]+\.wav$');
+  static final _chunkFile = RegExp(r'^[A-Za-z0-9_.-]+\.(wav|flac)$');
 
   @override
   String get toolId => SoundFinderTool.config.id;
@@ -35,9 +37,17 @@ class SleepSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
       records.add(_meta(s.id, s.data.updatedAt));
       for (final e in s.data.events) {
         if (!s.hasFile(e)) continue;
-        final id = SleepSessionStore.chunkSyncId(s.id, e.fileName);
+        final id = SleepSessionStore.chunkSyncId(s.id, e.syncFileName);
         present.add(id);
-        records.add(_meta(id, e.endedAt.millisecondsSinceEpoch));
+        final current = s.fileSizes.containsKey(e.fileName);
+        records.add(
+          _meta(
+            id,
+            current
+                ? e.audioUpdatedAt ?? e.endedAt.millisecondsSinceEpoch
+                : e.endedAt.millisecondsSinceEpoch,
+          ),
+        );
       }
     }
     final tombstones = await SleepSessionStore.tombstones();
@@ -64,16 +74,23 @@ class SleepSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
       if (data == null) return null;
       return {'shortId': id, ...data.toJson()};
     }
-    final wav = File('$path/$file');
-    if (!await wav.exists()) return null;
+    final session = await SleepSessionData.load(path);
+    final event = session?.events
+        .where((e) => e.syncFileName == file)
+        .firstOrNull;
+    final audioFile = event == null
+        ? File('$path/$file')
+        : session!.fileFor(event);
+    if (!await audioFile.exists()) return null;
+    final actualName = audioFile.uri.pathSegments.last;
     return {
       'shortId': id,
       'sessionId': sessionId,
-      'file': file,
+      'file': actualName,
       'audio': {
         '__type': 'blob',
-        'mimeType': 'audio/wav',
-        'data': base64Encode(await wav.readAsBytes()),
+        'mimeType': actualName.endsWith('.flac') ? 'audio/flac' : 'audio/wav',
+        'data': base64Encode(await audioFile.readAsBytes()),
       },
     };
   }
@@ -97,8 +114,10 @@ class SleepSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
     }
     final audio = data['audio'];
     if (audio is! String) return;
+    final actualName = data['file'] as String? ?? file;
+    if (!_valid(sessionId, actualName) || !_sameChunk(file, actualName)) return;
     await Directory(path).create(recursive: true);
-    await File('$path/$file').writeAsBytes(base64Decode(audio));
+    await File('$path/$actualName').writeAsBytes(base64Decode(audio));
     SleepSessionStore.notifyChanged();
   }
 
@@ -112,9 +131,43 @@ class SleepSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
     if (file == null) {
       await SleepSessionStore.deleteDir(path);
     } else {
+      final session = await SleepSessionData.load(path);
+      final event = session?.events
+          .where((e) => e.syncFileName == file)
+          .firstOrNull;
+      if (event != null &&
+          event.fileName != file &&
+          _valid(sessionId, event.fileName) &&
+          _sameChunk(file, event.fileName)) {
+        await SleepSessionStore.deleteFile('$path/${event.fileName}');
+      }
       await SleepSessionStore.deleteFile('$path/$file');
     }
     SleepSessionStore.notifyChanged();
+  }
+
+  @override
+  Future<void> verifiedRemoteRecords(Map<String, int> records) async {
+    for (final session in await SleepSessionStore.list()) {
+      if (session.synthetic || records[session.id] != session.data.updatedAt) {
+        continue;
+      }
+      for (final event in session.data.events) {
+        if (event.fileName == event.syncFileName ||
+            event.audioUpdatedAt == null ||
+            records[SleepSessionStore.chunkSyncId(
+                  session.id,
+                  event.syncFileName,
+                )] !=
+                event.audioUpdatedAt ||
+            !_valid(session.id, event.syncFileName) ||
+            !_valid(session.id, event.fileName) ||
+            !_sameChunk(event.syncFileName, event.fileName)) {
+          continue;
+        }
+        await SleepSessionStore.removeConfirmedOriginal(session, event);
+      }
+    }
   }
 
   /// Ids come from the server and become paths, so nothing may escape the
@@ -122,4 +175,8 @@ class SleepSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   bool _valid(String sessionId, String? file) =>
       _sessionId.hasMatch(sessionId) &&
       (file == null || _chunkFile.hasMatch(file));
+
+  bool _sameChunk(String a, String b) =>
+      a == b ||
+      (a.endsWith('.wav') && b == '${a.substring(0, a.length - 4)}.flac');
 }

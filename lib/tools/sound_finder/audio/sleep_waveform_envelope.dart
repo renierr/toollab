@@ -1,12 +1,11 @@
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:tool_lab/helpers/wav_decoder.dart';
+import 'sleep_audio_file.dart';
 
-/// Reduces one WAV chunk to a compact, level-normalized playback waveform.
+/// Reduces one chunk to a compact, level-normalized playback waveform.
 Float32List? sleepWaveformEnvelope(String path, {int columns = 240}) {
-  final audio = WavDecoder.decode(File(path).readAsBytesSync());
+  final audio = readSleepAudio(path);
   if (audio == null || audio.samples.isEmpty) return null;
   final samples = audio.samples;
   final peaks = Float32List(columns);

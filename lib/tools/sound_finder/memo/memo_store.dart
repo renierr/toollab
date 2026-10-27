@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../voice_distorter/engine/wav_utils.dart';
+import '../../../helpers/wav_utils.dart';
 import 'memo_clip.dart';
 import 'memo_settings.dart';
 

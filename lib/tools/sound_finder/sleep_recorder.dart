@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -10,6 +11,7 @@ import '../../services/background_work_lease.dart';
 import '../../services/database_service.dart';
 import '../../services/foreground_runtime_service.dart';
 import 'audio/db_scale.dart';
+import 'audio/sleep_flac_codec.dart';
 import 'config.dart';
 import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
@@ -82,6 +84,7 @@ class SleepRecorder extends ChangeNotifier {
   Timer? _graceTimer;
   Timer? _timeout;
   Timer? _chunkTimer;
+  Future<void> _chunkWork = Future<void>.value();
   BackgroundWorkLease? _work;
   String _notificationTitle = 'Sleep sound recorder';
   String _notificationText = 'Recording sleep sounds';
@@ -200,7 +203,7 @@ class SleepRecorder extends ChangeNotifier {
   }
 
   Future<void> start() async {
-    if (_active || _starting) return;
+    if (_active || _starting || _finishing) return;
     _starting = true;
     _micUnavailable = false;
     _startFailed = false;
@@ -344,20 +347,34 @@ class SleepRecorder extends ChangeNotifier {
 
   void _scheduleChunk() {
     _chunkTimer?.cancel();
-    _chunkTimer = Timer(Duration(seconds: _chunkSeconds), () async {
+    _chunkTimer = Timer(Duration(seconds: _chunkSeconds), () {
       if (!_active) return;
-      await _processChunk(_chunkStart ?? DateTime.now());
-      if (_active) {
-        _chunkStart = DateTime.now();
-        _host.startCapture();
-        _scheduleChunk();
-      }
+      unawaited(_processChunk(_chunkStart ?? DateTime.now(), restart: true));
     });
   }
 
-  Future<void> _processChunk(DateTime chunkStart) async {
+  Future<void> _processChunk(DateTime chunkStart, {bool restart = false}) {
     final samples = _host.stopCapture();
     final endedAt = DateTime.now();
+    if (restart && _active) {
+      _chunkStart = endedAt;
+      _host.startCapture();
+      _scheduleChunk();
+    }
+    final work = _chunkWork.then(
+      (_) => _saveChunk(chunkStart, endedAt, samples),
+    );
+    _chunkWork = work.catchError((Object e) {
+      errorLog('$_logPrefix chunk: $e');
+    });
+    return _chunkWork;
+  }
+
+  Future<void> _saveChunk(
+    DateTime chunkStart,
+    DateTime endedAt,
+    Float32List samples,
+  ) async {
     if (samples.isEmpty) {
       errorLog('$_logPrefix chunk empty');
       return;
@@ -407,14 +424,25 @@ class SleepRecorder extends ChangeNotifier {
     _quietSinceSnapshot = 0;
 
     final dirPath = _sessionDir ?? (await SleepSessionStore.root()).path;
-    final fileName = 'chunk-${_stamp(endedAt)}.wav';
+    final rate = _host.sampleRate;
+    Uint8List? compressed;
+    try {
+      compressed = await compute(_encodeSleepChunk, (samples, rate));
+    } catch (e) {
+      errorLog('$_logPrefix FLAC encoding: $e');
+    }
+    final useFlac =
+        compressed != null && compressed.length < samples.length * 2;
+    final fileName = 'chunk-${_stamp(endedAt)}.${useFlac ? 'flac' : 'wav'}';
     await File('$dirPath/$fileName').writeAsBytes(
-      WavPcm16Encoder.encode(
-        samples,
-        frames: samples.length,
-        sampleRate: _host.sampleRate,
-        channels: 1,
-      ),
+      useFlac
+          ? compressed
+          : WavPcm16Encoder.encode(
+              samples,
+              frames: samples.length,
+              sampleRate: rate,
+              channels: 1,
+            ),
     );
     _lastEvent = DateTime.now();
     _events.add(
@@ -461,6 +489,7 @@ class SleepRecorder extends ChangeNotifier {
   Future<void> stop() async {
     if (!_active) return;
     if (waiting) return _abortStart();
+    _finishing = true;
     _session++;
     _active = false;
     _recordsAt = null;
@@ -497,7 +526,6 @@ class SleepRecorder extends ChangeNotifier {
     } catch (e) {
       errorLog('$_logPrefix release capture: $e');
     }
-    _finishing = true;
     notifyListeners();
     unawaited(_finish(data, work));
   }
@@ -591,4 +619,13 @@ class SleepRecorder extends ChangeNotifier {
     _chunkTimer?.cancel();
     super.dispose();
   }
+}
+
+Uint8List _encodeSleepChunk((Float32List, int) input) {
+  final (samples, rate) = input;
+  final pcm = Int16List(samples.length);
+  for (var i = 0; i < samples.length; i++) {
+    pcm[i] = (samples[i].clamp(-1.0, 1.0) * 32767).round();
+  }
+  return SleepFlacCodec.encode(pcm, rate);
 }

@@ -8,7 +8,7 @@ import '../../../services/database_service.dart';
 import 'clip_export_format.dart';
 import 'voice_effect.dart';
 import 'voice_recorder.dart';
-import 'wav_utils.dart';
+import '../../../helpers/wav_utils.dart';
 
 /// Loads a recorded clip once and re-applies the [VoiceEffectParams] knobs as
 /// per-source SoLoud filters on every play — no reload needed to switch

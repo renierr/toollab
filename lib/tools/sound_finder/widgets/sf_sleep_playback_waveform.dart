@@ -55,7 +55,9 @@ class _SfSleepPlaybackWaveformState extends State<SfSleepPlaybackWaveform> {
     final path = widget.file.path;
     try {
       final peaks = await compute(sleepWaveformEnvelope, path);
-      if (peaks == null) debugLog('[SleepPlaybackWaveform] no WAV data: $path');
+      if (peaks == null) {
+        debugLog('[SleepPlaybackWaveform] no audio data: $path');
+      }
       if (mounted && id == _loadId) setState(() => _peaks = peaks);
     } catch (e) {
       errorLog('[SleepPlaybackWaveform] load $path: $e');

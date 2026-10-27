@@ -6541,6 +6541,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepDeleteTitle => 'Delete session?';
 
   @override
+  String get sfSleepCompress => 'Compress audio';
+
+  @override
+  String get sfSleepCompressAll => 'Compress all audio';
+
+  @override
+  String get sfSleepCompressing => 'Compressing…';
+
+  @override
+  String get sfSleepCompressTitle => 'Compress this session?';
+
+  @override
+  String get sfSleepCompressAllTitle => 'Compress all sessions?';
+
+  @override
+  String get sfSleepCompressBody =>
+      'Convert WAV chunks to lossless FLAC. Original WAV files stay until sync confirms the replacements. Update your other devices before syncing; older versions cannot read these chunks. Sleep sessions may be shared with other builds on this device.';
+
+  @override
+  String sfSleepCompressed(int count) {
+    return 'Compressed $count chunks. Original files remain until a later sync verifies them.';
+  }
+
+  @override
+  String get sfSleepCompressNone =>
+      'No chunks were compressed. They may be unsupported, missing, or already smaller than FLAC.';
+
+  @override
+  String get sfSleepCompressFailed => 'Could not compress this session.';
+
+  @override
   String sfSleepDeleteBody(Object count) {
     return 'Delete this session and its $count chunks? Synced copies are removed on the next sync.';
   }

@@ -34,6 +34,7 @@ class SleepSessionsState extends ChangeNotifier {
     _player.onChunkStarted = _onChunkStarted;
     SleepSessionStore.revision.addListener(_onStoreChanged);
     SleepSessionStore.analysisProgress.addListener(notifyListeners);
+    SleepSessionStore.compressionProgress.addListener(notifyListeners);
     load();
   }
 
@@ -46,6 +47,7 @@ class SleepSessionsState extends ChangeNotifier {
   List<SleepSession> _sessions = const [];
   bool _loading = true;
   bool _disposed = false;
+  bool _compressingAll = false;
   Timer? _reloadTimer;
   final Map<String, int> _selected = {};
   final Map<String, Set<SleepSoundCategory?>> _filters = {};
@@ -58,6 +60,12 @@ class SleepSessionsState extends ChangeNotifier {
 
   double? analysisProgress(String id) =>
       SleepSessionStore.analysisProgress.value[id];
+
+  double? compressionProgress(String id) =>
+      SleepSessionStore.compressionProgress.value[id];
+  bool get compressing =>
+      _compressingAll || SleepSessionStore.compressionProgress.value.isNotEmpty;
+  bool get analyzing => SleepSessionStore.analysisProgress.value.isNotEmpty;
 
   List<SleepStageBand> healthStages(String id) => _healthStages[id] ?? const [];
   bool healthLoading(String id) => _healthLoading.contains(id);
@@ -188,6 +196,28 @@ class SleepSessionsState extends ChangeNotifier {
   Future<void> analyze(SleepSession session) =>
       SleepSessionStore.analyze(session);
 
+  Future<int> compress(SleepSession session) async {
+    if (_player.sessionId == session.id) await _player.stop();
+    return SleepSessionStore.compress(session);
+  }
+
+  Future<int> compressAll() async {
+    if (compressing) return 0;
+    _compressingAll = true;
+    notifyListeners();
+    try {
+      await _player.stop();
+      var converted = 0;
+      for (final session in List.of(_sessions)) {
+        converted += await SleepSessionStore.compress(session);
+      }
+      return converted;
+    } finally {
+      _compressingAll = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
   Future<void> delete(SleepSession session) async {
     if (_player.sessionId == session.id) await _player.stop();
     _selected.remove(session.id);
@@ -287,6 +317,7 @@ class SleepSessionsState extends ChangeNotifier {
     _player.onChunkStarted = null;
     SleepSessionStore.revision.removeListener(_onStoreChanged);
     SleepSessionStore.analysisProgress.removeListener(notifyListeners);
+    SleepSessionStore.compressionProgress.removeListener(notifyListeners);
     super.dispose();
   }
 }

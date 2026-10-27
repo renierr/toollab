@@ -75,11 +75,23 @@ class SleepEvent {
     this.classification = 'sound',
     this.annotation,
     this.analysis,
+    this.storedSyncFile,
+    this.audioUpdatedAt,
   });
 
   /// Bare file name; the session directory resolves it, so a session pulled
   /// onto another device keeps working.
-  final String fileName;
+  String fileName;
+  String? storedSyncFile;
+  int? audioUpdatedAt;
+  String get syncFileName => storedSyncFile ?? fileName;
+
+  void replaceAudio(String name, int updatedAt) {
+    storedSyncFile ??= fileName;
+    fileName = name;
+    audioUpdatedAt = updatedAt;
+  }
+
   final DateTime startedAt;
   final DateTime endedAt;
 
@@ -98,6 +110,8 @@ class SleepEvent {
 
   Map<String, dynamic> toJson() => {
     'file': fileName,
+    if (syncFileName != fileName) 'syncFile': syncFileName,
+    if (audioUpdatedAt != null) 'audioUpdatedAt': audioUpdatedAt,
     'startedAt': _iso(startedAt),
     'endedAt': _iso(endedAt),
     'peakAmplitude': peakAmplitude,
@@ -110,6 +124,10 @@ class SleepEvent {
     final raw = json['analysis'];
     return SleepEvent(
       fileName: (json['file'] as String).split(RegExp(r'[\\/]')).last,
+      storedSyncFile: (json['syncFile'] as String?)
+          ?.split(RegExp(r'[\\/]'))
+          .last,
+      audioUpdatedAt: (json['audioUpdatedAt'] as num?)?.toInt(),
       startedAt: _parse(json['startedAt']),
       endedAt: _parse(json['endedAt']),
       peakAmplitude: (json['peakAmplitude'] as num).toDouble(),
@@ -159,7 +177,14 @@ class SleepSessionData {
   bool get isAnalyzed =>
       events.isEmpty || analysisVersion >= SleepChunkAnalyzer.version;
 
-  File fileFor(SleepEvent event) => File('$path/${event.fileName}');
+  File fileFor(SleepEvent event) {
+    final current = File('$path/${event.fileName}');
+    if (event.syncFileName != event.fileName && !current.existsSync()) {
+      final previous = File('$path/${event.syncFileName}');
+      if (previous.existsSync()) return previous;
+    }
+    return current;
+  }
 
   Duration get duration => endedAt.difference(startedAt);
 

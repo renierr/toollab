@@ -8,6 +8,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
 import '../sound_finder_colors.dart';
+import 'sf_sleep_compress_button.dart';
 
 class SfSleepOverviewCard extends StatelessWidget {
   const SfSleepOverviewCard({super.key});
@@ -20,7 +21,7 @@ class SfSleepOverviewCard extends StatelessWidget {
         .select<SleepSessionsState, List<SleepSession>>((s) => s.sessions)
         .reversed
         .toList();
-    final wav = sessions.fold(0, (a, s) => a + s.wavBytes);
+    final wav = sessions.fold(0, (a, s) => a + s.audioBytes);
     final json = sessions.fold(0, (a, s) => a + s.jsonBytes);
     return Card(
       margin: const EdgeInsets.all(8),
@@ -42,6 +43,14 @@ class SfSleepOverviewCard extends StatelessWidget {
               ),
               style: theme.textTheme.bodySmall,
             ),
+            if (sessions.any(
+              (s) =>
+                  !s.synthetic &&
+                  s.data.events.any((e) => e.fileName.endsWith('.wav')),
+            )) ...[
+              const SizedBox(height: 8),
+              const SfSleepCompressButton(),
+            ],
             if (sessions.length >= 2) ...[
               const SizedBox(height: 12),
               Text(l10n.sfSleepTrendTitle, style: theme.textTheme.labelMedium),

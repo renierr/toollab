@@ -11717,6 +11717,60 @@ abstract class AppLocalizations {
   /// **'Delete session?'**
   String get sfSleepDeleteTitle;
 
+  /// No description provided for @sfSleepCompress.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress audio'**
+  String get sfSleepCompress;
+
+  /// No description provided for @sfSleepCompressAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress all audio'**
+  String get sfSleepCompressAll;
+
+  /// No description provided for @sfSleepCompressing.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressing…'**
+  String get sfSleepCompressing;
+
+  /// No description provided for @sfSleepCompressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress this session?'**
+  String get sfSleepCompressTitle;
+
+  /// No description provided for @sfSleepCompressAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress all sessions?'**
+  String get sfSleepCompressAllTitle;
+
+  /// No description provided for @sfSleepCompressBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert WAV chunks to lossless FLAC. Original WAV files stay until sync confirms the replacements. Update your other devices before syncing; older versions cannot read these chunks. Sleep sessions may be shared with other builds on this device.'**
+  String get sfSleepCompressBody;
+
+  /// No description provided for @sfSleepCompressed.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressed {count} chunks. Original files remain until a later sync verifies them.'**
+  String sfSleepCompressed(int count);
+
+  /// No description provided for @sfSleepCompressNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No chunks were compressed. They may be unsupported, missing, or already smaller than FLAC.'**
+  String get sfSleepCompressNone;
+
+  /// No description provided for @sfSleepCompressFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not compress this session.'**
+  String get sfSleepCompressFailed;
+
   /// No description provided for @sfSleepDeleteBody.
   ///
   /// In en, this message translates to:
