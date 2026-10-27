@@ -36,7 +36,7 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
       return Center(child: Text(l10n.depotWishlistLoadFailed));
     }
 
-    final items = state.items;
+    final items = state.itemsByDayChange;
 
     return RefreshIndicator(
       onRefresh: state.refresh,

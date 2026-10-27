@@ -70,6 +70,31 @@ class DepotWishlistState extends ChangeNotifier {
   bool get searchFailed => _searchFailed;
   String get query => _query;
   List<DepotWishlistItem> get items => _items;
+  List<DepotWishlistItem> get itemsByDayChange {
+    final ranked = [
+      for (final (index, item) in _items.indexed)
+        (
+          index: index,
+          item: item,
+          change: _quotes[item.symbol]?.dayChangePercent,
+        ),
+    ];
+    ranked.sort((a, b) {
+      final aChange = a.change;
+      final bChange = b.change;
+      final aValid = aChange != null && aChange.isFinite;
+      final bValid = bChange != null && bChange.isFinite;
+      if (aValid && bValid) {
+        final comparison = bChange.compareTo(aChange);
+        if (comparison != 0) return comparison;
+      } else if (aValid != bValid) {
+        return aValid ? -1 : 1;
+      }
+      return a.index.compareTo(b.index);
+    });
+    return [for (final entry in ranked) entry.item];
+  }
+
   List<DepotWishlistSearchResult> get results => _results;
 
   /// Symbols whose last quote request failed, e.g. delisted or offline.

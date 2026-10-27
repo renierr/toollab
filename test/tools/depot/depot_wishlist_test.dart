@@ -239,6 +239,119 @@ void main() {
   );
 
   test(
+    'sorts daily changes descending and keeps unavailable values last',
+    () async {
+      final changes = <String, double?>{
+        'GAIN': 5,
+        'LOSS': -2,
+        'FLAT': 0,
+        'TIE': 5,
+        'UNKNOWN': null,
+        'INVALID': double.nan,
+      };
+      for (final symbol in changes.keys) {
+        await store.deleteWishlistItem(symbol);
+      }
+      final state = DepotWishlistState(
+        quoteLoader: (symbol) async => DepotWishlistQuote(
+          price: 100,
+          previousClose: changes[symbol] == null ? 0 : 100,
+          currency: 'EUR',
+          exchange: '',
+          points: const [],
+          quotedDayChangePercent: changes[symbol],
+        ),
+        logoLoader: (_) async => throw const FormatException('offline'),
+      );
+      addTearDown(state.dispose);
+      await state.ensureLoaded();
+      for (final symbol in changes.keys) {
+        expect(
+          await state.add(
+            DepotWishlistSearchResult(
+              symbol: symbol,
+              name: symbol,
+              quoteType: 'EQUITY',
+              exchange: '',
+            ),
+          ),
+          isTrue,
+        );
+      }
+      expect(state.itemsByDayChange.map((item) => item.symbol), [
+        'TIE',
+        'GAIN',
+        'FLAT',
+        'LOSS',
+        'INVALID',
+        'UNKNOWN',
+      ]);
+      changes['LOSS'] = 7;
+      changes['GAIN'] = -5;
+      await state.refresh();
+      expect(state.itemsByDayChange.map((item) => item.symbol), [
+        'LOSS',
+        'TIE',
+        'FLAT',
+        'GAIN',
+        'INVALID',
+        'UNKNOWN',
+      ]);
+      for (final symbol in changes.keys) {
+        await state.remove(symbol);
+      }
+    },
+  );
+
+  test('entries with no quote sort after losses', () async {
+    for (final (symbol, date) in [
+      ('NOQUOTE', DateTime(2026, 1, 2)),
+      ('LOSS', DateTime(2026, 1, 1)),
+    ]) {
+      await store.saveWishlistItem(
+        DepotWishlistItem(
+          symbol: symbol,
+          name: symbol,
+          quoteType: 'EQUITY',
+          exchange: '',
+          currency: 'EUR',
+          addedAt: date,
+        ),
+      );
+    }
+    final refreshed = Completer<void>();
+    final state = DepotWishlistState(
+      quoteLoader: (symbol) async {
+        if (symbol == 'NOQUOTE') throw const FormatException('offline');
+        return const DepotWishlistQuote(
+          price: 90,
+          previousClose: 100,
+          currency: 'EUR',
+          exchange: '',
+          points: [],
+        );
+      },
+      logoLoader: (_) async => throw const FormatException('offline'),
+    );
+    addTearDown(state.dispose);
+    state.addListener(() {
+      if (state.isLoaded && !state.isRefreshing && state.failed.isNotEmpty) {
+        if (!refreshed.isCompleted) refreshed.complete();
+      }
+    });
+    await state.ensureLoaded();
+    await refreshed.future.timeout(const Duration(seconds: 5));
+    expect(state.failed, contains('NOQUOTE'));
+    expect(state.quoteFor('NOQUOTE'), isNull);
+    expect(state.itemsByDayChange.map((item) => item.symbol), [
+      'LOSS',
+      'NOQUOTE',
+    ]);
+    await state.remove('NOQUOTE');
+    await state.remove('LOSS');
+  });
+
+  test(
     'refresh preserves quotes added during a request and on failure',
     () async {
       await store.deleteWishlistItem('AAPL');
@@ -492,6 +605,73 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Deine Wunschliste ist leer'), findsOneWidget);
+  });
+
+  testWidgets('wishlist reorders when daily changes refresh', (tester) async {
+    tester.view.physicalSize = const Size(800, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final changes = {'UP': 3.0, 'DOWN': -2.0, 'FLAT': 0.0};
+    final state = DepotWishlistState(
+      quoteLoader: (symbol) async => DepotWishlistQuote(
+        price: 100,
+        previousClose: 100,
+        currency: 'EUR',
+        exchange: '',
+        points: const [],
+        quotedDayChangePercent: changes[symbol],
+      ),
+      logoLoader: (_) async => throw const FormatException('offline'),
+    );
+    late final DepotLogoState logos;
+    addTearDown(state.dispose);
+    await tester.runAsync(() async {
+      logos = DepotLogoState();
+      for (final symbol in changes.keys) {
+        await store.deleteWishlistItem(symbol);
+      }
+      await logos.ensureLoaded();
+      await state.ensureLoaded();
+      for (final symbol in changes.keys) {
+        await state.add(
+          DepotWishlistSearchResult(
+            symbol: symbol,
+            name: symbol,
+            quoteType: 'EQUITY',
+            exchange: '',
+          ),
+        );
+      }
+    });
+    addTearDown(logos.dispose);
+    await tester.pumpWidget(
+      app(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: state),
+            ChangeNotifierProvider.value(value: logos),
+          ],
+          child: const DepotWishlistView(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    List<String> visibleSymbols() => tester
+        .widgetList<DepotWishlistRow>(find.byType(DepotWishlistRow))
+        .map((row) => row.item.symbol)
+        .toList();
+    expect(visibleSymbols(), ['UP', 'FLAT', 'DOWN']);
+    changes['DOWN'] = 8;
+    await tester.runAsync(state.refresh);
+    await tester.pumpAndSettle();
+    expect(visibleSymbols(), ['DOWN', 'UP', 'FLAT']);
+    await tester.runAsync(() async {
+      for (final symbol in changes.keys) {
+        await state.remove(symbol);
+      }
+    });
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('currency switch and ISIN are visible on the wishlist', (

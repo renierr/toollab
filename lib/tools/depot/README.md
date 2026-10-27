@@ -208,6 +208,8 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 
 Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
 The selected Yahoo listing determines the exchange and trading currency. The wishlist's
+entries are ordered by today's percentage change, highest first; entries without a daily
+change appear last. The order updates when quotes refresh. The wishlist's
 saved currency switch selects native prices or an approximate EUR price, marked `≈`, using
 Yahoo's latest currency rate; it falls back to native currency if no rate is available.
 Details retain the listing currency for the chart, historical prices and returns; the EUR
