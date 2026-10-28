@@ -5,7 +5,9 @@ import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../audio/sleep_chunk_analyzer.dart';
+import '../sleep_cloud_audio.dart';
 import '../sleep_labels.dart';
+import '../sleep_session_data.dart';
 import '../sleep_session_store.dart';
 import '../sleep_player.dart';
 import '../sleep_sessions_state.dart';
@@ -16,6 +18,24 @@ class SfSleepEventCard extends StatelessWidget {
   const SfSleepEventCard({super.key, required this.session});
 
   final SleepSession session;
+
+  Future<void> _saveChunk(BuildContext context, SleepEvent e) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final file = await context.read<SleepCloudAudio>().fileFor(session, e);
+    if (!context.mounted) return;
+    if (file == null) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.sfSleepCloudUnavailable)),
+      );
+      return;
+    }
+    await FileSaveHelper.saveFileFromPath(
+      context: context,
+      suggestedName: e.fileName,
+      sourcePath: file.path,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +54,8 @@ class SfSleepEventCard extends StatelessWidget {
     final e = events[index];
     final a = e.analysis;
     final category = a?.category;
-    final hasFile = session.hasFile(e);
+    final offloaded = session.isOffloaded(e);
+    final hasFile = session.hasFile(e) || offloaded;
     final size = session.sizeOf(e);
 
     final parts = a == null
@@ -63,6 +84,7 @@ class SfSleepEventCard extends StatelessWidget {
           l10n.sfSleepRhythm(a.periodSec.toStringAsFixed(1)),
       ],
       if (size != null) FormatHelper.fileSize(size),
+      if (offloaded) l10n.sfSleepInCloud,
     ];
 
     return Card(
@@ -190,13 +212,7 @@ class SfSleepEventCard extends StatelessWidget {
                 IconButton(
                   tooltip: l10n.sfSleepSaveChunk,
                   icon: const Icon(Icons.save_alt_outlined),
-                  onPressed: hasFile
-                      ? () => FileSaveHelper.saveFileFromPath(
-                          context: context,
-                          suggestedName: e.fileName,
-                          sourcePath: session.data.fileFor(e).path,
-                        )
-                      : null,
+                  onPressed: hasFile ? () => _saveChunk(context, e) : null,
                 ),
               ],
             ),

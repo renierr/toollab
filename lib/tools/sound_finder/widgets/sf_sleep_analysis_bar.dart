@@ -45,8 +45,9 @@ class SfSleepAnalysisBar extends StatelessWidget {
           FilledButton.tonalIcon(
             icon: const Icon(Icons.auto_awesome_outlined),
             label: Text(l10n.sfSleepAnalyze),
-            onPressed: () =>
-                context.read<SleepSessionsState>().analyze(session),
+            onPressed: session.offloadedCount > 0
+                ? null
+                : () => context.read<SleepSessionsState>().analyze(session),
           ),
         ],
       ),

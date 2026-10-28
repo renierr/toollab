@@ -11771,6 +11771,48 @@ abstract class AppLocalizations {
   /// **'Could not compress this session.'**
   String get sfSleepCompressFailed;
 
+  /// No description provided for @sfSleepKeepAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep audio on device'**
+  String get sfSleepKeepAudio;
+
+  /// No description provided for @sfSleepKeepDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String sfSleepKeepDays(int days);
+
+  /// No description provided for @sfSleepKeepForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
+  String get sfSleepKeepForever;
+
+  /// No description provided for @sfSleepKeepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Older sessions keep their audio on the sync server only and load it when played. Deleting a session removes it everywhere.'**
+  String get sfSleepKeepHint;
+
+  /// No description provided for @sfSleepCloudChunks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chunks on the server only'**
+  String sfSleepCloudChunks(int count);
+
+  /// No description provided for @sfSleepInCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'On server'**
+  String get sfSleepInCloud;
+
+  /// No description provided for @sfSleepCloudUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This audio is on the sync server and could not be loaded.'**
+  String get sfSleepCloudUnavailable;
+
   /// No description provided for @sfSleepDeleteBody.
   ///
   /// In en, this message translates to:

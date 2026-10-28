@@ -46,6 +46,12 @@ abstract interface class VerifiedSyncDelegate {
   Future<void> verifiedRemoteRecords(Map<String, int> records);
 }
 
+abstract interface class RemoteOnlySyncDelegate {
+  /// Ids of [candidates] (id -> server version) the device keeps on the server
+  /// only; they are left out of the pull.
+  Future<Set<String>> keepRemote(Map<String, int> candidates);
+}
+
 mixin DefaultSyncDelegate implements SyncDelegate {
   @override
   Future<List<Map<String, dynamic>>> getLocalSyncRecordsByIds(
@@ -226,6 +232,45 @@ class SyncService {
     return result;
   }
 
+  /// Fetches records by id outside a sync run, for data a device keeps on the
+  /// server only. Blobs come back unwrapped, like in [SyncDelegate.savePulledRecord].
+  static Future<Map<String, Map<String, dynamic>>> pullRecords({
+    required String baseUrl,
+    required String userId,
+    required String toolId,
+    required List<String> ids,
+    Duration timeout = const Duration(seconds: 90),
+  }) async {
+    final sanitizedUrl = baseUrl.endsWith('/')
+        ? baseUrl.substring(0, baseUrl.length - 1)
+        : baseUrl;
+    final namespace = userId.trim().isEmpty
+        ? toolId
+        : '$toolId-${userId.trim()}';
+    final client = await _client;
+    final response = await client
+        .post(
+          Uri.parse('$sanitizedUrl/api/sync/$namespace/pull'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'ids': ids}),
+        )
+        .timeout(timeout);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to pull records: ${_serverError(response)}');
+    }
+    final Map<String, dynamic> json = jsonDecode(response.body);
+    if (json['success'] != true) {
+      throw Exception('Server returned success=false for pull request');
+    }
+    return {
+      for (final r in json['records'] as List<dynamic>? ?? const [])
+        if (r is Map<String, dynamic> && r['deleted'] != true)
+          r['id'] as String: _unwrapBlobData(
+            r['data'] as Map<String, dynamic>? ?? {},
+          ),
+    };
+  }
+
   static Future<Map<String, int>> sync({
     required String baseUrl,
     required String userId,
@@ -363,6 +408,13 @@ class SyncService {
       if (lMeta == null || sMeta.updatedAt > lMeta.updatedAt) {
         toPullIds.add(sMeta.id);
       }
+    }
+
+    if (delegate is RemoteOnlySyncDelegate && toPullIds.isNotEmpty) {
+      final kept = await (delegate as RemoteOnlySyncDelegate).keepRemote({
+        for (final id in toPullIds) id: serverMetaMap[id]!.updatedAt,
+      });
+      toPullIds.removeWhere(kept.contains);
     }
 
     final pushCandidates = fullMetadata

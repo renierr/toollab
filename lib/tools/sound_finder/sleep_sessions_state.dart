@@ -36,6 +36,7 @@ class SleepSessionsState extends ChangeNotifier {
     SleepSessionStore.analysisProgress.addListener(notifyListeners);
     SleepSessionStore.compressionProgress.addListener(notifyListeners);
     load();
+    _loadKeepDays();
   }
 
   static const _logPrefix = '[SleepSessions]';
@@ -48,6 +49,7 @@ class SleepSessionsState extends ChangeNotifier {
   bool _loading = true;
   bool _disposed = false;
   bool _compressingAll = false;
+  int _keepDays = SleepSessionStore.defaultKeepDays;
   Timer? _reloadTimer;
   final Map<String, int> _selected = {};
   final Map<String, Set<SleepSoundCategory?>> _filters = {};
@@ -66,6 +68,22 @@ class SleepSessionsState extends ChangeNotifier {
   bool get compressing =>
       _compressingAll || SleepSessionStore.compressionProgress.value.isNotEmpty;
   bool get analyzing => SleepSessionStore.analysisProgress.value.isNotEmpty;
+
+  /// Days a session keeps its audio on this device; 0 keeps it forever.
+  int get keepDays => _keepDays;
+
+  Future<void> _loadKeepDays() async {
+    final days = await SleepSessionStore.keepDays();
+    if (_disposed) return;
+    _keepDays = days;
+    notifyListeners();
+  }
+
+  Future<void> setKeepDays(int days) async {
+    _keepDays = days;
+    notifyListeners();
+    await SleepSessionStore.setKeepDays(days);
+  }
 
   List<SleepStageBand> healthStages(String id) => _healthStages[id] ?? const [];
   bool healthLoading(String id) => _healthLoading.contains(id);

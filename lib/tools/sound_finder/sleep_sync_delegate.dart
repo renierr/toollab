@@ -12,7 +12,7 @@ import 'sleep_session_store.dart';
 /// has to fit in a single request.
 class SleepSyncDelegate
     with DefaultSyncDelegate
-    implements SyncDelegate, VerifiedSyncDelegate {
+    implements SyncDelegate, VerifiedSyncDelegate, RemoteOnlySyncDelegate {
   static final _sessionId = RegExp(r'^session-[A-Za-z0-9_-]+$');
   static final _chunkFile = RegExp(r'^[A-Za-z0-9_.-]+\.(wav|flac)$');
 
@@ -31,23 +31,24 @@ class SleepSyncDelegate
   Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {
     final records = <Map<String, dynamic>>[];
     final present = <String>{};
+    final keepDays = await SleepSessionStore.keepDays();
     for (final s in await SleepSessionStore.list()) {
       if (s.synthetic) continue;
       present.add(s.id);
       records.add(_meta(s.id, s.data.updatedAt));
+      // Offload entries count only while the session is old, so a longer
+      // keep period reports them missing and the audio is pulled back.
+      final old = SleepSessionStore.isOld(s.id, s.data.startedAt, keepDays);
       for (final e in s.data.events) {
-        if (!s.hasFile(e)) continue;
         final id = SleepSessionStore.chunkSyncId(s.id, e.syncFileName);
+        final version = s.hasFile(e)
+            ? _chunkVersion(s, e)
+            : old
+            ? s.offloaded[e.syncFileName]
+            : null;
+        if (version == null) continue;
         present.add(id);
-        final current = s.fileSizes.containsKey(e.fileName);
-        records.add(
-          _meta(
-            id,
-            current
-                ? e.audioUpdatedAt ?? e.endedAt.millisecondsSinceEpoch
-                : e.endedAt.millisecondsSinceEpoch,
-          ),
-        );
+        records.add(_meta(id, version));
       }
     }
     final tombstones = await SleepSessionStore.tombstones();
@@ -57,6 +58,11 @@ class SleepSyncDelegate
     }
     return records;
   }
+
+  int _chunkVersion(SleepSession s, SleepEvent e) =>
+      s.fileSizes.containsKey(e.fileName)
+      ? e.audioUpdatedAt ?? e.endedAt.millisecondsSinceEpoch
+      : e.endedAt.millisecondsSinceEpoch;
 
   Map<String, dynamic> _meta(String id, int updatedAt) => {
     'id': id,
@@ -124,6 +130,7 @@ class SleepSyncDelegate
       fileName: actualName,
       updatedAt: updatedAt,
     );
+    await SleepSessionStore.forgetOffloaded(path, file);
     SleepSessionStore.notifyChanged();
   }
 
@@ -148,31 +155,81 @@ class SleepSyncDelegate
         await SleepSessionStore.deleteFile('$path/${event.fileName}');
       }
       await SleepSessionStore.deleteFile('$path/$file');
+      await SleepSessionStore.forgetOffloaded(path, file);
     }
     SleepSessionStore.notifyChanged();
   }
 
   @override
-  Future<void> verifiedRemoteRecords(Map<String, int> records) async {
-    for (final session in await SleepSessionStore.list()) {
-      if (session.synthetic || records[session.id] != session.data.updatedAt) {
+  Future<Set<String>> keepRemote(Map<String, int> candidates) async {
+    final keepDays = await SleepSessionStore.keepDays();
+    if (keepDays <= 0) return const {};
+    final bySession = <String, Map<String, int>>{};
+    for (final c in candidates.entries) {
+      final (sessionId, file) = SleepSessionStore.parseSyncId(c.key);
+      if (file == null || !_valid(sessionId, file)) continue;
+      (bySession[sessionId] ??= {})[file] = c.value;
+    }
+    final kept = <String>{};
+    for (final MapEntry(key: sessionId, value: chunks) in bySession.entries) {
+      final path = await SleepSessionStore.sessionPath(sessionId);
+      final data = await SleepSessionData.load(path);
+      if (!SleepSessionStore.isOld(sessionId, data?.startedAt, keepDays)) {
         continue;
       }
-      for (final event in session.data.events) {
-        if (event.fileName == event.syncFileName ||
-            event.audioUpdatedAt == null ||
-            records[SleepSessionStore.chunkSyncId(
-                  session.id,
-                  event.syncFileName,
-                )] !=
-                event.audioUpdatedAt ||
-            !_valid(session.id, event.syncFileName) ||
-            !_valid(session.id, event.fileName) ||
-            !_sameChunk(event.syncFileName, event.fileName)) {
-          continue;
-        }
-        await SleepSessionStore.removeConfirmedOriginal(session, event);
+      for (final file in await SleepSessionStore.offload(path, chunks)) {
+        kept.add(SleepSessionStore.chunkSyncId(sessionId, file));
       }
+    }
+    return kept;
+  }
+
+  @override
+  Future<void> verifiedRemoteRecords(Map<String, int> records) async {
+    final keepDays = await SleepSessionStore.keepDays();
+    for (final session in await SleepSessionStore.list()) {
+      if (session.synthetic) continue;
+      await _removeConfirmedOriginals(session, records);
+      if (!session.data.isAnalyzed ||
+          !SleepSessionStore.isOld(
+            session.id,
+            session.data.startedAt,
+            keepDays,
+          )) {
+        continue;
+      }
+      await SleepSessionStore.offload(session.path, {
+        for (final e in session.data.events)
+          if (session.hasFile(e) &&
+              records[SleepSessionStore.chunkSyncId(
+                    session.id,
+                    e.syncFileName,
+                  )] ==
+                  _chunkVersion(session, e))
+            e.syncFileName: _chunkVersion(session, e),
+      });
+    }
+  }
+
+  Future<void> _removeConfirmedOriginals(
+    SleepSession session,
+    Map<String, int> records,
+  ) async {
+    if (records[session.id] != session.data.updatedAt) return;
+    for (final event in session.data.events) {
+      if (event.fileName == event.syncFileName ||
+          event.audioUpdatedAt == null ||
+          records[SleepSessionStore.chunkSyncId(
+                session.id,
+                event.syncFileName,
+              )] !=
+              event.audioUpdatedAt ||
+          !_valid(session.id, event.syncFileName) ||
+          !_valid(session.id, event.fileName) ||
+          !_sameChunk(event.syncFileName, event.fileName)) {
+        continue;
+      }
+      await SleepSessionStore.removeConfirmedOriginal(session, event);
     }
   }
 

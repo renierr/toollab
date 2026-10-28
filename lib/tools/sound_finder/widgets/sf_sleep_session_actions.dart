@@ -113,12 +113,14 @@ class SfSleepSessionActions extends StatelessWidget {
           OutlinedButton.icon(
             icon: const Icon(Icons.auto_awesome_outlined),
             label: Text(l10n.sfSleepReanalyze),
-            onPressed: analyzing || compressing
+            onPressed: analyzing || compressing || session.offloadedCount > 0
                 ? null
                 : () => state.analyze(session),
           ),
         if (!session.synthetic &&
-            session.data.events.any((e) => e.fileName.endsWith('.wav')))
+            session.data.events.any(
+              (e) => e.fileName.endsWith('.wav') && session.hasFile(e),
+            ))
           SfSleepCompressButton(session: session),
         OutlinedButton.icon(
           icon: const Icon(Icons.picture_as_pdf_outlined),

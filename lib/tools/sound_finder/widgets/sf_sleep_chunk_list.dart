@@ -148,7 +148,7 @@ class _ChunkRow extends StatelessWidget {
             ? l10n.sfSleepStopPlayback
             : l10n.sfSleepPlayChunk,
         icon: Icon(playingSingle ? Icons.stop : Icons.play_arrow),
-        onPressed: session.hasFile(event)
+        onPressed: session.hasFile(event) || session.isOffloaded(event)
             ? () => context.read<SleepPlayer>().playChunk(session, index)
             : null,
       ),

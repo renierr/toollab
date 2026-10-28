@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
+import '../sleep_cloud_audio.dart';
 import '../sleep_player.dart';
 import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
@@ -17,7 +19,16 @@ class SfSleepSessionsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => SleepPlayer()),
+        Provider(
+          create: (context) =>
+              SleepCloudAudio.fromAppState(context.read<AppState>()),
+          dispose: (_, SleepCloudAudio audio) => audio.dispose(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SleepPlayer(
+            resolveAudio: context.read<SleepCloudAudio>().fileFor,
+          ),
+        ),
         ChangeNotifierProvider(
           create: (context) => SleepSessionsState(context.read<SleepPlayer>()),
         ),

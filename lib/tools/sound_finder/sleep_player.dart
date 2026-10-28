@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -16,9 +17,10 @@ import 'sleep_session_store.dart';
 /// Plays one chunk or a queue of chunks of a sleep session back to back and
 /// publishes the audible moment of the night as [playhead].
 class SleepPlayer extends ChangeNotifier {
-  SleepPlayer() {
+  SleepPlayer({this._resolveAudio}) {
     loadSettings();
   }
+  final Future<File?> Function(SleepSession, SleepEvent)? _resolveAudio;
   static const _logPrefix = '[SleepPlayer]';
   static const _kPlaybackGain = 'sf_sleep_playback_gain';
   static const List<double> playbackGains = [1, 1.5, 2, 3, 4];
@@ -37,6 +39,8 @@ class SleepPlayer extends ChangeNotifier {
   bool _gainTouched = false;
   double _playingPeak = 1;
   bool _disposed = false;
+  bool _cloudUnavailable = false;
+  File? _playingFile;
   AudioSource? _source;
   SoundHandle? _handle;
   StreamSubscription<dynamic>? _soundEventsSub;
@@ -54,6 +58,10 @@ class SleepPlayer extends ChangeNotifier {
   double get gain => _gain;
   int get queueLength => _queue.length;
   int get queuePosition => _queuePos;
+  File? get playingFile => _playingFile;
+
+  /// The last chunk asked for lives on the server and could not be fetched.
+  bool get cloudUnavailable => _cloudUnavailable;
 
   bool isQueueActive(String id) => _continuous && sessionId == id;
 
@@ -117,6 +125,14 @@ class SleepPlayer extends ChangeNotifier {
     _queue = queue;
     _continuous = continuous;
     _paused = false;
+    _cloudUnavailable = false;
+  }
+
+  Future<File?> _resolve(SleepSession session, SleepEvent event) async {
+    final resolve = _resolveAudio;
+    if (resolve != null) return resolve(session, event);
+    final file = session.data.fileFor(event);
+    return session.hasFile(event) && await file.exists() ? file : null;
   }
 
   Future<void> _startAt(int pos) async {
@@ -129,16 +145,26 @@ class SleepPlayer extends ChangeNotifier {
       return;
     }
     _queuePos = pos;
+    _playingFile = null;
     final index = _queue[pos];
     final event = session.data.events[index];
     onChunkStarted?.call(session.id, index);
     notifyListeners();
 
-    final file = session.data.fileFor(event);
-    if (!session.hasFile(event) || !await file.exists()) {
+    final file = await _resolve(session, event);
+    if (_disposed || gen != _generation) return;
+    if (file == null) {
+      // A failed fetch would fail again for the next chunk, so stop instead
+      // of waiting out one timeout per chunk.
+      if (session.isOffloaded(event)) {
+        _cloudUnavailable = true;
+        await stop();
+        return;
+      }
       await (_continuous ? _startAt(pos + 1) : stop());
       return;
     }
+    _playingFile = file;
     try {
       if (!SoLoud.instance.isInitialized) await SoLoud.instance.init();
       final source = await SoLoud.instance.loadFile(file.path);
@@ -272,10 +298,9 @@ class SleepPlayer extends ChangeNotifier {
     if (!playbackGains.contains(value)) return;
     _gainTouched = true;
     _gain = value;
-    final session = _session;
-    if (value > 1 && _playingPeak == 1 && session != null && _handle != null) {
-      final event = session.data.events[_queue[_queuePos]];
-      unawaited(_measurePeak(session.data.fileFor(event).path, _generation));
+    final file = _playingFile;
+    if (value > 1 && _playingPeak == 1 && file != null && _handle != null) {
+      unawaited(_measurePeak(file.path, _generation));
     }
     _applyGain();
     unawaited(
@@ -302,6 +327,7 @@ class SleepPlayer extends ChangeNotifier {
     _generation++;
     await _releaseVoice();
     _session = null;
+    _playingFile = null;
     _queue = const [];
     _queuePos = 0;
     _continuous = false;

@@ -9,9 +9,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/helpers/wav_decoder.dart';
+import 'package:tool_lab/services/database_service.dart';
 
 import 'audio/sleep_chunk_analyzer.dart';
 import 'audio/sleep_wav_compressor.dart';
+import 'config.dart';
 import 'sleep_session_data.dart';
 
 /// One session directory on disk plus what it occupies.
@@ -21,6 +23,7 @@ class SleepSession {
     required this.fileSizes,
     required this.jsonBytes,
     this.synthetic = false,
+    this.offloaded = const {},
   });
 
   final SleepSessionData data;
@@ -28,6 +31,9 @@ class SleepSession {
   /// Bytes per audio file present on disk, keyed by file name.
   final Map<String, int> fileSizes;
   final int jsonBytes;
+
+  /// Chunks kept on the server only: sync file name -> server version.
+  final Map<String, int> offloaded;
 
   /// Rebuilt from chunk names because no session.json exists (legacy or an
   /// interrupted recording). Never synced until saved once.
@@ -43,6 +49,9 @@ class SleepSession {
       fileSizes.containsKey(e.syncFileName);
   int? sizeOf(SleepEvent e) =>
       fileSizes[e.fileName] ?? fileSizes[e.syncFileName];
+  bool isOffloaded(SleepEvent e) =>
+      !hasFile(e) && offloaded.containsKey(e.syncFileName);
+  int get offloadedCount => data.events.where(isOffloaded).length;
 }
 
 /// File-backed storage for sleep sessions: one directory per session holding
@@ -116,6 +125,7 @@ class SleepSessionStore {
         data: data,
         fileSizes: sizes,
         jsonBytes: await json.length(),
+        offloaded: await _readOffloaded(dir.path),
       );
     }
     if (sizes.isEmpty) return null;
@@ -214,6 +224,109 @@ class SleepSessionStore {
     if (event.syncFileName != syncFile) event.storedSyncFile = syncFile;
     await data.save(touch: false);
   });
+
+  /// Drops the offload entry of a chunk whose audio is local again.
+  static Future<void> forgetOffloaded(String path, String syncFile) =>
+      _serialized(path, () async {
+        final map = await _readOffloaded(path);
+        if (map.remove(syncFile) != null) await _writeOffloaded(path, map);
+      });
+
+  // --- Offload: old sessions keep their audio on the server only. ---
+
+  static const _offloadedFile = 'offloaded.json';
+  static const _kKeepDays = 'sf_sleep_keep_days';
+  static const defaultKeepDays = 30;
+
+  /// 0 keeps audio forever.
+  static const keepDaysOptions = [7, 14, 30, 90, 0];
+
+  static Future<int> keepDays() async {
+    final raw = await DatabaseService.instance.getSetting(
+      SoundFinderTool.config.id,
+      _kKeepDays,
+    );
+    final days = int.tryParse(raw ?? '');
+    return days != null && keepDaysOptions.contains(days)
+        ? days
+        : defaultKeepDays;
+  }
+
+  static Future<void> setKeepDays(int days) => DatabaseService.instance
+      .setSetting(SoundFinderTool.config.id, _kKeepDays, days.toString());
+
+  /// Falls back to the stamp in the session id when no session.json is local.
+  static bool isOld(String sessionId, DateTime? startedAt, int keepDays) {
+    if (keepDays <= 0) return false;
+    final start = startedAt ?? _parseStamp(_sessionStamp, sessionId);
+    return start != null &&
+        start.isBefore(DateTime.now().subtract(Duration(days: keepDays)));
+  }
+
+  static Future<Map<String, int>> _readOffloaded(String path) async {
+    final f = File('$path/$_offloadedFile');
+    if (!await f.exists()) return {};
+    try {
+      final raw = jsonDecode(await f.readAsString()) as Map<String, dynamic>;
+      return raw.map((k, v) => MapEntry(k, (v as num).toInt()));
+    } catch (e) {
+      errorLog('$_logPrefix offloaded $path: $e');
+      return {};
+    }
+  }
+
+  static Future<void> _writeOffloaded(String path, Map<String, int> map) async {
+    final f = File('$path/$_offloadedFile');
+    if (map.isEmpty) {
+      if (await f.exists()) await f.delete();
+      return;
+    }
+    await f.writeAsString(jsonEncode(map));
+  }
+
+  /// Records [versions] (sync file name -> server version) as kept on the
+  /// server and deletes the local audio. Returns the sync file names handled.
+  static Future<Set<String>> offload(
+    String path,
+    Map<String, int> versions,
+  ) async {
+    final done = <String>{};
+    final id = path.split(RegExp(r'[\\/]')).last;
+    if (versions.isEmpty ||
+        analysisProgress.value.containsKey(id) ||
+        compressionProgress.value.containsKey(id)) {
+      return done;
+    }
+    await _serialized(path, () async {
+      final data = await SleepSessionData.load(path);
+      // Without a local session.json (first sync of an old session) every
+      // chunk is taken as named; its session record arrives in the same sync.
+      final files = <String, String>{
+        if (data == null)
+          for (final f in versions.keys) f: f
+        else
+          for (final e in data.events)
+            if (versions.containsKey(e.syncFileName))
+              e.syncFileName: e.fileName,
+      };
+      if (files.isEmpty) return;
+      final map = await _readOffloaded(path);
+      for (final f in files.keys) {
+        map[f] = versions[f]!;
+      }
+      // The entries go first: a crash before the deletes leaves a harmless
+      // extra file, the reverse would make sync pull the audio straight back.
+      await Directory(path).create(recursive: true);
+      await _writeOffloaded(path, map);
+      for (final MapEntry(key: syncFile, value: fileName) in files.entries) {
+        await deleteFile('$path/$fileName');
+        if (syncFile != fileName) await deleteFile('$path/$syncFile');
+        done.add(syncFile);
+      }
+    });
+    if (done.isNotEmpty) notifyChanged();
+    return done;
+  }
 
   static Future<void> _serialized(String key, Future<void> Function() body) {
     final previous = _locks[key] ?? Future<void>.value();

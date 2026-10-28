@@ -7,7 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/helpers/wav_pcm16_encoder.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 import 'package:tool_lab/services/sync_service.dart';
@@ -36,6 +38,16 @@ void main() {
           return null;
         });
     SleepSessionStore.overrideRootForTest('${work.path}/sleep_recordings');
+  });
+
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;
+  });
+
+  tearDownAll(() async {
+    await DatabaseService.instance.close();
   });
 
   test('atomic replacement preserves the destination on failure', () async {

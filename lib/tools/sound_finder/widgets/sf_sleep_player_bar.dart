@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -36,10 +38,12 @@ class SfSleepPlayerBar extends StatelessWidget {
       skipQuiet,
       pos,
       len,
+      playingFile,
+      cloudUnavailable,
     ) = context
         .select<
           SleepPlayer,
-          (bool, int?, bool, double, double, bool, int, int)
+          (bool, int?, bool, double, double, bool, int, int, File?, bool)
         >(
           (p) => (
             p.isQueueActive(session.id),
@@ -50,6 +54,8 @@ class SfSleepPlayerBar extends StatelessWidget {
             p.skipQuiet,
             p.queuePosition,
             p.queueLength,
+            p.playingFile,
+            p.cloudUnavailable,
           ),
         );
 
@@ -162,10 +168,19 @@ class SfSleepPlayerBar extends StatelessWidget {
             ),
           ],
         ),
-        if (playingIndex != null && playingIndex < session.data.events.length)
+        if (cloudUnavailable)
+          Text(
+            l10n.sfSleepCloudUnavailable,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        if (playingIndex != null &&
+            playingIndex < session.data.events.length &&
+            playingFile != null)
           SfSleepPlaybackWaveform(
             event: session.data.events[playingIndex],
-            file: session.data.fileFor(session.data.events[playingIndex]),
+            file: playingFile,
             playhead: player.playhead,
           ),
       ],

@@ -6572,6 +6572,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepCompressFailed => 'Could not compress this session.';
 
   @override
+  String get sfSleepKeepAudio => 'Keep audio on device';
+
+  @override
+  String sfSleepKeepDays(int days) {
+    return '$days days';
+  }
+
+  @override
+  String get sfSleepKeepForever => 'Forever';
+
+  @override
+  String get sfSleepKeepHint =>
+      'Older sessions keep their audio on the sync server only and load it when played. Deleting a session removes it everywhere.';
+
+  @override
+  String sfSleepCloudChunks(int count) {
+    return '$count chunks on the server only';
+  }
+
+  @override
+  String get sfSleepInCloud => 'On server';
+
+  @override
+  String get sfSleepCloudUnavailable =>
+      'This audio is on the sync server and could not be loaded.';
+
+  @override
   String sfSleepDeleteBody(Object count) {
     return 'Delete this session and its $count chunks? Synced copies are removed on the next sync.';
   }

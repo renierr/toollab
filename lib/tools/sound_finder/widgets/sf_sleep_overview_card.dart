@@ -9,6 +9,7 @@ import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
 import '../sound_finder_colors.dart';
 import 'sf_sleep_compress_button.dart';
+import 'sf_sleep_keep_days_picker.dart';
 
 class SfSleepOverviewCard extends StatelessWidget {
   const SfSleepOverviewCard({super.key});
@@ -23,6 +24,7 @@ class SfSleepOverviewCard extends StatelessWidget {
         .toList();
     final wav = sessions.fold(0, (a, s) => a + s.audioBytes);
     final json = sessions.fold(0, (a, s) => a + s.jsonBytes);
+    final cloudChunks = sessions.fold(0, (a, s) => a + s.offloadedCount);
     return Card(
       margin: const EdgeInsets.all(8),
       child: Padding(
@@ -43,10 +45,19 @@ class SfSleepOverviewCard extends StatelessWidget {
               ),
               style: theme.textTheme.bodySmall,
             ),
+            if (cloudChunks > 0)
+              Text(
+                l10n.sfSleepCloudChunks(cloudChunks),
+                style: theme.textTheme.bodySmall,
+              ),
+            const SizedBox(height: 4),
+            const SfSleepKeepDaysPicker(),
             if (sessions.any(
               (s) =>
                   !s.synthetic &&
-                  s.data.events.any((e) => e.fileName.endsWith('.wav')),
+                  s.data.events.any(
+                    (e) => e.fileName.endsWith('.wav') && s.hasFile(e),
+                  ),
             )) ...[
               const SizedBox(height: 8),
               const SfSleepCompressButton(),

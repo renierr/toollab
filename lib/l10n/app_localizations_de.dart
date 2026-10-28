@@ -6614,6 +6614,33 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diese Sitzung konnte nicht komprimiert werden.';
 
   @override
+  String get sfSleepKeepAudio => 'Audio auf dem Gerät behalten';
+
+  @override
+  String sfSleepKeepDays(int days) {
+    return '$days Tage';
+  }
+
+  @override
+  String get sfSleepKeepForever => 'Immer';
+
+  @override
+  String get sfSleepKeepHint =>
+      'Ältere Sitzungen behalten ihr Audio nur auf dem Sync-Server und laden es beim Abspielen. Das Löschen einer Sitzung entfernt sie überall.';
+
+  @override
+  String sfSleepCloudChunks(int count) {
+    return '$count Abschnitte nur auf dem Server';
+  }
+
+  @override
+  String get sfSleepInCloud => 'Auf dem Server';
+
+  @override
+  String get sfSleepCloudUnavailable =>
+      'Dieses Audio liegt auf dem Sync-Server und konnte nicht geladen werden.';
+
+  @override
   String sfSleepDeleteBody(Object count) {
     return 'Diese Sitzung und ihre $count Abschnitte löschen? Synchronisierte Kopien werden bei der nächsten Synchronisierung entfernt.';
   }
