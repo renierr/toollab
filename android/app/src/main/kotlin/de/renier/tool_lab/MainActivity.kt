@@ -10,8 +10,8 @@ import android.os.Environment
 import android.provider.Settings
 import android.provider.OpenableColumns
 import androidx.core.app.ActivityCompat
-import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.android.FlutterFragment
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
@@ -75,7 +75,7 @@ open class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         resolveLaunchRoute(intent)
-        flutterEngine?.takeIf { it.dartExecutor.isExecutingDart }?.let {
+        retainedEngine?.takeIf { it.dartExecutor.isExecutingDart }?.let {
             pushLaunchRoute(it.dartExecutor.binaryMessenger)
         }
         SharingHelper.handleIntent(this, intent, null)
