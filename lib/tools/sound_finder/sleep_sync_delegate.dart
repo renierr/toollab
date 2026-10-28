@@ -6,6 +6,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'config.dart';
 import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
+import 'sleep_sync_aliases.dart';
 
 /// Syncs finished sleep sessions: one small record per session (metadata,
 /// events, analysis) and one blob record per audio chunk, so a whole night never
@@ -122,6 +123,26 @@ class SleepSyncDelegate
     if (audio is! String) return;
     final actualName = data['file'] as String? ?? file;
     if (!_valid(sessionId, actualName) || !_sameChunk(file, actualName)) return;
+    final session = await SleepSessionData.load(path);
+    final alias = session?.events
+        .where(
+          (event) =>
+              event.syncFileName != file &&
+              (_sameChunk(file, event.fileName) ||
+                  _sameChunk(event.fileName, file)),
+        )
+        .firstOrNull;
+    if (session != null && alias != null) {
+      await SleepSyncAliases.verify(
+        session: session,
+        event: alias,
+        alias: file,
+        fileName: actualName,
+        updatedAt: updatedAt,
+        bytes: base64Decode(audio),
+      );
+      return;
+    }
     await Directory(path).create(recursive: true);
     await File('$path/$actualName').writeAsBytes(base64Decode(audio));
     await SleepSessionStore.adoptPulledChunk(
@@ -161,9 +182,11 @@ class SleepSyncDelegate
   }
 
   @override
-  Future<Set<String>> keepRemote(Map<String, int> candidates) async {
+  Future<Set<String>> keepRemote(
+    Map<String, int> candidates,
+    Future<Map<String, Map<String, dynamic>>> Function(List<String> ids) pull,
+  ) async {
     final keepDays = await SleepSessionStore.keepDays();
-    if (keepDays <= 0) return const {};
     final bySession = <String, Map<String, int>>{};
     for (final c in candidates.entries) {
       final (sessionId, file) = SleepSessionStore.parseSyncId(c.key);
@@ -173,11 +196,49 @@ class SleepSyncDelegate
     final kept = <String>{};
     for (final MapEntry(key: sessionId, value: chunks) in bySession.entries) {
       final path = await SleepSessionStore.sessionPath(sessionId);
+      final session = await SleepSessionStore.byId(sessionId);
+      if (session != null && !session.synthetic) {
+        for (final file in await SleepSyncAliases.verified(session, chunks)) {
+          kept.add(SleepSessionStore.chunkSyncId(sessionId, file));
+        }
+        for (final event in session.data.events.where(session.isOffloaded)) {
+          for (final entry in chunks.entries) {
+            final id = SleepSessionStore.chunkSyncId(sessionId, entry.key);
+            if (kept.contains(id) ||
+                entry.key == event.syncFileName ||
+                !(_sameChunk(entry.key, event.fileName) ||
+                    _sameChunk(event.fileName, entry.key))) {
+              continue;
+            }
+            final canonicalId = SleepSessionStore.chunkSyncId(
+              sessionId,
+              event.syncFileName,
+            );
+            final records = await pull([canonicalId, id]);
+            if (await SleepSyncAliases.verifyOffloaded(
+              session: session,
+              event: event,
+              alias: entry.key,
+              updatedAt: entry.value,
+              canonical: records[canonicalId],
+              duplicate: records[id],
+            )) {
+              kept.add(id);
+            }
+          }
+        }
+      }
       final data = await SleepSessionData.load(path);
       if (!SleepSessionStore.isOld(sessionId, data?.startedAt, keepDays)) {
         continue;
       }
-      for (final file in await SleepSessionStore.offload(path, chunks)) {
+      for (final file in await SleepSessionStore.offload(path, {
+        for (final entry in chunks.entries)
+          if (!kept.contains(
+            SleepSessionStore.chunkSyncId(sessionId, entry.key),
+          ))
+            entry.key: entry.value,
+      })) {
         kept.add(SleepSessionStore.chunkSyncId(sessionId, file));
       }
     }

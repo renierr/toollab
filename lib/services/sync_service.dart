@@ -49,7 +49,10 @@ abstract interface class VerifiedSyncDelegate {
 abstract interface class RemoteOnlySyncDelegate {
   /// Ids of [candidates] (id -> server version) the device keeps on the server
   /// only; they are left out of the pull.
-  Future<Set<String>> keepRemote(Map<String, int> candidates);
+  Future<Set<String>> keepRemote(
+    Map<String, int> candidates,
+    Future<Map<String, Map<String, dynamic>>> Function(List<String> ids) pull,
+  );
 }
 
 mixin DefaultSyncDelegate implements SyncDelegate {
@@ -411,9 +414,16 @@ class SyncService {
     }
 
     if (delegate is RemoteOnlySyncDelegate && toPullIds.isNotEmpty) {
-      final kept = await (delegate as RemoteOnlySyncDelegate).keepRemote({
-        for (final id in toPullIds) id: serverMetaMap[id]!.updatedAt,
-      });
+      final kept = await (delegate as RemoteOnlySyncDelegate).keepRemote(
+        {for (final id in toPullIds) id: serverMetaMap[id]!.updatedAt},
+        (ids) => pullRecords(
+          baseUrl: baseUrl,
+          userId: userId,
+          toolId: delegate.toolId,
+          ids: ids,
+          timeout: httpTimeout,
+        ),
+      );
       toPullIds.removeWhere(kept.contains);
     }
 

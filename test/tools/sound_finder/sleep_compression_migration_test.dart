@@ -172,6 +172,7 @@ void main() {
     await data.save();
     final original = data.toJson();
     final delegate = SleepSyncDelegate();
+    await SleepSessionStore.setKeepDays(0);
     Future<void> sync() async => SyncService.sync(
       baseUrl: 'https://test.invalid',
       userId: '',
@@ -316,6 +317,165 @@ void main() {
       });
       expect(await wav.exists(), isFalse);
       expect(await flac.exists(), isTrue);
+    },
+  );
+
+  for (final canonical in ['chunk-1.wav', 'chunk-1.flac']) {
+    test('duplicate alias converges with $canonical as canonical', () async {
+      final path = await SleepSessionStore.sessionPath('session-alias');
+      await Directory(path).create(recursive: true);
+      final file = File('$path/chunk-1.flac');
+      await file.writeAsBytes([1, 2, 3]);
+      final now = DateTime.now();
+      final data = SleepSessionData(
+        path: path,
+        startedAt: now,
+        endedAt: now,
+        targetMinutes: 0,
+        threshold: 0.01,
+        adaptiveThreshold: false,
+        updatedAt: 300,
+        events: [
+          SleepEvent(
+            fileName: 'chunk-1.flac',
+            storedSyncFile: canonical,
+            audioUpdatedAt: 100,
+            startedAt: now,
+            endedAt: now,
+            peakAmplitude: 0.1,
+          ),
+        ],
+      );
+      await data.save(touch: false);
+      final other = canonical.endsWith('.wav') ? 'chunk-1.flac' : 'chunk-1.wav';
+      final canonicalId = SleepSessionStore.chunkSyncId(data.id, canonical);
+      final aliasId = SleepSessionStore.chunkSyncId(data.id, other);
+      final server = <String, Map<String, dynamic>>{
+        data.id: {'id': data.id, 'updatedAt': 300, 'deleted': false},
+        canonicalId: {'id': canonicalId, 'updatedAt': 100, 'deleted': false},
+        aliasId: {
+          'id': aliasId,
+          'updatedAt': 200,
+          'deleted': false,
+          'data': {
+            'file': 'chunk-1.flac',
+            'audio': {
+              '__type': 'blob',
+              'data': base64Encode([1, 2, 3]),
+            },
+          },
+        },
+      };
+      AppHttpClient.testClient = MockClient((request) async {
+        if (request.method == 'GET') {
+          return http.Response(
+            jsonEncode({
+              'success': true,
+              'full': true,
+              'records': server.values.toList(),
+            }),
+            200,
+          );
+        }
+        if (request.url.path.endsWith('/pull')) {
+          final ids = (jsonDecode(request.body) as Map)['ids'] as List;
+          return http.Response(
+            jsonEncode({
+              'success': true,
+              'records': [for (final id in ids) server[id]],
+            }),
+            200,
+          );
+        }
+        throw StateError('Unexpected push');
+      });
+      final delegate = SleepSyncDelegate();
+      Future<Map<String, int>> sync() => SyncService.sync(
+        baseUrl: 'https://test.invalid',
+        userId: '',
+        delegate: delegate,
+        backendAlreadyChecked: true,
+      );
+      expect((await sync())['pulled'], 1);
+      expect((await sync())['pulled'], 0);
+      expect((await sync())['pulled'], 0);
+      final event = (await SleepSessionData.load(path))!.events.single;
+      expect(event.syncFileName, canonical);
+      expect(event.audioUpdatedAt, 100);
+      expect(await file.readAsBytes(), [1, 2, 3]);
+
+      await file.writeAsBytes([9, 8, 7, 6]);
+      await expectLater(sync(), throwsStateError);
+      expect(await file.readAsBytes(), [9, 8, 7, 6]);
+      expect(
+        (await SleepSessionData.load(path))!.events.single.syncFileName,
+        canonical,
+      );
+    });
+  }
+
+  test(
+    'offloaded duplicates are compared once without restoring audio',
+    () async {
+      final path = await SleepSessionStore.sessionPath('session-offloaded');
+      await Directory(path).create(recursive: true);
+      final now = DateTime.now();
+      final data = SleepSessionData(
+        path: path,
+        startedAt: now,
+        endedAt: now,
+        targetMinutes: 0,
+        threshold: 0.01,
+        adaptiveThreshold: false,
+        updatedAt: 300,
+        events: [
+          SleepEvent(
+            fileName: 'chunk-1.flac',
+            storedSyncFile: 'chunk-1.wav',
+            audioUpdatedAt: 100,
+            startedAt: now,
+            endedAt: now,
+            peakAmplitude: 0.1,
+          ),
+        ],
+      );
+      await data.save(touch: false);
+      await File('$path/offloaded.json').writeAsString('{"chunk-1.wav":100}');
+      final canonical = SleepSessionStore.chunkSyncId(data.id, 'chunk-1.wav');
+      final alias = SleepSessionStore.chunkSyncId(data.id, 'chunk-1.flac');
+      final record = {
+        'file': 'chunk-1.flac',
+        'audio': base64Encode([1, 2, 3]),
+      };
+      var pulls = 0;
+      Future<Map<String, Map<String, dynamic>>> pull(List<String> ids) async {
+        pulls++;
+        return {canonical: record, alias: record};
+      }
+
+      final delegate = SleepSyncDelegate();
+      expect(await delegate.keepRemote({alias: 200}, pull), {alias});
+      expect(await delegate.keepRemote({alias: 200}, pull), {alias});
+      expect(pulls, 1);
+      expect(await File('$path/chunk-1.flac').exists(), isFalse);
+
+      Future<Map<String, Map<String, dynamic>>> conflicting(
+        List<String> ids,
+      ) async => {
+        canonical: record,
+        alias: {
+          'file': 'chunk-1.flac',
+          'audio': base64Encode([9]),
+        },
+      };
+      await expectLater(
+        delegate.keepRemote({alias: 201}, conflicting),
+        throwsStateError,
+      );
+      expect(
+        await File('$path/offloaded.json').readAsString(),
+        '{"chunk-1.wav":100}',
+      );
     },
   );
 }

@@ -207,7 +207,7 @@ class SleepSessionStore {
   }) => _serialized(path, () async {
     final data = await SleepSessionData.load(path);
     final event = data?.events
-        .where((e) => e.syncFileName == syncFile || e.fileName == fileName)
+        .where((e) => e.syncFileName == syncFile)
         .firstOrNull;
     if (data == null ||
         event == null ||
