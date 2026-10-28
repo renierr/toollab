@@ -33,14 +33,26 @@ typedef _WriteDecoder =
 typedef _ErrorDecoder = Void Function(Pointer<Void>, Int32, Pointer<Void>);
 
 /// Native FLAC codec supplied by flutter_soloud. Inputs are mono PCM16.
+/// Sleep chunks are unreadable if the plugin stops bundling libFLAC or is
+/// built with NO_OPUS_OGG_LIBS.
 class SleepFlacCodec {
   SleepFlacCodec._();
 
   static DynamicLibrary _library() {
-    if (Platform.isAndroid) return DynamicLibrary.open('libFLAC.so');
-    if (Platform.isWindows) return DynamicLibrary.open('FLAC.dll');
-    if (Platform.isLinux) return DynamicLibrary.open('libFLAC.so.14');
-    throw UnsupportedError('FLAC is unavailable on this platform');
+    final name = Platform.isAndroid
+        ? 'libFLAC.so'
+        : Platform.isWindows
+        ? 'FLAC.dll'
+        : Platform.isLinux
+        ? 'libFLAC.so.14'
+        : throw UnsupportedError('FLAC is unavailable on this platform');
+    try {
+      return DynamicLibrary.open(name);
+    } on ArgumentError catch (e) {
+      throw UnsupportedError(
+        '$name bundled by flutter_soloud not found: ${e.message}',
+      );
+    }
   }
 
   static Uint8List encode(Int16List samples, int sampleRate) {
