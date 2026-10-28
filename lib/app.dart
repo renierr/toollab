@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -252,9 +253,9 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _checkPendingSharing();
     } else if (state == AppLifecycleState.detached &&
+        defaultTargetPlatform != TargetPlatform.android &&
         !ForegroundRuntimeService.isActive) {
-      // Background work keeps this engine alive past its activity, and that
-      // work may still read its temp files.
+      // Retained engines may still read their temp files.
       TempFileManager.cleanSession();
     }
   }

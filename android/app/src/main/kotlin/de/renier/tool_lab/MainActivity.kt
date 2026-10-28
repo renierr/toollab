@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.provider.OpenableColumns
 import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
+import io.flutter.embedding.android.FlutterFragment
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
@@ -31,6 +32,7 @@ open class MainActivity : FlutterFragmentActivity() {
     private var launchRoute: String? = null
     private var filePickerResult: MethodChannel.Result? = null
     private var filePickerTargetDir: String? = null
+    private var selfUpdateInProgress = false
 
     /**
      * The foreground service living in this activity's process. Tool activities
@@ -73,8 +75,17 @@ open class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         resolveLaunchRoute(intent)
+        flutterEngine?.takeIf { it.dartExecutor.isExecutingDart }?.let {
+            pushLaunchRoute(it.dartExecutor.binaryMessenger)
+        }
         SharingHelper.handleIntent(this, intent, null)
     }
+
+    override fun createFlutterFragment(): FlutterFragment =
+        super.createFlutterFragment().apply {
+            // The new-engine fragment otherwise destroys our retained engine.
+            requireArguments().putBoolean("destroy_engine_with_fragment", false)
+        }
 
     override fun provideFlutterEngine(context: Context): FlutterEngine =
         retainedEngine ?: FlutterEngine(context.applicationContext).also { retainedEngine = it }
@@ -200,7 +211,9 @@ open class MainActivity : FlutterFragmentActivity() {
         gpsInfoHelper?.stopGpsInfoUpdates()
         gpsInfoHelper = null
         super.onDestroy()
-        if (!isChangingConfigurations && !ToolLabForegroundService.isActive) releaseEngine()
+        if (selfUpdateInProgress && !isChangingConfigurations && !ToolLabForegroundService.isActive) {
+            releaseEngine()
+        }
     }
 
     private fun releaseEngine() {
@@ -561,7 +574,10 @@ open class MainActivity : FlutterFragmentActivity() {
                                 runOnUiThread {
                                     result.success(true)
                                     // A Flutter surface still visible when the update kills us hangs Pixel 10.
-                                    if (selfUpdate) finishAndRemoveTask()
+                                    if (selfUpdate) {
+                                        selfUpdateInProgress = true
+                                        finishAndRemoveTask()
+                                    }
                                 }
                             } catch (e: Exception) {
                                 runOnUiThread { result.error("OPEN_ERROR", e.message, null) }
