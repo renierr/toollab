@@ -118,6 +118,12 @@ class SleepSyncDelegate
     if (!_valid(sessionId, actualName) || !_sameChunk(file, actualName)) return;
     await Directory(path).create(recursive: true);
     await File('$path/$actualName').writeAsBytes(base64Decode(audio));
+    await SleepSessionStore.adoptPulledChunk(
+      path,
+      syncFile: file,
+      fileName: actualName,
+      updatedAt: updatedAt,
+    );
     SleepSessionStore.notifyChanged();
   }
 

@@ -187,6 +187,34 @@ class SleepSessionStore {
     notifyChanged();
   }
 
+  /// Stores the server's version of a pulled chunk in its event, so the chunk
+  /// reports that version next sync instead of being pulled again.
+  static Future<void> adoptPulledChunk(
+    String path, {
+    required String syncFile,
+    required String fileName,
+    required int updatedAt,
+  }) => _serialized(path, () async {
+    final data = await SleepSessionData.load(path);
+    final event = data?.events
+        .where((e) => e.syncFileName == syncFile || e.fileName == fileName)
+        .firstOrNull;
+    if (data == null ||
+        event == null ||
+        (event.fileName == fileName &&
+            event.syncFileName == syncFile &&
+            event.audioUpdatedAt == updatedAt)) {
+      return;
+    }
+    if (event.fileName != fileName) {
+      event.replaceAudio(fileName, updatedAt);
+    } else {
+      event.audioUpdatedAt = updatedAt;
+    }
+    if (event.syncFileName != syncFile) event.storedSyncFile = syncFile;
+    await data.save(touch: false);
+  });
+
   static Future<void> _serialized(String key, Future<void> Function() body) {
     final previous = _locks[key] ?? Future<void>.value();
     final next = previous.then((_) => body()).catchError((Object e) {
