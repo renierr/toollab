@@ -91,6 +91,7 @@ class _MoverRow extends StatelessWidget {
     return Tooltip(
       message: details.join('\n'),
       triggerMode: TooltipTriggerMode.tap,
+      showDuration: const Duration(seconds: 10),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 3),
         child: Row(
