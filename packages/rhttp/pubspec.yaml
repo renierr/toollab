@@ -10,6 +10,7 @@ topics:
   - http3
 funding:
   - https://github.com/sponsors/Tienisto/
+resolution: workspace
 
 environment:
   sdk: ^3.9.0

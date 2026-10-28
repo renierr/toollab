@@ -151,3 +151,5 @@ Work that must happen while the app is closed goes through `BackgroundTaskServic
 ## Verification Procedures
 
 *Note: Formatting and static analysis are only required when Dart/source code files are changed. They are not necessary when only markdown documentation, images, or static assets are modified.*
+
+- The patched packages under `packages/` are pub **workspace** members (see `workspace:` in the root `pubspec.yaml`). Run `flutter pub get` at the repo root only — pub resolves app and members together and drops any stray member `.dart_tool/package_config.json`, which would otherwise pin one machine's Flutter SDK path and break analysis elsewhere.

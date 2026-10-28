@@ -6,6 +6,13 @@ version: 1.8.0+55
 environment:
   sdk: ^3.12.1
 
+# Both patched packages in packages/ share this one resolution: a single
+# `flutter pub get` at the repo root writes the only .dart_tool/package_config.json,
+# so no member keeps a config holding another machine's Flutter SDK path.
+workspace:
+  - packages/google_mlkit_genai_prompt
+  - packages/rhttp
+
 dependencies:
   flutter:
     sdk: flutter
