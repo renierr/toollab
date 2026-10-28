@@ -603,18 +603,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coreShortcutsTitle => 'Tool Shortcuts';
 
   @override
-  String get coreShortcutsDirectAccessTitle => 'Direct Access Launcher';
-
-  @override
   String get coreShortcutsDirectAccessSubtitle =>
-      'Add separate home screen icons or app drawer launchers for your favorite tools. Tapping a shortcut will open the app directly inside that tool.';
+      'Pin a home screen shortcut or show a separate app drawer icon. A shortcut opens the app straight inside that tool.';
 
   @override
   String get coreShortcutsAndroidRequired =>
-      'Android OS is required to pin native shortcuts or toggle app drawer icons. Toggles will persist locally but no native icons will be modified.';
+      'Android is required to pin native shortcuts or toggle app drawer icons. Toggles persist locally, but no native icons are changed.';
 
   @override
-  String get coreShortcutsSelectTools => 'Select Tools to Configure';
+  String get coreShortcutsSearchHint => 'Filter tools';
+
+  @override
+  String get coreShortcutsFilterAll => 'All';
+
+  @override
+  String get coreShortcutsFilterHomeScreen => 'Home screen';
+
+  @override
+  String get coreShortcutsFilterDrawer => 'App drawer';
+
+  @override
+  String get coreShortcutsNoMatches => 'No tools match this filter';
+
+  @override
+  String get coreShortcutsPinTooltip => 'Add home screen shortcut';
+
+  @override
+  String get coreShortcutsPinnedTooltip => 'Shortcut requested';
+
+  @override
+  String get coreShortcutsDrawerTooltip => 'Show app drawer icon';
+
+  @override
+  String get coreShortcutsPinFailed =>
+      'This launcher does not support pinned shortcuts';
 
   @override
   String coreShortcutsPinRequested(String name) {
@@ -3361,20 +3383,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get widgetToolChooserAlwaysUseTool =>
       'Always use this tool for this file type';
-
-  @override
-  String get widgetShortcutHomeTitle => 'Home Screen Shortcut';
-
-  @override
-  String get widgetShortcutHomeSubtitle =>
-      'Add shortcut to your home launcher screen';
-
-  @override
-  String get widgetShortcutDrawerTitle => 'App Drawer Icon';
-
-  @override
-  String get widgetShortcutDrawerSubtitle =>
-      'Show separate launcher icon in App Drawer';
 
   @override
   String get sectionTitleDevices => 'Devices';

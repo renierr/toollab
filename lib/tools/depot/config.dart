@@ -27,6 +27,7 @@ class DepotTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameDepot,
     descriptionL10n: (l10n) => l10n.toolDescDepot,
+    androidProcessIsolated: true,
     fileExtensions: const ['pdf'],
     shareTarget: const ShareTargetConfig(accept: ['application/pdf']),
     createPage: (sd) => DepotPage(sharedFile: sd?.firstFile),

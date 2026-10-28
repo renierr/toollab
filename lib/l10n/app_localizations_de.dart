@@ -608,18 +608,41 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreShortcutsTitle => 'Tool-Verknüpfungen';
 
   @override
-  String get coreShortcutsDirectAccessTitle => 'Direktzugriff-Starter';
-
-  @override
   String get coreShortcutsDirectAccessSubtitle =>
-      'Fügen Sie separate Home-Screen-Symbole oder App-Drawer-Einträge für Ihre Lieblingstools hinzu. Ein Tippen auf eine Verknüpfung öffnet die App direkt in diesem Tool.';
+      'Startbildschirm-Verknüpfung anheften oder ein separates App-Drawer-Symbol anzeigen. Eine Verknüpfung öffnet die App direkt im jeweiligen Tool.';
 
   @override
   String get coreShortcutsAndroidRequired =>
-      'Android wird benötigt, um native Verknüpfungen anzuheften oder App-Drawer-Symbole zu verwalten. Änderungen werden lokal gespeichert, aber keine nativen Symbole werden verändert.';
+      'Android wird benötigt, um native Verknüpfungen anzuheften oder App-Drawer-Symbole zu verwalten. Änderungen werden lokal gespeichert, aber keine nativen Symbole verändert.';
 
   @override
-  String get coreShortcutsSelectTools => 'Tools zur Konfiguration auswählen';
+  String get coreShortcutsSearchHint => 'Tools filtern';
+
+  @override
+  String get coreShortcutsFilterAll => 'Alle';
+
+  @override
+  String get coreShortcutsFilterHomeScreen => 'Startbildschirm';
+
+  @override
+  String get coreShortcutsFilterDrawer => 'App-Drawer';
+
+  @override
+  String get coreShortcutsNoMatches => 'Keine Tools passen zu diesem Filter';
+
+  @override
+  String get coreShortcutsPinTooltip =>
+      'Startbildschirm-Verknüpfung hinzufügen';
+
+  @override
+  String get coreShortcutsPinnedTooltip => 'Verknüpfung angefordert';
+
+  @override
+  String get coreShortcutsDrawerTooltip => 'App-Drawer-Symbol anzeigen';
+
+  @override
+  String get coreShortcutsPinFailed =>
+      'Dieser Launcher unterstützt keine angehefteten Verknüpfungen';
 
   @override
   String coreShortcutsPinRequested(String name) {
@@ -3389,20 +3412,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get widgetToolChooserAlwaysUseTool =>
       'Dieses Tool immer für diesen Dateityp verwenden';
-
-  @override
-  String get widgetShortcutHomeTitle => 'Startbildschirm-Verknüpfung';
-
-  @override
-  String get widgetShortcutHomeSubtitle =>
-      'Verknüpfung zum Startbildschirm hinzufügen';
-
-  @override
-  String get widgetShortcutDrawerTitle => 'App-Drawer-Symbol';
-
-  @override
-  String get widgetShortcutDrawerSubtitle =>
-      'Separates Symbol im App-Drawer anzeigen';
 
   @override
   String get sectionTitleDevices => 'Geräte';

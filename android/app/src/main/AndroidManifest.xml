@@ -321,11 +321,40 @@
                 />
         </activity>
 
+        <activity
+            android:name="de.renier.tool_lab.DepotActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":depot"
+            android:taskAffinity="de.renier.tool_lab.depot"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+        </activity>
+
         <activity-alias
             android:name="de.renier.tool_lab.FileManagerAlias"
             android:targetActivity="de.renier.tool_lab.FileManagerActivity"
             android:label="File Manager"
             android:icon="@mipmap/ic_launcher_file_manager"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.DepotAlias"
+            android:targetActivity="de.renier.tool_lab.DepotActivity"
+            android:label="Depot"
+            android:icon="@mipmap/ic_launcher_depot"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -820,6 +849,71 @@
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="WiFi Signal Heatmap"
             android:icon="@mipmap/ic_launcher"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.BluetoothScannerAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="Bluetooth Scanner"
+            android:icon="@mipmap/ic_launcher_bluetooth_scanner"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.TreadmillControlAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="Treadmill Control"
+            android:icon="@mipmap/ic_launcher_treadmill_control"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.VoiceDistorterAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="Voice Distorter"
+            android:icon="@mipmap/ic_launcher_voice_distorter"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.SudokuAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="Sudoku"
+            android:icon="@mipmap/ic_launcher_sudoku"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.TotpAuthAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="TOTP Authenticator"
+            android:icon="@mipmap/ic_launcher_totp_auth"
             android:enabled="false"
             android:exported="true">
             <intent-filter>

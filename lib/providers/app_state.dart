@@ -133,7 +133,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> pinShortcut(String toolId, String toolName) async {
+  Future<bool> pinShortcut(String toolId, String toolName) async {
     final success = await ShortcutService.instance.pinShortcut(
       toolId,
       toolName,
@@ -147,6 +147,7 @@ class AppState extends ChangeNotifier {
       _pinnedShortcuts[toolId] = true;
       notifyListeners();
     }
+    return success;
   }
 
   Future<void> setToolSyncEnabled(String toolId, bool value) async {

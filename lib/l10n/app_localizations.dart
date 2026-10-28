@@ -1142,29 +1142,71 @@ abstract class AppLocalizations {
   /// **'Tool Shortcuts'**
   String get coreShortcutsTitle;
 
-  /// No description provided for @coreShortcutsDirectAccessTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Direct Access Launcher'**
-  String get coreShortcutsDirectAccessTitle;
-
   /// No description provided for @coreShortcutsDirectAccessSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Add separate home screen icons or app drawer launchers for your favorite tools. Tapping a shortcut will open the app directly inside that tool.'**
+  /// **'Pin a home screen shortcut or show a separate app drawer icon. A shortcut opens the app straight inside that tool.'**
   String get coreShortcutsDirectAccessSubtitle;
 
   /// No description provided for @coreShortcutsAndroidRequired.
   ///
   /// In en, this message translates to:
-  /// **'Android OS is required to pin native shortcuts or toggle app drawer icons. Toggles will persist locally but no native icons will be modified.'**
+  /// **'Android is required to pin native shortcuts or toggle app drawer icons. Toggles persist locally, but no native icons are changed.'**
   String get coreShortcutsAndroidRequired;
 
-  /// No description provided for @coreShortcutsSelectTools.
+  /// No description provided for @coreShortcutsSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Select Tools to Configure'**
-  String get coreShortcutsSelectTools;
+  /// **'Filter tools'**
+  String get coreShortcutsSearchHint;
+
+  /// No description provided for @coreShortcutsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get coreShortcutsFilterAll;
+
+  /// No description provided for @coreShortcutsFilterHomeScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen'**
+  String get coreShortcutsFilterHomeScreen;
+
+  /// No description provided for @coreShortcutsFilterDrawer.
+  ///
+  /// In en, this message translates to:
+  /// **'App drawer'**
+  String get coreShortcutsFilterDrawer;
+
+  /// No description provided for @coreShortcutsNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No tools match this filter'**
+  String get coreShortcutsNoMatches;
+
+  /// No description provided for @coreShortcutsPinTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add home screen shortcut'**
+  String get coreShortcutsPinTooltip;
+
+  /// No description provided for @coreShortcutsPinnedTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Shortcut requested'**
+  String get coreShortcutsPinnedTooltip;
+
+  /// No description provided for @coreShortcutsDrawerTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Show app drawer icon'**
+  String get coreShortcutsDrawerTooltip;
+
+  /// No description provided for @coreShortcutsPinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This launcher does not support pinned shortcuts'**
+  String get coreShortcutsPinFailed;
 
   /// No description provided for @coreShortcutsPinRequested.
   ///
@@ -5896,30 +5938,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Always use this tool for this file type'**
   String get widgetToolChooserAlwaysUseTool;
-
-  /// No description provided for @widgetShortcutHomeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Home Screen Shortcut'**
-  String get widgetShortcutHomeTitle;
-
-  /// No description provided for @widgetShortcutHomeSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Add shortcut to your home launcher screen'**
-  String get widgetShortcutHomeSubtitle;
-
-  /// No description provided for @widgetShortcutDrawerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'App Drawer Icon'**
-  String get widgetShortcutDrawerTitle;
-
-  /// No description provided for @widgetShortcutDrawerSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Show separate launcher icon in App Drawer'**
-  String get widgetShortcutDrawerSubtitle;
 
   /// No description provided for @sectionTitleDevices.
   ///

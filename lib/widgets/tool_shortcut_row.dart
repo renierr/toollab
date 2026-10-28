@@ -4,100 +4,83 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 class ToolShortcutRow extends StatelessWidget {
   final ToolModel tool;
+  final bool hasShortcut;
   final bool hasDrawerIcon;
+  final bool enabled;
   final VoidCallback onPinPressed;
   final ValueChanged<bool> onDrawerIconChanged;
 
   const ToolShortcutRow({
     super.key,
     required this.tool,
+    required this.hasShortcut,
     required this.hasDrawerIcon,
     required this.onPinPressed,
     required this.onDrawerIconChanged,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final mutedColor = theme.colorScheme.onSurface.withValues(alpha: 0.6);
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.15),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: tool.accentColor.withValues(alpha: 0.15),
+            foregroundColor: tool.accentColor,
+            child: Icon(tool.icon, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                CircleAvatar(
-                  backgroundColor: tool.accentColor.withValues(alpha: 0.15),
-                  foregroundColor: tool.accentColor,
-                  child: Icon(tool.icon),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        tool.localizedName(l10n),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        tool.localizedDescription(l10n),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.6,
-                          ),
-                        ),
-                      ),
-                    ],
+                Text(
+                  tool.localizedName(l10n),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  tool.localizedDescription(l10n),
+                  style: theme.textTheme.bodySmall?.copyWith(color: mutedColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 8),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.widgetShortcutHomeTitle),
-              subtitle: Text(l10n.widgetShortcutHomeSubtitle),
-              trailing: OutlinedButton.icon(
-                onPressed: onPinPressed,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(l10n.commonAdd),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: tool.accentColor,
-                  side: BorderSide(
-                    color: tool.accentColor.withValues(alpha: 0.5),
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: enabled ? onPinPressed : null,
+            tooltip: hasShortcut
+                ? l10n.coreShortcutsPinnedTooltip
+                : l10n.coreShortcutsPinTooltip,
+            visualDensity: VisualDensity.compact,
+            icon: Icon(
+              hasShortcut
+                  ? Icons.check_circle
+                  : Icons.add_to_home_screen_outlined,
+              color: hasShortcut ? tool.accentColor : null,
             ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.widgetShortcutDrawerTitle),
-              subtitle: Text(l10n.widgetShortcutDrawerSubtitle),
+          ),
+          Tooltip(
+            message: l10n.coreShortcutsDrawerTooltip,
+            child: Switch.adaptive(
               value: hasDrawerIcon,
-              onChanged: onDrawerIconChanged,
+              onChanged: enabled ? onDrawerIconChanged : null,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
