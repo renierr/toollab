@@ -44,6 +44,7 @@ class DepotMoversCard extends StatelessWidget {
                 mover: mover,
                 share: largest <= 0 ? 0 : mover.returnPercent.abs() / largest,
                 format: format,
+                periodLabel: periodLabel,
               ),
           ],
         ),
@@ -58,11 +59,13 @@ class _MoverRow extends StatelessWidget {
   /// Bar length relative to the largest move, 0..1.
   final double share;
   final DepotFormat format;
+  final String periodLabel;
 
   const _MoverRow({
     required this.mover,
     required this.share,
     required this.format,
+    required this.periodLabel,
   });
 
   @override
@@ -71,65 +74,82 @@ class _MoverRow extends StatelessWidget {
     final holding = mover.holding;
     final returnPercent = mover.returnPercent;
     final color = DepotFormat.gainColor(returnPercent) ?? theme.hintColor;
+    final l10n = AppLocalizations.of(context);
+    final details = <String>[
+      holding.name,
+      if (holding.isin != null && holding.isin!.isNotEmpty)
+        '${l10n.depotDetailIsin}: ${holding.isin}'
+      else if (holding.symbol != null && holding.symbol!.isNotEmpty)
+        '${l10n.depotDetailSymbol}: ${holding.symbol}',
+      '${l10n.depotDetailShares}: ${format.shares(holding.shares)}',
+      if (holding.currentPrice != 0)
+        '${l10n.depotDetailCurrentPrice}: ${format.money(holding.currentPrice)}',
+      '${l10n.depotDetailCurrentValue}: ${format.money(holding.currentValue)}',
+      '${l10n.depotDetailPeriodReturn(periodLabel)}: ${format.percent(returnPercent)}',
+    ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          DepotHoldingAvatar(
-            name: holding.name,
-            colorSeed: holding.identifier ?? holding.id,
-            size: 22,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 3,
-            child: Text(
-              holding.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall,
+    return Tooltip(
+      message: details.join('\n'),
+      triggerMode: TooltipTriggerMode.tap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(
+          children: [
+            DepotHoldingAvatar(
+              name: holding.name,
+              colorSeed: holding.identifier ?? holding.id,
+              size: 22,
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 4,
-            child: SizedBox(
-              height: 16,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _Bar(
-                      share: returnPercent < 0 ? share : 0,
-                      color: color,
-                      alignment: Alignment.centerRight,
-                    ),
-                  ),
-                  Container(width: 1, color: theme.dividerColor),
-                  Expanded(
-                    child: _Bar(
-                      share: returnPercent > 0 ? share : 0,
-                      color: color,
-                      alignment: Alignment.centerLeft,
-                    ),
-                  ),
-                ],
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 3,
+              child: Text(
+                holding.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall,
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 76),
-            child: Text(
-              format.percent(returnPercent),
-              textAlign: TextAlign.right,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w600,
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 4,
+              child: SizedBox(
+                height: 16,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _Bar(
+                        share: returnPercent < 0 ? share : 0,
+                        color: color,
+                        alignment: Alignment.centerRight,
+                      ),
+                    ),
+                    Container(width: 1, color: theme.dividerColor),
+                    Expanded(
+                      child: _Bar(
+                        share: returnPercent > 0 ? share : 0,
+                        color: color,
+                        alignment: Alignment.centerLeft,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 76),
+              child: Text(
+                format.percent(returnPercent),
+                textAlign: TextAlign.right,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
