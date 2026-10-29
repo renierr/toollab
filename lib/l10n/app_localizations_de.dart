@@ -11276,6 +11276,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get depotMoversCopy => 'Als Bild kopieren';
+
+  @override
+  String get depotMoversCopied => 'Bewegungen in die Zwischenablage kopiert';
+
+  @override
+  String get depotMoversCopyFailed => 'Bewegungen konnten nicht kopiert werden';
+
+  @override
   String depotReportHoldings(int count, String period) {
     return 'Positionen ($count) · $period';
   }

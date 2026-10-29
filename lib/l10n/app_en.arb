@@ -5558,6 +5558,9 @@
       }
     }
   },
+  "depotMoversCopy": "Copy as image",
+  "depotMoversCopied": "Movers copied to clipboard",
+  "depotMoversCopyFailed": "Could not copy movers to clipboard",
   "depotReportHoldings": "Holdings ({count}) · {period}",
   "@depotReportHoldings": {
     "placeholders": {

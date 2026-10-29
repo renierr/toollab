@@ -19985,6 +19985,24 @@ abstract class AppLocalizations {
   /// **'Biggest movers ({period})'**
   String depotMoversTitle(String period);
 
+  /// No description provided for @depotMoversCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy as image'**
+  String get depotMoversCopy;
+
+  /// No description provided for @depotMoversCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Movers copied to clipboard'**
+  String get depotMoversCopied;
+
+  /// No description provided for @depotMoversCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy movers to clipboard'**
+  String get depotMoversCopyFailed;
+
   /// No description provided for @depotReportHoldings.
   ///
   /// In en, this message translates to:

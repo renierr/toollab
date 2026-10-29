@@ -11194,6 +11194,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get depotMoversCopy => 'Copy as image';
+
+  @override
+  String get depotMoversCopied => 'Movers copied to clipboard';
+
+  @override
+  String get depotMoversCopyFailed => 'Could not copy movers to clipboard';
+
+  @override
   String depotReportHoldings(int count, String period) {
     return 'Holdings ($count) · $period';
   }

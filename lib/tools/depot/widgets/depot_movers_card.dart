@@ -1,6 +1,10 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../depot_format.dart';
@@ -8,7 +12,7 @@ import '../depot_portfolio_state.dart';
 import 'depot_holding_avatar.dart';
 
 /// The period's largest gains and losses as bars around a centre line.
-class DepotMoversCard extends StatelessWidget {
+class DepotMoversCard extends StatefulWidget {
   final List<DepotMover> movers;
   final String periodLabel;
   final DepotFormat format;
@@ -21,32 +25,94 @@ class DepotMoversCard extends StatelessWidget {
   });
 
   @override
+  State<DepotMoversCard> createState() => _DepotMoversCardState();
+}
+
+class _DepotMoversCardState extends State<DepotMoversCard> {
+  final GlobalKey _captureKey = GlobalKey();
+
+  Future<void> _copyAsImage() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final boundary =
+        _captureKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
+    var copied = false;
+    if (boundary != null) {
+      ui.Image? image;
+      try {
+        image = await boundary.toImage(pixelRatio: pixelRatio);
+        final data = await image.toByteData(format: ui.ImageByteFormat.png);
+        if (data != null) {
+          copied = await ClipboardHelper.copyImageBytes(
+            data.buffer.asUint8List(),
+          );
+        }
+      } catch (e) {
+        errorLog('DepotMoversCard: copy as image failed: $e');
+      } finally {
+        image?.dispose();
+      }
+    }
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          copied ? l10n.depotMoversCopied : l10n.depotMoversCopyFailed,
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final movers = widget.movers;
     final largest = movers
         .map((m) => m.returnPercent.abs())
         .fold<double>(0, math.max);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.depotMoversTitle(periodLabel),
-              style: theme.textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            for (final mover in movers)
-              _MoverRow(
-                mover: mover,
-                share: largest <= 0 ? 0 : mover.returnPercent.abs() / largest,
-                format: format,
-                periodLabel: periodLabel,
+    return RepaintBoundary(
+      key: _captureKey,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.depotMoversTitle(widget.periodLabel),
+                      style: theme.textTheme.titleSmall,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _copyAsImage,
+                    tooltip: l10n.depotMoversCopy,
+                    icon: const Icon(Icons.copy_rounded, size: 16),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 28,
+                      height: 28,
+                    ),
+                  ),
+                ],
               ),
-          ],
+              const SizedBox(height: 8),
+              for (final mover in movers)
+                _MoverRow(
+                  mover: mover,
+                  share: largest <= 0 ? 0 : mover.returnPercent.abs() / largest,
+                  format: widget.format,
+                  periodLabel: widget.periodLabel,
+                ),
+            ],
+          ),
         ),
       ),
     );
