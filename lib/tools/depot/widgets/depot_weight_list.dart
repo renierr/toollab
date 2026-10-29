@@ -53,7 +53,7 @@ class DepotWeightList extends StatelessWidget {
         const SizedBox(height: 12),
         DepotWeightDonut(holdings: open, format: format),
         const SizedBox(height: 12),
-        for (final holding in open)
+        for (final (index, holding) in open.indexed)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Column(
@@ -123,9 +123,7 @@ class DepotWeightList extends StatelessWidget {
                           (largest <= 0 ? 0 : holding.currentValue / largest),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: DepotColors.holding(
-                            holding.identifier ?? holding.id,
-                          ),
+                          color: DepotColors.weight(index, open.length),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),

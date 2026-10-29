@@ -2,6 +2,7 @@ import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tool_lab/tools/depot/depot_colors.dart';
 import 'package:tool_lab/tools/depot/depot_format.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_weight_donut.dart';
@@ -14,6 +15,16 @@ DepotHolding holding(String id, double value, {bool sold = false}) =>
     });
 
 void main() {
+  test('adjacent weight colors remain distinct across palette cycles', () {
+    for (var count = 2; count < 30; count++) {
+      for (var index = 0; index < count; index++) {
+        expect(
+          DepotColors.weight(index, count),
+          isNot(DepotColors.weight((index + 1) % count, count)),
+        );
+      }
+    }
+  });
   testWidgets('fits a narrow screen and totals open positive positions', (
     tester,
   ) async {
@@ -56,14 +67,31 @@ void main() {
       );
       final chart = find.byType(DepotWeightDonut);
       final center = tester.getCenter(chart);
+      final paint = find.descendant(
+        of: chart,
+        matching: find.byWidgetPredicate(
+          (widget) => widget is CustomPaint && widget.painter != null,
+        ),
+      );
+      final initialPainter = tester.widget<CustomPaint>(paint).painter!;
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
-      await mouse.addPointer(location: center + const Offset(100, 0));
-      await mouse.moveTo(center + const Offset(100, 0));
+      await mouse.addPointer(location: center + const Offset(90, 0));
+      await mouse.moveTo(center + const Offset(90, 0));
       await tester.pump();
+      expect(
+        tester
+            .widget<CustomPaint>(paint)
+            .painter!
+            .shouldRepaint(initialPainter),
+        isTrue,
+      );
       expect(find.text('A'), findsOneWidget);
       expect(find.text(format.percent(75, signed: false)), findsOneWidget);
       expect(find.text(format.money(75)), findsOneWidget);
-      await mouse.moveTo(center + const Offset(-100, 0));
+      await mouse.moveTo(center + const Offset(103, 0));
+      await tester.pump();
+      expect(find.text('A'), findsOneWidget);
+      await mouse.moveTo(center + const Offset(-90, 0));
       await tester.pump();
       expect(find.text('B'), findsOneWidget);
       expect(find.text(format.percent(25, signed: false)), findsOneWidget);
@@ -71,7 +99,7 @@ void main() {
       await tester.pump();
       expect(find.text(format.money(100)), findsOneWidget);
       await mouse.removePointer();
-      await tester.tapAt(center + const Offset(-100, 0));
+      await tester.tapAt(center + const Offset(-90, 0));
       await tester.pump();
       expect(find.text('B'), findsOneWidget);
     },
@@ -101,7 +129,7 @@ void main() {
       ),
     );
     await tester.tapAt(
-      tester.getCenter(find.byType(DepotWeightDonut)) + const Offset(80, 0),
+      tester.getCenter(find.byType(DepotWeightDonut)) + const Offset(72, 0),
     );
     await tester.pump();
     expect(tester.takeException(), isNull);

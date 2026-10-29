@@ -33,6 +33,24 @@ class DepotColors {
     DepotDividendStatus.projected => dividendExpected,
   };
 
+  static const _weightPalette = [
+    AppTheme.accentBlue,
+    AppTheme.accentRed,
+    AppTheme.accentTeal,
+    AppTheme.accentPurple,
+    AppTheme.accentAmber,
+    AppTheme.accentGreen,
+    AppTheme.accentAmberLight,
+  ];
+
+  static Color weight(int index, int count) {
+    final slot =
+        index == count - 1 && index > 0 && index % _weightPalette.length == 0
+        ? 1
+        : index % _weightPalette.length;
+    return _weightPalette[slot];
+  }
+
   /// A stable color per holding, spread around the hue circle so neighbours
   /// in the list rarely look alike.
   static Color holding(String seed) {
