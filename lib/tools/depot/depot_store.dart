@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
+import 'models/depot_asset_profile.dart';
 import 'models/depot_dividend.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
@@ -74,6 +76,7 @@ class DepotStore {
   static const _activityFullSyncKey = 'parqet_activity_full_sync_at';
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
+  static const _assetProfilesKey = 'asset_profiles';
 
   String get _toolId => DepotTool.config.id;
 
@@ -422,6 +425,38 @@ class DepotStore {
 
   Future<void> setWishlistEuroDisplay(bool value) => DatabaseService.instance
       .setSetting(_toolId, _wishlistEuroKey, value.toString());
+
+  /// Sector/industry/region metadata cached per holding identifier.
+  Future<Map<String, DepotAssetProfile>> assetProfiles() async {
+    final stored = await DatabaseService.instance.getSetting(
+      _toolId,
+      _assetProfilesKey,
+    );
+    if (stored == null || stored.isEmpty) return const {};
+    try {
+      final decoded = jsonDecode(stored);
+      if (decoded is! Map) return const {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.key is String && entry.value is Map<String, dynamic>)
+            entry.key as String: DepotAssetProfile.fromJson(
+              entry.value as Map<String, dynamic>,
+            ),
+      };
+    } catch (e) {
+      errorLog('[DepotStore] Reading asset profiles failed: $e');
+      return const {};
+    }
+  }
+
+  Future<void> saveAssetProfiles(Map<String, DepotAssetProfile> profiles) =>
+      DatabaseService.instance.setSetting(
+        _toolId,
+        _assetProfilesKey,
+        jsonEncode({
+          for (final entry in profiles.entries) entry.key: entry.value.toJson(),
+        }),
+      );
 
   Future<List<DepotHoldingLogo>> wishlistLogos() async {
     final db = await _getDb();
@@ -946,5 +981,6 @@ class DepotStore {
     });
     await DatabaseService.instance.deleteSetting(_toolId, _lastSyncKey);
     await DatabaseService.instance.deleteSetting(_toolId, _activityFullSyncKey);
+    await DatabaseService.instance.deleteSetting(_toolId, _assetProfilesKey);
   }
 }

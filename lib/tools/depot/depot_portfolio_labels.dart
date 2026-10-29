@@ -1,5 +1,6 @@
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import 'depot_region.dart';
 import 'dividends/depot_dividend_calendar.dart';
 import 'models/depot_dividend.dart';
 import 'models/depot_filters.dart';
@@ -89,6 +90,33 @@ class DepotPortfolioLabels {
     DepotDividendFrequency.semiannual => l10n.depotDividendFreqSemiannual,
     DepotDividendFrequency.annual => l10n.depotDividendFreqAnnual,
     DepotDividendFrequency.irregular => l10n.depotDividendFreqIrregular,
+  };
+
+  static String region(AppLocalizations l10n, DepotRegion region) =>
+      switch (region) {
+        DepotRegion.northAmerica => l10n.depotRegionNorthAmerica,
+        DepotRegion.southAmerica => l10n.depotRegionSouthAmerica,
+        DepotRegion.europe => l10n.depotRegionEurope,
+        DepotRegion.asia => l10n.depotRegionAsia,
+        DepotRegion.oceania => l10n.depotRegionOceania,
+        DepotRegion.africa => l10n.depotRegionAfrica,
+        DepotRegion.other => l10n.depotRegionOther,
+      };
+
+  /// Yahoo's sector names, localized. Unknown names pass through.
+  static String sector(AppLocalizations l10n, String name) => switch (name) {
+    'Technology' => l10n.depotSectorTechnology,
+    'Financial Services' => l10n.depotSectorFinancialServices,
+    'Consumer Cyclical' => l10n.depotSectorConsumerCyclical,
+    'Consumer Defensive' => l10n.depotSectorConsumerDefensive,
+    'Healthcare' => l10n.depotSectorHealthcare,
+    'Industrials' => l10n.depotSectorIndustrials,
+    'Energy' => l10n.depotSectorEnergy,
+    'Basic Materials' => l10n.depotSectorBasicMaterials,
+    'Communication Services' => l10n.depotSectorCommunicationServices,
+    'Utilities' => l10n.depotSectorUtilities,
+    'Real Estate' => l10n.depotSectorRealEstate,
+    _ => name,
   };
 
   static String error(AppLocalizations l10n, ParqetException error) =>

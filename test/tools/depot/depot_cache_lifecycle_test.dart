@@ -8,6 +8,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
+import 'package:tool_lab/tools/depot/depot_allocation_state.dart';
 import 'package:tool_lab/tools/depot/depot_dividend_state.dart';
 import 'package:tool_lab/tools/depot/depot_holding_trend_state.dart';
 import 'package:tool_lab/tools/depot/depot_import_state.dart';
@@ -48,6 +49,15 @@ class _Logos extends DepotLogoState {
   }
 }
 
+class _Allocation extends DepotAllocationState {
+  int reductions = 0;
+  @override
+  void reduceCache() {
+    reductions++;
+    super.reduceCache();
+  }
+}
+
 class _Portfolio extends DepotPortfolioState {
   @override
   Future<void> syncIfStale() async {}
@@ -73,6 +83,7 @@ void main() {
     final wishlist = _Wishlist();
     final dividends = _Dividends();
     final logos = _Logos();
+    final allocation = _Allocation();
     final portfolio = _Portfolio();
     final imports = DepotImportState();
     final tabs = DepotState();
@@ -91,6 +102,7 @@ void main() {
           ChangeNotifierProvider<DepotWishlistState>.value(value: wishlist),
           ChangeNotifierProvider<DepotDividendState>.value(value: dividends),
           ChangeNotifierProvider<DepotLogoState>.value(value: logos),
+          ChangeNotifierProvider<DepotAllocationState>.value(value: allocation),
           ChangeNotifierProvider<DepotPortfolioState>.value(value: portfolio),
           ChangeNotifierProvider<DepotImportState>.value(value: imports),
           ChangeNotifierProvider<DepotState>.value(value: tabs),
@@ -116,6 +128,7 @@ void main() {
     expect(wishlist.reductions, 1);
     expect(dividends.reductions, 1);
     expect(logos.reductions, 1);
+    expect(allocation.reductions, 1);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     router.dispose();
@@ -123,6 +136,7 @@ void main() {
     wishlist.dispose();
     dividends.dispose();
     logos.dispose();
+    allocation.dispose();
     portfolio.dispose();
     imports.dispose();
     tabs.dispose();

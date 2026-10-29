@@ -1,6 +1,13 @@
 import 'package:flutter/foundation.dart';
 
-enum DepotTab { overview, dividends, activities, wishlist, pdfImport }
+enum DepotTab {
+  overview,
+  allocation,
+  dividends,
+  activities,
+  wishlist,
+  pdfImport,
+}
 
 class DepotState extends ChangeNotifier {
   DepotTab _tab = DepotTab.overview;

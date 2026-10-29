@@ -16,7 +16,7 @@ class DepotTabs extends StatelessWidget {
       builder: (context, constraints) {
         // Segments share the width equally, so below this even one label
         // wraps; the app bar title already names the tab.
-        final cramped = constraints.maxWidth < 620;
+        final cramped = constraints.maxWidth < 780;
         ButtonSegment<DepotTab> segment(
           DepotTab value,
           IconData icon,
@@ -34,6 +34,11 @@ class DepotTabs extends StatelessWidget {
               DepotTab.overview,
               Icons.pie_chart_outline,
               l10n.depotTabOverview,
+            ),
+            segment(
+              DepotTab.allocation,
+              Icons.stacked_bar_chart,
+              l10n.depotTabAllocation,
             ),
             segment(
               DepotTab.dividends,

@@ -3,8 +3,10 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 
+import '../models/depot_asset_profile.dart';
 import '../models/depot_dividend.dart';
 import '../models/market_quote.dart';
 
@@ -19,6 +21,12 @@ class YahooFinanceException implements Exception {
 
 typedef YahooDividends = ({String currency, List<DepotDividendEvent> events});
 typedef YahooNextDividend = ({DateTime? exDate, DateTime? payDate});
+
+/// A profile plus the fund constituents it was derived from.
+typedef YahooAssetProfile = ({
+  DepotAssetProfile profile,
+  List<({String symbol, double weight})> topHoldings,
+});
 
 /// Unofficial, keyless Yahoo Finance endpoints. They may change without
 /// notice, so every caller treats a failure as "no data".
@@ -301,6 +309,142 @@ class YahooFinanceApi {
       payDate: raw(calendar?['dividendDate']),
     );
   }
+
+  /// Sector, industry and country for [query], a ticker or an ISIN. The search
+  /// endpoint works keyless; the quote summary adds the country and a fund's
+  /// sector weights, but needs a session.
+  static Future<YahooAssetProfile?> assetProfile(
+    String query, {
+    YahooSession? session,
+  }) async {
+    String? sector;
+    String? industry;
+    String? country;
+    String? symbol;
+    var sectorShares = const <String, double>{};
+    var topHoldings = const <({String symbol, double weight})>[];
+
+    try {
+      final json = await _getJson('/v1/finance/search', {
+        'q': query,
+        'quotesCount': '10',
+        'newsCount': '0',
+      });
+      final match = _firstQuote(json, query);
+      symbol = match?['symbol'] as String?;
+      sector = match?['sector'] as String?;
+      industry = match?['industry'] as String?;
+    } catch (e) {
+      debugLog('[YahooFinanceApi] Search profile failed for $query: $e');
+    }
+
+    if (session != null && (symbol ?? query).isNotEmpty) {
+      try {
+        final json = await _getJson(
+          '/v10/finance/quoteSummary/${Uri.encodeComponent(symbol ?? query)}',
+          {'modules': 'assetProfile,topHoldings', 'crumb': session.crumb},
+          cookie: session.cookie,
+        );
+        final results = (json['quoteSummary'] as Map?)?['result'] as List?;
+        final result = results == null || results.isEmpty
+            ? null
+            : results.first as Map?;
+        final asset = result?['assetProfile'] as Map?;
+        sector ??= asset?['sector'] as String?;
+        industry ??= asset?['industry'] as String?;
+        country = asset?['country'] as String?;
+        final top = result?['topHoldings'] as Map?;
+        sectorShares = _sectorShares(top?['sectorWeightings']);
+        topHoldings = _topHoldings(top?['holdings']);
+      } catch (e) {
+        debugLog('[YahooFinanceApi] Summary profile failed for $query: $e');
+      }
+    }
+
+    final profile = DepotAssetProfile(
+      sector: _clean(sector),
+      industry: _clean(industry),
+      // A fund's "country" is its domicile, not its exposure, so it is only
+      // used for single securities; funds get countryShares from constituents.
+      country: sectorShares.isEmpty && topHoldings.isEmpty
+          ? _clean(country)
+          : null,
+      sectorShares: sectorShares,
+      fetchedAt: DateTime.now(),
+    );
+    if (profile.isEmpty && topHoldings.isEmpty) return null;
+    return (profile: profile, topHoldings: topHoldings);
+  }
+
+  static Map? _firstQuote(Map<String, dynamic> json, String query) {
+    final quotes = json['quotes'] as List? ?? const [];
+    Map? first;
+    for (final item in quotes) {
+      if (item is! Map) continue;
+      first ??= item;
+      final symbol = item['symbol'];
+      if (symbol is String && symbol.toUpperCase() == query.toUpperCase()) {
+        return item;
+      }
+    }
+    return first;
+  }
+
+  static Map<String, double> _sectorShares(Object? raw) {
+    if (raw is! List) return const {};
+    final shares = <String, double>{};
+    for (final item in raw) {
+      if (item is! Map) continue;
+      for (final entry in item.entries) {
+        final key = entry.key;
+        final value = entry.value;
+        if (key is! String || value is! num || value <= 0) continue;
+        final name = _sectorNames[key.toLowerCase().replaceAll('_', '')] ?? key;
+        shares.update(
+          name,
+          (current) => current + value.toDouble(),
+          ifAbsent: () => value.toDouble(),
+        );
+      }
+    }
+    final total = shares.values.fold<double>(0, (a, b) => a + b);
+    if (total <= 0) return const {};
+    return {for (final entry in shares.entries) entry.key: entry.value / total};
+  }
+
+  static List<({String symbol, double weight})> _topHoldings(Object? raw) {
+    if (raw is! List) return const [];
+    return [
+      for (final item in raw)
+        if (item is Map &&
+            item['symbol'] is String &&
+            (item['symbol'] as String).isNotEmpty &&
+            item['holdingPercent'] is num)
+          (
+            symbol: item['symbol'] as String,
+            weight: (item['holdingPercent'] as num).toDouble(),
+          ),
+    ];
+  }
+
+  static String? _clean(String? value) {
+    final trimmed = value?.trim();
+    return trimmed == null || trimmed.isEmpty ? null : trimmed;
+  }
+
+  static const Map<String, String> _sectorNames = {
+    'technology': 'Technology',
+    'financialservices': 'Financial Services',
+    'consumercyclical': 'Consumer Cyclical',
+    'consumerdefensive': 'Consumer Defensive',
+    'healthcare': 'Healthcare',
+    'industrials': 'Industrials',
+    'energy': 'Energy',
+    'basicmaterials': 'Basic Materials',
+    'communicationservices': 'Communication Services',
+    'utilities': 'Utilities',
+    'realestate': 'Real Estate',
+  };
 
   static Map _chartResult(Map<String, dynamic> json) {
     final results = (json['chart'] as Map?)?['result'] as List?;

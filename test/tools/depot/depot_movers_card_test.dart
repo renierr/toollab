@@ -70,7 +70,11 @@ void main() {
         ),
       );
 
-      final tooltip = tester.widget<Tooltip>(find.byType(Tooltip));
+      final rowTooltip = find.byWidgetPredicate(
+        (widget) =>
+            widget is Tooltip && widget.triggerMode == TooltipTriggerMode.tap,
+      );
+      final tooltip = tester.widget<Tooltip>(rowTooltip);
       final message = tooltip.message!;
       expect(message, contains(holding.name));
       expect(message, contains(holding.isin));
@@ -83,7 +87,7 @@ void main() {
         contains(locale == 'en' ? 'Current value' : 'Aktueller Wert'),
       );
 
-      await tester.tap(find.byType(Tooltip));
+      await tester.tap(rowTooltip);
       await tester.pumpAndSettle();
       expect(find.text(message), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -95,7 +99,7 @@ void main() {
       expect(find.text(message), findsNothing);
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await mouse.addPointer(location: Offset.zero);
-      await mouse.moveTo(tester.getCenter(find.byType(Tooltip)));
+      await mouse.moveTo(tester.getCenter(rowTooltip));
       await tester.pump(const Duration(seconds: 2));
       await tester.pumpAndSettle();
       expect(find.text(message), findsOneWidget);

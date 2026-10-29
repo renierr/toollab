@@ -18,6 +18,7 @@ Only imported statements and the local wishlist are edited here.
 | Tab | Shows | Source |
 |---|---|---|
 | Overview | KPIs, value chart, allocation, biggest movers, holdings for the selected period and portfolio | `POST /performance` |
+| Allocation | Weight per position plus region, sector, industry and asset-type split | Parqet values, Yahoo Finance metadata |
 | Dividends | Calendar, missing and upcoming payments, per year and per position | Parqet bookings plus Yahoo Finance for ex-dates and amounts |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
 | Wishlist | Stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database, optional backend sync and Yahoo Finance |
@@ -205,9 +206,10 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 
 | Endpoint | Used for |
 |---|---|
-| `GET /v1/finance/search?q=…` | Security search by name, ticker or ISIN; filtered to stocks, ETFs, funds and crypto |
+| `GET /v1/finance/search?q=…` | Security search by name, ticker or ISIN; filtered to stocks, ETFs, funds and crypto. Also the sector and industry of a holding |
 | `GET /v8/finance/chart/{symbol}?period1=…&period2=…&interval=5m` | Latest quote and the last 24 hours for wishlist entries and visible holdings |
 | `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | One year of daily closes, loaded on opening wishlist details |
+| `GET /v10/finance/quoteSummary/{symbol}?modules=assetProfile,topHoldings` | Country of a stock, and a fund's sector weights and top holdings |
 
 Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
 The latest quote is Yahoo's `fulldayPrice`, which includes pre- and post-market trades,
@@ -244,6 +246,12 @@ An ISIN search also checks Parqet's public asset data and stores the ISIN only f
 symbols explicitly listed on the matching asset. If Yahoo's ISIN search returns no match,
 the app searches by a confirmed symbol instead. Existing entries can be linked from the
 search result; if Parqet cannot confirm the match, the ISIN remains unknown.
+
+The Allocation tab resolves sector, industry and country per open holding. A fund has no
+single sector or country, so its sector split comes from Yahoo's `topHoldings` weights and
+its region split is approximated by the domicile of its ten largest constituents. Holdings
+without metadata are grouped as "Unclassified" rather than guessed. Profiles are cached in
+the tool settings for 30 days, so opening the tab offline still shows the last known split.
 
 ## Local data
 

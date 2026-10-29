@@ -19613,6 +19613,12 @@ abstract class AppLocalizations {
   /// **'Overview'**
   String get depotTabOverview;
 
+  /// No description provided for @depotTabAllocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocation'**
+  String get depotTabAllocation;
+
   /// No description provided for @depotTabImport.
   ///
   /// In en, this message translates to:
@@ -20374,6 +20380,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allocation'**
   String get depotAllocationTitle;
+
+  /// No description provided for @depotAllocationByRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'By region'**
+  String get depotAllocationByRegion;
+
+  /// No description provided for @depotAllocationBySector.
+  ///
+  /// In en, this message translates to:
+  /// **'By sector'**
+  String get depotAllocationBySector;
+
+  /// No description provided for @depotAllocationByIndustry.
+  ///
+  /// In en, this message translates to:
+  /// **'By industry'**
+  String get depotAllocationByIndustry;
+
+  /// No description provided for @depotAllocationByKind.
+  ///
+  /// In en, this message translates to:
+  /// **'By asset type'**
+  String get depotAllocationByKind;
+
+  /// No description provided for @depotAllocationPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight by position'**
+  String get depotAllocationPositions;
+
+  /// No description provided for @depotAllocationUnclassified.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclassified'**
+  String get depotAllocationUnclassified;
+
+  /// No description provided for @depotAllocationOtherIndustries.
+  ///
+  /// In en, this message translates to:
+  /// **'Other industries'**
+  String get depotAllocationOtherIndustries;
+
+  /// No description provided for @depotAllocationEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no open positions to break down.'**
+  String get depotAllocationEmpty;
+
+  /// No description provided for @depotAllocationSourceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Sector, industry and region come from Yahoo Finance. For funds the split is derived from their largest holdings, so it is only an approximation.'**
+  String get depotAllocationSourceNote;
+
+  /// No description provided for @depotRegionNorthAmerica.
+  ///
+  /// In en, this message translates to:
+  /// **'North America'**
+  String get depotRegionNorthAmerica;
+
+  /// No description provided for @depotRegionSouthAmerica.
+  ///
+  /// In en, this message translates to:
+  /// **'South America'**
+  String get depotRegionSouthAmerica;
+
+  /// No description provided for @depotRegionEurope.
+  ///
+  /// In en, this message translates to:
+  /// **'Europe'**
+  String get depotRegionEurope;
+
+  /// No description provided for @depotRegionAsia.
+  ///
+  /// In en, this message translates to:
+  /// **'Asia'**
+  String get depotRegionAsia;
+
+  /// No description provided for @depotRegionOceania.
+  ///
+  /// In en, this message translates to:
+  /// **'Oceania'**
+  String get depotRegionOceania;
+
+  /// No description provided for @depotRegionAfrica.
+  ///
+  /// In en, this message translates to:
+  /// **'Africa'**
+  String get depotRegionAfrica;
+
+  /// No description provided for @depotRegionOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get depotRegionOther;
+
+  /// No description provided for @depotSectorTechnology.
+  ///
+  /// In en, this message translates to:
+  /// **'Technology'**
+  String get depotSectorTechnology;
+
+  /// No description provided for @depotSectorFinancialServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Services'**
+  String get depotSectorFinancialServices;
+
+  /// No description provided for @depotSectorConsumerCyclical.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumer Cyclical'**
+  String get depotSectorConsumerCyclical;
+
+  /// No description provided for @depotSectorConsumerDefensive.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumer Defensive'**
+  String get depotSectorConsumerDefensive;
+
+  /// No description provided for @depotSectorHealthcare.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthcare'**
+  String get depotSectorHealthcare;
+
+  /// No description provided for @depotSectorIndustrials.
+  ///
+  /// In en, this message translates to:
+  /// **'Industrials'**
+  String get depotSectorIndustrials;
+
+  /// No description provided for @depotSectorEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy'**
+  String get depotSectorEnergy;
+
+  /// No description provided for @depotSectorBasicMaterials.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic Materials'**
+  String get depotSectorBasicMaterials;
+
+  /// No description provided for @depotSectorCommunicationServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Communication Services'**
+  String get depotSectorCommunicationServices;
+
+  /// No description provided for @depotSectorUtilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilities'**
+  String get depotSectorUtilities;
+
+  /// No description provided for @depotSectorRealEstate.
+  ///
+  /// In en, this message translates to:
+  /// **'Real Estate'**
+  String get depotSectorRealEstate;
 
   /// No description provided for @depotIncomeTitle.
   ///

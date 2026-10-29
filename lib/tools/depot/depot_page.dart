@@ -10,6 +10,7 @@ import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
+import 'depot_allocation_state.dart';
 import 'depot_import_state.dart';
 import 'depot_dividend_state.dart';
 import 'depot_holding_trend_state.dart';
@@ -19,6 +20,7 @@ import 'depot_state.dart';
 import 'depot_wishlist_state.dart';
 import 'depot_wishlist_sync_delegate.dart';
 import 'widgets/depot_activities_view.dart';
+import 'widgets/depot_allocation_tab_view.dart';
 import 'widgets/depot_dividends_view.dart';
 import 'widgets/depot_import_view.dart';
 import 'widgets/depot_overview_view.dart';
@@ -58,12 +60,14 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     final wishlist = context.read<DepotWishlistState>();
     final dividends = context.read<DepotDividendState>();
     final logos = context.read<DepotLogoState>();
+    final allocation = context.read<DepotAllocationState>();
     logos.ensureLoaded();
     onDispose(() {
       trends.reduceCache();
       wishlist.reduceCache();
       dividends.reduceCache();
       logos.reduceCache();
+      allocation.reduceCache();
     });
 
     final portfolioState = context.read<DepotPortfolioState>();
@@ -114,6 +118,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     return ToolLayout(
       title: switch (tab) {
         DepotTab.overview => DepotTool.config.localizedName(l10n),
+        DepotTab.allocation => l10n.depotTabAllocation,
         DepotTab.dividends => l10n.depotTabDividends,
         DepotTab.activities => l10n.depotTabActivities,
         DepotTab.wishlist => l10n.depotTabWishlist,
@@ -147,6 +152,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
             child: SelectionArea(
               child: switch (tab) {
                 DepotTab.overview => const DepotOverviewView(),
+                DepotTab.allocation => const DepotAllocationTabView(),
                 DepotTab.dividends => const DepotDividendsView(),
                 DepotTab.activities => const DepotActivitiesView(),
                 DepotTab.wishlist => DepotWishlistView(

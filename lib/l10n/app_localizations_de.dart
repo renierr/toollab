@@ -11069,6 +11069,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotTabOverview => 'Übersicht';
 
   @override
+  String get depotTabAllocation => 'Verteilung';
+
+  @override
   String get depotTabImport => 'PDF-Import';
 
   @override
@@ -11496,6 +11499,89 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotAllocationTitle => 'Aufteilung';
+
+  @override
+  String get depotAllocationByRegion => 'Nach Region';
+
+  @override
+  String get depotAllocationBySector => 'Nach Sektor';
+
+  @override
+  String get depotAllocationByIndustry => 'Nach Branche';
+
+  @override
+  String get depotAllocationByKind => 'Nach Anlageklasse';
+
+  @override
+  String get depotAllocationPositions => 'Gewichtung nach Position';
+
+  @override
+  String get depotAllocationUnclassified => 'Nicht klassifiziert';
+
+  @override
+  String get depotAllocationOtherIndustries => 'Übrige Branchen';
+
+  @override
+  String get depotAllocationEmpty =>
+      'Es gibt keine offenen Positionen für die Aufteilung.';
+
+  @override
+  String get depotAllocationSourceNote =>
+      'Sektor, Branche und Region stammen von Yahoo Finance. Bei Fonds ist die Aufteilung aus den größten Positionen abgeleitet und damit nur eine Näherung.';
+
+  @override
+  String get depotRegionNorthAmerica => 'Nordamerika';
+
+  @override
+  String get depotRegionSouthAmerica => 'Südamerika';
+
+  @override
+  String get depotRegionEurope => 'Europa';
+
+  @override
+  String get depotRegionAsia => 'Asien';
+
+  @override
+  String get depotRegionOceania => 'Ozeanien';
+
+  @override
+  String get depotRegionAfrica => 'Afrika';
+
+  @override
+  String get depotRegionOther => 'Sonstige';
+
+  @override
+  String get depotSectorTechnology => 'Technologie';
+
+  @override
+  String get depotSectorFinancialServices => 'Finanzdienstleistungen';
+
+  @override
+  String get depotSectorConsumerCyclical => 'Zyklischer Konsum';
+
+  @override
+  String get depotSectorConsumerDefensive => 'Nicht-zyklischer Konsum';
+
+  @override
+  String get depotSectorHealthcare => 'Gesundheit';
+
+  @override
+  String get depotSectorIndustrials => 'Industrie';
+
+  @override
+  String get depotSectorEnergy => 'Energie';
+
+  @override
+  String get depotSectorBasicMaterials => 'Grundstoffe';
+
+  @override
+  String get depotSectorCommunicationServices => 'Kommunikation';
+
+  @override
+  String get depotSectorUtilities => 'Versorger';
+
+  @override
+  String get depotSectorRealEstate => 'Immobilien';
 
   @override
   String get depotIncomeTitle => 'Dividenden & Zinsen (12 Monate)';
