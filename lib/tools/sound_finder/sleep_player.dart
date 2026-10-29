@@ -165,6 +165,7 @@ class SleepPlayer extends ChangeNotifier {
       return;
     }
     _playingFile = file;
+    notifyListeners();
     try {
       if (!SoLoud.instance.isInitialized) await SoLoud.instance.init();
       final source = await SoLoud.instance.loadFile(file.path);
