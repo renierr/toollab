@@ -19649,6 +19649,24 @@ abstract class AppLocalizations {
   /// **'Refresh quotes'**
   String get depotWishlistRefresh;
 
+  /// No description provided for @depotWishlistCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy wishlist as image'**
+  String get depotWishlistCopy;
+
+  /// No description provided for @depotWishlistCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Wishlist copied to clipboard'**
+  String get depotWishlistCopied;
+
+  /// No description provided for @depotWishlistCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy wishlist to clipboard'**
+  String get depotWishlistCopyFailed;
+
   /// No description provided for @depotWishlistSearchHint.
   ///
   /// In en, this message translates to:

@@ -11006,6 +11006,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotWishlistRefresh => 'Refresh quotes';
 
   @override
+  String get depotWishlistCopy => 'Copy wishlist as image';
+
+  @override
+  String get depotWishlistCopied => 'Wishlist copied to clipboard';
+
+  @override
+  String get depotWishlistCopyFailed => 'Could not copy wishlist to clipboard';
+
+  @override
   String get depotWishlistSearchHint => 'Search by name, ticker or ISIN';
 
   @override

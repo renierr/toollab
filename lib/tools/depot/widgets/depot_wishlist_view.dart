@@ -9,7 +9,9 @@ import 'depot_wishlist_detail_dialog.dart';
 import 'depot_wishlist_row.dart';
 
 class DepotWishlistView extends StatefulWidget {
-  const DepotWishlistView({super.key});
+  final GlobalKey captureKey;
+
+  const DepotWishlistView({super.key, required this.captureKey});
 
   @override
   State<DepotWishlistView> createState() => _DepotWishlistViewState();
@@ -38,84 +40,98 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
 
     final items = state.itemsByDayChange;
 
-    return RefreshIndicator(
-      onRefresh: state.refresh,
-      child: ReadableWidth(
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            if (state.isRefreshing)
-              const SliverToBoxAdapter(
-                child: LinearProgressIndicator(minHeight: 2),
-              ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              sliver: SliverList.list(
-                children: const [_LocalOnlyNote(), _CurrencySwitch()],
-              ),
-            ),
-            if (items.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(32, 16, 32, 48),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.star_outline,
-                        size: 48,
-                        color: theme.hintColor,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l10n.depotWishlistEmpty,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.depotWishlistEmptyHint,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.hintColor,
+    return ReadableWidth(
+      child: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: Column(children: [_LocalOnlyNote(), _CurrencySwitch()]),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: state.refresh,
+              child: RepaintBoundary(
+                key: widget.captureKey,
+                child: ColoredBox(
+                  color: theme.scaffoldBackgroundColor,
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      if (state.isRefreshing)
+                        const SliverToBoxAdapter(
+                          child: LinearProgressIndicator(minHeight: 2),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.tonalIcon(
-                        onPressed: () => DepotWishlistAddDialog.show(context),
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.depotWishlistAdd),
-                      ),
+                      if (items.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(32, 16, 32, 48),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.star_outline,
+                                  size: 48,
+                                  color: theme.hintColor,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  l10n.depotWishlistEmpty,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.titleSmall,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.depotWishlistEmptyHint,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                FilledButton.tonalIcon(
+                                  onPressed: () =>
+                                      DepotWishlistAddDialog.show(context),
+                                  icon: const Icon(Icons.add),
+                                  label: Text(l10n.depotWishlistAdd),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        SliverPadding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          sliver: SliverList.separated(
+                            itemCount: items.length,
+                            separatorBuilder: (context, index) =>
+                                const Divider(height: 1, indent: 64),
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return DepotWishlistRow(
+                                item: item,
+                                quote: state.quoteFor(item.symbol),
+                                euroRate: state.displayEuroRate(
+                                  state.quoteFor(item.symbol)?.currency ??
+                                      item.currency,
+                                ),
+                                logoBytes: state.logoFor(item.symbol),
+                                failed: state.failed.contains(item.symbol),
+                                onTap: () => DepotWishlistDetailDialog.show(
+                                  context,
+                                  item,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                     ],
                   ),
                 ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.only(bottom: 24),
-                sliver: SliverList.separated(
-                  itemCount: items.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1, indent: 64),
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return DepotWishlistRow(
-                      item: item,
-                      quote: state.quoteFor(item.symbol),
-                      euroRate: state.displayEuroRate(
-                        state.quoteFor(item.symbol)?.currency ?? item.currency,
-                      ),
-                      logoBytes: state.logoFor(item.symbol),
-                      failed: state.failed.contains(item.symbol),
-                      onTap: () =>
-                          DepotWishlistDetailDialog.show(context, item),
-                    );
-                  },
-                ),
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

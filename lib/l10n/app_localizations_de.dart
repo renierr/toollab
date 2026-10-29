@@ -11087,6 +11087,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotWishlistRefresh => 'Kurse aktualisieren';
 
   @override
+  String get depotWishlistCopy => 'Wunschliste als Bild kopieren';
+
+  @override
+  String get depotWishlistCopied => 'Wunschliste in die Zwischenablage kopiert';
+
+  @override
+  String get depotWishlistCopyFailed =>
+      'Wunschliste konnte nicht kopiert werden';
+
+  @override
   String get depotWishlistSearchHint => 'Nach Name, Kürzel oder ISIN suchen';
 
   @override

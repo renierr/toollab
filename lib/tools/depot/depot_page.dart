@@ -26,6 +26,7 @@ import 'widgets/depot_report_button.dart';
 import 'widgets/depot_settings_page.dart';
 import 'widgets/depot_tabs.dart';
 import 'widgets/depot_wishlist_add_dialog.dart';
+import 'widgets/depot_wishlist_copy_button.dart';
 import 'widgets/depot_wishlist_refresh_button.dart';
 import 'widgets/depot_wishlist_view.dart';
 
@@ -42,6 +43,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
   // Owned by the page, not the import tab: a tab switch must not delete PDFs
   // that are still being read.
   late final TempFileScope _scope;
+  final GlobalKey _wishlistCaptureKey = GlobalKey();
 
   @override
   void initState() {
@@ -120,6 +122,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
       actions: [
         if (tab == DepotTab.overview) const DepotReportButton(),
         if (tab == DepotTab.wishlist) ...[
+          DepotWishlistCopyButton(captureKey: _wishlistCaptureKey),
           const DepotWishlistRefreshButton(),
           IconButton(
             icon: const Icon(Icons.add),
@@ -146,7 +149,9 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
                 DepotTab.overview => const DepotOverviewView(),
                 DepotTab.dividends => const DepotDividendsView(),
                 DepotTab.activities => const DepotActivitiesView(),
-                DepotTab.wishlist => const DepotWishlistView(),
+                DepotTab.wishlist => DepotWishlistView(
+                  captureKey: _wishlistCaptureKey,
+                ),
                 DepotTab.pdfImport => DepotImportView(tempScope: _scope),
               },
             ),

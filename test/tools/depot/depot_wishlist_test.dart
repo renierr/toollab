@@ -876,7 +876,9 @@ void main() {
       app(
         ChangeNotifierProvider.value(
           value: state,
-          child: const SelectionArea(child: DepotWishlistView()),
+          child: SelectionArea(
+            child: DepotWishlistView(captureKey: GlobalKey()),
+          ),
         ),
       ),
     );
@@ -931,7 +933,7 @@ void main() {
             ChangeNotifierProvider.value(value: state),
             ChangeNotifierProvider.value(value: logos),
           ],
-          child: const DepotWishlistView(),
+          child: DepotWishlistView(captureKey: GlobalKey()),
         ),
       ),
     );
@@ -1003,7 +1005,9 @@ void main() {
           ChangeNotifierProvider.value(value: state),
           ChangeNotifierProvider.value(value: logos),
         ],
-        child: app(const SelectionArea(child: DepotWishlistView())),
+        child: app(
+          SelectionArea(child: DepotWishlistView(captureKey: GlobalKey())),
+        ),
       ),
     );
     await tester.pumpAndSettle();
