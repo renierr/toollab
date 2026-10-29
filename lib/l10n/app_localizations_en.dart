@@ -11003,6 +11003,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotWishlistAdd => 'Add security';
 
   @override
+  String get depotWishlistRefresh => 'Refresh quotes';
+
+  @override
   String get depotWishlistSearchHint => 'Search by name, ticker or ISIN';
 
   @override

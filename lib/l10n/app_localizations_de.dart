@@ -11084,6 +11084,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotWishlistAdd => 'Wertpapier hinzufügen';
 
   @override
+  String get depotWishlistRefresh => 'Kurse aktualisieren';
+
+  @override
   String get depotWishlistSearchHint => 'Nach Name, Kürzel oder ISIN suchen';
 
   @override

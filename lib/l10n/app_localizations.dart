@@ -19643,6 +19643,12 @@ abstract class AppLocalizations {
   /// **'Add security'**
   String get depotWishlistAdd;
 
+  /// No description provided for @depotWishlistRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh quotes'**
+  String get depotWishlistRefresh;
+
   /// No description provided for @depotWishlistSearchHint.
   ///
   /// In en, this message translates to:

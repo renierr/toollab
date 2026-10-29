@@ -26,6 +26,7 @@ import 'widgets/depot_report_button.dart';
 import 'widgets/depot_settings_page.dart';
 import 'widgets/depot_tabs.dart';
 import 'widgets/depot_wishlist_add_dialog.dart';
+import 'widgets/depot_wishlist_refresh_button.dart';
 import 'widgets/depot_wishlist_view.dart';
 
 class DepotPage extends StatefulWidget {
@@ -118,12 +119,14 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
       },
       actions: [
         if (tab == DepotTab.overview) const DepotReportButton(),
-        if (tab == DepotTab.wishlist)
+        if (tab == DepotTab.wishlist) ...[
+          const DepotWishlistRefreshButton(),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: l10n.depotWishlistAdd,
             onPressed: () => DepotWishlistAddDialog.show(context),
           ),
+        ],
         if (tab != DepotTab.pdfImport)
           IconButton(
             icon: const Icon(Icons.settings_outlined),

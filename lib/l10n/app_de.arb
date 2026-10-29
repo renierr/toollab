@@ -4327,6 +4327,7 @@
   "depotTabWishlist": "Wunschliste",
   "depotWishlistAddTitle": "Zur Wunschliste hinzufügen",
   "depotWishlistAdd": "Wertpapier hinzufügen",
+  "depotWishlistRefresh": "Kurse aktualisieren",
   "depotWishlistSearchHint": "Nach Name, Kürzel oder ISIN suchen",
   "depotWishlistShowEuro": "Kurse in Euro anzeigen",
   "depotWishlistEuroSwitchHint": "Umgerechnete Kurse sind Schätzwerte (≈).",

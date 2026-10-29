@@ -5480,6 +5480,7 @@
   "depotTabWishlist": "Wishlist",
   "depotWishlistAddTitle": "Add to wishlist",
   "depotWishlistAdd": "Add security",
+  "depotWishlistRefresh": "Refresh quotes",
   "depotWishlistSearchHint": "Search by name, ticker or ISIN",
   "depotWishlistShowEuro": "Show prices in euros",
   "depotWishlistEuroSwitchHint": "Converted prices are estimates (≈).",
