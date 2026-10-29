@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 import '../depot_state.dart';
 
@@ -14,21 +15,41 @@ class DepotTabs extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Segments share the width equally, so below this even one label
-        // wraps; the app bar title already names the tab.
-        final cramped = constraints.maxWidth < 780;
+        final cramped = constraints.isCompact;
         ButtonSegment<DepotTab> segment(
           DepotTab value,
           IconData icon,
           String label,
         ) => ButtonSegment(
           value: value,
-          icon: Icon(icon),
-          label: cramped ? null : Text(label),
+          label: cramped
+              ? Icon(icon)
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
           tooltip: label,
         );
 
         return SegmentedButton<DepotTab>(
+          style: cramped
+              ? const ButtonStyle(
+                  padding: WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 3),
+                  ),
+                  minimumSize: WidgetStatePropertyAll(Size(0, 40)),
+                )
+              : null,
           segments: [
             segment(
               DepotTab.overview,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -102,6 +104,23 @@ void main() {
 
       expect(industries, isEmpty);
     });
+
+    test('uses a profile region without inventing a country', () {
+      final profile = DepotAssetProfile(
+        region: 'asia',
+        fetchedAt: DateTime.now(),
+      );
+      final restored = DepotAssetProfile.fromJson(profile.toJson());
+      expect(restored.country, isNull);
+      expect(
+        depotAllocationBreakdown(
+          holdings: [_holding('TSM')],
+          profileOf: (_) => restored,
+          dimension: DepotAllocationDimension.region,
+        ),
+        {'asia': 100},
+      );
+    });
   });
 
   group('region', () {
@@ -190,5 +209,59 @@ void main() {
         expect(calls.where((query) => query == 'IE00ETF'), hasLength(1));
       },
     );
+
+    test(
+      'retries old partial profiles once without discarding them on failure',
+      () async {
+        final holding = _holding('AAPL');
+        await store.saveAssetProfiles({
+          'AAPL': DepotAssetProfile(
+            sector: 'Technology',
+            cacheVersion: 1,
+            fetchedAt: DateTime.now(),
+          ),
+        });
+        final state = DepotAllocationState(
+          profileLoader: (query, session) async {
+            calls.add(query);
+            return null;
+          },
+          sessionLoader: () async => null,
+        );
+        addTearDown(state.dispose);
+        await state.ensureProfiles([holding]);
+        await state.ensureProfiles([holding]);
+        expect(calls, ['AAPL']);
+        expect(state.profileOf(holding)?.sector, 'Technology');
+      },
+    );
+
+    test('refresh waits for an active fetch and then reloads', () async {
+      final started = Completer<void>();
+      final release = Completer<void>();
+      final holding = _holding('AAPL');
+      final state = DepotAllocationState(
+        profileLoader: (query, session) async {
+          calls.add(query);
+          if (calls.length == 1) {
+            started.complete();
+            await release.future;
+          }
+          return (
+            profile: _profile(sector: 'Technology'),
+            topHoldings: const <({String symbol, double weight})>[],
+          );
+        },
+        sessionLoader: () async => null,
+      );
+      addTearDown(state.dispose);
+      final initial = state.ensureProfiles([holding]);
+      await started.future;
+      final refresh = state.refresh([holding]);
+      release.complete();
+      await initial;
+      await refresh;
+      expect(calls, ['AAPL', 'AAPL']);
+    });
   });
 }

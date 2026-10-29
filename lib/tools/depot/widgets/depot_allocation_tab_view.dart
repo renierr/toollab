@@ -5,6 +5,7 @@ import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../depot_allocation.dart';
 import '../depot_allocation_state.dart';
+import '../depot_allocation_sync.dart';
 import '../depot_colors.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
@@ -62,10 +63,7 @@ class DepotAllocationTabView extends StatelessWidget {
     );
 
     return RefreshIndicator(
-      onRefresh: () async {
-        await portfolio.sync();
-        await allocation.refresh(holdings);
-      },
+      onRefresh: () => syncDepotAllocation(portfolio, allocation),
       child: ReadableWidth(
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),

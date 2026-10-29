@@ -4477,7 +4477,7 @@
   "depotAllocationUnclassified": "Nicht klassifiziert",
   "depotAllocationOtherIndustries": "Übrige Branchen",
   "depotAllocationEmpty": "Es gibt keine offenen Positionen für die Aufteilung.",
-  "depotAllocationSourceNote": "Sektor, Branche und Region stammen von Yahoo Finance. Bei Fonds ist die Aufteilung aus den größten Positionen abgeleitet und damit nur eine Näherung.",
+  "depotAllocationSourceNote": "Metadaten stammen von Yahoo Finance und Nasdaq. Fondsregionen werden anhand der größten Positionen geschätzt; fehlende Daten bleiben unklassifiziert.",
   "depotRegionNorthAmerica": "Nordamerika",
   "depotRegionSouthAmerica": "Südamerika",
   "depotRegionEurope": "Europa",

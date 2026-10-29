@@ -6,6 +6,7 @@ import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../models/depot_holding.dart';
 import 'depot_holding_avatar.dart';
+import 'depot_weight_donut.dart';
 
 /// Every open position's share of the portfolio, largest first.
 class DepotWeightList extends StatelessWidget {
@@ -49,7 +50,9 @@ class DepotWeightList extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 12),
+        DepotWeightDonut(holdings: open, format: format),
+        const SizedBox(height: 12),
         for (final holding in open)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),

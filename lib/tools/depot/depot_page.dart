@@ -20,6 +20,7 @@ import 'depot_state.dart';
 import 'depot_wishlist_state.dart';
 import 'depot_wishlist_sync_delegate.dart';
 import 'widgets/depot_activities_view.dart';
+import 'widgets/depot_allocation_refresh_button.dart';
 import 'widgets/depot_allocation_tab_view.dart';
 import 'widgets/depot_dividends_view.dart';
 import 'widgets/depot_import_view.dart';
@@ -126,6 +127,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
       },
       actions: [
         if (tab == DepotTab.overview) const DepotReportButton(),
+        if (tab == DepotTab.allocation) const DepotAllocationRefreshButton(),
         if (tab == DepotTab.wishlist) ...[
           DepotWishlistCopyButton(captureKey: _wishlistCaptureKey),
           const DepotWishlistRefreshButton(),

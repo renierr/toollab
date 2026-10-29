@@ -20432,7 +20432,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotAllocationSourceNote.
   ///
   /// In en, this message translates to:
-  /// **'Sector, industry and region come from Yahoo Finance. For funds the split is derived from their largest holdings, so it is only an approximation.'**
+  /// **'Metadata comes from Yahoo Finance and Nasdaq. Fund regions are estimated from their largest holdings; unavailable data is unclassified.'**
   String get depotAllocationSourceNote;
 
   /// No description provided for @depotRegionNorthAmerica.

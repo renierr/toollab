@@ -33,6 +33,7 @@ class DepotAllocationState extends ChangeNotifier {
   Future<void>? _cacheLoad;
   bool _cacheLoaded = false;
   bool _isFetching = false;
+  Completer<void>? _fetchDone;
   bool _disposed = false;
   int _generation = 0;
 
@@ -72,13 +73,18 @@ class DepotAllocationState extends ChangeNotifier {
       if (key == null || _pending.contains(key)) continue;
       final cached = _profiles[key];
       final fresh =
-          cached != null && now.difference(cached.fetchedAt) < staleAfter;
+          cached != null &&
+          (cached.cacheVersion >= 2 ||
+              cached.country != null ||
+              cached.countryShares.isNotEmpty) &&
+          now.difference(cached.fetchedAt) < staleAfter;
       if (!force && (fresh || _failed.contains(key))) continue;
       targets[key] = holding;
     }
     if (targets.isEmpty) return;
 
     _isFetching = true;
+    final done = _fetchDone = Completer<void>();
     _notify();
     var changed = false;
     try {
@@ -106,11 +112,14 @@ class DepotAllocationState extends ChangeNotifier {
         _isFetching = false;
         _notify();
       }
+      if (identical(_fetchDone, done)) _fetchDone = null;
+      done.complete();
     }
   }
 
   /// Re-reads every position's profile, used by pull-to-refresh.
   Future<void> refresh(Iterable<DepotHolding> holdings) async {
+    await _fetchDone?.future;
     _failed.clear();
     await ensureProfiles(holdings, force: true);
   }
@@ -205,13 +214,15 @@ class DepotAllocationState extends ChangeNotifier {
     YahooSession? session,
   ) async {
     final cached = _profiles[symbol];
-    if (cached?.country != null) return cached?.country;
+    if (cached?.country != null || cached?.region != null) {
+      return cached?.country ?? cached?.region;
+    }
     if (!_pending.add(symbol)) return null;
     try {
       final result = await _profileLoader(symbol, session);
       if (result == null || _disposed) return null;
       _profiles = {..._profiles, symbol: result.profile};
-      return result.profile.country;
+      return result.profile.country ?? result.profile.region;
     } catch (e) {
       debugLog('[DepotAllocationState] Constituent failed for $symbol: $e');
       return null;

@@ -4,6 +4,8 @@ class DepotAssetProfile {
   final String? sector;
   final String? industry;
   final String? country;
+  final String? region;
+  final int cacheVersion;
 
   /// Share per sector for funds, 0..1 and summing to 1.
   final Map<String, double> sectorShares;
@@ -17,6 +19,8 @@ class DepotAssetProfile {
     this.sector,
     this.industry,
     this.country,
+    this.region,
+    this.cacheVersion = 2,
     this.sectorShares = const {},
     this.countryShares = const {},
     required this.fetchedAt,
@@ -26,6 +30,7 @@ class DepotAssetProfile {
       sector == null &&
       industry == null &&
       country == null &&
+      region == null &&
       sectorShares.isEmpty &&
       countryShares.isEmpty;
 
@@ -34,6 +39,8 @@ class DepotAssetProfile {
         sector: sector,
         industry: industry,
         country: country,
+        region: region,
+        cacheVersion: cacheVersion,
         sectorShares: sectorShares,
         countryShares: countryShares ?? this.countryShares,
         fetchedAt: fetchedAt,
@@ -45,6 +52,8 @@ class DepotAssetProfile {
       sector: _text(json['sector']),
       industry: _text(json['industry']),
       country: _text(json['country']),
+      region: _text(json['region']),
+      cacheVersion: (json['cacheVersion'] as num?)?.toInt() ?? 1,
       sectorShares: _shares(json['sectorShares']),
       countryShares: _shares(json['countryShares']),
       fetchedAt: DateTime.fromMillisecondsSinceEpoch(
@@ -59,6 +68,8 @@ class DepotAssetProfile {
     if (sector != null) 'sector': sector,
     if (industry != null) 'industry': industry,
     if (country != null) 'country': country,
+    if (region != null) 'region': region,
+    'cacheVersion': cacheVersion,
     if (sectorShares.isNotEmpty) 'sectorShares': sectorShares,
     if (countryShares.isNotEmpty) 'countryShares': countryShares,
     'fetchedAt': fetchedAt.millisecondsSinceEpoch,

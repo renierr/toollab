@@ -5677,7 +5677,7 @@
   "depotAllocationUnclassified": "Unclassified",
   "depotAllocationOtherIndustries": "Other industries",
   "depotAllocationEmpty": "There are no open positions to break down.",
-  "depotAllocationSourceNote": "Sector, industry and region come from Yahoo Finance. For funds the split is derived from their largest holdings, so it is only an approximation.",
+  "depotAllocationSourceNote": "Metadata comes from Yahoo Finance and Nasdaq. Fund regions are estimated from their largest holdings; unavailable data is unclassified.",
   "depotRegionNorthAmerica": "North America",
   "depotRegionSouthAmerica": "South America",
   "depotRegionEurope": "Europe",

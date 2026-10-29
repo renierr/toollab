@@ -77,5 +77,9 @@ void _addRegions(
     add(DepotRegion.of(profile.country).name, value);
     return;
   }
+  if (DepotRegion.values.any((region) => region.name == profile.region)) {
+    add(profile.region, value);
+    return;
+  }
   add(null, value);
 }

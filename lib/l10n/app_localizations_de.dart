@@ -11527,7 +11527,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotAllocationSourceNote =>
-      'Sektor, Branche und Region stammen von Yahoo Finance. Bei Fonds ist die Aufteilung aus den größten Positionen abgeleitet und damit nur eine Näherung.';
+      'Metadaten stammen von Yahoo Finance und Nasdaq. Fondsregionen werden anhand der größten Positionen geschätzt; fehlende Daten bleiben unklassifiziert.';
 
   @override
   String get depotRegionNorthAmerica => 'Nordamerika';

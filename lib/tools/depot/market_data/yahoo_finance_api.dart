@@ -9,6 +9,7 @@ import 'package:tool_lab/services/app_http_client.dart';
 import '../models/depot_asset_profile.dart';
 import '../models/depot_dividend.dart';
 import '../models/market_quote.dart';
+import 'nasdaq_profile_api.dart';
 
 class YahooFinanceException implements Exception {
   final String message;
@@ -321,6 +322,7 @@ class YahooFinanceApi {
     String? industry;
     String? country;
     String? symbol;
+    String? quoteType;
     var sectorShares = const <String, double>{};
     var topHoldings = const <({String symbol, double weight})>[];
 
@@ -332,6 +334,7 @@ class YahooFinanceApi {
       });
       final match = _firstQuote(json, query);
       symbol = match?['symbol'] as String?;
+      quoteType = match?['quoteType'] as String?;
       sector = match?['sector'] as String?;
       industry = match?['industry'] as String?;
     } catch (e) {
@@ -361,14 +364,22 @@ class YahooFinanceApi {
       }
     }
 
+    final region = country == null && quoteType == 'EQUITY' && symbol != null
+        ? await NasdaqProfileApi.region(symbol)
+        : null;
     final profile = DepotAssetProfile(
       sector: _clean(sector),
       industry: _clean(industry),
       // A fund's "country" is its domicile, not its exposure, so it is only
       // used for single securities; funds get countryShares from constituents.
-      country: sectorShares.isEmpty && topHoldings.isEmpty
+      country:
+          quoteType != 'ETF' &&
+              quoteType != 'MUTUALFUND' &&
+              sectorShares.isEmpty &&
+              topHoldings.isEmpty
           ? _clean(country)
           : null,
+      region: region,
       sectorShares: sectorShares,
       fetchedAt: DateTime.now(),
     );

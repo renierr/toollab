@@ -16,6 +16,12 @@ enum DepotRegion {
   }
 
   static const Map<String, DepotRegion> _countries = {
+    'northamerica': northAmerica,
+    'southamerica': southAmerica,
+    'europe': europe,
+    'asia': asia,
+    'oceania': oceania,
+    'africa': africa,
     // North America
     'united states': northAmerica,
     'usa': northAmerica,
