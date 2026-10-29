@@ -6491,6 +6491,52 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSleepNoStages => 'Keine Schlafphasen gefunden.';
 
   @override
+  String get sfSleepTrim => 'Kürzen';
+
+  @override
+  String get sfSleepTrimTitle => 'Sitzung kürzen';
+
+  @override
+  String get sfSleepTrimHint =>
+      'Start- und Endmarker ziehen. Alles außerhalb wird aus der Sitzung entfernt, inklusive Audio, hier und auf dem Server.';
+
+  @override
+  String get sfSleepTrimStart => 'Beginn';
+
+  @override
+  String get sfSleepTrimEnd => 'Ende';
+
+  @override
+  String get sfSleepTrimEarlier => '1 Minute früher';
+
+  @override
+  String get sfSleepTrimLater => '1 Minute später';
+
+  @override
+  String get sfSleepTrimKept => 'Behalten';
+
+  @override
+  String get sfSleepTrimRemovedChunks => 'Entfernte Abschnitte';
+
+  @override
+  String get sfSleepTrimFreed => 'Freigegeben';
+
+  @override
+  String get sfSleepTrimAuto => 'Aus Schlafphasen';
+
+  @override
+  String sfSleepTrimConfirmBody(int count, String start, String end) {
+    return 'Nur $start – $end behalten und $count Abschnitte außerhalb löschen? Das kann nicht rückgängig gemacht werden; synchronisierte Kopien werden bei der nächsten Synchronisierung entfernt.';
+  }
+
+  @override
+  String get sfSleepTrimDone => 'Sitzung gekürzt';
+
+  @override
+  String get sfSleepTrimFailed =>
+      'Die Sitzung kann während Aufnahme, Analyse oder Komprimierung nicht gekürzt werden.';
+
+  @override
   String get sfSleepExportReport => 'Bericht exportieren';
 
   @override

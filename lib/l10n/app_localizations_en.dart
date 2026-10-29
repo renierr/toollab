@@ -6450,6 +6450,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepNoStages => 'No sleep stages found.';
 
   @override
+  String get sfSleepTrim => 'Trim';
+
+  @override
+  String get sfSleepTrimTitle => 'Trim session';
+
+  @override
+  String get sfSleepTrimHint =>
+      'Drag the start and end markers. Everything outside them is removed from the session, audio included, here and on the server.';
+
+  @override
+  String get sfSleepTrimStart => 'Start';
+
+  @override
+  String get sfSleepTrimEnd => 'End';
+
+  @override
+  String get sfSleepTrimEarlier => '1 minute earlier';
+
+  @override
+  String get sfSleepTrimLater => '1 minute later';
+
+  @override
+  String get sfSleepTrimKept => 'Kept';
+
+  @override
+  String get sfSleepTrimRemovedChunks => 'Removed chunks';
+
+  @override
+  String get sfSleepTrimFreed => 'Freed';
+
+  @override
+  String get sfSleepTrimAuto => 'From sleep stages';
+
+  @override
+  String sfSleepTrimConfirmBody(int count, String start, String end) {
+    return 'Keep only $start – $end and delete $count chunks outside it? This cannot be undone; synced copies are removed on the next sync.';
+  }
+
+  @override
+  String get sfSleepTrimDone => 'Session trimmed';
+
+  @override
+  String get sfSleepTrimFailed =>
+      'Could not trim the session while it is being recorded, analyzed or compressed.';
+
+  @override
   String get sfSleepExportReport => 'Export report';
 
   @override

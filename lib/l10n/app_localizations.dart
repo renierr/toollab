@@ -11567,6 +11567,90 @@ abstract class AppLocalizations {
   /// **'No sleep stages found.'**
   String get sfSleepNoStages;
 
+  /// No description provided for @sfSleepTrim.
+  ///
+  /// In en, this message translates to:
+  /// **'Trim'**
+  String get sfSleepTrim;
+
+  /// No description provided for @sfSleepTrimTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trim session'**
+  String get sfSleepTrimTitle;
+
+  /// No description provided for @sfSleepTrimHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the start and end markers. Everything outside them is removed from the session, audio included, here and on the server.'**
+  String get sfSleepTrimHint;
+
+  /// No description provided for @sfSleepTrimStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get sfSleepTrimStart;
+
+  /// No description provided for @sfSleepTrimEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get sfSleepTrimEnd;
+
+  /// No description provided for @sfSleepTrimEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'1 minute earlier'**
+  String get sfSleepTrimEarlier;
+
+  /// No description provided for @sfSleepTrimLater.
+  ///
+  /// In en, this message translates to:
+  /// **'1 minute later'**
+  String get sfSleepTrimLater;
+
+  /// No description provided for @sfSleepTrimKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept'**
+  String get sfSleepTrimKept;
+
+  /// No description provided for @sfSleepTrimRemovedChunks.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed chunks'**
+  String get sfSleepTrimRemovedChunks;
+
+  /// No description provided for @sfSleepTrimFreed.
+  ///
+  /// In en, this message translates to:
+  /// **'Freed'**
+  String get sfSleepTrimFreed;
+
+  /// No description provided for @sfSleepTrimAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'From sleep stages'**
+  String get sfSleepTrimAuto;
+
+  /// No description provided for @sfSleepTrimConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep only {start} – {end} and delete {count} chunks outside it? This cannot be undone; synced copies are removed on the next sync.'**
+  String sfSleepTrimConfirmBody(int count, String start, String end);
+
+  /// No description provided for @sfSleepTrimDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Session trimmed'**
+  String get sfSleepTrimDone;
+
+  /// No description provided for @sfSleepTrimFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not trim the session while it is being recorded, analyzed or compressed.'**
+  String get sfSleepTrimFailed;
+
   /// No description provided for @sfSleepExportReport.
   ///
   /// In en, this message translates to:

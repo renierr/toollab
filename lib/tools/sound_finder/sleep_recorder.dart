@@ -305,6 +305,7 @@ class SleepRecorder extends ChangeNotifier {
     _start = now;
     _recordsAt = now;
     _sessionDir = dir;
+    SleepSessionStore.recordingPath.value = dir;
     _timeout = Timer(
       Duration(minutes: _durationMinutes),
       () => unawaited(stop()),
@@ -521,6 +522,8 @@ class SleepRecorder extends ChangeNotifier {
       }
       SleepSessionStore.notifyChanged();
     }
+    // Cleared only after the final save, so a trim cannot slip in before it.
+    SleepSessionStore.recordingPath.value = null;
     try {
       await _host.releaseCapture();
     } catch (e) {

@@ -11,6 +11,7 @@ import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
 import 'sf_sleep_compress_button.dart';
+import 'sf_sleep_trim_page.dart';
 
 class SfSleepSessionActions extends StatelessWidget {
   const SfSleepSessionActions({super.key, required this.session});
@@ -91,15 +92,21 @@ class SfSleepSessionActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.read<SleepSessionsState>();
-    final (analyzing, healthLoading, reportBusy, compressing) = context
-        .select<SleepSessionsState, (bool, bool, bool, bool)>(
-          (s) => (
-            s.analysisProgress(session.id) != null,
-            s.healthLoading(session.id),
-            s.reportBusy(session.id),
-            s.compressionProgress(session.id) != null,
-          ),
-        );
+    final (
+      analyzing,
+      healthLoading,
+      reportBusy,
+      compressing,
+      recording,
+    ) = context.select<SleepSessionsState, (bool, bool, bool, bool, bool)>(
+      (s) => (
+        s.analysisProgress(session.id) != null,
+        s.healthLoading(session.id),
+        s.reportBusy(session.id),
+        s.compressionProgress(session.id) != null,
+        s.isRecording(session),
+      ),
+    );
     return Wrap(
       spacing: 8,
       runSpacing: 4,
@@ -116,6 +123,14 @@ class SfSleepSessionActions extends StatelessWidget {
             onPressed: analyzing || compressing || session.offloadedCount > 0
                 ? null
                 : () => state.analyze(session),
+          ),
+        if (!session.synthetic && !recording)
+          OutlinedButton.icon(
+            icon: const Icon(Icons.content_cut),
+            label: Text(l10n.sfSleepTrim),
+            onPressed: analyzing || compressing
+                ? null
+                : () => SfSleepTrimPage.open(context, session),
           ),
         if (!session.synthetic &&
             session.data.events.any(

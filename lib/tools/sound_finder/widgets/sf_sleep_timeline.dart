@@ -19,12 +19,19 @@ import '../sound_finder_colors.dart';
 /// Any tap or horizontal drag selects the nearest chunk, so even 2 px wide
 /// bars are reachable by touch.
 class SfSleepTimeline extends StatelessWidget {
-  const SfSleepTimeline({super.key, required this.session});
+  const SfSleepTimeline({super.key, required this.session, this.foreground});
 
   static const double _height = 170;
   static const double _leftPad = 34;
 
+  /// Plot geometry for a [foreground] that maps time to x like the bars do.
+  static const double plotLeft = _leftPad;
+  static const double plotBottomPad = _TimelinePainter._bottomPad;
+
   final SleepSession session;
+
+  /// Laid over the plot and takes its gestures, e.g. the trim markers.
+  final Widget? foreground;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +80,7 @@ class SfSleepTimeline extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              return MouseRegion(
+              final plot = MouseRegion(
                 onHover: playingHere
                     ? null
                     : (e) => pick(e.localPosition.dx, width),
@@ -99,6 +106,14 @@ class SfSleepTimeline extends StatelessWidget {
                     ),
                   ),
                 ),
+              );
+              final overlay = foreground;
+              if (overlay == null) return plot;
+              return Stack(
+                children: [
+                  plot,
+                  Positioned.fill(child: overlay),
+                ],
               );
             },
           ),
@@ -148,6 +163,8 @@ class SfSleepTimeline extends StatelessWidget {
     }
     return best;
   }
+
+  static double plotSpanMs(SleepSessionData data) => _totalMs(data);
 
   static double _totalMs(SleepSessionData data) => math.max(
     1000.0,

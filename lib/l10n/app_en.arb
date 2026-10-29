@@ -3436,6 +3436,33 @@
   "sfSleepShowMore": "Show {count} more",
   "sfSleepLoadStages": "Load sleep stages",
   "sfSleepNoStages": "No sleep stages found.",
+  "sfSleepTrim": "Trim",
+  "sfSleepTrimTitle": "Trim session",
+  "sfSleepTrimHint": "Drag the start and end markers. Everything outside them is removed from the session, audio included, here and on the server.",
+  "sfSleepTrimStart": "Start",
+  "sfSleepTrimEnd": "End",
+  "sfSleepTrimEarlier": "1 minute earlier",
+  "sfSleepTrimLater": "1 minute later",
+  "sfSleepTrimKept": "Kept",
+  "sfSleepTrimRemovedChunks": "Removed chunks",
+  "sfSleepTrimFreed": "Freed",
+  "sfSleepTrimAuto": "From sleep stages",
+  "sfSleepTrimConfirmBody": "Keep only {start} – {end} and delete {count} chunks outside it? This cannot be undone; synced copies are removed on the next sync.",
+  "@sfSleepTrimConfirmBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "sfSleepTrimDone": "Session trimmed",
+  "sfSleepTrimFailed": "Could not trim the session while it is being recorded, analyzed or compressed.",
   "sfSleepExportReport": "Export report",
   "sfSleepPdfReport": "PDF report",
   "sfSleepPdfFailed": "Could not create the PDF report.",

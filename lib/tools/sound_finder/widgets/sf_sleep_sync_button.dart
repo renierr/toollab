@@ -21,13 +21,19 @@ class _SfSleepSyncButtonState extends State<SfSleepSyncButton> {
   void initState() {
     super.initState();
     // Catches up on a session whose sync after recording failed, e.g. offline.
-    final appState = context.read<AppState>();
-    if (appState.syncEnabled && appState.syncsTool(SoundFinderTool.config.id)) {
+    // After the first frame, because the sync notifies AppState right away.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final appState = context.read<AppState>();
+      if (!appState.syncEnabled ||
+          !appState.syncsTool(SoundFinderTool.config.id)) {
+        return;
+      }
       appState.syncWithBackend([SleepSyncDelegate()]).catchError((Object e) {
         errorLog('[SfSleepSyncButton] Auto-sync on open failed: $e');
         return null;
       });
-    }
+    });
   }
 
   Future<void> _sync() async {

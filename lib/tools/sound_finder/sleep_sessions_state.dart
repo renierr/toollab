@@ -35,6 +35,7 @@ class SleepSessionsState extends ChangeNotifier {
     SleepSessionStore.revision.addListener(_onStoreChanged);
     SleepSessionStore.analysisProgress.addListener(notifyListeners);
     SleepSessionStore.compressionProgress.addListener(notifyListeners);
+    SleepSessionStore.recordingPath.addListener(notifyListeners);
     load();
     _loadKeepDays();
   }
@@ -68,6 +69,9 @@ class SleepSessionsState extends ChangeNotifier {
   bool get compressing =>
       _compressingAll || SleepSessionStore.compressionProgress.value.isNotEmpty;
   bool get analyzing => SleepSessionStore.analysisProgress.value.isNotEmpty;
+
+  bool isRecording(SleepSession session) =>
+      SleepSessionStore.isRecording(session.path);
 
   /// Days a session keeps its audio on this device; 0 keeps it forever.
   int get keepDays => _keepDays;
@@ -236,6 +240,18 @@ class SleepSessionsState extends ChangeNotifier {
     }
   }
 
+  /// Returns the number of chunks removed, or null when the trim was refused.
+  Future<int?> trim(SleepSession session, DateTime from, DateTime to) async {
+    if (_player.sessionId == session.id) await _player.stop();
+    _selected.remove(session.id);
+    final removed = await SleepSessionStore.trim(session, from, to);
+    if (removed != null && _healthStages.remove(session.id) != null) {
+      final trimmed = await SleepSessionStore.byId(session.id);
+      if (trimmed != null) await loadHealthStages(trimmed);
+    }
+    return removed;
+  }
+
   Future<void> delete(SleepSession session) async {
     if (_player.sessionId == session.id) await _player.stop();
     _selected.remove(session.id);
@@ -336,6 +352,7 @@ class SleepSessionsState extends ChangeNotifier {
     SleepSessionStore.revision.removeListener(_onStoreChanged);
     SleepSessionStore.analysisProgress.removeListener(notifyListeners);
     SleepSessionStore.compressionProgress.removeListener(notifyListeners);
+    SleepSessionStore.recordingPath.removeListener(notifyListeners);
     super.dispose();
   }
 }

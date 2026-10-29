@@ -71,6 +71,11 @@ class SleepSessionStore {
   static final ValueNotifier<Map<String, double>> compressionProgress =
       ValueNotifier(const {});
 
+  /// Directory of the session the recorder is writing, if any.
+  static final ValueNotifier<String?> recordingPath = ValueNotifier(null);
+
+  static bool isRecording(String path) => recordingPath.value == path;
+
   static final Map<String, Future<void>> _locks = {};
   static String? _rootPath;
 
@@ -191,10 +196,120 @@ class SleepSessionStore {
     return result;
   }
 
-  /// Writes a session as-is, keeping its [SleepSessionData.updatedAt].
+  /// Writes a session as-is, keeping its [SleepSessionData.updatedAt]. Chunks
+  /// the new version no longer lists lose their audio, so a trim made on
+  /// another device frees the space here too.
   static Future<void> replace(SleepSessionData data) async {
-    await _serialized(data.path, () => data.save(touch: false));
+    await _serialized(data.path, () async {
+      final previous = await SleepSessionData.load(data.path);
+      await data.save(touch: false);
+      if (previous == null) return;
+      final listed = {
+        for (final e in data.events) ...[
+          _chunkStem(e.fileName),
+          _chunkStem(e.syncFileName),
+        ],
+      };
+      await _dropChunks(data.path, [
+        for (final e in previous.events)
+          if (!listed.contains(_chunkStem(e.fileName)) &&
+              !listed.contains(_chunkStem(e.syncFileName)))
+            e,
+      ]);
+    });
     notifyChanged();
+  }
+
+  static String _chunkStem(String file) {
+    final dot = file.lastIndexOf('.');
+    return dot < 0 ? file : file.substring(0, dot);
+  }
+
+  /// Deletes the audio and offload entries of [events]; call inside the
+  /// session's lock.
+  static Future<void> _dropChunks(String path, List<SleepEvent> events) async {
+    if (events.isEmpty) return;
+    final offloaded = await _readOffloaded(path);
+    for (final e in events) {
+      await deleteFile('$path/${e.fileName}');
+      if (e.syncFileName != e.fileName) {
+        await deleteFile('$path/${e.syncFileName}');
+      }
+      offloaded.remove(e.syncFileName);
+    }
+    await _writeOffloaded(path, offloaded);
+  }
+
+  /// Chunks whose middle falls outside [from]..[to] are cut by a trim.
+  static bool keepsOnTrim(SleepEvent e, DateTime from, DateTime to) {
+    final mid = e.startedAt.add(e.duration ~/ 2);
+    return !mid.isBefore(from) && !mid.isAfter(to);
+  }
+
+  /// Cuts the session down to [from]..[to]. Removed chunks lose their audio and
+  /// are tombstoned, so sync deletes them on the server and other devices.
+  /// Returns the number of chunks removed, or null when nothing was saved.
+  static Future<int?> trim(
+    SleepSession session,
+    DateTime from,
+    DateTime to,
+  ) async {
+    final id = session.id;
+    if (session.synthetic ||
+        !to.isAfter(from) ||
+        isRecording(session.path) ||
+        analysisProgress.value.containsKey(id) ||
+        compressionProgress.value.containsKey(id)) {
+      return null;
+    }
+    int? removed;
+    await _serialized(session.path, () async {
+      final data = await SleepSessionData.load(session.path);
+      if (data == null) return;
+      final kept = [
+        for (final e in data.events)
+          if (keepsOnTrim(e, from, to)) e,
+      ];
+      final cut = [
+        for (final e in data.events)
+          if (!keepsOnTrim(e, from, to)) e,
+      ];
+      // A boundary chunk that stays keeps its full length inside the session.
+      final start = kept.isNotEmpty && kept.first.startedAt.isBefore(from)
+          ? kept.first.startedAt
+          : from;
+      final end = kept.isNotEmpty && kept.last.endedAt.isAfter(to)
+          ? kept.last.endedAt
+          : to;
+      final next = SleepSessionData(
+        path: data.path,
+        startedAt: start,
+        endedAt: end,
+        targetMinutes: data.targetMinutes,
+        threshold: data.threshold,
+        adaptiveThreshold: data.adaptiveThreshold,
+        events: kept,
+        levels: [
+          for (final l in data.levels)
+            if (!l.at.isBefore(start) && !l.at.isAfter(end)) l,
+        ],
+        updatedAt: math.max(
+          DateTime.now().millisecondsSinceEpoch,
+          data.updatedAt + 1,
+        ),
+        analysisVersion: data.analysisVersion,
+      );
+      // Tombstones go first: a crash before the deletes leaves files that
+      // are still listed, which keeps the tombstones from being sent.
+      await addTombstones([
+        for (final e in cut) chunkSyncId(id, e.syncFileName),
+      ]);
+      await next.save(touch: false);
+      await _dropChunks(session.path, cut);
+      removed = cut.length;
+    });
+    if (removed != null) notifyChanged();
+    return removed;
   }
 
   /// Stores the server's version of a pulled chunk in its event, so the chunk
