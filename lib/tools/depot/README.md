@@ -67,7 +67,9 @@ background task (`DepotBackgroundSync`), so all of them write the same shape.
      portfolio is read once instead;
    - the newest bookings of each portfolio are always read too, for holdings Parqet lists
      without a count (such as cash).
-4. Other periods are fetched only when selected and their cached copy is stale.
+4. Other periods are fetched only when selected and their cached copy is stale. Every
+   period response also updates the stored holdings' price, value and quote time, so
+   they stay in step with that period's figures; sold holdings are only replaced by Max.
 
 **Sync all data again** (settings) re-reads every period and every activity. It is only
 needed when a booking is edited in Parqet without changing the holding's activity count.
@@ -208,6 +210,9 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 | `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | One year of daily closes, loaded on opening wishlist details |
 
 Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
+The latest quote is Yahoo's `fulldayPrice`, which includes pre- and post-market trades,
+so US listings keep moving while Wall Street is closed; without it the regular-session
+price is used.
 Holding sparklines load only for visible rows with room to show them. For securities,
 the ISIN is sent to Parqet's public asset endpoint to resolve confirmed listing symbols;
 crypto symbols are searched on Yahoo. Yahoo receives the selected listing symbol, not

@@ -51,6 +51,7 @@ class DepotParqetSync {
     await store.savePerformance(
       portfolios: portfolios,
       holdings: period == DepotPeriod.max ? priority.holdings : null,
+      quotes: priority.quotes,
       summaries: priority.summaries,
       charts: priority.charts,
       holdingPerformance: priority.holdingPerformance,
@@ -114,6 +115,7 @@ class DepotParqetSync {
       charts: pull.charts,
       holdingPerformance: pull.holdingPerformance,
       holdings: period == DepotPeriod.max ? pull.holdings : null,
+      quotes: pull.quotes,
     );
   }
 
@@ -215,6 +217,7 @@ class _PerformancePull {
   final ParqetApi api;
   final List<DepotPortfolio> portfolios;
   final holdings = <DepotHolding>[];
+  final quotes = <DepotHolding>[];
   final activityCounts = <String, Map<String, int>>{};
   final holdingPerformance = <DepotHoldingPerformance>[];
   final summaries = <DepotSummary>[];
@@ -247,6 +250,8 @@ class _PerformancePull {
       if (period == DepotPeriod.max) {
         holdings.addAll(performance.holdings);
         activityCounts[scope] = performance.activityCounts;
+      } else {
+        quotes.addAll(performance.holdings);
       }
       holdingPerformance.addAll(performance.holdingPerformance);
     }

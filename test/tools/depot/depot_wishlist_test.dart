@@ -279,6 +279,46 @@ void main() {
     },
   );
 
+  test('market quote prefers the extended-hours price', () {
+    final close = DateTime(2026, 10, 28, 22);
+    final premarket = DateTime(2026, 10, 29, 14);
+    final parsed = YahooFinanceApi.parseChartQuote(
+      {
+        'chart': {
+          'result': [
+            {
+              'meta': {
+                'currency': 'USD',
+                'regularMarketPrice': 100,
+                'regularMarketTime': close.millisecondsSinceEpoch ~/ 1000,
+                'regularMarketChangePercent': -1,
+                'fulldayPrice': 102,
+                'fulldayChangePercent': 2,
+                'previousClose': 101,
+              },
+              'timestamp': [
+                close.millisecondsSinceEpoch ~/ 1000,
+                premarket.millisecondsSinceEpoch ~/ 1000,
+              ],
+              'indicators': {
+                'quote': [
+                  {
+                    'close': [100, 102],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      'TEST',
+      dailyCloses: false,
+    );
+    expect(parsed.price, 102);
+    expect(parsed.dayChangePercent, 2);
+    expect(parsed.quoteAt, premarket);
+  });
+
   test(
     'currency preference persists and ISIN links to an existing item',
     () async {

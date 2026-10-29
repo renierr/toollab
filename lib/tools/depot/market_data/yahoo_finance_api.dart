@@ -167,7 +167,11 @@ class YahooFinanceApi {
       }
       points.add(MarketPricePoint(date: date, close: close));
     }
+    // fulldayPrice includes pre- and post-market trades, so a US listing
+    // does not freeze at the last close while Wall Street is shut.
+    final fulldayPrice = value(meta['fulldayPrice']);
     final price =
+        fulldayPrice ??
         value(meta['regularMarketPrice']) ??
         (points.isEmpty ? null : points.last.close);
     if (price == null) {
@@ -179,7 +183,18 @@ class YahooFinanceApi {
         (dailyCloses && points.length > 1
             ? points[points.length - 2].close
             : 0);
-    final quoteTime = meta['regularMarketTime'];
+    final regularTime = meta['regularMarketTime'];
+    var quoteAt = regularTime is num
+        ? DateTime.fromMillisecondsSinceEpoch((regularTime * 1000).round())
+        : null;
+    if (fulldayPrice != null &&
+        points.isNotEmpty &&
+        (quoteAt == null || points.last.date.isAfter(quoteAt))) {
+      quoteAt = points.last.date;
+    }
+    final changePercent = fulldayPrice != null
+        ? meta['fulldayChangePercent']
+        : meta['regularMarketChangePercent'];
     return MarketQuote(
       price: price,
       previousClose: previousClose,
@@ -193,11 +208,9 @@ class YahooFinanceApi {
       dayLow: value(meta['regularMarketDayLow']),
       yearHigh: value(meta['fiftyTwoWeekHigh']),
       yearLow: value(meta['fiftyTwoWeekLow']),
-      quoteAt: quoteTime is num
-          ? DateTime.fromMillisecondsSinceEpoch((quoteTime * 1000).round())
-          : null,
-      quotedDayChangePercent: meta['regularMarketChangePercent'] is num
-          ? (meta['regularMarketChangePercent'] as num).toDouble()
+      quoteAt: quoteAt,
+      quotedDayChangePercent: changePercent is num
+          ? changePercent.toDouble()
           : null,
     );
   }

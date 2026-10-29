@@ -685,6 +685,7 @@ class DepotStore {
   Future<void> savePerformance({
     List<DepotPortfolio>? portfolios,
     List<DepotHolding>? holdings,
+    List<DepotHolding> quotes = const [],
     required List<DepotSummary> summaries,
     required Map<DepotPeriodKey, List<DepotChartPoint>> charts,
     required List<DepotHoldingPerformance> holdingPerformance,
@@ -692,6 +693,24 @@ class DepotStore {
     final db = await _getDb();
     await db.transaction((txn) async {
       if (portfolios != null) await _replacePortfolios(txn, portfolios);
+      if (holdings == null && quotes.isNotEmpty) {
+        // Shorter periods omit sold holdings, so only their quotes are taken.
+        final batch = txn.batch();
+        for (final quote in quotes) {
+          batch.update(
+            _holdings,
+            {
+              'current_price': quote.currentPrice,
+              'current_value': quote.currentValue,
+              'quote_at': quote.quoteAt?.millisecondsSinceEpoch,
+              'quote_exchange': quote.quoteExchange,
+            },
+            where: 'id = ? AND portfolio_id = ?',
+            whereArgs: [quote.id, quote.portfolioId],
+          );
+        }
+        await batch.commit(noResult: true);
+      }
       if (holdings != null) {
         await txn.delete(_holdings);
         final batch = txn.batch();
