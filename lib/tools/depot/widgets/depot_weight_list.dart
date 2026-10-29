@@ -118,6 +118,7 @@ class DepotWeightList extends StatelessWidget {
                       borderRadius: BorderRadius.circular(2),
                     ),
                     child: SizedBox(
+                      height: 4,
                       width:
                           constraints.maxWidth *
                           (largest <= 0 ? 0 : holding.currentValue / largest),

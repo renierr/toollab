@@ -7,10 +7,10 @@ class DepotAssetProfile {
   final String? region;
   final int cacheVersion;
 
-  /// Share per sector for funds, 0..1 and summing to 1.
+  /// Known shares of the whole fund, which may sum to less than 1.
   final Map<String, double> sectorShares;
 
-  /// Share per country for funds, derived from the top holdings, 0..1.
+  /// Known shares of the whole fund, derived from its top holdings.
   final Map<String, double> countryShares;
 
   final DateTime fetchedAt;
@@ -20,7 +20,7 @@ class DepotAssetProfile {
     this.industry,
     this.country,
     this.region,
-    this.cacheVersion = 2,
+    this.cacheVersion = 3,
     this.sectorShares = const {},
     this.countryShares = const {},
     required this.fetchedAt,
@@ -48,14 +48,15 @@ class DepotAssetProfile {
 
   factory DepotAssetProfile.fromJson(Map<String, dynamic> json) {
     final fetched = json['fetchedAt'];
+    final version = (json['cacheVersion'] as num?)?.toInt() ?? 1;
     return DepotAssetProfile(
       sector: _text(json['sector']),
       industry: _text(json['industry']),
       country: _text(json['country']),
       region: _text(json['region']),
-      cacheVersion: (json['cacheVersion'] as num?)?.toInt() ?? 1,
-      sectorShares: _shares(json['sectorShares']),
-      countryShares: _shares(json['countryShares']),
+      cacheVersion: version,
+      sectorShares: version >= 3 ? _shares(json['sectorShares']) : const {},
+      countryShares: version >= 3 ? _shares(json['countryShares']) : const {},
       fetchedAt: DateTime.fromMillisecondsSinceEpoch(
         fetched is num
             ? fetched.round()
@@ -87,7 +88,11 @@ class DepotAssetProfile {
     for (final entry in raw.entries) {
       final key = entry.key;
       final value = entry.value;
-      if (key is String && value is num && value > 0) {
+      if (key is String &&
+          value is num &&
+          value.isFinite &&
+          value > 0 &&
+          value <= 1) {
         result[key] = value.toDouble();
       }
     }

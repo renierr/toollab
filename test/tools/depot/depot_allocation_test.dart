@@ -66,11 +66,11 @@ void main() {
       },
     );
 
-    test('maps fund countries to regions and normalizes shares', () {
+    test('maps fund countries to regions without inflating partial shares', () {
       final fund = _holding('fund', value: 400);
       final other = _holding('other', value: 600);
       final profile = _profile(
-        countryShares: const {'United States': 0.75, 'Germany': 0.25},
+        countryShares: const {'United States': 0.30, 'Germany': 0.10},
       );
 
       final regions = depotAllocationBreakdown(
@@ -79,9 +79,46 @@ void main() {
         dimension: DepotAllocationDimension.region,
       );
 
-      expect(regions[DepotRegion.northAmerica.name], 300);
-      expect(regions[DepotRegion.europe.name], 100);
-      expect(regions[null], 600);
+      expect(regions[DepotRegion.northAmerica.name], closeTo(120, 0.001));
+      expect(regions[DepotRegion.europe.name], closeTo(40, 0.001));
+      expect(regions[null], closeTo(840, 0.001));
+    });
+
+    test('leaves missing sector weight unclassified', () {
+      final sectors = depotAllocationBreakdown(
+        holdings: [_holding('fund', value: 1000)],
+        profileOf: (_) =>
+            _profile(sectorShares: const {'Technology': 0.2, 'Energy': 0.1}),
+        dimension: DepotAllocationDimension.sector,
+      );
+      expect(sectors['Technology'], closeTo(200, 0.001));
+      expect(sectors['Energy'], closeTo(100, 0.001));
+      expect(sectors[null], closeTo(700, 0.001));
+    });
+
+    test('handles tiny rounding excess without exceeding portfolio value', () {
+      final sectors = depotAllocationBreakdown(
+        holdings: [_holding('fund', value: 1000)],
+        profileOf: (_) =>
+            _profile(sectorShares: const {'Technology': 0.6, 'Energy': 0.4001}),
+        dimension: DepotAllocationDimension.sector,
+      );
+      expect(
+        sectors.values.fold<double>(0, (a, b) => a + b),
+        closeTo(1000, 0.0001),
+      );
+      expect(sectors[null], isNull);
+    });
+
+    test('ignores normalized fund shares from old cache versions', () {
+      final profile = DepotAssetProfile.fromJson({
+        'cacheVersion': 2,
+        'sectorShares': {'Technology': 1.0},
+        'countryShares': {'United States': 1.0},
+        'fetchedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+      expect(profile.sectorShares, isEmpty);
+      expect(profile.countryShares, isEmpty);
     });
 
     test('sold positions do not take part', () {
@@ -163,8 +200,9 @@ void main() {
             'IE00ETF' => (
               profile: _profile(sectorShares: const {'Technology': 1}),
               topHoldings: <({String symbol, double weight})>[
-                (symbol: 'AAPL', weight: 3),
-                (symbol: 'SAP', weight: 1),
+                (symbol: 'AAPL', weight: 0.3),
+                (symbol: 'SAP', weight: 0.1),
+                (symbol: 'MISSING', weight: 0.2),
               ],
             ),
             'AAPL' => (
@@ -191,9 +229,15 @@ void main() {
         final profile = state.profileOf(etf);
         expect(profile, isNotNull);
         expect(profile!.sectorShares, {'Technology': 1});
-        expect(profile.countryShares['United States'], closeTo(0.75, 0.001));
-        expect(profile.countryShares['Germany'], closeTo(0.25, 0.001));
+        expect(profile.countryShares['United States'], closeTo(0.3, 0.001));
+        expect(profile.countryShares['Germany'], closeTo(0.1, 0.001));
         expect(calls, containsAll(['IE00ETF', 'AAPL', 'SAP']));
+        final breakdown = depotAllocationBreakdown(
+          holdings: [etf],
+          profileOf: state.profileOf,
+          dimension: DepotAllocationDimension.region,
+        );
+        expect(breakdown[null], closeTo(600, 0.001));
 
         final reopened = DepotAllocationState(
           profileLoader: (query, session) async {
@@ -207,6 +251,56 @@ void main() {
 
         expect(reopened.profileOf(etf)?.countryShares, profile.countryShares);
         expect(calls.where((query) => query == 'IE00ETF'), hasLength(1));
+      },
+    );
+
+    test(
+      'fills missing stock details from confirmed alternative listings',
+      () async {
+        final stock = _holding('stock', isin: 'DE0007164600');
+        final state = DepotAllocationState(
+          profileLoader: (query, session) async {
+            calls.add(query);
+            return switch (query) {
+              'DE0007164600' => (
+                profile: _profile(sector: 'Technology'),
+                topHoldings: const <({String symbol, double weight})>[],
+              ),
+              'SAP' => (
+                profile: _profile(industry: 'Software', country: 'Germany'),
+                topHoldings: const <({String symbol, double weight})>[],
+              ),
+              _ => null,
+            };
+          },
+          confirmedSymbolsLoader: (_) async => ['SAP.DE', 'SAP'],
+          sessionLoader: () async => null,
+        );
+        addTearDown(state.dispose);
+        await state.ensureProfiles([stock]);
+        expect(calls, ['DE0007164600', 'SAP']);
+        expect(state.profileOf(stock)?.sector, 'Technology');
+        expect(state.profileOf(stock)?.industry, 'Software');
+        expect(state.profileOf(stock)?.country, 'Germany');
+      },
+    );
+
+    test(
+      'never searches unconfirmed names when listings are unavailable',
+      () async {
+        final stock = _holding('stock', isin: 'DE0007164600');
+        final state = DepotAllocationState(
+          profileLoader: (query, session) async {
+            calls.add(query);
+            return null;
+          },
+          confirmedSymbolsLoader: (_) async => [],
+          sessionLoader: () async => null,
+        );
+        addTearDown(state.dispose);
+        await state.ensureProfiles([stock]);
+        expect(calls, ['DE0007164600']);
+        expect(state.profileOf(stock), isNull);
       },
     );
 
@@ -236,7 +330,40 @@ void main() {
       },
     );
 
-    test('refresh waits for an active fetch and then reloads', () async {
+    test(
+      'refreshes old normalized fund caches even when recently fetched',
+      () async {
+        final etf = _holding('ETF', isin: 'IE00ETF', value: 1000);
+        await store.saveAssetProfiles({
+          'IE00ETF': DepotAssetProfile(
+            cacheVersion: 2,
+            sectorShares: const {'Technology': 1},
+            countryShares: const {'United States': 1},
+            fetchedAt: DateTime.now(),
+          ),
+        });
+        final state = DepotAllocationState(
+          profileLoader: (query, session) async {
+            calls.add(query);
+            return (
+              profile: DepotAssetProfile(
+                sectorShares: const {'Technology': 0.4},
+                fetchedAt: DateTime.now(),
+              ),
+              topHoldings: const <({String symbol, double weight})>[],
+            );
+          },
+          sessionLoader: () async => null,
+        );
+        addTearDown(state.dispose);
+        await state.ensureProfiles([etf]);
+        expect(calls, ['IE00ETF']);
+        expect(state.profileOf(etf)?.sectorShares, {'Technology': 0.4});
+        expect(state.profileOf(etf)?.countryShares, isEmpty);
+      },
+    );
+
+    test('refresh waits for an active fetch without repeating it', () async {
       final started = Completer<void>();
       final release = Completer<void>();
       final holding = _holding('AAPL');
@@ -261,7 +388,93 @@ void main() {
       release.complete();
       await initial;
       await refresh;
+      expect(calls, ['AAPL']);
+    });
+
+    test(
+      'complete cached profiles never expire or fetch automatically',
+      () async {
+        final now = DateTime(2026, 10, 29);
+        final holding = _holding('AAPL');
+        await store.saveAssetProfiles({
+          'AAPL': DepotAssetProfile(
+            sector: 'Technology',
+            industry: 'Electronics',
+            country: 'United States',
+            fetchedAt: now.subtract(const Duration(days: 365)),
+          ),
+        });
+        final state = DepotAllocationState(
+          clock: () => now,
+          profileLoader: (query, session) async {
+            calls.add(query);
+            return null;
+          },
+          sessionLoader: () async => null,
+        );
+        addTearDown(state.dispose);
+        await state.ensureLoaded();
+        expect(calls, isEmpty);
+        expect(state.profileOf(holding)?.sector, 'Technology');
+        await state.refresh([holding]);
+        expect(calls, isEmpty);
+      },
+    );
+
+    test('failed lookups retry after one day across restarts', () async {
+      var now = DateTime(2026, 10, 29);
+      final holding = _holding('AAPL');
+      DepotAllocationState makeState() => DepotAllocationState(
+        clock: () => now,
+        profileLoader: (query, session) async {
+          calls.add(query);
+          return null;
+        },
+        confirmedSymbolsLoader: (_) async => [],
+        sessionLoader: () async => null,
+      );
+      final first = makeState();
+      await first.refresh([holding]);
+      await first.refresh([holding]);
+      expect(calls, ['AAPL']);
+      first.dispose();
+      final reopened = makeState();
+      addTearDown(reopened.dispose);
+      now = now.add(const Duration(hours: 23));
+      await reopened.refresh([holding]);
+      expect(calls, ['AAPL']);
+      now = now.add(const Duration(hours: 2));
+      await reopened.refresh([holding]);
       expect(calls, ['AAPL', 'AAPL']);
+    });
+
+    test('retries missing fields without replacing known values', () async {
+      final now = DateTime(2026, 10, 29);
+      final holding = _holding('AAPL');
+      await store.saveAssetProfiles({
+        'AAPL': DepotAssetProfile(
+          sector: 'Technology',
+          fetchedAt: now.subtract(const Duration(days: 2)),
+        ),
+      });
+      final state = DepotAllocationState(
+        clock: () => now,
+        profileLoader: (query, session) async => (
+          profile: DepotAssetProfile(
+            sector: 'Different',
+            industry: 'Electronics',
+            country: 'United States',
+            fetchedAt: now,
+          ),
+          topHoldings: const <({String symbol, double weight})>[],
+        ),
+        sessionLoader: () async => null,
+      );
+      addTearDown(state.dispose);
+      await state.refresh([holding]);
+      expect(state.profileOf(holding)?.sector, 'Technology');
+      expect(state.profileOf(holding)?.industry, 'Electronics');
+      expect(state.profileOf(holding)?.country, 'United States');
     });
   });
 }

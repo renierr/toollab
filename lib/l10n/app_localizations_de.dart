@@ -11501,6 +11501,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotAllocationTitle => 'Aufteilung';
 
   @override
+  String get depotAllocationRefresh =>
+      'Fehlende Aufteilungsdaten aktualisieren';
+
+  @override
   String get depotAllocationByRegion => 'Nach Region';
 
   @override
@@ -11527,7 +11531,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotAllocationSourceNote =>
-      'Metadaten stammen von Yahoo Finance und Nasdaq. Fondsregionen werden anhand der größten Positionen geschätzt; fehlende Daten bleiben unklassifiziert.';
+      'Synchronisieren lädt fehlende Daten von Yahoo Finance und Nasdaq. Fondsregionen basieren auf bis zu zehn größten Positionen; der Rest und fehlende Daten bleiben unklassifiziert.';
 
   @override
   String get depotRegionNorthAmerica => 'Nordamerika';

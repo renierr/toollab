@@ -44,10 +44,12 @@ void _addShares(
 ) {
   if (shares != null && shares.isNotEmpty) {
     final total = shares.values.fold<double>(0, (a, b) => a + b);
-    if (total > 0) {
+    if (total > 0 && total <= 1.001) {
+      final divisor = total > 1 ? total : 1.0;
       for (final entry in shares.entries) {
-        add(entry.key, value * entry.value / total);
+        add(entry.key, value * entry.value / divisor);
       }
+      add(null, value * (1 - total / divisor));
       return;
     }
   }
@@ -66,10 +68,12 @@ void _addRegions(
   final shares = profile.countryShares;
   if (shares.isNotEmpty) {
     final total = shares.values.fold<double>(0, (a, b) => a + b);
-    if (total > 0) {
+    if (total > 0 && total <= 1.001) {
+      final divisor = total > 1 ? total : 1.0;
       for (final entry in shares.entries) {
-        add(DepotRegion.of(entry.key).name, value * entry.value / total);
+        add(DepotRegion.of(entry.key).name, value * entry.value / divisor);
       }
+      add(null, value * (1 - total / divisor));
       return;
     }
   }

@@ -250,10 +250,13 @@ search result; if Parqet cannot confirm the match, the ISIN remains unknown.
 
 The Allocation tab resolves sector, industry and country per open holding. A fund has no
 single sector or country, so its sector split comes from Yahoo's `topHoldings` weights and
-its region split is approximated by the domicile of its ten largest constituents. Nasdaq
-region data is used as a fallback for US-listed stocks, including fund constituents. Holdings
-without metadata are grouped as "Unclassified" rather than guessed. Profiles are cached in
-the tool settings for 30 days, so opening the tab offline still shows the last known split.
+its region split uses the domicile of up to ten largest constituents. Only their known
+fund weights are classified; the remainder stays "Unclassified". Nasdaq region data is a
+fallback for US-listed stocks, including fund constituents. Missing stock metadata can also
+be retried against up to three US-format listings confirmed by Parqet for the same ISIN.
+Profiles are stored in tool settings and loaded without network requests. Allocation sync
+only fetches incomplete metadata, at most once per asset every 24 hours; known values are
+retained. Older normalized fund data is discarded. Portfolio sync remains independent.
 
 ## Local data
 

@@ -398,7 +398,9 @@ class YahooFinanceApi {
         return item;
       }
     }
-    return first;
+    return RegExp(r'^[A-Z]{2}[A-Z0-9]{9}[0-9]$').hasMatch(query.toUpperCase())
+        ? first
+        : null;
   }
 
   static Map<String, double> _sectorShares(Object? raw) {
@@ -408,34 +410,39 @@ class YahooFinanceApi {
       if (item is! Map) continue;
       for (final entry in item.entries) {
         final key = entry.key;
-        final value = entry.value;
-        if (key is! String || value is! num || value <= 0) continue;
+        final value = _profileWeight(entry.value);
+        if (key is! String || value == null) continue;
         final name = _sectorNames[key.toLowerCase().replaceAll('_', '')] ?? key;
         shares.update(
           name,
-          (current) => current + value.toDouble(),
-          ifAbsent: () => value.toDouble(),
+          (current) => current + value,
+          ifAbsent: () => value,
         );
       }
     }
     final total = shares.values.fold<double>(0, (a, b) => a + b);
-    if (total <= 0) return const {};
-    return {for (final entry in shares.entries) entry.key: entry.value / total};
+    if (total <= 0 || total > 1.001) return const {};
+    return shares;
   }
 
   static List<({String symbol, double weight})> _topHoldings(Object? raw) {
     if (raw is! List) return const [];
-    return [
-      for (final item in raw)
-        if (item is Map &&
-            item['symbol'] is String &&
-            (item['symbol'] as String).isNotEmpty &&
-            item['holdingPercent'] is num)
-          (
-            symbol: item['symbol'] as String,
-            weight: (item['holdingPercent'] as num).toDouble(),
-          ),
-    ];
+    final holdings = <({String symbol, double weight})>[];
+    for (final item in raw) {
+      if (item is! Map || item['symbol'] is! String) continue;
+      final symbol = (item['symbol'] as String).trim();
+      final weight = _profileWeight(item['holdingPercent']);
+      if (symbol.isNotEmpty && weight != null) {
+        holdings.add((symbol: symbol, weight: weight));
+      }
+    }
+    return holdings;
+  }
+
+  static double? _profileWeight(Object? value) {
+    final raw = value is Map ? value['raw'] : value;
+    if (raw is! num || !raw.isFinite || raw <= 0 || raw > 1) return null;
+    return raw.toDouble();
   }
 
   static String? _clean(String? value) {

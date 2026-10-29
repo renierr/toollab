@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
+import 'depot_market_search.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_asset_profile.dart';
 import 'models/depot_holding.dart';
@@ -15,21 +16,29 @@ class DepotAllocationState extends ChangeNotifier {
     Future<YahooAssetProfile?> Function(String query, YahooSession? session)?
     profileLoader,
     Future<YahooSession?> Function()? sessionLoader,
+    Future<List<String>> Function(DepotHolding holding)? confirmedSymbolsLoader,
+    DateTime Function()? clock,
   }) : _profileLoader = profileLoader ?? _loadProfile,
-       _sessionLoader = sessionLoader ?? YahooFinanceApi.session;
+       _sessionLoader = sessionLoader ?? YahooFinanceApi.session,
+       _confirmedSymbolsLoader =
+           confirmedSymbolsLoader ?? DepotMarketSearch.holdingSymbols,
+       _clock = clock ?? DateTime.now;
 
-  static const Duration staleAfter = Duration(days: 30);
+  static const Duration retryAfter = Duration(days: 1);
   static const int _parallelRequests = 3;
   static const int _maxConstituents = 10;
+  static const int _maxAlternateListings = 3;
 
   final DepotStore _store = DepotStore.instance;
   final Future<YahooAssetProfile?> Function(String, YahooSession?)
   _profileLoader;
   final Future<YahooSession?> Function() _sessionLoader;
+  final Future<List<String>> Function(DepotHolding) _confirmedSymbolsLoader;
+  final DateTime Function() _clock;
 
   Map<String, DepotAssetProfile> _profiles = const {};
+  Map<String, DateTime> _attempts = {};
   final Set<String> _pending = {};
-  final Set<String> _failed = {};
   Future<void>? _cacheLoad;
   bool _cacheLoaded = false;
   bool _isFetching = false;
@@ -56,29 +65,23 @@ class DepotAllocationState extends ChangeNotifier {
     return null;
   }
 
-  Future<void> ensureProfiles(
-    Iterable<DepotHolding> holdings, {
-    bool force = false,
-  }) async {
+  Future<void> ensureProfiles(Iterable<DepotHolding> holdings) async {
     if (_disposed) return;
-    await _ensureCache();
+    await ensureLoaded();
     if (_disposed || _isFetching) return;
 
-    final now = DateTime.now();
     final generation = _generation;
     final targets = <String, DepotHolding>{};
     for (final holding in holdings) {
-      if (holding.isSold || holding.currentValue <= 0) continue;
+      if (holding.isSold ||
+          holding.currentValue <= 0 ||
+          holding.assetType != DepotAssetType.security) {
+        continue;
+      }
       final key = _keyOf(holding);
       if (key == null || _pending.contains(key)) continue;
       final cached = _profiles[key];
-      final fresh =
-          cached != null &&
-          (cached.cacheVersion >= 2 ||
-              cached.country != null ||
-              cached.countryShares.isNotEmpty) &&
-          now.difference(cached.fetchedAt) < staleAfter;
-      if (!force && (fresh || _failed.contains(key))) continue;
+      if (!_needsProfile(holding, cached) || !_isDue(key, cached)) continue;
       targets[key] = holding;
     }
     if (targets.isEmpty) return;
@@ -92,8 +95,13 @@ class DepotAllocationState extends ChangeNotifier {
       final entries = targets.entries.toList();
       for (var start = 0; start < entries.length; start += _parallelRequests) {
         if (_disposed || generation != _generation) break;
+        final chunk = entries.skip(start).take(_parallelRequests).toList();
+        for (final entry in chunk) {
+          _attempts[entry.key] = _clock();
+        }
+        await _store.saveAssetProfileAttempts(_attempts);
         final results = await Future.wait([
-          for (final entry in entries.skip(start).take(_parallelRequests))
+          for (final entry in chunk)
             _fetch(entry.key, entry.value, session, generation),
         ]);
         changed = results.any((fetched) => fetched) || changed;
@@ -101,9 +109,10 @@ class DepotAllocationState extends ChangeNotifier {
     } catch (e) {
       errorLog('[DepotAllocationState] Fetching profiles failed: $e');
     } finally {
-      if (changed && !_disposed) {
+      if (!_disposed && generation == _generation) {
         try {
-          await _store.saveAssetProfiles(_profiles);
+          if (changed) await _store.saveAssetProfiles(_profiles);
+          await _store.saveAssetProfileAttempts(_attempts);
         } catch (e) {
           errorLog('[DepotAllocationState] Saving profiles failed: $e');
         }
@@ -117,20 +126,41 @@ class DepotAllocationState extends ChangeNotifier {
     }
   }
 
-  /// Re-reads every position's profile, used by pull-to-refresh.
+  /// Fetches missing metadata, respecting the per-asset retry interval.
   Future<void> refresh(Iterable<DepotHolding> holdings) async {
     await _fetchDone?.future;
-    _failed.clear();
-    await ensureProfiles(holdings, force: true);
+    await ensureProfiles(holdings);
   }
 
-  Future<void> _ensureCache() => _cacheLoad ??= _loadCache();
+  Future<void> ensureLoaded() => _cacheLoad ??= _loadCache();
+
+  bool _isDue(String key, DepotAssetProfile? cached) {
+    final last =
+        _attempts[key] ??
+        (cached != null && cached.cacheVersion >= 3 ? cached.fetchedAt : null);
+    return last == null || _clock().difference(last) >= retryAfter;
+  }
+
+  bool _needsProfile(DepotHolding holding, DepotAssetProfile? profile) {
+    if (profile == null) return true;
+    return switch (holding.kind) {
+      DepotHoldingKind.etf || DepotHoldingKind.fund =>
+        profile.sectorShares.isEmpty || profile.countryShares.isEmpty,
+      DepotHoldingKind.stock =>
+        profile.sector == null ||
+            profile.industry == null ||
+            (profile.country == null && profile.region == null),
+      _ => false,
+    };
+  }
 
   Future<void> _loadCache() async {
     try {
       final cached = await _store.assetProfiles();
+      final attempts = await _store.assetProfileAttempts();
       if (_disposed) return;
       _profiles = {...cached, ..._profiles};
+      _attempts = {...attempts, ..._attempts};
     } catch (e) {
       errorLog('[DepotAllocationState] Loading cached profiles failed: $e');
     }
@@ -149,30 +179,109 @@ class DepotAllocationState extends ChangeNotifier {
       final query = _keyOf(holding) ?? key;
       final result = await _profileLoader(query, session);
       if (_disposed || generation != _generation) return false;
-      if (result == null) {
-        _failed.add(key);
+      var profile = result?.profile;
+      if (holding.kind == DepotHoldingKind.stock &&
+          (profile?.country == null && profile?.region == null ||
+              profile?.sector == null ||
+              profile?.industry == null)) {
+        profile = await _completeFromListings(
+          holding,
+          profile,
+          session,
+          generation,
+        );
+      }
+      if (_disposed || generation != _generation) return false;
+      if (profile == null) {
         return false;
       }
-      var profile = result.profile;
-      if (profile.countryShares.isEmpty && result.topHoldings.isNotEmpty) {
+      if (profile.countryShares.isEmpty &&
+          (result?.topHoldings.isNotEmpty ?? false)) {
         final shares = await _countryShares(
-          result.topHoldings,
+          result!.topHoldings,
           session,
           generation,
         );
         profile = profile.copyWith(countryShares: shares);
       }
       if (_disposed || generation != _generation) return false;
+      final previous = _profiles[key];
+      if (previous != null) {
+        profile = DepotAssetProfile(
+          sector: previous.sector ?? profile.sector,
+          industry: previous.industry ?? profile.industry,
+          country: previous.country ?? profile.country,
+          region: previous.region ?? profile.region,
+          sectorShares:
+              previous.cacheVersion >= 3 && previous.sectorShares.isNotEmpty
+              ? previous.sectorShares
+              : profile.sectorShares,
+          countryShares:
+              previous.cacheVersion >= 3 && previous.countryShares.isNotEmpty
+              ? previous.countryShares
+              : profile.countryShares,
+          fetchedAt: profile.fetchedAt,
+        );
+      }
       _profiles = {..._profiles, key: profile};
-      _failed.remove(key);
       return true;
     } catch (e) {
-      _failed.add(key);
       errorLog('[DepotAllocationState] Profile failed for $key: $e');
       return false;
     } finally {
       _pending.remove(key);
     }
+  }
+
+  Future<DepotAssetProfile?> _completeFromListings(
+    DepotHolding holding,
+    DepotAssetProfile? profile,
+    YahooSession? session,
+    int generation,
+  ) async {
+    try {
+      final symbols = await _confirmedSymbolsLoader(holding);
+      final candidates = symbols
+          .toSet()
+          .where((symbol) => RegExp(r'^[A-Za-z0-9-]+$').hasMatch(symbol))
+          .take(_maxAlternateListings);
+      for (final symbol in candidates) {
+        if (_disposed || generation != _generation) break;
+        try {
+          var alternate = _profiles[symbol];
+          if ((alternate == null ||
+                  (alternate.country == null && alternate.region == null)) &&
+              _isDue(symbol, alternate)) {
+            _attempts[symbol] = _clock();
+            alternate =
+                (await _profileLoader(symbol, session))?.profile ?? alternate;
+            if (alternate != null) {
+              _profiles = {..._profiles, symbol: alternate};
+            }
+          }
+          if (alternate == null) continue;
+          profile = DepotAssetProfile(
+            sector: profile?.sector ?? alternate.sector,
+            industry: profile?.industry ?? alternate.industry,
+            country: profile?.country ?? alternate.country,
+            region: profile?.region ?? alternate.region,
+            sectorShares: profile?.sectorShares ?? const {},
+            countryShares: profile?.countryShares ?? const {},
+            fetchedAt: profile?.fetchedAt ?? alternate.fetchedAt,
+          );
+          if ((profile.country != null || profile.region != null) &&
+              profile.sector != null &&
+              profile.industry != null) {
+            break;
+          }
+        } catch (e) {
+          debugLog('[DepotAllocationState] Alternate listing failed: $e');
+        }
+      }
+    } catch (e) {
+      debugLog('[DepotAllocationState] Confirmed listings unavailable: $e');
+    }
+    return profile;
   }
 
   /// A fund's region mix is approximated from the domicile of its largest
@@ -183,8 +292,20 @@ class DepotAllocationState extends ChangeNotifier {
     int generation,
   ) async {
     final countries = <String, double>{};
-    var total = 0.0;
-    final entries = topHoldings.take(_maxConstituents).toList();
+    final valid =
+        topHoldings
+            .where(
+              (entry) =>
+                  entry.weight.isFinite &&
+                  entry.weight > 0 &&
+                  entry.weight <= 1,
+            )
+            .toList()
+          ..sort((a, b) => b.weight.compareTo(a.weight));
+    final entries = valid.take(_maxConstituents).toList();
+    if (entries.fold<double>(0, (sum, entry) => sum + entry.weight) > 1.001) {
+      return const {};
+    }
     for (var start = 0; start < entries.length; start += _parallelRequests) {
       if (_disposed || generation != _generation) break;
       final loaded = await Future.wait([
@@ -200,13 +321,9 @@ class DepotAllocationState extends ChangeNotifier {
           (current) => current + weight,
           ifAbsent: () => weight,
         );
-        total += weight;
       }
     }
-    if (total <= 0) return const {};
-    return {
-      for (final entry in countries.entries) entry.key: entry.value / total,
-    };
+    return countries;
   }
 
   Future<String?> _constituentCountry(
@@ -217,7 +334,8 @@ class DepotAllocationState extends ChangeNotifier {
     if (cached?.country != null || cached?.region != null) {
       return cached?.country ?? cached?.region;
     }
-    if (!_pending.add(symbol)) return null;
+    if (!_isDue(symbol, cached) || !_pending.add(symbol)) return null;
+    _attempts[symbol] = _clock();
     try {
       final result = await _profileLoader(symbol, session);
       if (result == null || _disposed) return null;
@@ -236,6 +354,7 @@ class DepotAllocationState extends ChangeNotifier {
     _isFetching = false;
     _pending.clear();
     _profiles = const {};
+    _attempts = {};
     _cacheLoad = null;
     _cacheLoaded = false;
   }

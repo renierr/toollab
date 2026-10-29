@@ -42,7 +42,7 @@ class DepotAllocationTabView extends StatelessWidget {
         if (!holding.isSold && holding.currentValue > 0) holding,
     ];
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => allocation.ensureProfiles(holdings),
+      (_) => allocation.ensureLoaded(),
     );
 
     final format = DepotFormat.of(context, portfolio.currency);

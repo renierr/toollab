@@ -77,6 +77,7 @@ class DepotStore {
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
   static const _assetProfilesKey = 'asset_profiles';
+  static const _assetProfileAttemptsKey = 'asset_profile_attempts';
 
   String get _toolId => DepotTool.config.id;
 
@@ -455,6 +456,38 @@ class DepotStore {
         _assetProfilesKey,
         jsonEncode({
           for (final entry in profiles.entries) entry.key: entry.value.toJson(),
+        }),
+      );
+
+  Future<Map<String, DateTime>> assetProfileAttempts() async {
+    final stored = await DatabaseService.instance.getSetting(
+      _toolId,
+      _assetProfileAttemptsKey,
+    );
+    if (stored == null || stored.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(stored);
+      if (decoded is! Map) return {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.key is String && entry.value is int)
+            entry.key as String: DateTime.fromMillisecondsSinceEpoch(
+              entry.value as int,
+            ),
+      };
+    } catch (e) {
+      errorLog('[DepotStore] Reading profile attempts failed: $e');
+      return {};
+    }
+  }
+
+  Future<void> saveAssetProfileAttempts(Map<String, DateTime> attempts) =>
+      DatabaseService.instance.setSetting(
+        _toolId,
+        _assetProfileAttemptsKey,
+        jsonEncode({
+          for (final entry in attempts.entries)
+            entry.key: entry.value.millisecondsSinceEpoch,
         }),
       );
 
@@ -982,5 +1015,9 @@ class DepotStore {
     await DatabaseService.instance.deleteSetting(_toolId, _lastSyncKey);
     await DatabaseService.instance.deleteSetting(_toolId, _activityFullSyncKey);
     await DatabaseService.instance.deleteSetting(_toolId, _assetProfilesKey);
+    await DatabaseService.instance.deleteSetting(
+      _toolId,
+      _assetProfileAttemptsKey,
+    );
   }
 }

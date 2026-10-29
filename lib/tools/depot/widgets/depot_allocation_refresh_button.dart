@@ -15,7 +15,7 @@ class DepotAllocationRefreshButton extends StatelessWidget {
     final allocation = context.watch<DepotAllocationState>();
     final busy = portfolio.isSyncing || allocation.isFetching;
     return IconButton(
-      tooltip: AppLocalizations.of(context).depotSyncNow,
+      tooltip: AppLocalizations.of(context).depotAllocationRefresh,
       icon: busy
           ? const SizedBox(
               width: 20,

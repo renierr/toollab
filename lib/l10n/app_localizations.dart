@@ -20381,6 +20381,12 @@ abstract class AppLocalizations {
   /// **'Allocation'**
   String get depotAllocationTitle;
 
+  /// No description provided for @depotAllocationRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Update missing allocation data'**
+  String get depotAllocationRefresh;
+
   /// No description provided for @depotAllocationByRegion.
   ///
   /// In en, this message translates to:
@@ -20432,7 +20438,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotAllocationSourceNote.
   ///
   /// In en, this message translates to:
-  /// **'Metadata comes from Yahoo Finance and Nasdaq. Fund regions are estimated from their largest holdings; unavailable data is unclassified.'**
+  /// **'Use sync to fetch missing Yahoo Finance and Nasdaq data. Fund regions use up to ten largest holdings; remaining or unavailable data is unclassified.'**
   String get depotAllocationSourceNote;
 
   /// No description provided for @depotRegionNorthAmerica.
