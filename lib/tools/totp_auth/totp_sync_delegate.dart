@@ -1,14 +1,19 @@
+import 'dart:convert';
+
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 
 import 'config.dart';
 import 'totp_account.dart';
+import 'totp_auth_state.dart';
 import 'totp_crypto.dart';
 
-class TotpSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
+class TotpSyncDelegate
+    with DefaultSyncDelegate
+    implements SyncDelegate, SyncPreflightDelegate {
   static const _table = 'accounts';
   static String get _toolId => TotpAuthTool.config.id;
 
@@ -16,7 +21,8 @@ class TotpSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   String? _password;
   bool _passwordLoaded = false;
 
-  Future<ToolDatabase> _db() {
+  Future<ToolDatabase> _db() async {
+    await TotpAuthState.migrateDb();
     return DatabaseService.instance.getToolDatabase(_toolId);
   }
 
@@ -35,6 +41,46 @@ class TotpSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
     _password = await _storage.read(key: TotpCrypto.syncPasswordKey);
     _passwordLoaded = true;
     return _password != null && _password!.isNotEmpty;
+  }
+
+  Future<String> _requiredPassword() async {
+    final password = await _syncPassword();
+    if (password == null || password.isEmpty) {
+      throw StateError('A sync password is required');
+    }
+    return password;
+  }
+
+  Future<Map<String, dynamic>> _decryptRecord(Map<String, dynamic> data) async {
+    if (data['version'] != 2 || data['payload'] is! String) {
+      throw const SyncUnsupportedPayloadException();
+    }
+    final password = await _requiredPassword();
+    try {
+      final clear = await TotpCrypto.decrypt(
+        data['payload'] as String,
+        password,
+      );
+      final decoded = jsonDecode(clear);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Invalid sync record');
+      }
+      return decoded;
+    } on SecretBoxAuthenticationError {
+      throw const SyncPasswordMismatchException();
+    }
+  }
+
+  @override
+  Future<void> verifyRemotePayloads(
+    Map<String, Map<String, dynamic>> records,
+  ) async {
+    for (final entry in records.entries) {
+      final account = await _decryptRecord(entry.value);
+      if (account['id'] != entry.key) {
+        throw const FormatException('Sync record ID does not match');
+      }
+    }
   }
 
   @override
@@ -69,13 +115,14 @@ class TotpSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
     );
     if (rows.isEmpty) return null;
     final account = TotpAccount.fromMap(Map<String, dynamic>.from(rows.first));
-    final data = account.toJson();
-    final password = await _syncPassword();
-    if (password != null && password.isNotEmpty) {
-      data['secret'] = await TotpCrypto.encrypt(account.secret, password);
-      data['encrypted'] = true;
-    }
-    return data;
+    final password = await _requiredPassword();
+    return {
+      'version': 2,
+      'payload': await TotpCrypto.encrypt(
+        jsonEncode(account.toJson()),
+        password,
+      ),
+    };
   }
 
   @override
@@ -85,24 +132,9 @@ class TotpSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
     required int updatedAt,
     required bool deleted,
   }) async {
-    final map = Map<String, dynamic>.from(data);
-    if (map['encrypted'] == true) {
-      final password = await _syncPassword();
-      if (password == null || password.isEmpty) {
-        throw StateError(
-          'Cannot decrypt synced TOTP secrets without the sync password.',
-        );
-      }
-      try {
-        map['secret'] = await TotpCrypto.decrypt(
-          map['secret'] as String,
-          password,
-        );
-      } catch (e) {
-        errorLog('[TotpSyncDelegate] Failed to decrypt pulled secret: $e');
-        rethrow;
-      }
-      map['encrypted'] = false;
+    final map = await _decryptRecord(data);
+    if (map['id'] != id) {
+      throw const FormatException('Sync record ID does not match');
     }
     final account = TotpAccount.fromMap(map)
       ..updatedAt = DateTime.fromMillisecondsSinceEpoch(updatedAt)
@@ -117,6 +149,8 @@ class TotpSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
 
   @override
   Future<void> finalizeLocalSync(String id, bool wasDeleted) async {
-    // Soft deletes stay in the table until the next sync pass.
+    if (!wasDeleted) return;
+    final db = await _db();
+    await db.delete(_table, where: 'id = ?', whereArgs: [id]);
   }
 }

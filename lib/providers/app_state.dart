@@ -310,6 +310,7 @@ class AppState extends ChangeNotifier {
       return null;
     }
 
+    if (_isSyncing) return null;
     _isSyncing = true;
     notifyListeners();
 
@@ -339,7 +340,7 @@ class AppState extends ChangeNotifier {
       // One tool that cannot sync - an oversized record, a schema mismatch -
       // must not cost every other tool its run, so failures are collected and
       // reported after the rest have had their turn.
-      final failures = <String>[];
+      final failures = <String, Object>{};
       var done = 0;
       for (final delegate in delegates) {
         await work?.update(
@@ -357,12 +358,12 @@ class AppState extends ChangeNotifier {
           deletedTotal += results['deleted'] ?? 0;
         } catch (e) {
           errorLog('[AppState] Sync failed for ${delegate.toolId}: $e');
-          failures.add('${delegate.toolId}: $e');
+          failures[delegate.toolId] = e;
         }
       }
       await _publishToHealthConnect(requested);
 
-      if (failures.isNotEmpty) throw Exception(failures.join('; '));
+      if (failures.isNotEmpty) throw SyncFailures(failures);
 
       _syncLastSynced = DateTime.now().millisecondsSinceEpoch;
       await _settingsService.setSyncLastSynced(_syncLastSynced);

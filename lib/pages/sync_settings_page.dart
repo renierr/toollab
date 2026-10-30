@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/helpers/sync_error_message.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/backend_sync_task.dart';
@@ -118,7 +119,7 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
       final l10n = AppLocalizations.of(context);
       setState(() {
         _syncSuccess = false;
-        _syncMessage = l10n.coreSyncFailed(e.toString());
+        _syncMessage = l10n.coreSyncFailed(syncErrorMessage(e, l10n));
       });
     } finally {
       if (mounted) {

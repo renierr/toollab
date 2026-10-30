@@ -22946,7 +22946,7 @@ abstract class AppLocalizations {
   /// No description provided for @totpSyncPasswordDescription.
   ///
   /// In en, this message translates to:
-  /// **'When set, account secrets are encrypted with this password before they are synced to the cloud, and sync only runs while a password is set. It is stored securely on this device.'**
+  /// **'Account data is encrypted before syncing. Use the same password on every device. Sync cannot run without it. The password is stored securely on this device.'**
   String get totpSyncPasswordDescription;
 
   /// No description provided for @totpSyncPasswordSaved.
@@ -22961,11 +22961,17 @@ abstract class AppLocalizations {
   /// **'Sync password removed'**
   String get totpSyncPasswordRemoved;
 
-  /// No description provided for @totpSyncPasswordRotated.
+  /// No description provided for @totpSyncPasswordMismatch.
   ///
   /// In en, this message translates to:
-  /// **'Every account is re-uploaded with the new password. Copies synced under an older password cannot be decrypted afterwards.'**
-  String get totpSyncPasswordRotated;
+  /// **'The authenticator sync password does not match the backend data. Use the same password on every device.'**
+  String get totpSyncPasswordMismatch;
+
+  /// No description provided for @totpSyncUnsupportedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'The backend contains unsupported older authenticator sync data. It must be removed before syncing the new format.'**
+  String get totpSyncUnsupportedFormat;
 
   /// No description provided for @totpSyncNow.
   ///

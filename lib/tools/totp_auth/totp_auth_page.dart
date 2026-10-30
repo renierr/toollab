@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/sync_error_message.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -48,8 +49,11 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
     final appState = context.read<AppState>();
     final totpState = context.read<TotpAuthState>();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      totpState.reload();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await totpState.ready;
+      if (!mounted) return;
+      await totpState.reload();
+      if (!mounted) return;
 
       if (appState.syncEnabled &&
           appState.syncServerUrl.isNotEmpty &&
@@ -62,6 +66,13 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
             })
             .catchError((e) {
               errorLog('[TotpAuthPage] Auto-sync on open failed: $e');
+              if (mounted) {
+                final l10n = AppLocalizations.of(context);
+                _snack(
+                  l10n.totpSyncFailed(syncErrorMessage(e, l10n)),
+                  error: true,
+                );
+              }
             });
       }
     });
@@ -299,7 +310,9 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
       );
     } catch (e) {
       errorLog('[TotpAuthPage] Manual sync failed: $e');
-      if (mounted) _snack(l10n.totpSyncFailed(e.toString()), error: true);
+      if (mounted) {
+        _snack(l10n.totpSyncFailed(syncErrorMessage(e, l10n)), error: true);
+      }
     } finally {
       if (mounted) setState(() => _syncing = false);
     }

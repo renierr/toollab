@@ -50,6 +50,34 @@ abstract interface class VerifiedSyncDelegate {
   Future<void> verifiedRemoteRecords(Map<String, int> records);
 }
 
+abstract interface class SyncPreflightDelegate {
+  Future<void> verifyRemotePayloads(Map<String, Map<String, dynamic>> records);
+}
+
+class SyncPasswordMismatchException implements Exception {
+  const SyncPasswordMismatchException();
+
+  @override
+  String toString() => 'Sync password does not match the backend data.';
+}
+
+class SyncUnsupportedPayloadException implements Exception {
+  const SyncUnsupportedPayloadException();
+
+  @override
+  String toString() => 'Unsupported encrypted sync data format.';
+}
+
+class SyncFailures implements Exception {
+  const SyncFailures(this.failures);
+
+  final Map<String, Object> failures;
+
+  @override
+  String toString() =>
+      failures.entries.map((e) => '${e.key}: ${e.value}').join('; ');
+}
+
 abstract interface class RemoteOnlySyncDelegate {
   /// Ids of [candidates] (id -> server version) the device keeps on the server
   /// only; they are left out of the pull.
@@ -287,6 +315,9 @@ class SyncService {
     required SyncDelegate delegate,
     bool backendAlreadyChecked = false,
   }) async {
+    if (!await delegate.isReadyToSync()) {
+      throw StateError('Tool is not ready to sync');
+    }
     final String sanitizedUrl = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
@@ -366,6 +397,30 @@ class SyncService {
         updatedAt: item['updatedAt'] as int? ?? 0,
         deleted: item['deleted'] as bool? ?? false,
       );
+    }
+
+    if (delegate is SyncPreflightDelegate) {
+      if (!fullMetadata || truncatedMetadata) {
+        throw StateError('Cannot verify incomplete sync metadata');
+      }
+      final ids = serverMetaMap.values
+          .where((record) => !record.deleted)
+          .map((record) => record.id)
+          .toList();
+      for (final batch in _batches(ids, delegate.syncPullBatchSize)) {
+        final records = await pullRecords(
+          baseUrl: baseUrl,
+          userId: userId,
+          toolId: delegate.toolId,
+          ids: batch,
+          timeout: httpTimeout,
+        );
+        if (records.length != batch.length ||
+            !batch.every(records.containsKey)) {
+          throw StateError('Cannot verify all remote sync records');
+        }
+        await (delegate as SyncPreflightDelegate).verifyRemotePayloads(records);
+      }
     }
 
     final List<Map<String, dynamic>> localMetaList = fullMetadata

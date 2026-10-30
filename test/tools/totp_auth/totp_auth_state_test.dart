@@ -84,7 +84,7 @@ void main() {
     expect(state.accounts, hasLength(2));
   });
 
-  test('sync password gates sync and bumps accounts for re-upload', () async {
+  test('changing a sync password does not overwrite remote data', () async {
     final state = await _initialize();
     addTearDown(state.dispose);
     final account = _account('Example', 'alice', 'JBSWY3DPEHPK3PXP');
@@ -92,14 +92,9 @@ void main() {
     expect(state.hasSyncPassword, isFalse);
     final before = state.accounts.single.updatedAt;
 
-    await Future<void>.delayed(const Duration(milliseconds: 5));
     await state.setSyncPassword('correct horse battery');
     expect(state.hasSyncPassword, isTrue);
-    expect(
-      state.accounts.single.updatedAt.isAfter(before),
-      isTrue,
-      reason: 'remote copies must be re-encrypted under the new password',
-    );
+    expect(state.accounts.single.updatedAt, before);
     expect(account.id, state.accounts.single.id);
 
     await state.setSyncPassword(null);

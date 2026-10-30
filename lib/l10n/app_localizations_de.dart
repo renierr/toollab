@@ -13024,7 +13024,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get totpSyncPasswordDescription =>
-      'Wenn gesetzt, werden Kontogeheimnisse mit diesem Passwort verschlüsselt, bevor sie in die Cloud synchronisiert werden; die Synchronisierung läuft nur mit gesetztem Passwort. Es wird sicher auf diesem Gerät gespeichert.';
+      'Kontodaten werden vor der Synchronisierung verschlüsselt. Verwende auf allen Geräten dasselbe Passwort. Ohne Passwort ist keine Synchronisierung möglich. Das Passwort wird sicher auf diesem Gerät gespeichert.';
 
   @override
   String get totpSyncPasswordSaved => 'Sync-Passwort gespeichert';
@@ -13033,8 +13033,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get totpSyncPasswordRemoved => 'Sync-Passwort entfernt';
 
   @override
-  String get totpSyncPasswordRotated =>
-      'Alle Konten werden mit dem neuen Passwort erneut hochgeladen. Kopien, die mit einem älteren Passwort synchronisiert wurden, können danach nicht mehr entschlüsselt werden.';
+  String get totpSyncPasswordMismatch =>
+      'Das Authenticator-Sync-Passwort stimmt nicht mit den Backend-Daten überein. Verwende auf allen Geräten dasselbe Passwort.';
+
+  @override
+  String get totpSyncUnsupportedFormat =>
+      'Das Backend enthält nicht unterstützte ältere Authenticator-Sync-Daten. Diese müssen vor der Synchronisierung im neuen Format entfernt werden.';
 
   @override
   String get totpSyncNow => 'Jetzt synchronisieren';

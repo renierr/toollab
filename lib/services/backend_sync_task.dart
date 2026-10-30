@@ -51,12 +51,14 @@ class BackendSyncTask {
         DatabaseService.toolSyncEnabledKey,
       );
       if (!DatabaseService.isToolSyncEnabled(enabled)) continue;
-      tools++;
       try {
+        final delegate = delegateFactory();
+        if (!await delegate.isReadyToSync()) continue;
+        tools++;
         final result = await SyncService.sync(
           baseUrl: url,
           userId: settings.getSyncUserId(),
-          delegate: delegateFactory(),
+          delegate: delegate,
           backendAlreadyChecked: true,
         );
         pulled += result['pulled'] ?? 0;

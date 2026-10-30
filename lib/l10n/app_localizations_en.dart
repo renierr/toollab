@@ -12926,7 +12926,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get totpSyncPasswordDescription =>
-      'When set, account secrets are encrypted with this password before they are synced to the cloud, and sync only runs while a password is set. It is stored securely on this device.';
+      'Account data is encrypted before syncing. Use the same password on every device. Sync cannot run without it. The password is stored securely on this device.';
 
   @override
   String get totpSyncPasswordSaved => 'Sync password saved';
@@ -12935,8 +12935,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totpSyncPasswordRemoved => 'Sync password removed';
 
   @override
-  String get totpSyncPasswordRotated =>
-      'Every account is re-uploaded with the new password. Copies synced under an older password cannot be decrypted afterwards.';
+  String get totpSyncPasswordMismatch =>
+      'The authenticator sync password does not match the backend data. Use the same password on every device.';
+
+  @override
+  String get totpSyncUnsupportedFormat =>
+      'The backend contains unsupported older authenticator sync data. It must be removed before syncing the new format.';
 
   @override
   String get totpSyncNow => 'Sync now';
