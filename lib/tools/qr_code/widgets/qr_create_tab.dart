@@ -5,7 +5,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/qr_code/config.dart';
-import 'package:tool_lab/tools/qr_code/qr_codec.dart';
+import 'package:tool_lab/helpers/qr_codec.dart';
 import 'package:tool_lab/tools/qr_code/qr_content_type.dart';
 
 import 'qr_create_form.dart';

@@ -12641,6 +12641,306 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolDescTotpAuth => 'Two-factor authentication codes';
 
   @override
+  String get totpSearchHint => 'Search accounts';
+
+  @override
+  String totpNoResults(String query) {
+    return 'No accounts match “$query”';
+  }
+
+  @override
+  String get totpEmptyTitle => 'No accounts yet';
+
+  @override
+  String get totpEmptyDescription =>
+      'Scan a setup QR code, paste a setup link, or import a backup from 2FAS, Aegis, andOTP and other authenticator apps.';
+
+  @override
+  String get totpAddAccount => 'Add account';
+
+  @override
+  String get totpScanQr => 'Scan QR code';
+
+  @override
+  String get totpScanQrHint => 'Point the camera at the setup code';
+
+  @override
+  String get totpEnterManually => 'Enter manually';
+
+  @override
+  String get totpEnterManuallyHint => 'Paste a setup link or type the secret';
+
+  @override
+  String get totpImportAccounts => 'Import accounts';
+
+  @override
+  String get totpImportShortHint => 'Restore from another authenticator';
+
+  @override
+  String get totpMoreActions => 'More actions';
+
+  @override
+  String get totpAccountActions => 'Account actions';
+
+  @override
+  String get totpUnnamedAccount => 'Unnamed account';
+
+  @override
+  String get totpCopyCode => 'Copy code';
+
+  @override
+  String totpCodeCopied(String title) {
+    return 'Code for $title copied';
+  }
+
+  @override
+  String get totpCopyUri => 'Copy setup link';
+
+  @override
+  String get totpUriCopied => 'Setup link copied';
+
+  @override
+  String get totpDeleteAccount => 'Delete account';
+
+  @override
+  String get totpDeleteTitle => 'Delete account?';
+
+  @override
+  String totpDeleteMessage(String title) {
+    return '“$title” will be removed from this device. You can still restore it from a backup.';
+  }
+
+  @override
+  String totpAccountAdded(String title) {
+    return '$title added';
+  }
+
+  @override
+  String get totpEditAccount => 'Edit account';
+
+  @override
+  String get totpFieldUri => 'Setup link (optional)';
+
+  @override
+  String get totpUriHelper =>
+      'Paste an otpauth:// link to fill the fields automatically.';
+
+  @override
+  String get totpPaste => 'Paste';
+
+  @override
+  String get totpFieldIssuer => 'Service / issuer';
+
+  @override
+  String get totpFieldAccount => 'Account name';
+
+  @override
+  String get totpFieldSecret => 'Secret key (Base32)';
+
+  @override
+  String get totpShowSecret => 'Show secret';
+
+  @override
+  String get totpPreview => 'Preview';
+
+  @override
+  String get totpAdvancedOptions => 'Advanced options';
+
+  @override
+  String get totpTypeTotp => 'Time based';
+
+  @override
+  String get totpTypeHotp => 'Counter based';
+
+  @override
+  String get totpAlgorithm => 'Algorithm';
+
+  @override
+  String get totpDigits => 'Digits';
+
+  @override
+  String get totpPeriod => 'Period (s)';
+
+  @override
+  String get totpCounter => 'Counter';
+
+  @override
+  String get totpInvalidSecret => 'Enter a valid Base32 secret.';
+
+  @override
+  String get totpMissingFields => 'Enter a service or account name.';
+
+  @override
+  String get totpInvalidPeriod =>
+      'The period must be between 1 and 3600 seconds.';
+
+  @override
+  String get totpInvalidCounter => 'The counter must be zero or greater.';
+
+  @override
+  String get totpScanTitle => 'Scan QR code';
+
+  @override
+  String get totpScanHint =>
+      'Point the camera at the authenticator setup code.';
+
+  @override
+  String get totpScanImageHint => 'Open an image that contains the setup code.';
+
+  @override
+  String get totpChooseImage => 'Choose image';
+
+  @override
+  String get totpNoQrFound => 'No QR code found in that image.';
+
+  @override
+  String get totpNotOtpQr => 'That QR code is not an authenticator setup code.';
+
+  @override
+  String get totpImportTitle => 'Import accounts';
+
+  @override
+  String get totpImportHint =>
+      'Choose a backup file from another authenticator app. Secrets are imported straight into this device.';
+
+  @override
+  String get totpChooseFile => 'Choose backup file';
+
+  @override
+  String get totpChooseAnotherFile => 'Choose a different file';
+
+  @override
+  String totpImportDetected(int count, String format) {
+    return '$count accounts found ($format)';
+  }
+
+  @override
+  String get totpImportPassword => 'Backup password';
+
+  @override
+  String get totpImportPasswordHint =>
+      'This backup is encrypted with a password.';
+
+  @override
+  String get totpImportFormats =>
+      'Supported: 2FAS, Aegis (unencrypted), andOTP, FreeOTP, Bitwarden, Google Authenticator migration, otpauth links, and ToolLab backups.';
+
+  @override
+  String get totpImportErrorPasswordRequired =>
+      'This backup is encrypted. Enter its password.';
+
+  @override
+  String get totpImportErrorWrongPassword =>
+      'Could not decrypt the backup with this password.';
+
+  @override
+  String totpImportErrorEncrypted(String format) {
+    return 'Encrypted $format backups are not supported. Export an unencrypted backup instead.';
+  }
+
+  @override
+  String get totpImportErrorEmpty => 'No accounts were found in this file.';
+
+  @override
+  String get totpImportErrorInvalid => 'This file could not be read.';
+
+  @override
+  String get totpImportErrorUnsupported =>
+      'This backup format is not supported.';
+
+  @override
+  String totpImportSummary(int added, int skipped) {
+    return '$added accounts imported, $skipped duplicates skipped';
+  }
+
+  @override
+  String get totpImportNothing => 'No new accounts were imported.';
+
+  @override
+  String get totpExportBackup => 'Export backup';
+
+  @override
+  String get totpExportTitle => 'Export accounts';
+
+  @override
+  String totpExportAccountCount(int count) {
+    return '$count accounts will be exported';
+  }
+
+  @override
+  String get totpExportEncrypted => 'Encrypted backup';
+
+  @override
+  String get totpExportEncryptedDesc =>
+      'Password-protected .totpbackup file. Recommended.';
+
+  @override
+  String get totpExportPlain => 'Plain JSON backup';
+
+  @override
+  String get totpExportPlainDesc =>
+      'Readable file with all secrets in plain text.';
+
+  @override
+  String get totpExportPlainWarning =>
+      'Anyone with this file can generate your codes. Store it somewhere safe.';
+
+  @override
+  String get totpExportLinks => 'Setup links';
+
+  @override
+  String get totpExportLinksDesc =>
+      'Text file with one otpauth:// link per account.';
+
+  @override
+  String get totpExportPassword => 'Password';
+
+  @override
+  String get totpExportPasswordConfirm => 'Confirm password';
+
+  @override
+  String get totpExportAction => 'Export';
+
+  @override
+  String get totpPasswordTooShort => 'Use at least 8 characters.';
+
+  @override
+  String get totpPasswordMismatch => 'Passwords do not match.';
+
+  @override
+  String totpExportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get totpBackupSaved => 'Backup exported';
+
+  @override
+  String get totpShowPassword => 'Show password';
+
+  @override
+  String get totpHidePassword => 'Hide password';
+
+  @override
+  String get totpSyncPassword => 'Sync password';
+
+  @override
+  String get totpSyncPasswordDescription =>
+      'When set, account secrets are encrypted with this password before they are synced to the cloud. It is stored securely on this device.';
+
+  @override
+  String get totpSyncPasswordSaved => 'Sync password saved';
+
+  @override
+  String get totpSyncPasswordRemoved => 'Sync password removed';
+
+  @override
+  String get totpRemoveSyncPassword => 'Remove password';
+
+  @override
+  String get totpHotpNext => 'Next code';
+
+  @override
   String get emfMapScanner => 'Scanner';
 
   @override

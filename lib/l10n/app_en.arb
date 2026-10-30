@@ -6394,6 +6394,164 @@
   "toolDescWifiHeatmap": "Map Wi-Fi signal strength across a space",
   "toolNameTotpAuth": "TOTP Authenticator",
   "toolDescTotpAuth": "Two-factor authentication codes",
+  "totpSearchHint": "Search accounts",
+  "totpNoResults": "No accounts match “{query}”",
+  "@totpNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "totpEmptyTitle": "No accounts yet",
+  "totpEmptyDescription": "Scan a setup QR code, paste a setup link, or import a backup from 2FAS, Aegis, andOTP and other authenticator apps.",
+  "totpAddAccount": "Add account",
+  "totpScanQr": "Scan QR code",
+  "totpScanQrHint": "Point the camera at the setup code",
+  "totpEnterManually": "Enter manually",
+  "totpEnterManuallyHint": "Paste a setup link or type the secret",
+  "totpImportAccounts": "Import accounts",
+  "totpImportShortHint": "Restore from another authenticator",
+  "totpMoreActions": "More actions",
+  "totpAccountActions": "Account actions",
+  "totpUnnamedAccount": "Unnamed account",
+  "totpCopyCode": "Copy code",
+  "totpCodeCopied": "Code for {title} copied",
+  "@totpCodeCopied": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "totpCopyUri": "Copy setup link",
+  "totpUriCopied": "Setup link copied",
+  "totpDeleteAccount": "Delete account",
+  "totpDeleteTitle": "Delete account?",
+  "totpDeleteMessage": "“{title}” will be removed from this device. You can still restore it from a backup.",
+  "@totpDeleteMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "totpAccountAdded": "{title} added",
+  "@totpAccountAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "totpEditAccount": "Edit account",
+  "totpFieldUri": "Setup link (optional)",
+  "totpUriHelper": "Paste an otpauth:// link to fill the fields automatically.",
+  "totpPaste": "Paste",
+  "totpFieldIssuer": "Service / issuer",
+  "totpFieldAccount": "Account name",
+  "totpFieldSecret": "Secret key (Base32)",
+  "totpShowSecret": "Show secret",
+  "totpPreview": "Preview",
+  "totpAdvancedOptions": "Advanced options",
+  "totpTypeTotp": "Time based",
+  "totpTypeHotp": "Counter based",
+  "totpAlgorithm": "Algorithm",
+  "totpDigits": "Digits",
+  "totpPeriod": "Period (s)",
+  "totpCounter": "Counter",
+  "totpInvalidSecret": "Enter a valid Base32 secret.",
+  "totpMissingFields": "Enter a service or account name.",
+  "totpInvalidPeriod": "The period must be between 1 and 3600 seconds.",
+  "totpInvalidCounter": "The counter must be zero or greater.",
+  "totpScanTitle": "Scan QR code",
+  "totpScanHint": "Point the camera at the authenticator setup code.",
+  "totpScanImageHint": "Open an image that contains the setup code.",
+  "totpChooseImage": "Choose image",
+  "totpNoQrFound": "No QR code found in that image.",
+  "totpNotOtpQr": "That QR code is not an authenticator setup code.",
+  "totpImportTitle": "Import accounts",
+  "totpImportHint": "Choose a backup file from another authenticator app. Secrets are imported straight into this device.",
+  "totpChooseFile": "Choose backup file",
+  "totpChooseAnotherFile": "Choose a different file",
+  "totpImportDetected": "{count} accounts found ({format})",
+  "@totpImportDetected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "totpImportPassword": "Backup password",
+  "totpImportPasswordHint": "This backup is encrypted with a password.",
+  "totpImportFormats": "Supported: 2FAS, Aegis (unencrypted), andOTP, FreeOTP, Bitwarden, Google Authenticator migration, otpauth links, and ToolLab backups.",
+  "totpImportErrorPasswordRequired": "This backup is encrypted. Enter its password.",
+  "totpImportErrorWrongPassword": "Could not decrypt the backup with this password.",
+  "totpImportErrorEncrypted": "Encrypted {format} backups are not supported. Export an unencrypted backup instead.",
+  "@totpImportErrorEncrypted": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "totpImportErrorEmpty": "No accounts were found in this file.",
+  "totpImportErrorInvalid": "This file could not be read.",
+  "totpImportErrorUnsupported": "This backup format is not supported.",
+  "totpImportSummary": "{added} accounts imported, {skipped} duplicates skipped",
+  "@totpImportSummary": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "totpImportNothing": "No new accounts were imported.",
+  "totpExportBackup": "Export backup",
+  "totpExportTitle": "Export accounts",
+  "totpExportAccountCount": "{count} accounts will be exported",
+  "@totpExportAccountCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "totpExportEncrypted": "Encrypted backup",
+  "totpExportEncryptedDesc": "Password-protected .totpbackup file. Recommended.",
+  "totpExportPlain": "Plain JSON backup",
+  "totpExportPlainDesc": "Readable file with all secrets in plain text.",
+  "totpExportPlainWarning": "Anyone with this file can generate your codes. Store it somewhere safe.",
+  "totpExportLinks": "Setup links",
+  "totpExportLinksDesc": "Text file with one otpauth:// link per account.",
+  "totpExportPassword": "Password",
+  "totpExportPasswordConfirm": "Confirm password",
+  "totpExportAction": "Export",
+  "totpPasswordTooShort": "Use at least 8 characters.",
+  "totpPasswordMismatch": "Passwords do not match.",
+  "totpExportFailed": "Export failed: {error}",
+  "@totpExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "totpBackupSaved": "Backup exported",
+  "totpShowPassword": "Show password",
+  "totpHidePassword": "Hide password",
+  "totpSyncPassword": "Sync password",
+  "totpSyncPasswordDescription": "When set, account secrets are encrypted with this password before they are synced to the cloud. It is stored securely on this device.",
+  "totpSyncPasswordSaved": "Sync password saved",
+  "totpSyncPasswordRemoved": "Sync password removed",
+  "totpRemoveSyncPassword": "Remove password",
+  "totpHotpNext": "Next code",
   "emfMapScanner": "Scanner",
   "emfMapAnomaly": "Anomaly Map",
   "emfMapRoom": "Room",

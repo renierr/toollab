@@ -12733,6 +12733,312 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolDescTotpAuth => 'Zwei-Faktor-Authentifizierungscodes';
 
   @override
+  String get totpSearchHint => 'Konten durchsuchen';
+
+  @override
+  String totpNoResults(String query) {
+    return 'Keine Konten für „$query“ gefunden';
+  }
+
+  @override
+  String get totpEmptyTitle => 'Noch keine Konten';
+
+  @override
+  String get totpEmptyDescription =>
+      'Scanne einen Einrichtungscode, füge einen Einrichtungslink ein oder importiere eine Sicherung aus 2FAS, Aegis, andOTP und anderen Authenticator-Apps.';
+
+  @override
+  String get totpAddAccount => 'Konto hinzufügen';
+
+  @override
+  String get totpScanQr => 'QR-Code scannen';
+
+  @override
+  String get totpScanQrHint => 'Richte die Kamera auf den Einrichtungscode';
+
+  @override
+  String get totpEnterManually => 'Manuell eingeben';
+
+  @override
+  String get totpEnterManuallyHint =>
+      'Einrichtungslink einfügen oder Geheimnis eingeben';
+
+  @override
+  String get totpImportAccounts => 'Konten importieren';
+
+  @override
+  String get totpImportShortHint =>
+      'Aus einem anderen Authenticator wiederherstellen';
+
+  @override
+  String get totpMoreActions => 'Weitere Aktionen';
+
+  @override
+  String get totpAccountActions => 'Kontoaktionen';
+
+  @override
+  String get totpUnnamedAccount => 'Unbenanntes Konto';
+
+  @override
+  String get totpCopyCode => 'Code kopieren';
+
+  @override
+  String totpCodeCopied(String title) {
+    return 'Code für $title kopiert';
+  }
+
+  @override
+  String get totpCopyUri => 'Einrichtungslink kopieren';
+
+  @override
+  String get totpUriCopied => 'Einrichtungslink kopiert';
+
+  @override
+  String get totpDeleteAccount => 'Konto löschen';
+
+  @override
+  String get totpDeleteTitle => 'Konto löschen?';
+
+  @override
+  String totpDeleteMessage(String title) {
+    return '„$title“ wird von diesem Gerät entfernt. Du kannst es weiterhin aus einer Sicherung wiederherstellen.';
+  }
+
+  @override
+  String totpAccountAdded(String title) {
+    return '$title hinzugefügt';
+  }
+
+  @override
+  String get totpEditAccount => 'Konto bearbeiten';
+
+  @override
+  String get totpFieldUri => 'Einrichtungslink (optional)';
+
+  @override
+  String get totpUriHelper =>
+      'Füge einen otpauth://-Link ein, um die Felder automatisch auszufüllen.';
+
+  @override
+  String get totpPaste => 'Einfügen';
+
+  @override
+  String get totpFieldIssuer => 'Dienst / Aussteller';
+
+  @override
+  String get totpFieldAccount => 'Kontoname';
+
+  @override
+  String get totpFieldSecret => 'Geheimnis (Base32)';
+
+  @override
+  String get totpShowSecret => 'Geheimnis anzeigen';
+
+  @override
+  String get totpPreview => 'Vorschau';
+
+  @override
+  String get totpAdvancedOptions => 'Erweiterte Optionen';
+
+  @override
+  String get totpTypeTotp => 'Zeitbasiert';
+
+  @override
+  String get totpTypeHotp => 'Zählerbasiert';
+
+  @override
+  String get totpAlgorithm => 'Algorithmus';
+
+  @override
+  String get totpDigits => 'Stellen';
+
+  @override
+  String get totpPeriod => 'Zeitraum (s)';
+
+  @override
+  String get totpCounter => 'Zähler';
+
+  @override
+  String get totpInvalidSecret => 'Gib ein gültiges Base32-Geheimnis ein.';
+
+  @override
+  String get totpMissingFields => 'Gib einen Dienst- oder Kontonamen ein.';
+
+  @override
+  String get totpInvalidPeriod =>
+      'Der Zeitraum muss zwischen 1 und 3600 Sekunden liegen.';
+
+  @override
+  String get totpInvalidCounter => 'Der Zähler muss null oder größer sein.';
+
+  @override
+  String get totpScanTitle => 'QR-Code scannen';
+
+  @override
+  String get totpScanHint =>
+      'Richte die Kamera auf den Einrichtungscode des Authenticators.';
+
+  @override
+  String get totpScanImageHint =>
+      'Öffne ein Bild, das den Einrichtungscode enthält.';
+
+  @override
+  String get totpChooseImage => 'Bild auswählen';
+
+  @override
+  String get totpNoQrFound => 'In diesem Bild wurde kein QR-Code gefunden.';
+
+  @override
+  String get totpNotOtpQr =>
+      'Dieser QR-Code ist kein Einrichtungscode für einen Authenticator.';
+
+  @override
+  String get totpImportTitle => 'Konten importieren';
+
+  @override
+  String get totpImportHint =>
+      'Wähle eine Sicherungsdatei aus einer anderen Authenticator-App. Die Geheimnisse werden direkt auf dieses Gerät importiert.';
+
+  @override
+  String get totpChooseFile => 'Sicherungsdatei auswählen';
+
+  @override
+  String get totpChooseAnotherFile => 'Andere Datei auswählen';
+
+  @override
+  String totpImportDetected(int count, String format) {
+    return '$count Konten gefunden ($format)';
+  }
+
+  @override
+  String get totpImportPassword => 'Sicherungspasswort';
+
+  @override
+  String get totpImportPasswordHint =>
+      'Diese Sicherung ist mit einem Passwort verschlüsselt.';
+
+  @override
+  String get totpImportFormats =>
+      'Unterstützt: 2FAS, Aegis (unverschlüsselt), andOTP, FreeOTP, Bitwarden, Google-Authenticator-Migration, otpauth-Links und ToolLab-Sicherungen.';
+
+  @override
+  String get totpImportErrorPasswordRequired =>
+      'Diese Sicherung ist verschlüsselt. Gib das Passwort ein.';
+
+  @override
+  String get totpImportErrorWrongPassword =>
+      'Die Sicherung konnte mit diesem Passwort nicht entschlüsselt werden.';
+
+  @override
+  String totpImportErrorEncrypted(String format) {
+    return 'Verschlüsselte $format-Sicherungen werden nicht unterstützt. Exportiere stattdessen eine unverschlüsselte Sicherung.';
+  }
+
+  @override
+  String get totpImportErrorEmpty =>
+      'In dieser Datei wurden keine Konten gefunden.';
+
+  @override
+  String get totpImportErrorInvalid =>
+      'Diese Datei konnte nicht gelesen werden.';
+
+  @override
+  String get totpImportErrorUnsupported =>
+      'Dieses Sicherungsformat wird nicht unterstützt.';
+
+  @override
+  String totpImportSummary(int added, int skipped) {
+    return '$added Konten importiert, $skipped Duplikate übersprungen';
+  }
+
+  @override
+  String get totpImportNothing => 'Es wurden keine neuen Konten importiert.';
+
+  @override
+  String get totpExportBackup => 'Sicherung exportieren';
+
+  @override
+  String get totpExportTitle => 'Konten exportieren';
+
+  @override
+  String totpExportAccountCount(int count) {
+    return '$count Konten werden exportiert';
+  }
+
+  @override
+  String get totpExportEncrypted => 'Verschlüsselte Sicherung';
+
+  @override
+  String get totpExportEncryptedDesc =>
+      'Passwortgeschützte .totpbackup-Datei. Empfohlen.';
+
+  @override
+  String get totpExportPlain => 'Unverschlüsselte JSON-Sicherung';
+
+  @override
+  String get totpExportPlainDesc =>
+      'Lesbare Datei mit allen Geheimnissen im Klartext.';
+
+  @override
+  String get totpExportPlainWarning =>
+      'Jeder mit dieser Datei kann deine Codes erzeugen. Bewahre sie sicher auf.';
+
+  @override
+  String get totpExportLinks => 'Einrichtungslinks';
+
+  @override
+  String get totpExportLinksDesc =>
+      'Textdatei mit einem otpauth://-Link pro Konto.';
+
+  @override
+  String get totpExportPassword => 'Passwort';
+
+  @override
+  String get totpExportPasswordConfirm => 'Passwort bestätigen';
+
+  @override
+  String get totpExportAction => 'Exportieren';
+
+  @override
+  String get totpPasswordTooShort => 'Verwende mindestens 8 Zeichen.';
+
+  @override
+  String get totpPasswordMismatch => 'Die Passwörter stimmen nicht überein.';
+
+  @override
+  String totpExportFailed(String error) {
+    return 'Export fehlgeschlagen: $error';
+  }
+
+  @override
+  String get totpBackupSaved => 'Sicherung exportiert';
+
+  @override
+  String get totpShowPassword => 'Passwort anzeigen';
+
+  @override
+  String get totpHidePassword => 'Passwort verbergen';
+
+  @override
+  String get totpSyncPassword => 'Sync-Passwort';
+
+  @override
+  String get totpSyncPasswordDescription =>
+      'Wenn gesetzt, werden Kontogeheimnisse mit diesem Passwort verschlüsselt, bevor sie in die Cloud synchronisiert werden. Es wird sicher auf diesem Gerät gespeichert.';
+
+  @override
+  String get totpSyncPasswordSaved => 'Sync-Passwort gespeichert';
+
+  @override
+  String get totpSyncPasswordRemoved => 'Sync-Passwort entfernt';
+
+  @override
+  String get totpRemoveSyncPassword => 'Passwort entfernen';
+
+  @override
+  String get totpHotpNext => 'Nächster Code';
+
+  @override
   String get emfMapScanner => 'Scanner';
 
   @override

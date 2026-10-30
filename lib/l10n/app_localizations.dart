@@ -22439,6 +22439,540 @@ abstract class AppLocalizations {
   /// **'Two-factor authentication codes'**
   String get toolDescTotpAuth;
 
+  /// No description provided for @totpSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search accounts'**
+  String get totpSearchHint;
+
+  /// No description provided for @totpNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts match “{query}”'**
+  String totpNoResults(String query);
+
+  /// No description provided for @totpEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts yet'**
+  String get totpEmptyTitle;
+
+  /// No description provided for @totpEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a setup QR code, paste a setup link, or import a backup from 2FAS, Aegis, andOTP and other authenticator apps.'**
+  String get totpEmptyDescription;
+
+  /// No description provided for @totpAddAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get totpAddAccount;
+
+  /// No description provided for @totpScanQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR code'**
+  String get totpScanQr;
+
+  /// No description provided for @totpScanQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the setup code'**
+  String get totpScanQrHint;
+
+  /// No description provided for @totpEnterManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter manually'**
+  String get totpEnterManually;
+
+  /// No description provided for @totpEnterManuallyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a setup link or type the secret'**
+  String get totpEnterManuallyHint;
+
+  /// No description provided for @totpImportAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Import accounts'**
+  String get totpImportAccounts;
+
+  /// No description provided for @totpImportShortHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from another authenticator'**
+  String get totpImportShortHint;
+
+  /// No description provided for @totpMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get totpMoreActions;
+
+  /// No description provided for @totpAccountActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Account actions'**
+  String get totpAccountActions;
+
+  /// No description provided for @totpUnnamedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed account'**
+  String get totpUnnamedAccount;
+
+  /// No description provided for @totpCopyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get totpCopyCode;
+
+  /// No description provided for @totpCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code for {title} copied'**
+  String totpCodeCopied(String title);
+
+  /// No description provided for @totpCopyUri.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy setup link'**
+  String get totpCopyUri;
+
+  /// No description provided for @totpUriCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup link copied'**
+  String get totpUriCopied;
+
+  /// No description provided for @totpDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get totpDeleteAccount;
+
+  /// No description provided for @totpDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account?'**
+  String get totpDeleteTitle;
+
+  /// No description provided for @totpDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'“{title}” will be removed from this device. You can still restore it from a backup.'**
+  String totpDeleteMessage(String title);
+
+  /// No description provided for @totpAccountAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} added'**
+  String totpAccountAdded(String title);
+
+  /// No description provided for @totpEditAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit account'**
+  String get totpEditAccount;
+
+  /// No description provided for @totpFieldUri.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup link (optional)'**
+  String get totpFieldUri;
+
+  /// No description provided for @totpUriHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste an otpauth:// link to fill the fields automatically.'**
+  String get totpUriHelper;
+
+  /// No description provided for @totpPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get totpPaste;
+
+  /// No description provided for @totpFieldIssuer.
+  ///
+  /// In en, this message translates to:
+  /// **'Service / issuer'**
+  String get totpFieldIssuer;
+
+  /// No description provided for @totpFieldAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account name'**
+  String get totpFieldAccount;
+
+  /// No description provided for @totpFieldSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Secret key (Base32)'**
+  String get totpFieldSecret;
+
+  /// No description provided for @totpShowSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Show secret'**
+  String get totpShowSecret;
+
+  /// No description provided for @totpPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get totpPreview;
+
+  /// No description provided for @totpAdvancedOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced options'**
+  String get totpAdvancedOptions;
+
+  /// No description provided for @totpTypeTotp.
+  ///
+  /// In en, this message translates to:
+  /// **'Time based'**
+  String get totpTypeTotp;
+
+  /// No description provided for @totpTypeHotp.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter based'**
+  String get totpTypeHotp;
+
+  /// No description provided for @totpAlgorithm.
+  ///
+  /// In en, this message translates to:
+  /// **'Algorithm'**
+  String get totpAlgorithm;
+
+  /// No description provided for @totpDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'Digits'**
+  String get totpDigits;
+
+  /// No description provided for @totpPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Period (s)'**
+  String get totpPeriod;
+
+  /// No description provided for @totpCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter'**
+  String get totpCounter;
+
+  /// No description provided for @totpInvalidSecret.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid Base32 secret.'**
+  String get totpInvalidSecret;
+
+  /// No description provided for @totpMissingFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a service or account name.'**
+  String get totpMissingFields;
+
+  /// No description provided for @totpInvalidPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'The period must be between 1 and 3600 seconds.'**
+  String get totpInvalidPeriod;
+
+  /// No description provided for @totpInvalidCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'The counter must be zero or greater.'**
+  String get totpInvalidCounter;
+
+  /// No description provided for @totpScanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR code'**
+  String get totpScanTitle;
+
+  /// No description provided for @totpScanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the authenticator setup code.'**
+  String get totpScanHint;
+
+  /// No description provided for @totpScanImageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Open an image that contains the setup code.'**
+  String get totpScanImageHint;
+
+  /// No description provided for @totpChooseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose image'**
+  String get totpChooseImage;
+
+  /// No description provided for @totpNoQrFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code found in that image.'**
+  String get totpNoQrFound;
+
+  /// No description provided for @totpNotOtpQr.
+  ///
+  /// In en, this message translates to:
+  /// **'That QR code is not an authenticator setup code.'**
+  String get totpNotOtpQr;
+
+  /// No description provided for @totpImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import accounts'**
+  String get totpImportTitle;
+
+  /// No description provided for @totpImportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a backup file from another authenticator app. Secrets are imported straight into this device.'**
+  String get totpImportHint;
+
+  /// No description provided for @totpChooseFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose backup file'**
+  String get totpChooseFile;
+
+  /// No description provided for @totpChooseAnotherFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a different file'**
+  String get totpChooseAnotherFile;
+
+  /// No description provided for @totpImportDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} accounts found ({format})'**
+  String totpImportDetected(int count, String format);
+
+  /// No description provided for @totpImportPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup password'**
+  String get totpImportPassword;
+
+  /// No description provided for @totpImportPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is encrypted with a password.'**
+  String get totpImportPasswordHint;
+
+  /// No description provided for @totpImportFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Supported: 2FAS, Aegis (unencrypted), andOTP, FreeOTP, Bitwarden, Google Authenticator migration, otpauth links, and ToolLab backups.'**
+  String get totpImportFormats;
+
+  /// No description provided for @totpImportErrorPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is encrypted. Enter its password.'**
+  String get totpImportErrorPasswordRequired;
+
+  /// No description provided for @totpImportErrorWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not decrypt the backup with this password.'**
+  String get totpImportErrorWrongPassword;
+
+  /// No description provided for @totpImportErrorEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted {format} backups are not supported. Export an unencrypted backup instead.'**
+  String totpImportErrorEncrypted(String format);
+
+  /// No description provided for @totpImportErrorEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts were found in this file.'**
+  String get totpImportErrorEmpty;
+
+  /// No description provided for @totpImportErrorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This file could not be read.'**
+  String get totpImportErrorInvalid;
+
+  /// No description provided for @totpImportErrorUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup format is not supported.'**
+  String get totpImportErrorUnsupported;
+
+  /// No description provided for @totpImportSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{added} accounts imported, {skipped} duplicates skipped'**
+  String totpImportSummary(int added, int skipped);
+
+  /// No description provided for @totpImportNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No new accounts were imported.'**
+  String get totpImportNothing;
+
+  /// No description provided for @totpExportBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Export backup'**
+  String get totpExportBackup;
+
+  /// No description provided for @totpExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export accounts'**
+  String get totpExportTitle;
+
+  /// No description provided for @totpExportAccountCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} accounts will be exported'**
+  String totpExportAccountCount(int count);
+
+  /// No description provided for @totpExportEncrypted.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted backup'**
+  String get totpExportEncrypted;
+
+  /// No description provided for @totpExportEncryptedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Password-protected .totpbackup file. Recommended.'**
+  String get totpExportEncryptedDesc;
+
+  /// No description provided for @totpExportPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain JSON backup'**
+  String get totpExportPlain;
+
+  /// No description provided for @totpExportPlainDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Readable file with all secrets in plain text.'**
+  String get totpExportPlainDesc;
+
+  /// No description provided for @totpExportPlainWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with this file can generate your codes. Store it somewhere safe.'**
+  String get totpExportPlainWarning;
+
+  /// No description provided for @totpExportLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup links'**
+  String get totpExportLinks;
+
+  /// No description provided for @totpExportLinksDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Text file with one otpauth:// link per account.'**
+  String get totpExportLinksDesc;
+
+  /// No description provided for @totpExportPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get totpExportPassword;
+
+  /// No description provided for @totpExportPasswordConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get totpExportPasswordConfirm;
+
+  /// No description provided for @totpExportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get totpExportAction;
+
+  /// No description provided for @totpPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters.'**
+  String get totpPasswordTooShort;
+
+  /// No description provided for @totpPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get totpPasswordMismatch;
+
+  /// No description provided for @totpExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String totpExportFailed(String error);
+
+  /// No description provided for @totpBackupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup exported'**
+  String get totpBackupSaved;
+
+  /// No description provided for @totpShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get totpShowPassword;
+
+  /// No description provided for @totpHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get totpHidePassword;
+
+  /// No description provided for @totpSyncPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync password'**
+  String get totpSyncPassword;
+
+  /// No description provided for @totpSyncPasswordDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'When set, account secrets are encrypted with this password before they are synced to the cloud. It is stored securely on this device.'**
+  String get totpSyncPasswordDescription;
+
+  /// No description provided for @totpSyncPasswordSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync password saved'**
+  String get totpSyncPasswordSaved;
+
+  /// No description provided for @totpSyncPasswordRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync password removed'**
+  String get totpSyncPasswordRemoved;
+
+  /// No description provided for @totpRemoveSyncPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove password'**
+  String get totpRemoveSyncPassword;
+
+  /// No description provided for @totpHotpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next code'**
+  String get totpHotpNext;
+
   /// No description provided for @emfMapScanner.
   ///
   /// In en, this message translates to:

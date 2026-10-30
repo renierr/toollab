@@ -12,10 +12,10 @@ import 'package:tool_lab/widgets/drop_zone_action_button.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/tools/qr_code/config.dart';
 import 'package:tool_lab/tools/qr_code/qr_code_state.dart';
-import 'package:tool_lab/tools/qr_code/qr_codec.dart';
+import 'package:tool_lab/helpers/qr_codec.dart';
+import 'package:tool_lab/widgets/qr_scanner/qr_camera_scanner.dart';
+import 'package:tool_lab/widgets/qr_scanner/qr_mlkit_camera_scanner.dart';
 
-import 'qr_camera_scanner.dart';
-import 'qr_mlkit_camera_scanner.dart';
 import 'qr_result_card.dart';
 
 /// Scan tab: live camera scanning on Android plus scan-from-image
