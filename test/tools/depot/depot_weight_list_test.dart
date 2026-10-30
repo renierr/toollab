@@ -36,6 +36,8 @@ void main() {
             body: DepotWeightList(
               holdings: [_holding('A', 100), _holding('B', 50)],
               format: DepotFormat('en', 'EUR'),
+              kindOf: (holding) => holding.kind,
+              constituentsOf: (_) => const [],
             ),
           ),
         ),

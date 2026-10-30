@@ -61,7 +61,10 @@ class _CacheOnlyAllocation extends DepotAllocationState {
   }
 
   @override
-  Future<void> ensureProfiles(Iterable<DepotHolding> holdings) async {
+  Future<void> ensureProfiles(
+    Iterable<DepotHolding> holdings, {
+    bool force = false,
+  }) async {
     fetches++;
   }
 }

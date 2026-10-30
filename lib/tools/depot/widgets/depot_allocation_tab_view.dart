@@ -11,9 +11,12 @@ import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../depot_region.dart';
+import '../depot_xray.dart';
+import '../models/depot_holding.dart';
 import 'depot_connect_card.dart';
 import 'depot_share_breakdown.dart';
 import 'depot_weight_list.dart';
+import 'depot_xray_card.dart';
 
 /// Region, sector and industry split of the open positions.
 class DepotAllocationTabView extends StatelessWidget {
@@ -61,6 +64,19 @@ class DepotAllocationTabView extends StatelessWidget {
       profileOf: allocation.profileOf,
       dimension: DepotAllocationDimension.industry,
     );
+    final kinds = <DepotHoldingKind, double>{};
+    for (final holding in open) {
+      kinds.update(
+        allocation.kindOf(holding),
+        (value) => value + holding.currentValue,
+        ifAbsent: () => holding.currentValue,
+      );
+    }
+    final xray = depotXRay(
+      holdings: open,
+      profileOf: allocation.profileOf,
+      kindOf: allocation.kindOf,
+    );
 
     return RefreshIndicator(
       onRefresh: () => syncDepotAllocation(portfolio, allocation),
@@ -91,8 +107,18 @@ class DepotAllocationTabView extends StatelessWidget {
                 ),
               )
             else ...[
-              DepotWeightList(holdings: open, format: format),
+              DepotWeightList(
+                holdings: open,
+                format: format,
+                kindOf: allocation.kindOf,
+                constituentsOf: (holding) =>
+                    allocation.profileOf(holding)?.constituents ?? const [],
+              ),
               const SizedBox(height: 24),
+              if (xray.hasLookThrough) ...[
+                DepotXRayCard(xray: xray, format: format),
+                const SizedBox(height: 24),
+              ],
               DepotShareBreakdown(
                 title: l10n.depotAllocationByRegion,
                 entries: _entries(
@@ -131,7 +157,7 @@ class DepotAllocationTabView extends StatelessWidget {
               DepotShareBreakdown(
                 title: l10n.depotAllocationByKind,
                 entries: [
-                  for (final entry in portfolio.allocation.entries)
+                  for (final entry in kinds.entries)
                     if (entry.value > 0)
                       DepotShareEntry(
                         label: DepotPortfolioLabels.kinds(l10n, entry.key),

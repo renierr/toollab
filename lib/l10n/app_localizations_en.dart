@@ -11447,7 +11447,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotAllocationSourceNote =>
-      'Use sync to fetch missing Yahoo Finance and Nasdaq data. Fund regions use up to ten largest holdings; remaining or unavailable data is unclassified.';
+      'Refresh fetches data only for new or incomplete positions. ETF and fund regions use onvista\'s country split; Yahoo Finance and Nasdaq fill gaps. Remaining or unavailable data is unclassified.';
 
   @override
   String get depotRegionNorthAmerica => 'North America';
@@ -11502,6 +11502,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotSectorRealEstate => 'Real Estate';
+
+  @override
+  String get depotSectorConsumerGoods => 'Consumer Goods';
+
+  @override
+  String get depotXRayTitle => 'X-Ray';
+
+  @override
+  String get depotXRayNote =>
+      'Direct stocks plus the top holdings of your ETFs and funds, weighted by position value.';
+
+  @override
+  String get depotXRayDirect => 'Held directly';
+
+  @override
+  String depotXRayFundShare(String percent) {
+    return '$percent of fund';
+  }
+
+  @override
+  String depotXRaySources(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'via $count positions',
+      one: 'via 1 position',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotXRayUncovered => 'Other fund holdings';
+
+  @override
+  String depotXRayShowAll(int count) {
+    return 'Show all ($count)';
+  }
+
+  @override
+  String get depotXRayShowLess => 'Show less';
+
+  @override
+  String get depotAllocationDataTitle => 'Allocation data';
+
+  @override
+  String get depotAllocationDataDescription =>
+      'Sector, region and ETF holdings are stored on this device. Refresh only fetches new or incomplete positions.';
+
+  @override
+  String get depotAllocationDataReload => 'Reload all allocation data';
+
+  @override
+  String depotAllocationDataCount(int count, int total) {
+    return '$count of $total positions classified';
+  }
+
+  @override
+  String get depotAllocationDataFetching => 'Fetching allocation data…';
 
   @override
   String get depotIncomeTitle => 'Dividends & interest (12 months)';

@@ -20438,7 +20438,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotAllocationSourceNote.
   ///
   /// In en, this message translates to:
-  /// **'Use sync to fetch missing Yahoo Finance and Nasdaq data. Fund regions use up to ten largest holdings; remaining or unavailable data is unclassified.'**
+  /// **'Refresh fetches data only for new or incomplete positions. ETF and fund regions use onvista\'s country split; Yahoo Finance and Nasdaq fill gaps. Remaining or unavailable data is unclassified.'**
   String get depotAllocationSourceNote;
 
   /// No description provided for @depotRegionNorthAmerica.
@@ -20548,6 +20548,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Real Estate'**
   String get depotSectorRealEstate;
+
+  /// No description provided for @depotSectorConsumerGoods.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumer Goods'**
+  String get depotSectorConsumerGoods;
+
+  /// No description provided for @depotXRayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'X-Ray'**
+  String get depotXRayTitle;
+
+  /// No description provided for @depotXRayNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct stocks plus the top holdings of your ETFs and funds, weighted by position value.'**
+  String get depotXRayNote;
+
+  /// No description provided for @depotXRayDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Held directly'**
+  String get depotXRayDirect;
+
+  /// No description provided for @depotXRayFundShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} of fund'**
+  String depotXRayFundShare(String percent);
+
+  /// No description provided for @depotXRaySources.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{via 1 position} other{via {count} positions}}'**
+  String depotXRaySources(int count);
+
+  /// No description provided for @depotXRayUncovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Other fund holdings'**
+  String get depotXRayUncovered;
+
+  /// No description provided for @depotXRayShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all ({count})'**
+  String depotXRayShowAll(int count);
+
+  /// No description provided for @depotXRayShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get depotXRayShowLess;
+
+  /// No description provided for @depotAllocationDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocation data'**
+  String get depotAllocationDataTitle;
+
+  /// No description provided for @depotAllocationDataDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Sector, region and ETF holdings are stored on this device. Refresh only fetches new or incomplete positions.'**
+  String get depotAllocationDataDescription;
+
+  /// No description provided for @depotAllocationDataReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload all allocation data'**
+  String get depotAllocationDataReload;
+
+  /// No description provided for @depotAllocationDataCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {total} positions classified'**
+  String depotAllocationDataCount(int count, int total);
+
+  /// No description provided for @depotAllocationDataFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching allocation data…'**
+  String get depotAllocationDataFetching;
 
   /// No description provided for @depotIncomeTitle.
   ///

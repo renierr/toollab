@@ -18,7 +18,7 @@ Only imported statements and the local wishlist are edited here.
 | Tab | Shows | Source |
 |---|---|---|
 | Overview | KPIs, value chart, allocation, biggest movers, holdings for the selected period and portfolio | `POST /performance` |
-| Allocation | Position-weight donut and list, plus region, sector, industry and asset-type split | Parqet values, Yahoo Finance and Nasdaq metadata |
+| Allocation | Position-weight donut and list, X-Ray through ETF holdings, plus region, sector, industry and asset-type split | Parqet values, onvista, Yahoo Finance and Nasdaq metadata |
 | Dividends | Calendar, missing and upcoming payments, per year and per position | Parqet bookings plus Yahoo Finance for ex-dates and amounts |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
 | Wishlist | Stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database, optional backend sync and Yahoo Finance |
@@ -211,6 +211,8 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 | `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | One year of daily closes, loaded on opening wishlist details |
 | `GET /v10/finance/quoteSummary/{symbol}?modules=assetProfile,topHoldings` | Country of a stock, and a fund's sector weights and top holdings |
 | `GET https://api.nasdaq.com/api/company/{symbol}/company-profile` | Region fallback for US-listed stocks when Yahoo country is unavailable |
+| `GET https://api.onvista.de/api/v1/funds/ISIN:{isin}/breakdowns` | A fund's full country and sector split and its ten largest holdings (with ISIN) |
+| `GET https://api.onvista.de/api/v1/stocks/ISIN:{isin}/snapshot` | Country fallback for a stock when Yahoo has none |
 
 Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
 The latest quote is Yahoo's `fulldayPrice`, which includes pre- and post-market trades,
@@ -249,14 +251,30 @@ the app searches by a confirmed symbol instead. Existing entries can be linked f
 search result; if Parqet cannot confirm the match, the ISIN remains unknown.
 
 The Allocation tab resolves sector, industry and country per open holding. A fund has no
-single sector or country, so its sector split comes from Yahoo's `topHoldings` weights and
-its region split uses the domicile of up to ten largest constituents. Only their known
-fund weights are classified; the remainder stays "Unclassified". Nasdaq region data is a
-fallback for US-listed stocks, including fund constituents. Missing stock metadata can also
-be retried against up to three US-format listings confirmed by Parqet for the same ISIN.
-Profiles are stored in tool settings and loaded without network requests. Allocation sync
-only fetches incomplete metadata, at most once per asset every 24 hours; known values are
-retained. Older normalized fund data is discarded. Portfolio sync remains independent.
+single sector or country, so ETFs and funds are looked up on onvista by ISIN first: its
+country and sector split covers the whole fund, and its top ten holdings feed the X-Ray.
+onvista's German names are mapped onto Yahoo's sector names and into the region table;
+cash and "other" buckets stay "Unclassified". Only when onvista lacks a split is Yahoo
+asked: its `topHoldings` sector weights, and a region split approximated from the domicile
+of up to ten largest constituents. Yahoo's `quoteType` also overrides the name heuristic,
+so a fund without "ETF" or "Fonds" in its name is no longer counted as a stock.
+Stocks use Yahoo for sector, industry and country, then onvista's stock snapshot for a
+missing country, then Nasdaq region data and up to three US-format listings confirmed by
+Parqet for the same ISIN.
+
+The X-Ray merges direct stocks with every fund's top holdings, scaled by the fund's value
+and keyed by ISIN (Yahoo fallbacks by symbol), and lists the 20 largest; each expands to
+the positions that hold it. Fund value outside the published top holdings is shown as
+"Other fund holdings". In the position list ETFs and funds expand to their top holdings,
+and every row carries a kind badge.
+
+Profiles, including fund holdings, are stored in tool settings and loaded without network
+requests. Opening the tab never fetches. The refresh button only fetches positions without
+a profile or with incomplete metadata, at most once per asset every 24 hours, and keeps
+known values. A complete profile is never fetched again on its own; bumping
+`DepotAssetProfile.currentVersion` re-fetches fund profiles once. **Reload all allocation
+data** in the settings re-fetches every open security and lets new values replace cached
+ones; cached values stay until replaced. Portfolio sync remains independent.
 
 ## Local data
 

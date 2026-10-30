@@ -7,6 +7,7 @@ import 'package:tool_lab/tools/depot/depot_allocation.dart';
 import 'package:tool_lab/tools/depot/depot_allocation_state.dart';
 import 'package:tool_lab/tools/depot/depot_region.dart';
 import 'package:tool_lab/tools/depot/depot_store.dart';
+import 'package:tool_lab/tools/depot/market_data/onvista_api.dart';
 import 'package:tool_lab/tools/depot/market_data/yahoo_finance_api.dart';
 import 'package:tool_lab/tools/depot/models/depot_asset_profile.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
@@ -22,6 +23,10 @@ DepotHolding _holding(String id, {double value = 100, String? isin}) =>
         'isSold': false,
       },
     });
+
+Future<OnvistaFundBreakdown?> _noFund(String isin) async => null;
+
+Future<String?> _noCountry(String isin) async => null;
 
 DepotAssetProfile _profile({
   String? sector,
@@ -220,6 +225,8 @@ void main() {
         final state = DepotAllocationState(
           profileLoader: loader,
           sessionLoader: () async => null,
+          fundLoader: _noFund,
+          stockCountryLoader: _noCountry,
         );
         addTearDown(state.dispose);
         final etf = _holding('ETF', isin: 'IE00ETF', value: 1000);
@@ -245,6 +252,8 @@ void main() {
             return null;
           },
           sessionLoader: () async => null,
+          fundLoader: _noFund,
+          stockCountryLoader: _noCountry,
         );
         addTearDown(reopened.dispose);
         await reopened.ensureProfiles([etf]);
@@ -275,6 +284,8 @@ void main() {
           },
           confirmedSymbolsLoader: (_) async => ['SAP.DE', 'SAP'],
           sessionLoader: () async => null,
+          fundLoader: _noFund,
+          stockCountryLoader: _noCountry,
         );
         addTearDown(state.dispose);
         await state.ensureProfiles([stock]);
@@ -296,6 +307,8 @@ void main() {
           },
           confirmedSymbolsLoader: (_) async => [],
           sessionLoader: () async => null,
+          fundLoader: _noFund,
+          stockCountryLoader: _noCountry,
         );
         addTearDown(state.dispose);
         await state.ensureProfiles([stock]);
@@ -321,6 +334,8 @@ void main() {
             return null;
           },
           sessionLoader: () async => null,
+          fundLoader: _noFund,
+          stockCountryLoader: _noCountry,
         );
         addTearDown(state.dispose);
         await state.ensureProfiles([holding]);
@@ -354,6 +369,8 @@ void main() {
             );
           },
           sessionLoader: () async => null,
+          fundLoader: _noFund,
+          stockCountryLoader: _noCountry,
         );
         addTearDown(state.dispose);
         await state.ensureProfiles([etf]);
@@ -380,6 +397,8 @@ void main() {
           );
         },
         sessionLoader: () async => null,
+        fundLoader: _noFund,
+        stockCountryLoader: _noCountry,
       );
       addTearDown(state.dispose);
       final initial = state.ensureProfiles([holding]);
@@ -411,6 +430,8 @@ void main() {
             return null;
           },
           sessionLoader: () async => null,
+          fundLoader: _noFund,
+          stockCountryLoader: _noCountry,
         );
         addTearDown(state.dispose);
         await state.ensureLoaded();
@@ -432,6 +453,8 @@ void main() {
         },
         confirmedSymbolsLoader: (_) async => [],
         sessionLoader: () async => null,
+        fundLoader: _noFund,
+        stockCountryLoader: _noCountry,
       );
       final first = makeState();
       await first.refresh([holding]);
@@ -469,6 +492,8 @@ void main() {
           topHoldings: const <({String symbol, double weight})>[],
         ),
         sessionLoader: () async => null,
+        fundLoader: _noFund,
+        stockCountryLoader: _noCountry,
       );
       addTearDown(state.dispose);
       await state.refresh([holding]);

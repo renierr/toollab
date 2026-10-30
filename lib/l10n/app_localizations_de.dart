@@ -11531,7 +11531,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotAllocationSourceNote =>
-      'Synchronisieren lädt fehlende Daten von Yahoo Finance und Nasdaq. Fondsregionen basieren auf bis zu zehn größten Positionen; der Rest und fehlende Daten bleiben unklassifiziert.';
+      'Aktualisieren lädt nur Daten für neue oder unvollständige Positionen. ETF- und Fondsregionen nutzen die Länderaufteilung von onvista; Yahoo Finance und Nasdaq ergänzen Lücken. Der Rest und fehlende Daten bleiben unklassifiziert.';
 
   @override
   String get depotRegionNorthAmerica => 'Nordamerika';
@@ -11586,6 +11586,64 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotSectorRealEstate => 'Immobilien';
+
+  @override
+  String get depotSectorConsumerGoods => 'Konsumgüter';
+
+  @override
+  String get depotXRayTitle => 'Durchschau (X-Ray)';
+
+  @override
+  String get depotXRayNote =>
+      'Direkt gehaltene Aktien plus die größten Positionen deiner ETFs und Fonds, gewichtet nach Positionswert.';
+
+  @override
+  String get depotXRayDirect => 'Direkt gehalten';
+
+  @override
+  String depotXRayFundShare(String percent) {
+    return '$percent des Fonds';
+  }
+
+  @override
+  String depotXRaySources(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'über $count Positionen',
+      one: 'über 1 Position',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotXRayUncovered => 'Übrige Fondsbestände';
+
+  @override
+  String depotXRayShowAll(int count) {
+    return 'Alle anzeigen ($count)';
+  }
+
+  @override
+  String get depotXRayShowLess => 'Weniger anzeigen';
+
+  @override
+  String get depotAllocationDataTitle => 'Allokationsdaten';
+
+  @override
+  String get depotAllocationDataDescription =>
+      'Sektor, Region und ETF-Bestände werden auf diesem Gerät gespeichert. Aktualisieren lädt nur neue oder unvollständige Positionen.';
+
+  @override
+  String get depotAllocationDataReload => 'Alle Allokationsdaten neu laden';
+
+  @override
+  String depotAllocationDataCount(int count, int total) {
+    return '$count von $total Positionen klassifiziert';
+  }
+
+  @override
+  String get depotAllocationDataFetching => 'Allokationsdaten werden geladen…';
 
   @override
   String get depotIncomeTitle => 'Dividenden & Zinsen (12 Monate)';

@@ -5,23 +5,28 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
 import 'depot_market_search.dart';
+import 'market_data/onvista_api.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_asset_profile.dart';
 import 'models/depot_holding.dart';
 
-/// Sector, industry and region metadata per holding, fetched from Yahoo and
-/// cached in the tool database.
+/// Sector, industry, region and fund holdings per position, fetched once from
+/// onvista and Yahoo and cached in the tool database.
 class DepotAllocationState extends ChangeNotifier {
   DepotAllocationState({
     Future<YahooAssetProfile?> Function(String query, YahooSession? session)?
     profileLoader,
     Future<YahooSession?> Function()? sessionLoader,
     Future<List<String>> Function(DepotHolding holding)? confirmedSymbolsLoader,
+    Future<OnvistaFundBreakdown?> Function(String isin)? fundLoader,
+    Future<String?> Function(String isin)? stockCountryLoader,
     DateTime Function()? clock,
   }) : _profileLoader = profileLoader ?? _loadProfile,
        _sessionLoader = sessionLoader ?? YahooFinanceApi.session,
        _confirmedSymbolsLoader =
            confirmedSymbolsLoader ?? DepotMarketSearch.holdingSymbols,
+       _fundLoader = fundLoader ?? OnvistaApi.fundBreakdown,
+       _stockCountryLoader = stockCountryLoader ?? OnvistaApi.stockCountry,
        _clock = clock ?? DateTime.now;
 
   static const Duration retryAfter = Duration(days: 1);
@@ -34,6 +39,8 @@ class DepotAllocationState extends ChangeNotifier {
   _profileLoader;
   final Future<YahooSession?> Function() _sessionLoader;
   final Future<List<String>> Function(DepotHolding) _confirmedSymbolsLoader;
+  final Future<OnvistaFundBreakdown?> Function(String) _fundLoader;
+  final Future<String?> Function(String) _stockCountryLoader;
   final DateTime Function() _clock;
 
   Map<String, DepotAssetProfile> _profiles = const {};
@@ -52,6 +59,13 @@ class DepotAllocationState extends ChangeNotifier {
   DepotAssetProfile? profileOf(DepotHolding holding) =>
       _profiles[_keyOf(holding)];
 
+  /// The reported instrument type wins over the name heuristic, which files
+  /// every security without "ETF" or "Fonds" in its name as a stock.
+  DepotHoldingKind kindOf(DepotHolding holding) {
+    if (holding.assetType != DepotAssetType.security) return holding.kind;
+    return profileOf(holding)?.kind ?? holding.kind;
+  }
+
   static Future<YahooAssetProfile?> _loadProfile(
     String query,
     YahooSession? session,
@@ -65,7 +79,15 @@ class DepotAllocationState extends ChangeNotifier {
     return null;
   }
 
-  Future<void> ensureProfiles(Iterable<DepotHolding> holdings) async {
+  static bool _isFund(DepotHoldingKind kind) =>
+      kind == DepotHoldingKind.etf || kind == DepotHoldingKind.fund;
+
+  /// Fetches only positions whose metadata is missing or incomplete, at most
+  /// once per [retryAfter]. With [force], every position is fetched again.
+  Future<void> ensureProfiles(
+    Iterable<DepotHolding> holdings, {
+    bool force = false,
+  }) async {
     if (_disposed) return;
     await ensureLoaded();
     if (_disposed || _isFetching) return;
@@ -81,7 +103,9 @@ class DepotAllocationState extends ChangeNotifier {
       final key = _keyOf(holding);
       if (key == null || _pending.contains(key)) continue;
       final cached = _profiles[key];
-      if (!_needsProfile(holding, cached) || !_isDue(key, cached)) continue;
+      if (!force && (!_needsProfile(holding, cached) || !_isDue(key, cached))) {
+        continue;
+      }
       targets[key] = holding;
     }
     if (targets.isEmpty) return;
@@ -102,9 +126,16 @@ class DepotAllocationState extends ChangeNotifier {
         await _store.saveAssetProfileAttempts(_attempts);
         final results = await Future.wait([
           for (final entry in chunk)
-            _fetch(entry.key, entry.value, session, generation),
+            _fetch(
+              entry.key,
+              entry.value,
+              session,
+              generation,
+              replaceKnown: force,
+            ),
         ]);
         changed = results.any((fetched) => fetched) || changed;
+        if (changed) _notify();
       }
     } catch (e) {
       errorLog('[DepotAllocationState] Fetching profiles failed: $e');
@@ -132,26 +163,36 @@ class DepotAllocationState extends ChangeNotifier {
     await ensureProfiles(holdings);
   }
 
+  /// Fetches every position again; cached values stay until replaced.
+  Future<void> reloadAll(Iterable<DepotHolding> holdings) async {
+    await _fetchDone?.future;
+    await ensureProfiles(holdings, force: true);
+  }
+
   Future<void> ensureLoaded() => _cacheLoad ??= _loadCache();
 
   bool _isDue(String key, DepotAssetProfile? cached) {
     final last =
         _attempts[key] ??
-        (cached != null && cached.cacheVersion >= 3 ? cached.fetchedAt : null);
+        (cached != null &&
+                cached.cacheVersion >= DepotAssetProfile.currentVersion
+            ? cached.fetchedAt
+            : null);
     return last == null || _clock().difference(last) >= retryAfter;
   }
 
   bool _needsProfile(DepotHolding holding, DepotAssetProfile? profile) {
     if (profile == null) return true;
-    return switch (holding.kind) {
-      DepotHoldingKind.etf || DepotHoldingKind.fund =>
-        profile.sectorShares.isEmpty || profile.countryShares.isEmpty,
-      DepotHoldingKind.stock =>
-        profile.sector == null ||
-            profile.industry == null ||
-            (profile.country == null && profile.region == null),
-      _ => false,
-    };
+    final kind = profile.kind ?? holding.kind;
+    if (_isFund(kind)) {
+      return profile.cacheVersion < DepotAssetProfile.currentVersion ||
+          (profile.sectorShares.isEmpty && profile.countryShares.isEmpty);
+    }
+    if (kind == DepotHoldingKind.stock) {
+      return profile.sector == null ||
+          (profile.country == null && profile.region == null);
+    }
+    return false;
   }
 
   Future<void> _loadCache() async {
@@ -172,54 +213,79 @@ class DepotAllocationState extends ChangeNotifier {
     String key,
     DepotHolding holding,
     YahooSession? session,
-    int generation,
-  ) async {
+    int generation, {
+    required bool replaceKnown,
+  }) async {
     if (!_pending.add(key)) return false;
+    bool stale() => _disposed || generation != _generation;
     try {
-      final query = _keyOf(holding) ?? key;
-      final result = await _profileLoader(query, session);
-      if (_disposed || generation != _generation) return false;
-      var profile = result?.profile;
-      if (holding.kind == DepotHoldingKind.stock &&
-          (profile?.country == null && profile?.region == null ||
-              profile?.sector == null ||
-              profile?.industry == null)) {
-        profile = await _completeFromListings(
-          holding,
-          profile,
+      final isin = holding.isin?.trim();
+      var kind = holding.kind;
+      OnvistaFundBreakdown? fund;
+      if (_isFund(kind) && isin != null && isin.isNotEmpty) {
+        fund = await _fundLoader(isin);
+      }
+      if (stale()) return false;
+
+      // A complete onvista split makes the Yahoo round trips unnecessary.
+      DepotAssetProfile? profile;
+      var topHoldings = const <({String symbol, double weight})>[];
+      if (fund == null ||
+          fund.countryShares.isEmpty ||
+          fund.sectorShares.isEmpty) {
+        final result = await _profileLoader(key, session);
+        if (stale()) return false;
+        profile = result?.profile;
+        topHoldings = result?.topHoldings ?? const [];
+        final reported = profile?.kind;
+        if (reported != null) kind = reported;
+        if (fund == null &&
+            _isFund(kind) &&
+            !_isFund(holding.kind) &&
+            isin != null &&
+            isin.isNotEmpty) {
+          fund = await _fundLoader(isin);
+          if (stale()) return false;
+        }
+      }
+
+      if (kind == DepotHoldingKind.stock) {
+        profile = await _completeStock(holding, profile, session, generation);
+      } else if (_isFund(kind)) {
+        profile = await _completeFund(
+          profile ?? DepotAssetProfile(fetchedAt: _clock()),
+          fund,
+          topHoldings,
           session,
           generation,
         );
       }
-      if (_disposed || generation != _generation) return false;
-      if (profile == null) {
-        return false;
-      }
-      if (profile.countryShares.isEmpty &&
-          (result?.topHoldings.isNotEmpty ?? false)) {
-        final shares = await _countryShares(
-          result!.topHoldings,
-          session,
-          generation,
-        );
-        profile = profile.copyWith(countryShares: shares);
-      }
-      if (_disposed || generation != _generation) return false;
+      if (stale() || profile == null || profile.isEmpty) return false;
+      profile = profile.copyWith(kind: kind);
+
       final previous = _profiles[key];
       if (previous != null) {
+        final current =
+            previous.cacheVersion >= DepotAssetProfile.currentVersion;
+        // Retries keep what is known; only a full reload replaces it.
+        final (first, second) = replaceKnown
+            ? (profile, previous)
+            : (previous, profile);
         profile = DepotAssetProfile(
-          sector: previous.sector ?? profile.sector,
-          industry: previous.industry ?? profile.industry,
-          country: previous.country ?? profile.country,
-          region: previous.region ?? profile.region,
-          sectorShares:
-              previous.cacheVersion >= 3 && previous.sectorShares.isNotEmpty
-              ? previous.sectorShares
-              : profile.sectorShares,
-          countryShares:
-              previous.cacheVersion >= 3 && previous.countryShares.isNotEmpty
-              ? previous.countryShares
-              : profile.countryShares,
+          sector: first.sector ?? second.sector,
+          industry: first.industry ?? second.industry,
+          country: first.country ?? second.country,
+          region: first.region ?? second.region,
+          kind: profile.kind,
+          sectorShares: profile.sectorShares.isNotEmpty || !current
+              ? profile.sectorShares
+              : previous.sectorShares,
+          countryShares: profile.countryShares.isNotEmpty || !current
+              ? profile.countryShares
+              : previous.countryShares,
+          constituents: profile.constituents.isNotEmpty || !current
+              ? profile.constituents
+              : previous.constituents,
           fetchedAt: profile.fetchedAt,
         );
       }
@@ -231,6 +297,61 @@ class DepotAllocationState extends ChangeNotifier {
     } finally {
       _pending.remove(key);
     }
+  }
+
+  Future<DepotAssetProfile?> _completeStock(
+    DepotHolding holding,
+    DepotAssetProfile? profile,
+    YahooSession? session,
+    int generation,
+  ) async {
+    final isin = holding.isin?.trim();
+    if (profile?.country == null &&
+        profile?.region == null &&
+        isin != null &&
+        isin.isNotEmpty) {
+      final country = await _stockCountryLoader(isin);
+      if (country != null) {
+        profile = (profile ?? DepotAssetProfile(fetchedAt: _clock())).copyWith(
+          country: country,
+        );
+      }
+    }
+    if (_disposed || generation != _generation) return profile;
+    if (profile?.country == null && profile?.region == null ||
+        profile?.sector == null ||
+        profile?.industry == null) {
+      profile = await _completeFromListings(
+        holding,
+        profile,
+        session,
+        generation,
+      );
+    }
+    return profile;
+  }
+
+  Future<DepotAssetProfile> _completeFund(
+    DepotAssetProfile profile,
+    OnvistaFundBreakdown? fund,
+    List<({String symbol, double weight})> topHoldings,
+    YahooSession? session,
+    int generation,
+  ) async {
+    if (fund != null) {
+      profile = profile.copyWith(
+        sectorShares: fund.sectorShares.isNotEmpty ? fund.sectorShares : null,
+        countryShares: fund.countryShares.isNotEmpty
+            ? fund.countryShares
+            : null,
+        constituents: fund.constituents.isNotEmpty ? fund.constituents : null,
+      );
+    }
+    if (profile.countryShares.isEmpty && topHoldings.isNotEmpty) {
+      final shares = await _countryShares(topHoldings, session, generation);
+      profile = profile.copyWith(countryShares: shares);
+    }
+    return profile;
   }
 
   Future<DepotAssetProfile?> _completeFromListings(
@@ -265,8 +386,10 @@ class DepotAllocationState extends ChangeNotifier {
             industry: profile?.industry ?? alternate.industry,
             country: profile?.country ?? alternate.country,
             region: profile?.region ?? alternate.region,
+            kind: profile?.kind,
             sectorShares: profile?.sectorShares ?? const {},
             countryShares: profile?.countryShares ?? const {},
+            constituents: profile?.constituents ?? const [],
             fetchedAt: profile?.fetchedAt ?? alternate.fetchedAt,
           );
           if ((profile.country != null || profile.region != null) &&
@@ -284,8 +407,8 @@ class DepotAllocationState extends ChangeNotifier {
     return profile;
   }
 
-  /// A fund's region mix is approximated from the domicile of its largest
-  /// constituents, because Yahoo does not publish fund country weights.
+  /// Fallback when onvista has no country split: approximate it from the
+  /// domicile of the fund's largest constituents.
   Future<Map<String, double>> _countryShares(
     List<({String symbol, double weight})> topHoldings,
     YahooSession? session,

@@ -8,6 +8,8 @@ import 'package:tool_lab/services/app_http_client.dart';
 
 import '../models/depot_asset_profile.dart';
 import '../models/depot_dividend.dart';
+import '../models/depot_fund_constituent.dart';
+import '../models/depot_holding.dart';
 import '../models/market_quote.dart';
 import 'nasdaq_profile_api.dart';
 
@@ -325,6 +327,7 @@ class YahooFinanceApi {
     String? quoteType;
     var sectorShares = const <String, double>{};
     var topHoldings = const <({String symbol, double weight})>[];
+    var constituents = const <DepotFundConstituent>[];
 
     try {
       final json = await _getJson('/v1/finance/search', {
@@ -359,6 +362,7 @@ class YahooFinanceApi {
         final top = result?['topHoldings'] as Map?;
         sectorShares = _sectorShares(top?['sectorWeightings']);
         topHoldings = _topHoldings(top?['holdings']);
+        constituents = _constituents(top?['holdings']);
       } catch (e) {
         debugLog('[YahooFinanceApi] Summary profile failed for $query: $e');
       }
@@ -380,7 +384,14 @@ class YahooFinanceApi {
           ? _clean(country)
           : null,
       region: region,
+      kind: switch (quoteType) {
+        'EQUITY' => DepotHoldingKind.stock,
+        'ETF' => DepotHoldingKind.etf,
+        'MUTUALFUND' => DepotHoldingKind.fund,
+        _ => null,
+      },
       sectorShares: sectorShares,
+      constituents: constituents,
       fetchedAt: DateTime.now(),
     );
     if (profile.isEmpty && topHoldings.isEmpty) return null;
@@ -437,6 +448,27 @@ class YahooFinanceApi {
       }
     }
     return holdings;
+  }
+
+  static List<DepotFundConstituent> _constituents(Object? raw) {
+    if (raw is! List) return const [];
+    final constituents = <DepotFundConstituent>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final symbol = (item['symbol'] as String?)?.trim();
+      final name = (item['holdingName'] as String?)?.trim();
+      final weight = _profileWeight(item['holdingPercent']);
+      final label = name == null || name.isEmpty ? symbol : name;
+      if (label == null || label.isEmpty || weight == null) continue;
+      constituents.add(
+        DepotFundConstituent(
+          name: label,
+          symbol: symbol == null || symbol.isEmpty ? null : symbol,
+          weight: weight,
+        ),
+      );
+    }
+    return constituents..sort((a, b) => b.weight.compareTo(a.weight));
   }
 
   static double? _profileWeight(Object? value) {

@@ -103,7 +103,8 @@ class DepotPortfolioLabels {
         DepotRegion.other => l10n.depotRegionOther,
       };
 
-  /// Yahoo's sector names, localized. Unknown names pass through.
+  /// Yahoo's sector names (onvista's are mapped onto them), localized.
+  /// Unknown names pass through.
   static String sector(AppLocalizations l10n, String name) => switch (name) {
     'Technology' => l10n.depotSectorTechnology,
     'Financial Services' => l10n.depotSectorFinancialServices,
@@ -116,6 +117,7 @@ class DepotPortfolioLabels {
     'Communication Services' => l10n.depotSectorCommunicationServices,
     'Utilities' => l10n.depotSectorUtilities,
     'Real Estate' => l10n.depotSectorRealEstate,
+    'Consumer Goods' => l10n.depotSectorConsumerGoods,
     _ => name,
   };
 

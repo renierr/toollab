@@ -5678,7 +5678,7 @@
   "depotAllocationUnclassified": "Unclassified",
   "depotAllocationOtherIndustries": "Other industries",
   "depotAllocationEmpty": "There are no open positions to break down.",
-  "depotAllocationSourceNote": "Use sync to fetch missing Yahoo Finance and Nasdaq data. Fund regions use up to ten largest holdings; remaining or unavailable data is unclassified.",
+  "depotAllocationSourceNote": "Refresh fetches data only for new or incomplete positions. ETF and fund regions use onvista's country split; Yahoo Finance and Nasdaq fill gaps. Remaining or unavailable data is unclassified.",
   "depotRegionNorthAmerica": "North America",
   "depotRegionSouthAmerica": "South America",
   "depotRegionEurope": "Europe",
@@ -5697,6 +5697,35 @@
   "depotSectorCommunicationServices": "Communication Services",
   "depotSectorUtilities": "Utilities",
   "depotSectorRealEstate": "Real Estate",
+  "depotSectorConsumerGoods": "Consumer Goods",
+  "depotXRayTitle": "X-Ray",
+  "depotXRayNote": "Direct stocks plus the top holdings of your ETFs and funds, weighted by position value.",
+  "depotXRayDirect": "Held directly",
+  "depotXRayFundShare": "{percent} of fund",
+  "@depotXRayFundShare": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "depotXRaySources": "{count, plural, =1{via 1 position} other{via {count} positions}}",
+  "@depotXRaySources": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "depotXRayUncovered": "Other fund holdings",
+  "depotXRayShowAll": "Show all ({count})",
+  "@depotXRayShowAll": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "depotXRayShowLess": "Show less",
+  "depotAllocationDataTitle": "Allocation data",
+  "depotAllocationDataDescription": "Sector, region and ETF holdings are stored on this device. Refresh only fetches new or incomplete positions.",
+  "depotAllocationDataReload": "Reload all allocation data",
+  "depotAllocationDataCount": "{count} of {total} positions classified",
+  "@depotAllocationDataCount": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "depotAllocationDataFetching": "Fetching allocation data…",
   "depotIncomeTitle": "Dividends & interest (12 months)",
   "depotIncomeTotal": "Total {amount}",
   "@depotIncomeTotal": {
