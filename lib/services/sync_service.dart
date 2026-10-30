@@ -54,6 +54,11 @@ abstract interface class SyncPreflightDelegate {
   Future<void> verifyRemotePayloads(Map<String, Map<String, dynamic>> records);
 }
 
+abstract interface class SyncSessionGuard {
+  void beginSyncSession();
+  bool get syncSessionValid;
+}
+
 class SyncPasswordMismatchException implements Exception {
   const SyncPasswordMismatchException();
 
@@ -318,6 +323,17 @@ class SyncService {
     if (!await delegate.isReadyToSync()) {
       throw StateError('Tool is not ready to sync');
     }
+    if (delegate is SyncSessionGuard) {
+      (delegate as SyncSessionGuard).beginSyncSession();
+    }
+    Future<void> requireReady() async {
+      if (!await delegate.isReadyToSync() ||
+          (delegate is SyncSessionGuard &&
+              !(delegate as SyncSessionGuard).syncSessionValid)) {
+        throw StateError('Tool is no longer ready to sync');
+      }
+    }
+
     final String sanitizedUrl = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
@@ -350,6 +366,7 @@ class SyncService {
     var truncatedMetadata = false;
     final serverMetaList = <dynamic>[];
     do {
+      await requireReady();
       final query = <String, String>{'limit': '$_syncBatchSize'};
       if (pageCursor != null) query['cursor'] = pageCursor;
       final metadataResponse = await client
@@ -408,6 +425,7 @@ class SyncService {
           .map((record) => record.id)
           .toList();
       for (final batch in _batches(ids, delegate.syncPullBatchSize)) {
+        await requireReady();
         final records = await pullRecords(
           baseUrl: baseUrl,
           userId: userId,
@@ -522,6 +540,7 @@ class SyncService {
     if (toPullIds.isNotEmpty) {
       final pullUri = Uri.parse('$sanitizedUrl/api/sync/$toolId/pull');
       for (final ids in _batches(toPullIds, delegate.syncPullBatchSize)) {
+        await requireReady();
         final pullResponse = await client
             .post(
               pullUri,
@@ -576,6 +595,7 @@ class SyncService {
     if (toPush.isNotEmpty) {
       final pushUri = Uri.parse('$sanitizedUrl/api/sync/$toolId');
       await for (final records in _pushBatches(delegate, toPush)) {
+        await requireReady();
         final pushResponse = await client
             .post(
               pushUri,

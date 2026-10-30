@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -8,16 +6,13 @@ import 'package:tool_lab/tools/totp_auth/config.dart';
 import 'package:tool_lab/tools/totp_auth/totp_auth_state.dart';
 
 Future<TotpAuthState> _initialize() async {
-  final ready = Completer<void>();
   final state = TotpAuthState();
-  var notifications = 0;
-  void listener() {
-    if (++notifications == 2) ready.complete();
+  await state.ready;
+  if (state.lockController.configured) {
+    expect(await state.unlockVault('test password'), isTrue);
+  } else {
+    await state.setupVault('test password');
   }
-
-  state.addListener(listener);
-  await ready.future.timeout(const Duration(seconds: 5));
-  state.removeListener(listener);
   return state;
 }
 
@@ -44,7 +39,7 @@ void main() {
     final db = await DatabaseService.instance.getToolDatabase(
       TotpAuthTool.config.id,
     );
-    expect(await db.query('accounts'), isEmpty);
+    expect(await db.query('vault_accounts'), isEmpty);
   });
 
   test('version 1 startup preserves rows from the unprefixed table', () async {
@@ -86,6 +81,6 @@ void main() {
     final second = await _initialize();
     addTearDown(second.dispose);
     expect(second.accounts.single.id, 'legacy');
-    expect(await db.query('accounts'), hasLength(1));
+    expect(await db.query('vault_accounts'), hasLength(1));
   });
 }

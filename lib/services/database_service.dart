@@ -6,6 +6,10 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/tools/totp_auth/config.dart';
+
+class PlaintextAuthenticatorBackupException implements Exception {}
 
 class DatabaseService {
   static const String _dbName = 'tool_lab.db';
@@ -298,17 +302,34 @@ class DatabaseService {
   /// Reads the raw bytes of the active SQLite database file for backup/export.
   Future<Uint8List> getDatabaseBytes() async {
     final db = await database;
+    final toolDb = ToolDatabase(TotpAuthTool.config.id, db);
+    for (final table in [toolDb.nameTable('accounts'), 'accounts']) {
+      final exists = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        [table],
+      );
+      if (exists.isEmpty) continue;
+      final columns = await db.rawQuery('PRAGMA table_info($table)');
+      final names = columns.map((row) => row['name'] as String).toSet();
+      if (!names.containsAll({'id', 'issuer', 'account_name', 'secret'})) {
+        continue;
+      }
+      final rows = await db.rawQuery('SELECT 1 FROM $table LIMIT 1');
+      if (rows.isNotEmpty) {
+        throw PlaintextAuthenticatorBackupException();
+      }
+    }
+    final scope = TempFileManager.createScope();
+    final name = 'database_export_${DateTime.now().microsecondsSinceEpoch}.db';
+    final path = await scope.createFile(name);
+    await scope.deleteFile(name);
+    scope.track(name);
     try {
-      await db.execute('PRAGMA wal_checkpoint(FULL);');
-    } catch (e) {
-      errorLog('DatabaseService: WAL checkpoint failed before export: $e');
+      await db.execute('VACUUM INTO ?', [path]);
+      return await scope.readFile(name);
+    } finally {
+      await scope.cleanTracked();
     }
-    final path = db.path;
-    final file = File(path);
-    if (!await file.exists()) {
-      throw Exception('Database file does not exist');
-    }
-    return await file.readAsBytes();
   }
 
   Future<int> getDatabaseSize() async {

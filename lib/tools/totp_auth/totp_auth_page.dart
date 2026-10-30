@@ -4,6 +4,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/sync_error_message.dart';
@@ -12,6 +13,8 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/widgets/tool_lock_gate.dart';
+import 'package:tool_lab/widgets/tool_lock_settings_dialog.dart';
 
 import 'config.dart';
 import 'totp_account.dart';
@@ -27,9 +30,8 @@ import 'widgets/totp_export_dialog.dart';
 import 'widgets/totp_import_dialog.dart';
 import 'widgets/totp_scan_dialog.dart';
 import 'widgets/totp_search_field.dart';
-import 'widgets/totp_sync_password_dialog.dart';
 
-enum _MenuAction { import, export, syncPassword }
+enum _MenuAction { import, export, security }
 
 class TotpAuthPage extends StatefulWidget {
   const TotpAuthPage({super.key});
@@ -38,50 +40,97 @@ class TotpAuthPage extends StatefulWidget {
   State<TotpAuthPage> createState() => _TotpAuthPageState();
 }
 
-class _TotpAuthPageState extends State<TotpAuthPage> {
+class _TotpAuthPageState extends State<TotpAuthPage>
+    with DisposeCleanup, WidgetsBindingObserver {
   String _query = '';
   bool _syncing = false;
+  bool _wasUnlocked = false;
 
   @override
   void initState() {
     super.initState();
 
-    final appState = context.read<AppState>();
     final totpState = context.read<TotpAuthState>();
+    void onLockChanged() {
+      final unlocked = totpState.lockController.unlocked;
+      if (unlocked && !_wasUnlocked && mounted) _autoSync();
+      _wasUnlocked = unlocked;
+    }
+
+    totpState.lockController.addListener(onLockChanged);
+    WidgetsBinding.instance.addObserver(this);
+    onDispose(() {
+      WidgetsBinding.instance.removeObserver(this);
+      totpState.lockController.removeListener(onLockChanged);
+      totpState.lockController.lock();
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await totpState.ready;
       if (!mounted) return;
-      await totpState.reload();
-      if (!mounted) return;
-
-      if (appState.syncEnabled &&
-          appState.syncServerUrl.isNotEmpty &&
-          totpState.hasSyncPassword &&
-          appState.isToolSyncEnabled(TotpAuthTool.config.id)) {
-        appState
-            .syncWithBackend([TotpSyncDelegate()])
-            .then((_) {
-              if (mounted) totpState.reload();
-            })
-            .catchError((e) {
-              errorLog('[TotpAuthPage] Auto-sync on open failed: $e');
-              if (mounted) {
-                final l10n = AppLocalizations.of(context);
-                _snack(
-                  l10n.totpSyncFailed(syncErrorMessage(e, l10n)),
-                  error: true,
-                );
-              }
-            });
+      try {
+        await totpState.unlockAutomatically();
+      } catch (e) {
+        errorLog('[TotpAuthPage] Automatic unlock failed: $e');
       }
+      if (!mounted) return;
+      if (totpState.lockController.unlocked && !_wasUnlocked) onLockChanged();
     });
+  }
+
+  Future<void> _autoSync() async {
+    final appState = context.read<AppState>();
+    final state = context.read<TotpAuthState>();
+    if (!appState.syncEnabled ||
+        appState.syncServerUrl.isEmpty ||
+        !appState.isToolSyncEnabled(TotpAuthTool.config.id)) {
+      return;
+    }
+    try {
+      await appState.syncWithBackend([TotpSyncDelegate()]);
+      if (mounted) await state.reload();
+    } catch (e) {
+      errorLog('[TotpAuthPage] Auto-sync on unlock failed: $e');
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        _snack(l10n.totpSyncFailed(syncErrorMessage(e, l10n)), error: true);
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      final pageRoute = ModalRoute.of(context);
+      if (pageRoute != null) {
+        Navigator.of(context).popUntil((route) => route == pageRoute);
+      }
+      context.read<TotpAuthState>().lockController.lock();
+    } else if (state == AppLifecycleState.resumed) {
+      context.read<TotpAuthState>().unlockAutomatically().catchError((
+        Object e,
+      ) {
+        errorLog('[TotpAuthPage] Automatic unlock failed: $e');
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<TotpAuthState>();
     final l10n = AppLocalizations.of(context);
+    if (!state.lockController.initialized || !state.lockController.unlocked) {
+      return ToolLayout(
+        title: TotpAuthTool.config.localizedName(l10n),
+        child: ToolLockGate(
+          controller: state.lockController,
+          setup: state.setupVault,
+          unlock: state.unlockVault,
+          unlockBiometric: state.unlockBiometric,
+          reset: state.resetVault,
+        ),
+      );
+    }
     final filtered = state.search(_query);
     final empty = !state.hasAccounts;
 
@@ -113,8 +162,8 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
                 _openImport();
               case _MenuAction.export:
                 _openExport();
-              case _MenuAction.syncPassword:
-                _openSyncPassword();
+              case _MenuAction.security:
+                ToolLockSettingsDialog.show(context, state.lockController);
             }
           },
           itemBuilder: (_) => [
@@ -137,12 +186,12 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
               ),
             ),
             PopupMenuItem(
-              value: _MenuAction.syncPassword,
+              value: _MenuAction.security,
               child: ListTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.key_outlined),
-                title: Text(l10n.totpSyncPassword),
+                title: Text(l10n.toolLockSettings),
               ),
             ),
           ],
@@ -268,23 +317,6 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
         _snack(l10n.totpExportFailed(e.toString()), error: true);
       }
     }
-  }
-
-  Future<void> _openSyncPassword() async {
-    final state = context.read<TotpAuthState>();
-    final l10n = AppLocalizations.of(context);
-    final result = await TotpSyncPasswordDialog.show(
-      context,
-      current: state.syncPassword,
-    );
-    if (result == null || !mounted) return;
-    await state.setSyncPassword(result.password);
-    if (!mounted) return;
-    _snack(
-      result.password == null
-          ? l10n.totpSyncPasswordRemoved
-          : l10n.totpSyncPasswordSaved,
-    );
   }
 
   Future<void> _syncNow() async {

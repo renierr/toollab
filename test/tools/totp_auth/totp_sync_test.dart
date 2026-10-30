@@ -18,7 +18,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final server = <String, Map<String, dynamic>>{};
   late MockClient client;
+  late TotpAuthState state;
   var pushes = 0;
+  var replaceSessionDuringPull = false;
 
   setUpAll(() {
     sqfliteFfiInit();
@@ -29,9 +31,13 @@ void main() {
     await DatabaseService.instance.close();
     server.clear();
     pushes = 0;
+    replaceSessionDuringPull = false;
     FlutterSecureStorage.setMockInitialValues({
       TotpCrypto.syncPasswordKey: 'shared password',
     });
+    state = TotpAuthState();
+    await state.ready;
+    await state.setupVault('shared password');
     client = MockClient((request) async {
       if (request.method == 'GET') {
         return http.Response(
@@ -51,6 +57,11 @@ void main() {
       }
       final body = jsonDecode(request.body) as Map<String, dynamic>;
       if (request.url.path.endsWith('/pull')) {
+        if (replaceSessionDuringPull) {
+          replaceSessionDuringPull = false;
+          state.lockController.lock();
+          await state.unlockVault('shared password');
+        }
         return http.Response(
           jsonEncode({
             'success': true,
@@ -72,6 +83,7 @@ void main() {
     AppHttpClient.testClient = client;
   });
   tearDown(() {
+    state.dispose();
     AppHttpClient.testClient = null;
     client.close();
   });
@@ -85,15 +97,11 @@ void main() {
   );
 
   Future<void> put(TotpAccount account) async {
-    await TotpAuthState.migrateDb();
-    final db = await DatabaseService.instance.getToolDatabase(
-      TotpAuthTool.config.id,
-    );
-    await db.insert(
-      'accounts',
-      account.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    if (state.findById(account.id) == null) {
+      await state.addAccount(account);
+    } else {
+      await state.updateAccount(account);
+    }
   }
 
   test(
@@ -113,9 +121,10 @@ void main() {
       final db = await DatabaseService.instance.getToolDatabase(
         TotpAuthTool.config.id,
       );
-      await db.delete('accounts');
+      await db.delete('vault_accounts');
       expect((await sync())['pulled'], 1);
-      final restored = TotpAccount.fromMap((await db.query('accounts')).single);
+      await state.reload();
+      final restored = state.accounts.single;
       expect(restored.issuer, account.issuer);
       expect(restored.accountName, account.accountName);
       expect(restored.secret, account.secret);
@@ -135,12 +144,20 @@ void main() {
       final original = jsonEncode(server);
       account.updatedAt = account.updatedAt.add(const Duration(seconds: 5));
       await put(account);
-      FlutterSecureStorage.setMockInitialValues({
-        TotpCrypto.syncPasswordKey: 'wrong password',
-      });
+      final remoteAccount = account.copy();
+      final remote = server[account.id]!;
+      remote['data'] = {
+        'version': 2,
+        'payload': await TotpCrypto.encrypt(
+          jsonEncode(remoteAccount.toJson()),
+          'wrong password',
+        ),
+      };
+      final changedRemote = jsonEncode(server);
       await expectLater(sync(), throwsA(isA<SyncPasswordMismatchException>()));
       expect(pushes, 1);
-      expect(jsonEncode(server), original);
+      expect(jsonEncode(server), changedRemote);
+      expect(changedRemote, isNot(original));
     },
   );
 
@@ -162,9 +179,22 @@ void main() {
   });
 
   test('direct sync is blocked without password', () async {
-    FlutterSecureStorage.setMockInitialValues({});
+    state.lockController.lock();
     await expectLater(sync(), throwsStateError);
     expect(pushes, 0);
+  });
+
+  test('locking and unlocking during sync invalidates the old run', () async {
+    final account = TotpAccount.newAccount(
+      issuer: 'Private',
+      accountName: 'alice',
+      secret: 'JBSWY3DPEHPK3PXP',
+    );
+    await put(account);
+    await sync();
+    replaceSessionDuringPull = true;
+    await expectLater(sync(), throwsStateError);
+    expect(pushes, 1);
   });
 
   test('remote deletion removes the local account', () async {
@@ -184,6 +214,6 @@ void main() {
     final db = await DatabaseService.instance.getToolDatabase(
       TotpAuthTool.config.id,
     );
-    expect(await db.query('accounts'), isEmpty);
+    expect(await db.query('vault_accounts'), isEmpty);
   });
 }

@@ -11,11 +11,11 @@ void main() {
     expect(await TotpSyncDelegate().isReadyToSync(), isFalse);
   });
 
-  test('delegate is ready once a password is stored', () async {
+  test('a stored password cannot enable sync while locked', () async {
     FlutterSecureStorage.setMockInitialValues({
       TotpCrypto.syncPasswordKey: 'correct horse battery',
     });
-    expect(await TotpSyncDelegate().isReadyToSync(), isTrue);
+    expect(await TotpSyncDelegate().isReadyToSync(), isFalse);
   });
 
   test('empty stored password counts as not configured', () async {

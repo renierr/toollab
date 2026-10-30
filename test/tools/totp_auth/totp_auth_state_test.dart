@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -7,18 +5,16 @@ import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/totp_auth/totp.dart';
 import 'package:tool_lab/tools/totp_auth/totp_account.dart';
 import 'package:tool_lab/tools/totp_auth/totp_auth_state.dart';
+import 'package:tool_lab/tools/totp_auth/totp_crypto.dart';
 
 Future<TotpAuthState> _initialize() async {
-  final ready = Completer<void>();
   final state = TotpAuthState();
-  var notifications = 0;
-  void listener() {
-    if (++notifications == 2) ready.complete();
+  await state.ready;
+  if (state.lockController.configured) {
+    expect(await state.unlockVault('correct horse battery'), isTrue);
+  } else {
+    await state.setupVault('correct horse battery');
   }
-
-  state.addListener(listener);
-  await ready.future.timeout(const Duration(seconds: 5));
-  state.removeListener(listener);
   return state;
 }
 
@@ -84,21 +80,77 @@ void main() {
     expect(state.accounts, hasLength(2));
   });
 
-  test('changing a sync password does not overwrite remote data', () async {
+  test('locking clears accounts and disables sync until unlocked', () async {
     final state = await _initialize();
     addTearDown(state.dispose);
     final account = _account('Example', 'alice', 'JBSWY3DPEHPK3PXP');
     await state.addAccount(account);
-    expect(state.hasSyncPassword, isFalse);
-    final before = state.accounts.single.updatedAt;
-
-    await state.setSyncPassword('correct horse battery');
     expect(state.hasSyncPassword, isTrue);
-    expect(state.accounts.single.updatedAt, before);
-    expect(account.id, state.accounts.single.id);
-
-    await state.setSyncPassword(null);
+    state.lockController.lock();
     expect(state.hasSyncPassword, isFalse);
+    expect(state.accounts, isEmpty);
+    expect(await state.unlockVault('correct horse battery'), isTrue);
+    expect(state.accounts.single.id, account.id);
+  });
+
+  test('an unlock interrupted by locking cannot reopen the vault', () async {
+    final state = await _initialize();
+    addTearDown(state.dispose);
+    state.lockController.lock();
+    final unlock = state.unlockVault('correct horse battery');
+    state.lockController.lock();
+    expect(await unlock, isFalse);
+    expect(state.hasSyncPassword, isFalse);
+  });
+
+  test(
+    'automatic unlock is only started explicitly when the tool is open',
+    () async {
+      final first = await _initialize();
+      await first.lockController.setAutomatic(true);
+      first.dispose();
+      final second = TotpAuthState();
+      await second.ready;
+      addTearDown(second.dispose);
+      expect(second.hasSyncPassword, isFalse);
+      await second.unlockAutomatically();
+      expect(second.hasSyncPassword, isTrue);
+    },
+  );
+
+  test('five wrong passwords allow confirmed local reset', () async {
+    final state = await _initialize();
+    addTearDown(state.dispose);
+    await state.addAccount(_account('Example', 'alice', 'JBSWY3DPEHPK3PXP'));
+    state.lockController.lock();
+    await expectLater(state.resetVault(), throwsStateError);
+    for (var i = 0; i < 5; i++) {
+      expect(await state.unlockVault('wrong password'), isFalse);
+    }
+    expect(state.lockController.canReset, isTrue);
+    await state.resetVault();
+    expect(state.lockController.configured, isFalse);
+    await state.setupVault('new password');
+    expect(state.accounts, isEmpty);
+  });
+
+  test('forgotten previous sync password permits local reset', () async {
+    FlutterSecureStorage.setMockInitialValues({
+      TotpCrypto.syncPasswordKey: 'old password',
+    });
+    final state = TotpAuthState();
+    await state.ready;
+    addTearDown(state.dispose);
+    for (var i = 0; i < 5; i++) {
+      await expectLater(
+        state.setupVault('different password'),
+        throwsException,
+      );
+    }
+    expect(state.lockController.canReset, isTrue);
+    await state.resetVault();
+    await state.setupVault('different password');
+    expect(state.accounts, isEmpty);
   });
 
   test('HOTP counter advance persists', () async {

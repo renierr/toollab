@@ -1,54 +1,49 @@
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
+import 'package:tool_lab/services/tool_lock_controller.dart';
 
 import 'config.dart';
 import 'totp_account.dart';
-import 'totp_auth_state.dart';
 import 'totp_crypto.dart';
+import 'totp_vault_store.dart';
 
 class TotpSyncDelegate
     with DefaultSyncDelegate
-    implements SyncDelegate, SyncPreflightDelegate {
-  static const _table = 'accounts';
+    implements SyncDelegate, SyncPreflightDelegate, SyncSessionGuard {
   static String get _toolId => TotpAuthTool.config.id;
 
-  final _storage = const FlutterSecureStorage();
-  String? _password;
-  bool _passwordLoaded = false;
+  final _vault = TotpVaultStore();
+  ToolLockSession? _runSession;
 
-  Future<ToolDatabase> _db() async {
-    await TotpAuthState.migrateDb();
-    return DatabaseService.instance.getToolDatabase(_toolId);
+  @override
+  void beginSyncSession() {
+    _runSession = ToolLockController.sessionFor(_toolId);
   }
 
-  Future<String?> _syncPassword() async {
-    if (!_passwordLoaded) {
-      _password = await _storage.read(key: TotpCrypto.syncPasswordKey);
-      _passwordLoaded = true;
+  @override
+  bool get syncSessionValid =>
+      _runSession != null &&
+      identical(_runSession, ToolLockController.sessionFor(_toolId));
+
+  ToolLockSession _session() {
+    final session = ToolLockController.sessionFor(_toolId);
+    if (session == null || (_runSession != null && !syncSessionValid)) {
+      throw StateError('Vault is locked');
     }
-    return _password;
+    return session;
   }
 
   /// Re-reads the stored password so a password set after startup applies to
   /// the next run.
   @override
   Future<bool> isReadyToSync() async {
-    _password = await _storage.read(key: TotpCrypto.syncPasswordKey);
-    _passwordLoaded = true;
-    return _password != null && _password!.isNotEmpty;
+    return ToolLockController.sessionFor(_toolId) != null;
   }
 
   Future<String> _requiredPassword() async {
-    final password = await _syncPassword();
-    if (password == null || password.isEmpty) {
-      throw StateError('A sync password is required');
-    }
-    return password;
+    return _session().password;
   }
 
   Future<Map<String, dynamic>> _decryptRecord(Map<String, dynamic> data) async {
@@ -88,17 +83,14 @@ class TotpSyncDelegate
 
   @override
   Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {
-    final db = await _db();
-    final rows = await db.query(
-      _table,
-      columns: ['id', 'updated_at', 'deleted'],
-    );
-    return rows
+    final session = _session();
+    final accounts = await _vault.load(session.key);
+    return accounts
         .map(
-          (row) => {
-            'id': row['id'] as String,
-            'updatedAt': (row['updated_at'] as num?)?.toInt() ?? 0,
-            'deleted': (row['deleted'] as num?)?.toInt() == 1,
+          (account) => {
+            'id': account.id,
+            'updatedAt': account.updatedAt.millisecondsSinceEpoch,
+            'deleted': account.deleted,
           },
         )
         .toList();
@@ -106,15 +98,9 @@ class TotpSyncDelegate
 
   @override
   Future<Map<String, dynamic>?> getLocalRecordData(String id) async {
-    final db = await _db();
-    final rows = await db.query(
-      _table,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    final account = TotpAccount.fromMap(Map<String, dynamic>.from(rows.first));
+    final session = _session();
+    final account = (await _vault.load(session.key, id: id)).firstOrNull;
+    if (account == null) return null;
     final password = await _requiredPassword();
     return {
       'version': 2,
@@ -139,18 +125,14 @@ class TotpSyncDelegate
     final account = TotpAccount.fromMap(map)
       ..updatedAt = DateTime.fromMillisecondsSinceEpoch(updatedAt)
       ..deleted = deleted;
-    final db = await _db();
-    await db.insert(
-      _table,
-      account.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    final session = _session();
+    await _vault.save(account, session.key);
   }
 
   @override
   Future<void> finalizeLocalSync(String id, bool wasDeleted) async {
     if (!wasDeleted) return;
-    final db = await _db();
-    await db.delete(_table, where: 'id = ?', whereArgs: [id]);
+    _session();
+    await _vault.delete(id);
   }
 }

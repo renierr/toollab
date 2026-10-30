@@ -22937,29 +22937,149 @@ abstract class AppLocalizations {
   /// **'Hide password'**
   String get totpHidePassword;
 
-  /// No description provided for @totpSyncPassword.
+  /// No description provided for @toolLockTitle.
   ///
   /// In en, this message translates to:
-  /// **'Sync password'**
-  String get totpSyncPassword;
+  /// **'Tool security'**
+  String get toolLockTitle;
 
-  /// No description provided for @totpSyncPasswordDescription.
+  /// No description provided for @toolLockSetup.
   ///
   /// In en, this message translates to:
-  /// **'Account data is encrypted before syncing. Use the same password on every device. Sync cannot run without it. The password is stored securely on this device.'**
-  String get totpSyncPasswordDescription;
+  /// **'Set your encryption password'**
+  String get toolLockSetup;
 
-  /// No description provided for @totpSyncPasswordSaved.
+  /// No description provided for @toolLockSetupDescription.
   ///
   /// In en, this message translates to:
-  /// **'Sync password saved'**
-  String get totpSyncPasswordSaved;
+  /// **'Use the same password as sync on every device. If you forget it, encrypted data cannot be recovered without a backup.'**
+  String get toolLockSetupDescription;
 
-  /// No description provided for @totpSyncPasswordRemoved.
+  /// No description provided for @toolLockUnlock.
   ///
   /// In en, this message translates to:
-  /// **'Sync password removed'**
-  String get totpSyncPasswordRemoved;
+  /// **'Unlock tool'**
+  String get toolLockUnlock;
+
+  /// No description provided for @toolLockPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption password'**
+  String get toolLockPassword;
+
+  /// No description provided for @toolLockConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get toolLockConfirmPassword;
+
+  /// No description provided for @toolLockPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters.'**
+  String get toolLockPasswordTooShort;
+
+  /// No description provided for @toolLockPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get toolLockPasswordMismatch;
+
+  /// No description provided for @toolLockWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password.'**
+  String get toolLockWrongPassword;
+
+  /// No description provided for @toolLockCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect data'**
+  String get toolLockCreate;
+
+  /// No description provided for @toolLockUnlockAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get toolLockUnlockAction;
+
+  /// No description provided for @toolLockBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with fingerprint or device credential'**
+  String get toolLockBiometric;
+
+  /// No description provided for @toolLockReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset local data'**
+  String get toolLockReset;
+
+  /// No description provided for @toolLockResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset local data?'**
+  String get toolLockResetTitle;
+
+  /// No description provided for @toolLockResetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes this tool\'s local data and its encryption key. Backend data is not deleted and still requires its original password.'**
+  String get toolLockResetDescription;
+
+  /// No description provided for @toolLockResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete local data'**
+  String get toolLockResetConfirm;
+
+  /// No description provided for @toolLockSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Security settings'**
+  String get toolLockSettings;
+
+  /// No description provided for @toolLockAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Open without unlocking'**
+  String get toolLockAutomatic;
+
+  /// No description provided for @toolLockAutomaticDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the password in device secure storage. Local data remains encrypted.'**
+  String get toolLockAutomaticDescription;
+
+  /// No description provided for @toolLockBiometricSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow fingerprint or device credential'**
+  String get toolLockBiometricSetting;
+
+  /// No description provided for @toolLockError.
+  ///
+  /// In en, this message translates to:
+  /// **'Security operation failed: {error}'**
+  String toolLockError(String error);
+
+  /// No description provided for @toolLockExistingPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the sync password already set on this device.'**
+  String get toolLockExistingPassword;
+
+  /// No description provided for @toolLockBackupNeedsSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the authenticator and complete encryption before exporting the database.'**
+  String get toolLockBackupNeedsSetup;
+
+  /// No description provided for @toolLockCleanupPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Database cleanup is waiting for another process. Close other ToolLab windows and try again.'**
+  String get toolLockCleanupPending;
 
   /// No description provided for @totpSyncPasswordMismatch.
   ///
@@ -22996,12 +23116,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync finished. Pulled: {pulled}, Pushed: {pushed}, Deleted: {deleted}.'**
   String totpSyncFinished(int pulled, int pushed, int deleted);
-
-  /// No description provided for @totpRemoveSyncPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove password'**
-  String get totpRemoveSyncPassword;
 
   /// No description provided for @totpHotpNext.
   ///

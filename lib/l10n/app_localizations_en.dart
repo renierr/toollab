@@ -12922,17 +12922,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totpHidePassword => 'Hide password';
 
   @override
-  String get totpSyncPassword => 'Sync password';
+  String get toolLockTitle => 'Tool security';
 
   @override
-  String get totpSyncPasswordDescription =>
-      'Account data is encrypted before syncing. Use the same password on every device. Sync cannot run without it. The password is stored securely on this device.';
+  String get toolLockSetup => 'Set your encryption password';
 
   @override
-  String get totpSyncPasswordSaved => 'Sync password saved';
+  String get toolLockSetupDescription =>
+      'Use the same password as sync on every device. If you forget it, encrypted data cannot be recovered without a backup.';
 
   @override
-  String get totpSyncPasswordRemoved => 'Sync password removed';
+  String get toolLockUnlock => 'Unlock tool';
+
+  @override
+  String get toolLockPassword => 'Encryption password';
+
+  @override
+  String get toolLockConfirmPassword => 'Confirm password';
+
+  @override
+  String get toolLockPasswordTooShort => 'Use at least 8 characters.';
+
+  @override
+  String get toolLockPasswordMismatch => 'Passwords do not match.';
+
+  @override
+  String get toolLockWrongPassword => 'Incorrect password.';
+
+  @override
+  String get toolLockCreate => 'Protect data';
+
+  @override
+  String get toolLockUnlockAction => 'Unlock';
+
+  @override
+  String get toolLockBiometric =>
+      'Unlock with fingerprint or device credential';
+
+  @override
+  String get toolLockReset => 'Reset local data';
+
+  @override
+  String get toolLockResetTitle => 'Reset local data?';
+
+  @override
+  String get toolLockResetDescription =>
+      'This permanently deletes this tool\'s local data and its encryption key. Backend data is not deleted and still requires its original password.';
+
+  @override
+  String get toolLockResetConfirm => 'Delete local data';
+
+  @override
+  String get toolLockSettings => 'Security settings';
+
+  @override
+  String get toolLockAutomatic => 'Open without unlocking';
+
+  @override
+  String get toolLockAutomaticDescription =>
+      'Keep the password in device secure storage. Local data remains encrypted.';
+
+  @override
+  String get toolLockBiometricSetting =>
+      'Allow fingerprint or device credential';
+
+  @override
+  String toolLockError(String error) {
+    return 'Security operation failed: $error';
+  }
+
+  @override
+  String get toolLockExistingPassword =>
+      'Enter the sync password already set on this device.';
+
+  @override
+  String get toolLockBackupNeedsSetup =>
+      'Open the authenticator and complete encryption before exporting the database.';
+
+  @override
+  String get toolLockCleanupPending =>
+      'Database cleanup is waiting for another process. Close other ToolLab windows and try again.';
 
   @override
   String get totpSyncPasswordMismatch =>
@@ -12957,9 +13026,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String totpSyncFinished(int pulled, int pushed, int deleted) {
     return 'Sync finished. Pulled: $pulled, Pushed: $pushed, Deleted: $deleted.';
   }
-
-  @override
-  String get totpRemoveSyncPassword => 'Remove password';
 
   @override
   String get totpHotpNext => 'Next code';

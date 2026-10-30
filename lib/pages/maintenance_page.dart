@@ -10,6 +10,7 @@ import 'package:tool_lab/pages/maintenance/import_backup_card.dart';
 import 'package:tool_lab/pages/maintenance/temp_files_card.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/health_dashboard/store/health_store.dart';
+import 'package:tool_lab/tools/totp_auth/totp_auth_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
@@ -39,7 +40,9 @@ class MaintenancePage extends StatelessWidget {
       if (!context.mounted) return;
       FileSaveHelper.showErrorNotification(
         context: context,
-        errorMessage: l10n.coreDatabaseExportFailed(e.toString()),
+        errorMessage: e is PlaintextAuthenticatorBackupException
+            ? l10n.toolLockBackupNeedsSetup
+            : l10n.coreDatabaseExportFailed(e.toString()),
       );
     }
   }
@@ -104,8 +107,14 @@ class MaintenancePage extends StatelessWidget {
     if (confirmed != true) return;
 
     try {
+      if (!context.mounted) return;
+      final totpState = context.read<TotpAuthState>();
+      await totpState.ready;
+      totpState.lockController.lock();
       await DatabaseService.instance.importDatabaseFile(file.path);
       HealthStore.instance.reset();
+      if (!context.mounted) return;
+      await totpState.reloadAfterDatabaseRestore();
       if (!context.mounted) return;
       await context.read<AppState>().reloadFromDatabase();
       if (!context.mounted) return;
