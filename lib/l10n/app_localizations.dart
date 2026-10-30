@@ -22946,7 +22946,7 @@ abstract class AppLocalizations {
   /// No description provided for @totpSyncPasswordDescription.
   ///
   /// In en, this message translates to:
-  /// **'When set, account secrets are encrypted with this password before they are synced to the cloud. It is stored securely on this device.'**
+  /// **'When set, account secrets are encrypted with this password before they are synced to the cloud, and sync only runs while a password is set. It is stored securely on this device.'**
   String get totpSyncPasswordDescription;
 
   /// No description provided for @totpSyncPasswordSaved.
@@ -22960,6 +22960,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync password removed'**
   String get totpSyncPasswordRemoved;
+
+  /// No description provided for @totpSyncPasswordRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'Every account is re-uploaded with the new password. Copies synced under an older password cannot be decrypted afterwards.'**
+  String get totpSyncPasswordRotated;
+
+  /// No description provided for @totpSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get totpSyncNow;
+
+  /// No description provided for @totpSyncNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync is not set up in Settings'**
+  String get totpSyncNotConfigured;
+
+  /// No description provided for @totpSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed: {error}'**
+  String totpSyncFailed(String error);
+
+  /// No description provided for @totpSyncFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync finished. Pulled: {pulled}, Pushed: {pushed}, Deleted: {deleted}.'**
+  String totpSyncFinished(int pulled, int pushed, int deleted);
 
   /// No description provided for @totpRemoveSyncPassword.
   ///

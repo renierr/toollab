@@ -290,9 +290,20 @@ class AppState extends ChangeNotifier {
   ) async {
     if (_isSyncing) return null;
 
-    final delegates = _syncServerUrl.isEmpty
+    final requestedEnabled = _syncServerUrl.isEmpty
         ? const <SyncDelegate>[]
         : requested.where((d) => isToolSyncEnabled(d.toolId)).toList();
+
+    // A tool that cannot encrypt its records yet is skipped rather than
+    // uploading plaintext secrets.
+    final delegates = <SyncDelegate>[];
+    for (final delegate in requestedEnabled) {
+      if (await delegate.isReadyToSync()) {
+        delegates.add(delegate);
+      } else {
+        debugLog('[AppState] Skipping ${delegate.toolId}: not ready to sync');
+      }
+    }
 
     if (delegates.isEmpty) {
       await _publishToHealthConnect(requested);

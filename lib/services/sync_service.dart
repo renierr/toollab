@@ -36,6 +36,10 @@ abstract class SyncDelegate {
   /// Timeout of a single pull or push request.
   Duration get syncRequestTimeout;
 
+  /// False when the tool has no keys to encrypt its records yet; the sync run
+  /// skips it instead of uploading plaintext or failing every other tool.
+  Future<bool> isReadyToSync();
+
   /// Runs after the backend sync, for tools that also push their records into
   /// Health Connect. Device-local and independent of the backend, so it runs
   /// even when the tool takes no part in sync.
@@ -78,6 +82,9 @@ mixin DefaultSyncDelegate implements SyncDelegate {
 
   @override
   Duration get syncRequestTimeout => const Duration(seconds: 10);
+
+  @override
+  Future<bool> isReadyToSync() async => true;
 
   @override
   Future<void> publishToHealthConnect() async {}

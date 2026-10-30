@@ -12926,13 +12926,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get totpSyncPasswordDescription =>
-      'When set, account secrets are encrypted with this password before they are synced to the cloud. It is stored securely on this device.';
+      'When set, account secrets are encrypted with this password before they are synced to the cloud, and sync only runs while a password is set. It is stored securely on this device.';
 
   @override
   String get totpSyncPasswordSaved => 'Sync password saved';
 
   @override
   String get totpSyncPasswordRemoved => 'Sync password removed';
+
+  @override
+  String get totpSyncPasswordRotated =>
+      'Every account is re-uploaded with the new password. Copies synced under an older password cannot be decrypted afterwards.';
+
+  @override
+  String get totpSyncNow => 'Sync now';
+
+  @override
+  String get totpSyncNotConfigured => 'Sync is not set up in Settings';
+
+  @override
+  String totpSyncFailed(String error) {
+    return 'Sync failed: $error';
+  }
+
+  @override
+  String totpSyncFinished(int pulled, int pushed, int deleted) {
+    return 'Sync finished. Pulled: $pulled, Pushed: $pushed, Deleted: $deleted.';
+  }
 
   @override
   String get totpRemoveSyncPassword => 'Remove password';

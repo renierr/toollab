@@ -13024,13 +13024,34 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get totpSyncPasswordDescription =>
-      'Wenn gesetzt, werden Kontogeheimnisse mit diesem Passwort verschlüsselt, bevor sie in die Cloud synchronisiert werden. Es wird sicher auf diesem Gerät gespeichert.';
+      'Wenn gesetzt, werden Kontogeheimnisse mit diesem Passwort verschlüsselt, bevor sie in die Cloud synchronisiert werden; die Synchronisierung läuft nur mit gesetztem Passwort. Es wird sicher auf diesem Gerät gespeichert.';
 
   @override
   String get totpSyncPasswordSaved => 'Sync-Passwort gespeichert';
 
   @override
   String get totpSyncPasswordRemoved => 'Sync-Passwort entfernt';
+
+  @override
+  String get totpSyncPasswordRotated =>
+      'Alle Konten werden mit dem neuen Passwort erneut hochgeladen. Kopien, die mit einem älteren Passwort synchronisiert wurden, können danach nicht mehr entschlüsselt werden.';
+
+  @override
+  String get totpSyncNow => 'Jetzt synchronisieren';
+
+  @override
+  String get totpSyncNotConfigured =>
+      'Synchronisierung ist in den Einstellungen nicht eingerichtet';
+
+  @override
+  String totpSyncFailed(String error) {
+    return 'Synchronisierung fehlgeschlagen: $error';
+  }
+
+  @override
+  String totpSyncFinished(int pulled, int pushed, int deleted) {
+    return 'Synchronisierung abgeschlossen. Empfangen: $pulled, Gesendet: $pushed, Gelöscht: $deleted.';
+  }
 
   @override
   String get totpRemoveSyncPassword => 'Passwort entfernen';

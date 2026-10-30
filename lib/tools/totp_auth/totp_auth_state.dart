@@ -32,6 +32,11 @@ class TotpAuthState extends ChangeNotifier {
   String? _syncPassword;
   String? get syncPassword => _syncPassword;
 
+  /// Sync stays off until a password exists, so secrets never leave the device
+  /// in plaintext.
+  bool get hasSyncPassword =>
+      _syncPassword != null && _syncPassword!.isNotEmpty;
+
   Timer? _ticker;
 
   Future<void> _init() async {
@@ -258,13 +263,31 @@ class TotpAuthState extends ChangeNotifier {
   }
 
   Future<void> setSyncPassword(String? password) async {
+    final changed = password != _syncPassword;
     _syncPassword = password;
     if (password == null || password.isEmpty) {
       await _storage.delete(key: TotpCrypto.syncPasswordKey);
     } else {
       await _storage.write(key: TotpCrypto.syncPasswordKey, value: password);
+      // Remote copies are encrypted with the previous password, so every
+      // account is re-pushed under the new one on the next sync.
+      if (changed) await _touchAll();
     }
     notifyListeners();
+  }
+
+  Future<void> _touchAll() async {
+    final toolDb = await _db();
+    final now = DateTime.now();
+    for (final account in _accounts) {
+      account.updatedAt = now;
+      await toolDb.update(
+        _table,
+        account.toMap(),
+        where: 'id = ?',
+        whereArgs: [account.id],
+      );
+    }
   }
 
   Future<String> buildExport(TotpExportFormat format, {String? password}) {

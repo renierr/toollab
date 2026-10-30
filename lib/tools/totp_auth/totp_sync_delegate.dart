@@ -28,6 +28,15 @@ class TotpSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
     return _password;
   }
 
+  /// Re-reads the stored password so a password set after startup applies to
+  /// the next run.
+  @override
+  Future<bool> isReadyToSync() async {
+    _password = await _storage.read(key: TotpCrypto.syncPasswordKey);
+    _passwordLoaded = true;
+    return _password != null && _password!.isNotEmpty;
+  }
+
   @override
   String get toolId => _toolId;
 

@@ -6547,9 +6547,34 @@
   "totpShowPassword": "Show password",
   "totpHidePassword": "Hide password",
   "totpSyncPassword": "Sync password",
-  "totpSyncPasswordDescription": "When set, account secrets are encrypted with this password before they are synced to the cloud. It is stored securely on this device.",
+  "totpSyncPasswordDescription": "When set, account secrets are encrypted with this password before they are synced to the cloud, and sync only runs while a password is set. It is stored securely on this device.",
   "totpSyncPasswordSaved": "Sync password saved",
   "totpSyncPasswordRemoved": "Sync password removed",
+  "totpSyncPasswordRotated": "Every account is re-uploaded with the new password. Copies synced under an older password cannot be decrypted afterwards.",
+  "totpSyncNow": "Sync now",
+  "totpSyncNotConfigured": "Sync is not set up in Settings",
+  "totpSyncFailed": "Sync failed: {error}",
+  "@totpSyncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "totpSyncFinished": "Sync finished. Pulled: {pulled}, Pushed: {pushed}, Deleted: {deleted}.",
+  "@totpSyncFinished": {
+    "placeholders": {
+      "pulled": {
+        "type": "int"
+      },
+      "pushed": {
+        "type": "int"
+      },
+      "deleted": {
+        "type": "int"
+      }
+    }
+  },
   "totpRemoveSyncPassword": "Remove password",
   "totpHotpNext": "Next code",
   "emfMapScanner": "Scanner",

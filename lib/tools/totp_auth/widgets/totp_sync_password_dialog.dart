@@ -45,7 +45,7 @@ class _TotpSyncPasswordDialogState extends State<TotpSyncPasswordDialog> {
   }
 
   void _save() {
-    final value = _controller.text;
+    final value = _controller.text.trim();
     Navigator.of(
       context,
     ).pop(TotpSyncPasswordResult(value.isEmpty ? null : value));
@@ -55,6 +55,7 @@ class _TotpSyncPasswordDialogState extends State<TotpSyncPasswordDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final hasPassword = widget.current != null && widget.current!.isNotEmpty;
+    final tooShort = _controller.text.isNotEmpty && _controller.text.length < 8;
 
     return ResponsiveAlertDialog(
       title: Text(l10n.totpSyncPassword),
@@ -65,6 +66,22 @@ class _TotpSyncPasswordDialogState extends State<TotpSyncPasswordDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(l10n.totpSyncPasswordDescription),
+            if (hasPassword) ...[
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.warning_amber_outlined, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.totpSyncPasswordRotated,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
             TextField(
               controller: _controller,
@@ -72,8 +89,10 @@ class _TotpSyncPasswordDialogState extends State<TotpSyncPasswordDialog> {
               autocorrect: false,
               enableSuggestions: false,
               autofocus: true,
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                labelText: l10n.totpExportPassword,
+                labelText: l10n.totpSyncPassword,
+                errorText: tooShort ? l10n.totpPasswordTooShort : null,
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   tooltip: _hide
@@ -102,7 +121,10 @@ class _TotpSyncPasswordDialogState extends State<TotpSyncPasswordDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.commonCancel),
         ),
-        FilledButton(onPressed: _save, child: Text(l10n.commonSave)),
+        FilledButton(
+          onPressed: tooShort ? null : _save,
+          child: Text(l10n.commonSave),
+        ),
       ],
     );
   }

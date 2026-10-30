@@ -39,6 +39,7 @@ class TotpAuthPage extends StatefulWidget {
 
 class _TotpAuthPageState extends State<TotpAuthPage> {
   String _query = '';
+  bool _syncing = false;
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
 
       if (appState.syncEnabled &&
           appState.syncServerUrl.isNotEmpty &&
+          totpState.hasSyncPassword &&
           appState.isToolSyncEnabled(TotpAuthTool.config.id)) {
         appState
             .syncWithBackend([TotpSyncDelegate()])
@@ -75,6 +77,18 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
     return ToolLayout(
       title: TotpAuthTool.config.localizedName(l10n),
       actions: [
+        if (state.hasSyncPassword)
+          IconButton(
+            icon: _syncing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+            tooltip: l10n.totpSyncNow,
+            onPressed: _syncing ? null : _syncNow,
+          ),
         IconButton(
           icon: const Icon(Icons.add),
           tooltip: l10n.totpAddAccount,
@@ -260,6 +274,35 @@ class _TotpAuthPageState extends State<TotpAuthPage> {
           ? l10n.totpSyncPasswordRemoved
           : l10n.totpSyncPasswordSaved,
     );
+  }
+
+  Future<void> _syncNow() async {
+    final appState = context.read<AppState>();
+    final totpState = context.read<TotpAuthState>();
+    final l10n = AppLocalizations.of(context);
+    if (_syncing || appState.isSyncing) return;
+    setState(() => _syncing = true);
+    try {
+      final results = await appState.syncWithBackend([TotpSyncDelegate()]);
+      if (results == null) {
+        if (mounted) _snack(l10n.totpSyncNotConfigured, error: true);
+        return;
+      }
+      await totpState.reload();
+      if (!mounted) return;
+      _snack(
+        l10n.totpSyncFinished(
+          results['pulled'] ?? 0,
+          results['pushed'] ?? 0,
+          results['deleted'] ?? 0,
+        ),
+      );
+    } catch (e) {
+      errorLog('[TotpAuthPage] Manual sync failed: $e');
+      if (mounted) _snack(l10n.totpSyncFailed(e.toString()), error: true);
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
   }
 
   void _copyCode(TotpAccount account) {
