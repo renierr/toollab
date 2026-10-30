@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../depot_format.dart';
 import '../models/depot_fund_constituent.dart';
@@ -20,7 +19,6 @@ class DepotConstituentList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final hint = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
     return Padding(
@@ -42,9 +40,7 @@ class DepotConstituentList extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    l10n.depotXRayFundShare(
-                      format.percent(constituent.weight * 100, signed: false),
-                    ),
+                    format.percent(constituent.weight * 100, signed: false),
                     style: hint,
                   ),
                   const SizedBox(width: 12),
