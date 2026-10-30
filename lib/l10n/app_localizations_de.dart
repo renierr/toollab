@@ -13092,6 +13092,25 @@ class AppLocalizationsDe extends AppLocalizations {
       'Fingerabdruck oder Gerätecode erlauben';
 
   @override
+  String get toolLockBiometricTimeout => 'Erneut authentifizieren';
+
+  @override
+  String get toolLockBiometricEveryTime => 'Jedes Mal';
+
+  @override
+  String toolLockBiometricMinutes(int minutes) {
+    return 'Nach $minutes Min.';
+  }
+
+  @override
+  String get toolLockBiometricTimeoutDescription =>
+      'Ab der letzten erfolgreichen Geräteauthentifizierung. Nach dem Beenden des App-Prozesses ist sie erneut erforderlich.';
+
+  @override
+  String get toolLockBiometricAutomaticWarning =>
+      'Ohne Entsperren öffnen umgeht die Geräteauthentifizierung.';
+
+  @override
   String toolLockError(String error) {
     return 'Sicherheitsvorgang fehlgeschlagen: $error';
   }

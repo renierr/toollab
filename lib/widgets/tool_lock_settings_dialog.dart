@@ -74,6 +74,44 @@ class _ToolLockSettingsDialogState extends State<ToolLockSettingsDialog> {
                           () => widget.controller.setBiometric(value),
                         ),
                 ),
+              if (widget.controller.supportsBiometric &&
+                  widget.controller.biometric) ...[
+                DropdownButtonFormField<int>(
+                  initialValue: widget.controller.biometricTimeoutMinutes,
+                  decoration: InputDecoration(
+                    labelText: l10n.toolLockBiometricTimeout,
+                  ),
+                  items: ToolLockController.biometricTimeouts
+                      .map(
+                        (minutes) => DropdownMenuItem(
+                          value: minutes,
+                          child: Text(
+                            minutes == 0
+                                ? l10n.toolLockBiometricEveryTime
+                                : l10n.toolLockBiometricMinutes(minutes),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: _busy
+                      ? null
+                      : (minutes) {
+                          if (minutes != null) {
+                            _change(
+                              () => widget.controller.setBiometricTimeout(
+                                minutes,
+                              ),
+                            );
+                          }
+                        },
+                ),
+                const SizedBox(height: 8),
+                Text(l10n.toolLockBiometricTimeoutDescription),
+                if (widget.controller.automatic) ...[
+                  const SizedBox(height: 8),
+                  Text(l10n.toolLockBiometricAutomaticWarning),
+                ],
+              ],
               if (_error != null)
                 Text(
                   _error!,

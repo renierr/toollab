@@ -372,6 +372,7 @@ open class MainActivity : FlutterFragmentActivity() {
         gps.registerChannel(messenger)
 
         DeviceInfoHelper.registerChannels(this, messenger)
+        ToolBiometricStorage.register(applicationContext, messenger)
 
         // Foreground Runtime MethodChannel
         val channelInstance = MethodChannel(messenger, FOREGROUND_RUNTIME_CHANNEL)

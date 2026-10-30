@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/tool_vault_crypto.dart';
@@ -24,21 +25,33 @@ class ToolLockController extends ChangeNotifier {
   final String toolId;
   final String envelopeSetting;
   final _storage = const FlutterSecureStorage();
+  static const _biometricChannel = MethodChannel(
+    'de.renier.tool_lab/tool_biometric_storage',
+  );
   String get _preferenceKey => 'tool_lock_${toolId}_automatic';
   String get _attemptKey => 'tool_lock_${toolId}_attempts';
   String get _biometricKey => 'tool_lock_${toolId}_biometric';
-  FlutterSecureStorage get _biometricStorage => FlutterSecureStorage(
-    aOptions: AndroidOptions.biometric(
-      storageNamespace: 'tool_lock_$toolId',
-      enforceBiometrics: true,
-      resetOnError: false,
-    ),
+  String get _biometricTimeoutKey => 'tool_lock_${toolId}_biometric_timeout';
+  AndroidOptions get _biometricOptions => AndroidOptions.biometric(
+    storageNamespace: 'tool_lock_$toolId',
+    enforceBiometrics: true,
+    resetOnError: false,
   );
+
+  Future<T?> _biometricOperation<T>(String operation, {String? value}) =>
+      _biometricChannel.invokeMethod<T>(operation, {
+        'key': toolId,
+        'options': _biometricOptions.toMap(),
+        'minutes': biometricTimeoutMinutes,
+        'value': ?value,
+      });
 
   String? _envelope;
   int attempts = 0;
   bool automatic = false;
   bool biometric = false;
+  static const biometricTimeouts = [0, 1, 5, 15, 30, 60];
+  int biometricTimeoutMinutes = 5;
   bool initialized = false;
   int _generation = 0;
   int get generation => _generation;
@@ -57,6 +70,12 @@ class ToolLockController extends ChangeNotifier {
     attempts = int.tryParse(await _storage.read(key: _attemptKey) ?? '') ?? 0;
     automatic = await _storage.read(key: _preferenceKey) != null;
     biometric = (await _storage.read(key: _biometricKey)) == 'true';
+    final timeout = int.tryParse(
+      await _storage.read(key: _biometricTimeoutKey) ?? '',
+    );
+    biometricTimeoutMinutes = biometricTimeouts.contains(timeout)
+        ? timeout!
+        : 5;
     initialized = true;
     notifyListeners();
   }
@@ -118,7 +137,7 @@ class ToolLockController extends ChangeNotifier {
   Future<bool> unlockBiometric() async {
     if (!supportsBiometric || !biometric) return false;
     final generation = _generation;
-    final password = await _biometricStorage.read(key: toolId);
+    final password = await _biometricOperation<String>('read');
     if (generation != _generation) return false;
     return password != null && await unlock(password, countFailure: false);
   }
@@ -149,13 +168,22 @@ class ToolLockController extends ChangeNotifier {
     final session = _sessions[toolId];
     if (session == null) throw StateError('Vault is locked');
     if (enabled) {
-      await _biometricStorage.write(key: toolId, value: session.password);
+      await _biometricOperation<void>('write', value: session.password);
       await _storage.write(key: _biometricKey, value: 'true');
     } else {
       await _storage.delete(key: _biometricKey);
-      await _biometricStorage.delete(key: toolId);
+      await _biometricOperation<void>('delete');
     }
     biometric = enabled;
+    notifyListeners();
+  }
+
+  Future<void> setBiometricTimeout(int minutes) async {
+    if (!biometricTimeouts.contains(minutes)) {
+      throw ArgumentError.value(minutes, 'minutes');
+    }
+    await _storage.write(key: _biometricTimeoutKey, value: '$minutes');
+    biometricTimeoutMinutes = minutes;
     notifyListeners();
   }
 
@@ -173,9 +201,10 @@ class ToolLockController extends ChangeNotifier {
     await _storage.delete(key: _preferenceKey);
     await _storage.delete(key: _attemptKey);
     await _storage.delete(key: _biometricKey);
+    await _storage.delete(key: _biometricTimeoutKey);
     if (supportsBiometric && biometric) {
       try {
-        await _biometricStorage.delete(key: toolId);
+        await _biometricOperation<void>('delete');
       } catch (e) {
         errorLog(
           '[ToolLockController] Could not remove biometric credential: $e',
@@ -184,6 +213,7 @@ class ToolLockController extends ChangeNotifier {
     }
     automatic = false;
     biometric = false;
+    biometricTimeoutMinutes = 5;
     attempts = 0;
     notifyListeners();
   }

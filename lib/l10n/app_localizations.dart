@@ -23069,6 +23069,36 @@ abstract class AppLocalizations {
   /// **'Allow fingerprint or device credential'**
   String get toolLockBiometricSetting;
 
+  /// No description provided for @toolLockBiometricTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for authentication again'**
+  String get toolLockBiometricTimeout;
+
+  /// No description provided for @toolLockBiometricEveryTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Every time'**
+  String get toolLockBiometricEveryTime;
+
+  /// No description provided for @toolLockBiometricMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'After {minutes} min'**
+  String toolLockBiometricMinutes(int minutes);
+
+  /// No description provided for @toolLockBiometricTimeoutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured from the last successful device authentication. Authentication is required again when the app process ends.'**
+  String get toolLockBiometricTimeoutDescription;
+
+  /// No description provided for @toolLockBiometricAutomaticWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Open without unlocking bypasses device authentication.'**
+  String get toolLockBiometricAutomaticWarning;
+
   /// No description provided for @toolLockError.
   ///
   /// In en, this message translates to:

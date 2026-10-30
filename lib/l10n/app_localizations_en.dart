@@ -12993,6 +12993,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allow fingerprint or device credential';
 
   @override
+  String get toolLockBiometricTimeout => 'Ask for authentication again';
+
+  @override
+  String get toolLockBiometricEveryTime => 'Every time';
+
+  @override
+  String toolLockBiometricMinutes(int minutes) {
+    return 'After $minutes min';
+  }
+
+  @override
+  String get toolLockBiometricTimeoutDescription =>
+      'Measured from the last successful device authentication. Authentication is required again when the app process ends.';
+
+  @override
+  String get toolLockBiometricAutomaticWarning =>
+      'Open without unlocking bypasses device authentication.';
+
+  @override
   String toolLockError(String error) {
     return 'Security operation failed: $error';
   }
