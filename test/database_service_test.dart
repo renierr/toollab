@@ -2,6 +2,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/services/database_service.dart';
 
+class _AndroidPragmaExecutor extends Fake implements DatabaseExecutor {
+  _AndroidPragmaExecutor(this.result);
+
+  final List<Map<String, Object?>> result;
+  final List<String> queries = [];
+
+  @override
+  Future<List<Map<String, Object?>>> rawQuery(
+    String sql, [
+    List<Object?>? arguments,
+  ]) async {
+    queries.add(sql);
+    return result;
+  }
+}
+
 void main() {
   setUpAll(() async {
     sqfliteFfiInit();
@@ -14,6 +30,40 @@ void main() {
   });
 
   group('ToolDatabase Namespace Tests', () {
+    test(
+      'secure deletion uses a query and verifies the returned value',
+      () async {
+        final executor = _AndroidPragmaExecutor([
+          {'secure_delete': 1},
+        ]);
+        final txn = ToolDatabaseExecutor('test', executor);
+        await txn.enableSecureDelete();
+        expect(executor.queries, ['PRAGMA secure_delete = ON']);
+
+        final disabled = ToolDatabaseExecutor(
+          'test',
+          _AndroidPragmaExecutor([
+            {'secure_delete': 0},
+          ]),
+        );
+        await expectLater(disabled.enableSecureDelete(), throwsStateError);
+
+        final missing = ToolDatabaseExecutor(
+          'test',
+          _AndroidPragmaExecutor([]),
+        );
+        await expectLater(missing.enableSecureDelete(), throwsStateError);
+      },
+    );
+
+    test('secure deletion is enabled on the transaction connection', () async {
+      final db = await DatabaseService.instance.getToolDatabase('secure_test');
+      await db.transaction((txn) async {
+        await txn.enableSecureDelete();
+        final rows = await txn.rawQuery('PRAGMA secure_delete');
+        expect(rows.single['secure_delete'], 1);
+      });
+    });
     test('Tool database namespaces table names correctly', () async {
       final dbService = DatabaseService.instance;
       final toolDb1 = await dbService.getToolDatabase('tool-one');

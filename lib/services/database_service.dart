@@ -579,6 +579,13 @@ class ToolDatabaseExecutor {
     return await executor.rawQuery(sql, arguments);
   }
 
+  Future<void> enableSecureDelete() async {
+    final rows = await rawQuery('PRAGMA secure_delete = ON');
+    if (rows.isEmpty || (rows.first['secure_delete'] as num?)?.toInt() != 1) {
+      throw StateError('Could not enable secure deletion');
+    }
+  }
+
   /// Executes a raw UPDATE query.
   /// If referencing tool-specific tables, construct the SQL using [nameTable].
   Future<int> rawUpdate(String sql, [List<Object?>? arguments]) async {

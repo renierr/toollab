@@ -6552,6 +6552,8 @@
   "toolLockUnlock": "Unlock tool",
   "toolLockPassword": "Encryption password",
   "toolLockConfirmPassword": "Confirm password",
+  "toolLockShowPassword": "Show password",
+  "toolLockHidePassword": "Hide password",
   "toolLockPasswordTooShort": "Use at least 8 characters.",
   "toolLockPasswordMismatch": "Passwords do not match.",
   "toolLockWrongPassword": "Incorrect password.",

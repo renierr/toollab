@@ -24,7 +24,59 @@ class _Controller extends ToolLockController {
   }
 }
 
+class _SetupController extends _Controller {
+  @override
+  bool get configured => false;
+}
+
 void main() {
+  testWidgets('password fields can be revealed independently', (tester) async {
+    final controller = _SetupController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: ToolLockGate(
+            controller: controller,
+            setup: (_) async {},
+            unlock: (_) async => false,
+            unlockBiometric: () async => false,
+            reset: () async {},
+          ),
+        ),
+      ),
+    );
+    final fields = find.byType(TextField);
+    expect(fields, findsNWidgets(2));
+    await tester.enterText(fields.first, 'first password');
+    await tester.enterText(fields.last, 'second password');
+    expect(tester.widget<TextField>(fields.first).obscureText, isTrue);
+    expect(tester.widget<TextField>(fields.last).obscureText, isTrue);
+
+    await tester.tap(find.byTooltip('Show password').first);
+    await tester.pump();
+    expect(tester.widget<TextField>(fields.first).obscureText, isFalse);
+    expect(tester.widget<TextField>(fields.last).obscureText, isTrue);
+    await tester.tap(find.byTooltip('Show password'));
+    await tester.pump();
+    expect(tester.widget<TextField>(fields.last).obscureText, isFalse);
+    expect(
+      tester.widget<TextField>(fields.first).controller!.text,
+      'first password',
+    );
+    expect(
+      tester.widget<TextField>(fields.last).controller!.text,
+      'second password',
+    );
+    await tester.tap(find.byTooltip('Hide password').first);
+    await tester.pump();
+    expect(tester.widget<TextField>(fields.first).obscureText, isTrue);
+    expect(tester.widget<TextField>(fields.last).obscureText, isFalse);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('password form scrolls above a small-screen keyboard', (
     tester,
   ) async {

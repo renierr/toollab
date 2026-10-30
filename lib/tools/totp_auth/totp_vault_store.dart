@@ -84,8 +84,8 @@ class TotpVaultStore {
 
   Future<void> reset() async {
     final db = await _database();
-    await db.execute('PRAGMA secure_delete = ON');
     await db.transaction((txn) async {
+      await txn.enableSecureDelete();
       await txn.delete(_table);
       final oldTable = txn.nameTable('accounts');
       final old = await txn.rawQuery(
@@ -133,8 +133,8 @@ class TotpVaultStore {
 
   Future<void> migrateLegacy(SecretKey key, String wrappedKey) async {
     final db = await _database();
-    await db.execute('PRAGMA secure_delete = ON');
     await db.transaction((txn) async {
+      await txn.enableSecureDelete();
       final oldTable = txn.nameTable('accounts');
       final existing = await txn.rawQuery(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",

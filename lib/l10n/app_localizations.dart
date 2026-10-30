@@ -22973,6 +22973,18 @@ abstract class AppLocalizations {
   /// **'Confirm password'**
   String get toolLockConfirmPassword;
 
+  /// No description provided for @toolLockShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get toolLockShowPassword;
+
+  /// No description provided for @toolLockHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get toolLockHidePassword;
+
   /// No description provided for @toolLockPasswordTooShort.
   ///
   /// In en, this message translates to:

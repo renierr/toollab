@@ -5172,6 +5172,8 @@
   "toolLockUnlock": "Tool entsperren",
   "toolLockPassword": "Verschlüsselungspasswort",
   "toolLockConfirmPassword": "Passwort bestätigen",
+  "toolLockShowPassword": "Passwort anzeigen",
+  "toolLockHidePassword": "Passwort verbergen",
   "toolLockPasswordTooShort": "Verwende mindestens 8 Zeichen.",
   "toolLockPasswordMismatch": "Die Passwörter stimmen nicht überein.",
   "toolLockWrongPassword": "Falsches Passwort.",

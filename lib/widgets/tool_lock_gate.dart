@@ -29,6 +29,8 @@ class _ToolLockGateState extends State<ToolLockGate> {
   final _password = TextEditingController();
   final _confirm = TextEditingController();
   bool _busy = false;
+  bool _hidePassword = true;
+  bool _hideConfirmation = true;
   String? _error;
 
   @override
@@ -155,22 +157,33 @@ class _ToolLockGateState extends State<ToolLockGate> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: _password,
-                    obscureText: true,
+                    obscureText: _hidePassword,
                     autocorrect: false,
                     enableSuggestions: false,
                     decoration: InputDecoration(
                       labelText: l10n.toolLockPassword,
+                      suffixIcon: _PasswordVisibilityButton(
+                        hidden: _hidePassword,
+                        onPressed: () =>
+                            setState(() => _hidePassword = !_hidePassword),
+                      ),
                     ),
                     onSubmitted: (_) => _submit(),
                   ),
                   if (!configured)
                     TextField(
                       controller: _confirm,
-                      obscureText: true,
+                      obscureText: _hideConfirmation,
                       autocorrect: false,
                       enableSuggestions: false,
                       decoration: InputDecoration(
                         labelText: l10n.toolLockConfirmPassword,
+                        suffixIcon: _PasswordVisibilityButton(
+                          hidden: _hideConfirmation,
+                          onPressed: () => setState(
+                            () => _hideConfirmation = !_hideConfirmation,
+                          ),
+                        ),
                       ),
                       onSubmitted: (_) => _submit(),
                     ),
@@ -214,6 +227,28 @@ class _ToolLockGateState extends State<ToolLockGate> {
           ),
         );
       },
+    );
+  }
+}
+
+class _PasswordVisibilityButton extends StatelessWidget {
+  const _PasswordVisibilityButton({
+    required this.hidden,
+    required this.onPressed,
+  });
+
+  final bool hidden;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return IconButton(
+      tooltip: hidden ? l10n.toolLockShowPassword : l10n.toolLockHidePassword,
+      onPressed: onPressed,
+      icon: Icon(
+        hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+      ),
     );
   }
 }

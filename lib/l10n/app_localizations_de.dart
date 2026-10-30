@@ -13039,6 +13039,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolLockConfirmPassword => 'Passwort bestätigen';
 
   @override
+  String get toolLockShowPassword => 'Passwort anzeigen';
+
+  @override
+  String get toolLockHidePassword => 'Passwort verbergen';
+
+  @override
   String get toolLockPasswordTooShort => 'Verwende mindestens 8 Zeichen.';
 
   @override
