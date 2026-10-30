@@ -337,6 +337,22 @@
               />
         </activity>
 
+        <activity
+            android:name="de.renier.tool_lab.TotpAuthActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":totp_auth"
+            android:taskAffinity="de.renier.tool_lab.totp_auth"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+        </activity>
+
         <activity-alias
             android:name="de.renier.tool_lab.FileManagerAlias"
             android:targetActivity="de.renier.tool_lab.FileManagerActivity"
@@ -911,7 +927,7 @@
 
         <activity-alias
             android:name="de.renier.tool_lab.TotpAuthAlias"
-            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:targetActivity="de.renier.tool_lab.TotpAuthActivity"
             android:label="TOTP Authenticator"
             android:icon="@mipmap/ic_launcher_totp_auth"
             android:enabled="false"

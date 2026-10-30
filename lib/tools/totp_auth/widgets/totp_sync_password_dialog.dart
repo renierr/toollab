@@ -58,6 +58,7 @@ class _TotpSyncPasswordDialogState extends State<TotpSyncPasswordDialog> {
     final tooShort = _controller.text.isNotEmpty && _controller.text.length < 8;
 
     return ResponsiveAlertDialog(
+      scrollable: true,
       title: Text(l10n.totpSyncPassword),
       content: SizedBox(
         width: 440,

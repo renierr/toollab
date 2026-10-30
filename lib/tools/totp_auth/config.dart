@@ -21,6 +21,7 @@ class TotpAuthTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameTotpAuth,
     descriptionL10n: (l10n) => l10n.toolDescTotpAuth,
+    androidProcessIsolated: true,
     createPage: (_) => const TotpAuthPage(),
     stateProviders: () => [
       ChangeNotifierProvider<TotpAuthState>(create: (_) => TotpAuthState()),
