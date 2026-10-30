@@ -23099,6 +23099,84 @@ abstract class AppLocalizations {
   /// **'Open without unlocking bypasses device authentication.'**
   String get toolLockBiometricAutomaticWarning;
 
+  /// No description provided for @totpChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get totpChangePassword;
+
+  /// No description provided for @totpCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get totpCurrentPassword;
+
+  /// No description provided for @totpNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get totpNewPassword;
+
+  /// No description provided for @totpConfirmNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get totpConfirmNewPassword;
+
+  /// No description provided for @totpChangePasswordDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Update ToolLab on all devices and close the authenticator on the others until the change completes. If interrupted, unlock this device with the old password and resume here; do not reset it. Automatic and biometric unlock must be enabled again afterwards. Existing exports keep their original password.'**
+  String get totpChangePasswordDescription;
+
+  /// No description provided for @totpAdoptPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update sync password'**
+  String get totpAdoptPasswordTitle;
+
+  /// No description provided for @totpAdoptPasswordDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The backend password differs from this device. Enter the new password to verify the backend and update this device. Local accounts are kept. Automatic and biometric unlock must be enabled again afterwards.'**
+  String get totpAdoptPasswordDescription;
+
+  /// No description provided for @totpRotationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Password change incomplete'**
+  String get totpRotationPending;
+
+  /// No description provided for @totpRotationPendingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep other devices closed. Resume the password change on this device before syncing or editing accounts.'**
+  String get totpRotationPendingDescription;
+
+  /// No description provided for @totpRotationResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume password change'**
+  String get totpRotationResume;
+
+  /// No description provided for @totpPasswordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated'**
+  String get totpPasswordChanged;
+
+  /// No description provided for @totpPasswordWrongCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password is incorrect'**
+  String get totpPasswordWrongCurrent;
+
+  /// No description provided for @totpPasswordSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a different password'**
+  String get totpPasswordSame;
+
   /// No description provided for @toolLockError.
   ///
   /// In en, this message translates to:

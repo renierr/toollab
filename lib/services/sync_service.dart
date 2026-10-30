@@ -59,6 +59,14 @@ abstract interface class SyncSessionGuard {
   bool get syncSessionValid;
 }
 
+abstract interface class SyncWorkflowDelegate {
+  Future<Map<String, int>> runSyncWorkflow(String baseUrl, String userId);
+}
+
+abstract interface class SyncControlRecordDelegate {
+  bool isSyncControlRecord(String id);
+}
+
 class SyncPasswordMismatchException implements Exception {
   const SyncPasswordMismatchException();
 
@@ -323,6 +331,12 @@ class SyncService {
     if (!await delegate.isReadyToSync()) {
       throw StateError('Tool is not ready to sync');
     }
+    if (delegate is SyncWorkflowDelegate) {
+      return (delegate as SyncWorkflowDelegate).runSyncWorkflow(
+        baseUrl,
+        userId,
+      );
+    }
     if (delegate is SyncSessionGuard) {
       (delegate as SyncSessionGuard).beginSyncSession();
     }
@@ -439,6 +453,16 @@ class SyncService {
         }
         await (delegate as SyncPreflightDelegate).verifyRemotePayloads(records);
       }
+    }
+
+    if (delegate is SyncControlRecordDelegate) {
+      if (delegate is! SyncPreflightDelegate) {
+        throw StateError('Sync control records must be verified');
+      }
+      serverMetaMap.removeWhere(
+        (id, _) =>
+            (delegate as SyncControlRecordDelegate).isSyncControlRecord(id),
+      );
     }
 
     final List<Map<String, dynamic>> localMetaList = fullMetadata

@@ -13012,6 +13012,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open without unlocking bypasses device authentication.';
 
   @override
+  String get totpChangePassword => 'Change password';
+
+  @override
+  String get totpCurrentPassword => 'Current password';
+
+  @override
+  String get totpNewPassword => 'New password';
+
+  @override
+  String get totpConfirmNewPassword => 'Confirm new password';
+
+  @override
+  String get totpChangePasswordDescription =>
+      'Update ToolLab on all devices and close the authenticator on the others until the change completes. If interrupted, unlock this device with the old password and resume here; do not reset it. Automatic and biometric unlock must be enabled again afterwards. Existing exports keep their original password.';
+
+  @override
+  String get totpAdoptPasswordTitle => 'Update sync password';
+
+  @override
+  String get totpAdoptPasswordDescription =>
+      'The backend password differs from this device. Enter the new password to verify the backend and update this device. Local accounts are kept. Automatic and biometric unlock must be enabled again afterwards.';
+
+  @override
+  String get totpRotationPending => 'Password change incomplete';
+
+  @override
+  String get totpRotationPendingDescription =>
+      'Keep other devices closed. Resume the password change on this device before syncing or editing accounts.';
+
+  @override
+  String get totpRotationResume => 'Resume password change';
+
+  @override
+  String get totpPasswordChanged => 'Password updated';
+
+  @override
+  String get totpPasswordWrongCurrent => 'Current password is incorrect';
+
+  @override
+  String get totpPasswordSame => 'Choose a different password';
+
+  @override
   String toolLockError(String error) {
     return 'Security operation failed: $error';
   }

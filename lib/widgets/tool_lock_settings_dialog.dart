@@ -4,15 +4,24 @@ import 'package:tool_lab/services/tool_lock_controller.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class ToolLockSettingsDialog extends StatefulWidget {
-  const ToolLockSettingsDialog({super.key, required this.controller});
+  const ToolLockSettingsDialog({
+    super.key,
+    required this.controller,
+    this.onChangePassword,
+  });
   final ToolLockController controller;
+  final VoidCallback? onChangePassword;
 
   static Future<void> show(
     BuildContext context,
-    ToolLockController controller,
-  ) => showDialog<void>(
+    ToolLockController controller, {
+    VoidCallback? onChangePassword,
+  }) => showDialog<void>(
     context: context,
-    builder: (_) => ToolLockSettingsDialog(controller: controller),
+    builder: (_) => ToolLockSettingsDialog(
+      controller: controller,
+      onChangePassword: onChangePassword,
+    ),
   );
 
   @override
@@ -55,6 +64,17 @@ class _ToolLockSettingsDialogState extends State<ToolLockSettingsDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (widget.onChangePassword != null)
+                ListTile(
+                  leading: const Icon(Icons.password),
+                  title: Text(l10n.totpChangePassword),
+                  onTap: _busy
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          widget.onChangePassword!();
+                        },
+                ),
               SwitchListTile(
                 value: widget.controller.automatic,
                 title: Text(l10n.toolLockAutomatic),

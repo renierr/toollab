@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/services/tool_lock_controller.dart';
 
@@ -11,7 +12,11 @@ import 'totp_vault_store.dart';
 
 class TotpSyncDelegate
     with DefaultSyncDelegate
-    implements SyncDelegate, SyncPreflightDelegate, SyncSessionGuard {
+    implements
+        SyncDelegate,
+        SyncPreflightDelegate,
+        SyncSessionGuard,
+        SyncControlRecordDelegate {
   static String get _toolId => TotpAuthTool.config.id;
 
   final _vault = TotpVaultStore();
@@ -39,7 +44,12 @@ class TotpSyncDelegate
   /// the next run.
   @override
   Future<bool> isReadyToSync() async {
-    return ToolLockController.sessionFor(_toolId) != null;
+    return ToolLockController.sessionFor(_toolId) != null &&
+        await DatabaseService.instance.getSetting(
+              _toolId,
+              TotpVaultStore.rotationSetting,
+            ) ==
+            null;
   }
 
   Future<String> _requiredPassword() async {
@@ -47,7 +57,8 @@ class TotpSyncDelegate
   }
 
   Future<Map<String, dynamic>> _decryptRecord(Map<String, dynamic> data) async {
-    if (data['version'] != 2 || data['payload'] is! String) {
+    if ((data['version'] != 2 && data['version'] != 3) ||
+        data['payload'] is! String) {
       throw const SyncUnsupportedPayloadException();
     }
     final password = await _requiredPassword();
@@ -60,11 +71,18 @@ class TotpSyncDelegate
       if (decoded is! Map<String, dynamic>) {
         throw const FormatException('Invalid sync record');
       }
+      if ((data['version'] == 3) !=
+          (decoded['id'] == TotpCrypto.syncCheckRecordId)) {
+        throw const SyncUnsupportedPayloadException();
+      }
       return decoded;
     } on SecretBoxAuthenticationError {
       throw const SyncPasswordMismatchException();
     }
   }
+
+  @override
+  bool isSyncControlRecord(String id) => id == TotpCrypto.syncCheckRecordId;
 
   @override
   Future<void> verifyRemotePayloads(
@@ -134,5 +152,25 @@ class TotpSyncDelegate
     if (!wasDeleted) return;
     _session();
     await _vault.delete(id);
+  }
+}
+
+class TotpSyncWorkflow extends TotpSyncDelegate
+    implements SyncWorkflowDelegate {
+  TotpSyncWorkflow({required this.ready, required this.run});
+
+  final bool Function() ready;
+  final Future<void> Function(String baseUrl, String userId) run;
+
+  @override
+  Future<bool> isReadyToSync() async => ready();
+
+  @override
+  Future<Map<String, int>> runSyncWorkflow(
+    String baseUrl,
+    String userId,
+  ) async {
+    await run(baseUrl, userId);
+    return {'pulled': 0, 'pushed': 0, 'deleted': 0};
   }
 }

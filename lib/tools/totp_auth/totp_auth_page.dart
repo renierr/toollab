@@ -10,6 +10,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/sync_error_message.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -28,6 +29,8 @@ import 'widgets/totp_add_sheet.dart';
 import 'widgets/totp_empty_state.dart';
 import 'widgets/totp_export_dialog.dart';
 import 'widgets/totp_import_dialog.dart';
+import 'widgets/totp_password_change_dialog.dart';
+import 'widgets/totp_rotation_pending.dart';
 import 'widgets/totp_scan_dialog.dart';
 import 'widgets/totp_search_field.dart';
 
@@ -92,6 +95,10 @@ class _TotpAuthPageState extends State<TotpAuthPage>
     } catch (e) {
       errorLog('[TotpAuthPage] Auto-sync on unlock failed: $e');
       if (mounted) {
+        if (_isPasswordMismatch(e)) {
+          await _offerBackendPassword();
+          return;
+        }
         final l10n = AppLocalizations.of(context);
         _snack(l10n.totpSyncFailed(syncErrorMessage(e, l10n)), error: true);
       }
@@ -131,6 +138,12 @@ class _TotpAuthPageState extends State<TotpAuthPage>
         ),
       );
     }
+    if (state.rotationPending) {
+      return ToolLayout(
+        title: TotpAuthTool.config.localizedName(l10n),
+        child: TotpRotationPending(busy: _syncing, onResume: _resumeRotation),
+      );
+    }
     final filtered = state.search(_query);
     final empty = !state.hasAccounts;
 
@@ -163,7 +176,11 @@ class _TotpAuthPageState extends State<TotpAuthPage>
               case _MenuAction.export:
                 _openExport();
               case _MenuAction.security:
-                ToolLockSettingsDialog.show(context, state.lockController);
+                ToolLockSettingsDialog.show(
+                  context,
+                  state.lockController,
+                  onChangePassword: _changePassword,
+                );
             }
           },
           itemBuilder: (_) => [
@@ -343,6 +360,68 @@ class _TotpAuthPageState extends State<TotpAuthPage>
     } catch (e) {
       errorLog('[TotpAuthPage] Manual sync failed: $e');
       if (mounted) {
+        if (_isPasswordMismatch(e)) {
+          await _offerBackendPassword();
+          return;
+        }
+        _snack(l10n.totpSyncFailed(syncErrorMessage(e, l10n)), error: true);
+      }
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
+
+  bool _isPasswordMismatch(Object error) =>
+      error is SyncPasswordMismatchException ||
+      (error is SyncFailures && error.failures.values.any(_isPasswordMismatch));
+
+  Future<void> _changePassword() async {
+    final state = context.read<TotpAuthState>();
+    final appState = context.read<AppState>();
+    final changed = await TotpPasswordChangeDialog.show(
+      context,
+      adopt: false,
+      submit: (current, password) =>
+          state.changePassword(appState, current, password),
+    );
+    if (changed == true && mounted) {
+      _snack(AppLocalizations.of(context).totpPasswordChanged);
+    }
+  }
+
+  Future<void> _offerBackendPassword() async {
+    final state = context.read<TotpAuthState>();
+    if (!state.lockController.unlocked || state.rotationPending) return;
+    final appState = context.read<AppState>();
+    final changed = await TotpPasswordChangeDialog.show(
+      context,
+      adopt: true,
+      submit: (_, password) => state.adoptBackendPassword(appState, password),
+    );
+    if (changed != true || !mounted) return;
+    try {
+      await appState.syncWithBackend([TotpSyncDelegate()]);
+      await state.reload();
+      if (mounted) _snack(AppLocalizations.of(context).totpPasswordChanged);
+    } catch (e) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        _snack(l10n.totpSyncFailed(syncErrorMessage(e, l10n)), error: true);
+      }
+    }
+  }
+
+  Future<void> _resumeRotation() async {
+    if (_syncing) return;
+    final state = context.read<TotpAuthState>();
+    final appState = context.read<AppState>();
+    setState(() => _syncing = true);
+    try {
+      await state.resumePasswordRotation(appState);
+      if (mounted) _snack(AppLocalizations.of(context).totpPasswordChanged);
+    } catch (e) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
         _snack(l10n.totpSyncFailed(syncErrorMessage(e, l10n)), error: true);
       }
     } finally {

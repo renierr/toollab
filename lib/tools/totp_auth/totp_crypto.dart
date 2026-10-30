@@ -7,6 +7,7 @@ import 'package:cryptography/cryptography.dart';
 class TotpCrypto {
   /// Secure-storage key shared by the settings dialog and the sync delegate.
   static const syncPasswordKey = 'totp_sync_password';
+  static const syncCheckRecordId = '__tool_lab_password_check__';
 
   static final _pbkdf2 = Pbkdf2(
     macAlgorithm: Hmac.sha256(),

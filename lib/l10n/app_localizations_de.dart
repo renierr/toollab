@@ -13111,6 +13111,48 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ohne Entsperren öffnen umgeht die Geräteauthentifizierung.';
 
   @override
+  String get totpChangePassword => 'Passwort ändern';
+
+  @override
+  String get totpCurrentPassword => 'Aktuelles Passwort';
+
+  @override
+  String get totpNewPassword => 'Neues Passwort';
+
+  @override
+  String get totpConfirmNewPassword => 'Neues Passwort bestätigen';
+
+  @override
+  String get totpChangePasswordDescription =>
+      'Aktualisiere ToolLab auf allen Geräten und schließe den Authenticator auf den anderen, bis die Änderung abgeschlossen ist. Bei einer Unterbrechung dieses Gerät mit dem alten Passwort entsperren und hier fortsetzen; nicht zurücksetzen. Automatisches und biometrisches Entsperren müssen danach erneut aktiviert werden. Bestehende Exporte behalten ihr ursprüngliches Passwort.';
+
+  @override
+  String get totpAdoptPasswordTitle => 'Sync-Passwort aktualisieren';
+
+  @override
+  String get totpAdoptPasswordDescription =>
+      'Das Backend-Passwort unterscheidet sich von diesem Gerät. Gib das neue Passwort ein, um das Backend zu prüfen und dieses Gerät umzustellen. Lokale Konten bleiben erhalten. Automatisches und biometrisches Entsperren müssen danach erneut aktiviert werden.';
+
+  @override
+  String get totpRotationPending => 'Passwortänderung unvollständig';
+
+  @override
+  String get totpRotationPendingDescription =>
+      'Lass andere Geräte geschlossen. Setze die Passwortänderung auf diesem Gerät fort, bevor du synchronisierst oder Konten bearbeitest.';
+
+  @override
+  String get totpRotationResume => 'Passwortänderung fortsetzen';
+
+  @override
+  String get totpPasswordChanged => 'Passwort aktualisiert';
+
+  @override
+  String get totpPasswordWrongCurrent => 'Das aktuelle Passwort ist falsch';
+
+  @override
+  String get totpPasswordSame => 'Wähle ein anderes Passwort';
+
+  @override
   String toolLockError(String error) {
     return 'Sicherheitsvorgang fehlgeschlagen: $error';
   }

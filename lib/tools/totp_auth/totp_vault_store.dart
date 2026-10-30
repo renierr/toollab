@@ -11,6 +11,7 @@ import 'totp_account.dart';
 class TotpVaultStore {
   static const String _table = 'vault_accounts';
   static const String keyEnvelopeSetting = 'vault_key_envelope';
+  static const String rotationSetting = 'password_rotation_pending';
   static const String _cleanupSetting = 'vault_cleanup_pending';
 
   Future<ToolDatabase> _database() async {

@@ -171,8 +171,8 @@ class ToolLockController extends ChangeNotifier {
       await _biometricOperation<void>('write', value: session.password);
       await _storage.write(key: _biometricKey, value: 'true');
     } else {
-      await _storage.delete(key: _biometricKey);
       await _biometricOperation<void>('delete');
+      await _storage.delete(key: _biometricKey);
     }
     biometric = enabled;
     notifyListeners();
@@ -184,6 +184,40 @@ class ToolLockController extends ChangeNotifier {
     }
     await _storage.write(key: _biometricTimeoutKey, value: '$minutes');
     biometricTimeoutMinutes = minutes;
+    notifyListeners();
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required Future<void> Function(String oldEnvelope, String newEnvelope)
+    commit,
+  }) async {
+    if (newPassword.length < 8) throw ArgumentError('Password too short');
+    final oldEnvelope = _envelope;
+    final session = _sessions[toolId];
+    if (session == null || oldEnvelope == null) {
+      throw StateError('Vault is locked');
+    }
+    final generation = _generation;
+    await ToolVaultCrypto.unwrapKey(oldEnvelope, currentPassword);
+    final newEnvelope = await ToolVaultCrypto.wrapKey(session.key, newPassword);
+    void checkSession() {
+      if (generation != _generation || !identical(session, _sessions[toolId])) {
+        throw StateError('Vault session changed');
+      }
+    }
+
+    checkSession();
+    if (automatic) await setAutomatic(false);
+    checkSession();
+    if (biometric) await setBiometric(false);
+    checkSession();
+    await commit(oldEnvelope, newEnvelope);
+    _envelope = newEnvelope;
+    if (generation == _generation && identical(session, _sessions[toolId])) {
+      _sessions[toolId] = ToolLockSession(session.key, newPassword);
+    }
     notifyListeners();
   }
 

@@ -178,6 +178,34 @@ void main() {
     expect(pushes, 0);
   });
 
+  test('partially rotated backend blocks sync without uploading', () async {
+    final first = TotpAccount.newAccount(
+      issuer: 'First',
+      accountName: 'alice',
+      secret: 'JBSWY3DPEHPK3PXP',
+    );
+    final second = TotpAccount.newAccount(
+      issuer: 'Second',
+      accountName: 'bob',
+      secret: 'KRSXG5CTMVRXEZLU',
+    );
+    await put(first);
+    await put(second);
+    await sync();
+    server[second.id]!['data'] = {
+      'version': 2,
+      'payload': await TotpCrypto.encrypt(
+        jsonEncode(second.toJson()),
+        'new shared password',
+      ),
+    };
+    final before = jsonEncode(server);
+    final previousPushes = pushes;
+    await expectLater(sync(), throwsA(isA<SyncPasswordMismatchException>()));
+    expect(pushes, previousPushes);
+    expect(jsonEncode(server), before);
+  });
+
   test('direct sync is blocked without password', () async {
     state.lockController.lock();
     await expectLater(sync(), throwsStateError);

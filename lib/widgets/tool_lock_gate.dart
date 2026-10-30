@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/tool_lock_controller.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
+import 'package:tool_lab/widgets/password_visibility_button.dart';
 
 class ToolLockGate extends StatefulWidget {
   const ToolLockGate({
@@ -162,7 +163,7 @@ class _ToolLockGateState extends State<ToolLockGate> {
                     enableSuggestions: false,
                     decoration: InputDecoration(
                       labelText: l10n.toolLockPassword,
-                      suffixIcon: _PasswordVisibilityButton(
+                      suffixIcon: PasswordVisibilityButton(
                         hidden: _hidePassword,
                         onPressed: () =>
                             setState(() => _hidePassword = !_hidePassword),
@@ -178,7 +179,7 @@ class _ToolLockGateState extends State<ToolLockGate> {
                       enableSuggestions: false,
                       decoration: InputDecoration(
                         labelText: l10n.toolLockConfirmPassword,
-                        suffixIcon: _PasswordVisibilityButton(
+                        suffixIcon: PasswordVisibilityButton(
                           hidden: _hideConfirmation,
                           onPressed: () => setState(
                             () => _hideConfirmation = !_hideConfirmation,
@@ -227,28 +228,6 @@ class _ToolLockGateState extends State<ToolLockGate> {
           ),
         );
       },
-    );
-  }
-}
-
-class _PasswordVisibilityButton extends StatelessWidget {
-  const _PasswordVisibilityButton({
-    required this.hidden,
-    required this.onPressed,
-  });
-
-  final bool hidden;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return IconButton(
-      tooltip: hidden ? l10n.toolLockShowPassword : l10n.toolLockHidePassword,
-      onPressed: onPressed,
-      icon: Icon(
-        hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-      ),
     );
   }
 }

@@ -1,9 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/tool_vault_crypto.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/services/tool_lock_controller.dart';
 
 import 'config.dart';
@@ -11,6 +16,8 @@ import 'totp.dart';
 import 'totp_account.dart';
 import 'totp_backup.dart';
 import 'totp_crypto.dart';
+import 'totp_password_rotation.dart';
+import 'totp_sync_delegate.dart';
 import 'totp_vault_store.dart';
 
 class TotpAuthState extends ChangeNotifier {
@@ -30,6 +37,9 @@ class TotpAuthState extends ChangeNotifier {
   static const _schemaVersion = 3;
 
   final List<TotpAccount> _accounts = [];
+  bool _rotationPending = false;
+  bool _rotationBusy = false;
+  bool get rotationPending => _rotationPending;
 
   /// Active accounts in their stored order.
   List<TotpAccount> get accounts =>
@@ -48,6 +58,12 @@ class TotpAuthState extends ChangeNotifier {
 
   Future<void> _init() async {
     await migrateDb();
+    _rotationPending =
+        await DatabaseService.instance.getSetting(
+          TotpAuthTool.config.id,
+          TotpVaultStore.rotationSetting,
+        ) !=
+        null;
     try {
       await _vault.finishCleanup();
     } catch (e) {
@@ -135,6 +151,12 @@ class TotpAuthState extends ChangeNotifier {
     await ready;
     lockController.lock();
     await migrateDb();
+    _rotationPending =
+        await DatabaseService.instance.getSetting(
+          TotpAuthTool.config.id,
+          TotpVaultStore.rotationSetting,
+        ) !=
+        null;
     try {
       await _vault.finishCleanup();
     } catch (e) {
@@ -209,6 +231,9 @@ class TotpAuthState extends ChangeNotifier {
   }
 
   Future<void> resetVault() async {
+    if (_rotationPending || _rotationBusy) {
+      throw StateError('Password rotation must be completed first');
+    }
     await lockController.reset(() async {
       await _vault.reset();
       await _storage.delete(key: TotpCrypto.syncPasswordKey);
@@ -217,9 +242,217 @@ class TotpAuthState extends ChangeNotifier {
   }
 
   ToolLockSession _session() {
+    if (_rotationPending || _rotationBusy) {
+      throw StateError('Password rotation must be completed first');
+    }
     final session = ToolLockController.sessionFor(TotpAuthTool.config.id);
     if (session == null) throw StateError('Vault is locked');
     return session;
+  }
+
+  String get _rotationContext => '${TotpAuthTool.config.id}/password-rotation';
+
+  ToolLockSession _rotationSession() {
+    final session = ToolLockController.sessionFor(TotpAuthTool.config.id);
+    if (session == null) throw StateError('Vault is locked');
+    return session;
+  }
+
+  void _requireRotationSession(ToolLockSession session) {
+    if (!identical(
+      session,
+      ToolLockController.sessionFor(TotpAuthTool.config.id),
+    )) {
+      throw StateError('Vault session changed');
+    }
+  }
+
+  Future<void> _withSyncWorkflow(
+    AppState appState,
+    ToolLockSession session,
+    Future<void> Function(String url, String userId) run,
+  ) async {
+    final result = await appState.syncWithBackend([
+      TotpSyncWorkflow(
+        ready: () => identical(
+          session,
+          ToolLockController.sessionFor(TotpAuthTool.config.id),
+        ),
+        run: run,
+      ),
+    ]);
+    if (result == null) throw StateError('Sync is not available');
+  }
+
+  Future<void> _commitPassword(
+    ToolLockSession session,
+    String newPassword, {
+    required bool clearRotation,
+  }) async {
+    final generation = lockController.generation;
+    await lockController.changePassword(
+      currentPassword: session.password,
+      newPassword: newPassword,
+      commit: (oldEnvelope, newEnvelope) async {
+        final db = await DatabaseService.instance.database;
+        await db.transaction((txn) async {
+          _requireRotationSession(session);
+          if (generation != lockController.generation) {
+            throw StateError('Vault session changed');
+          }
+          final updated = await txn.update(
+            'tool_settings',
+            {
+              'value': newEnvelope,
+              'updated_at': DateTime.now().millisecondsSinceEpoch,
+            },
+            where: 'tool_id = ? AND key = ? AND value = ?',
+            whereArgs: [
+              TotpAuthTool.config.id,
+              TotpVaultStore.keyEnvelopeSetting,
+              oldEnvelope,
+            ],
+          );
+          if (updated != 1) throw StateError('Vault key changed');
+          if (clearRotation) {
+            final removed = await txn.delete(
+              'tool_settings',
+              where: 'tool_id = ? AND key = ?',
+              whereArgs: [
+                TotpAuthTool.config.id,
+                TotpVaultStore.rotationSetting,
+              ],
+            );
+            if (removed != 1) throw StateError('Rotation state missing');
+          }
+        });
+      },
+    );
+    if (clearRotation) _rotationPending = false;
+    notifyListeners();
+  }
+
+  Future<void> changePassword(
+    AppState appState,
+    String currentPassword,
+    String newPassword,
+  ) async {
+    await ready;
+    if (_rotationPending || _rotationBusy) {
+      throw StateError('Password rotation already pending');
+    }
+    final session = _rotationSession();
+    if (session.password != currentPassword) {
+      throw SecretBoxAuthenticationError();
+    }
+    if (newPassword.length < 8 || newPassword == currentPassword) {
+      throw ArgumentError('Invalid new password');
+    }
+    _rotationBusy = true;
+    notifyListeners();
+    try {
+      await _withSyncWorkflow(appState, session, (url, userId) async {
+        _requireRotationSession(session);
+        await SyncService.sync(
+          baseUrl: url,
+          userId: userId,
+          delegate: TotpSyncDelegate(),
+          backendAlreadyChecked: true,
+        );
+        _requireRotationSession(session);
+        final journal = await ToolVaultCrypto.encrypt(
+          jsonEncode({'password': newPassword, 'url': url, 'userId': userId}),
+          session.key,
+          context: _rotationContext,
+        );
+        _requireRotationSession(session);
+        await DatabaseService.instance.setSetting(
+          TotpAuthTool.config.id,
+          TotpVaultStore.rotationSetting,
+          journal,
+        );
+        _rotationPending = true;
+        notifyListeners();
+        _requireRotationSession(session);
+        await TotpPasswordRotation(
+          baseUrl: url,
+          userId: userId,
+          checkSession: () => _requireRotationSession(session),
+        ).rotate(session.password, newPassword);
+        _requireRotationSession(session);
+        await _commitPassword(session, newPassword, clearRotation: true);
+      });
+    } finally {
+      _rotationBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> resumePasswordRotation(AppState appState) async {
+    await ready;
+    if (!_rotationPending || _rotationBusy) {
+      throw StateError('No password rotation pending');
+    }
+    final session = _rotationSession();
+    _rotationBusy = true;
+    notifyListeners();
+    try {
+      await _withSyncWorkflow(appState, session, (url, userId) async {
+        final journal = await DatabaseService.instance.getSetting(
+          TotpAuthTool.config.id,
+          TotpVaultStore.rotationSetting,
+        );
+        if (journal == null) throw StateError('Rotation state missing');
+        final clear = await ToolVaultCrypto.decrypt(
+          journal,
+          session.key,
+          context: _rotationContext,
+        );
+        final data = jsonDecode(clear) as Map<String, dynamic>;
+        if (data['url'] != url ||
+            data['userId'] != userId ||
+            data['password'] is! String) {
+          throw StateError('Sync settings changed during password rotation');
+        }
+        final password = data['password'] as String;
+        _requireRotationSession(session);
+        await TotpPasswordRotation(
+          baseUrl: url,
+          userId: userId,
+          checkSession: () => _requireRotationSession(session),
+        ).rotate(session.password, password);
+        _requireRotationSession(session);
+        await _commitPassword(session, password, clearRotation: true);
+      });
+    } finally {
+      _rotationBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> adoptBackendPassword(AppState appState, String password) async {
+    await ready;
+    if (_rotationPending || _rotationBusy) {
+      throw StateError('Password rotation already pending');
+    }
+    if (password.length < 8) throw ArgumentError('Password too short');
+    final session = _rotationSession();
+    _rotationBusy = true;
+    notifyListeners();
+    try {
+      await _withSyncWorkflow(appState, session, (url, userId) async {
+        await TotpPasswordRotation(
+          baseUrl: url,
+          userId: userId,
+          checkSession: () => _requireRotationSession(session),
+        ).verifyPassword(password);
+        _requireRotationSession(session);
+        await _commitPassword(session, password, clearRotation: false);
+      });
+    } finally {
+      _rotationBusy = false;
+      notifyListeners();
+    }
   }
 
   int _nextSortOrder() {
