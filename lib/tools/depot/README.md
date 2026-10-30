@@ -268,8 +268,8 @@ the positions that hold it. Fund value outside the published top holdings is sho
 "Other fund holdings". In the position list ETFs and funds expand to their top holdings,
 and every row carries a kind badge.
 
-Profiles, including fund holdings, are stored in tool settings and loaded without network
-requests. Opening the tab never fetches. The refresh button only fetches positions without
+Profiles are stored in their own tables (see Local data) and loaded without network
+requests; only changed entries are written back. Opening the tab never fetches. The refresh button only fetches positions without
 a profile or with incomplete metadata, at most once per asset every 24 hours, and keeps
 known values. A complete profile is never fetched again on its own; bumping
 `DepotAssetProfile.currentVersion` re-fetches fund profiles once. **Reload all allocation
@@ -281,8 +281,21 @@ ones; cached values stay until replaced. Portfolio sync remains independent.
 Tables in the tool database (`DepotStore`): portfolios, holdings, holding performance per
 period, summaries and chart points per scope and period, transactions, activity counts per
 holding, dividend data from Yahoo Finance, holding logos (downloaded only on request from
-the settings), and the wishlist. Summaries and charts exist per portfolio and for all
-portfolios combined (scope `_all`).
+the settings), the wishlist, and allocation metadata. Summaries and charts exist per
+portfolio and for all portfolios combined (scope `_all`).
+
+Allocation metadata is keyed by ISIN, or by symbol for fund constituents and alternate
+listings:
+
+| Table | Content |
+|---|---|
+| `asset_profiles` | Kind, sector, industry, country, region, cache version, `fetched_at` and the last lookup `attempted_at`. A row without `fetched_at` only records a failed lookup |
+| `asset_shares` | A fund's sector and country weights, one row per `dimension` (`sector` / `country`) and name |
+| `fund_constituents` | A fund's top holdings by `rank`, with name, ISIN or symbol and weight |
+
+These tables are part of the data export and are emptied on **Disconnect**. Older versions
+kept this cache as JSON in tool settings; the schema migration moves it into the tables
+and deletes the settings entries.
 
 Depot tests use in-memory SQLite and block real HTTP requests. Run them with
 `flutter --suppress-analytics test --no-pub test/tools/depot` to also suppress Flutter CLI

@@ -15,7 +15,23 @@ class DepotFundConstituent {
   /// Merges the same company across funds and direct positions.
   String get key => isin ?? symbol ?? name.toLowerCase();
 
-  static DepotFundConstituent? fromJson(Object? raw) {
+  factory DepotFundConstituent.fromMap(Map<String, Object?> row) =>
+      DepotFundConstituent(
+        name: row['name'] as String,
+        isin: row['isin'] as String?,
+        symbol: row['symbol'] as String?,
+        weight: (row['weight'] as num).toDouble(),
+      );
+
+  Map<String, Object?> toMap() => {
+    'name': name,
+    'isin': isin,
+    'symbol': symbol,
+    'weight': weight,
+  };
+
+  /// Reads the JSON the profile cache used before it had its own tables.
+  static DepotFundConstituent? fromLegacyJson(Object? raw) {
     if (raw is! Map) return null;
     final name = raw['name'];
     final weight = raw['weight'];
@@ -34,11 +50,4 @@ class DepotFundConstituent {
       weight: weight.toDouble(),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'isin': ?isin,
-    'symbol': ?symbol,
-    'weight': weight,
-  };
 }

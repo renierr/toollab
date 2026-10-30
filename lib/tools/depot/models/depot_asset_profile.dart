@@ -69,7 +69,39 @@ class DepotAssetProfile {
     fetchedAt: fetchedAt,
   );
 
-  factory DepotAssetProfile.fromJson(Map<String, dynamic> json) {
+  /// [row] is an `asset_profiles` row with a `fetched_at`; shares and
+  /// constituents come from their own tables.
+  factory DepotAssetProfile.fromMap(
+    Map<String, Object?> row, {
+    Map<String, double> sectorShares = const {},
+    Map<String, double> countryShares = const {},
+    List<DepotFundConstituent> constituents = const [],
+  }) => DepotAssetProfile(
+    sector: row['sector'] as String?,
+    industry: row['industry'] as String?,
+    country: row['country'] as String?,
+    region: row['region'] as String?,
+    cacheVersion: (row['cache_version'] as int?) ?? 1,
+    kind: DepotHoldingKind.values.asNameMap()[row['kind']],
+    sectorShares: sectorShares,
+    countryShares: countryShares,
+    constituents: constituents,
+    fetchedAt: DateTime.fromMillisecondsSinceEpoch(row['fetched_at'] as int),
+  );
+
+  /// The `asset_profiles` columns, without key and attempt time.
+  Map<String, Object?> toMap() => {
+    'kind': kind?.name,
+    'sector': sector,
+    'industry': industry,
+    'country': country,
+    'region': region,
+    'cache_version': cacheVersion,
+    'fetched_at': fetchedAt.millisecondsSinceEpoch,
+  };
+
+  /// Reads the JSON the cache used before it had its own tables.
+  factory DepotAssetProfile.fromLegacyJson(Map<String, dynamic> json) {
     final fetched = json['fetchedAt'];
     final version = (json['cacheVersion'] as num?)?.toInt() ?? 1;
     final kind = json['kind'];
@@ -84,7 +116,7 @@ class DepotAssetProfile {
       countryShares: version >= 3 ? _shares(json['countryShares']) : const {},
       constituents: [
         for (final raw in json['constituents'] as List? ?? const [])
-          ?DepotFundConstituent.fromJson(raw),
+          ?DepotFundConstituent.fromLegacyJson(raw),
       ],
       fetchedAt: DateTime.fromMillisecondsSinceEpoch(
         fetched is num
@@ -93,20 +125,6 @@ class DepotAssetProfile {
       ),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'sector': ?sector,
-    'industry': ?industry,
-    'country': ?country,
-    'region': ?region,
-    'cacheVersion': cacheVersion,
-    if (kind != null) 'kind': kind!.name,
-    if (sectorShares.isNotEmpty) 'sectorShares': sectorShares,
-    if (countryShares.isNotEmpty) 'countryShares': countryShares,
-    if (constituents.isNotEmpty)
-      'constituents': [for (final c in constituents) c.toJson()],
-    'fetchedAt': fetchedAt.millisecondsSinceEpoch,
-  };
 
   static String? _text(Object? value) {
     if (value is! String) return null;

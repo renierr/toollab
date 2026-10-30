@@ -46,6 +46,8 @@ class DepotAllocationState extends ChangeNotifier {
   Map<String, DepotAssetProfile> _profiles = const {};
   Map<String, DateTime> _attempts = {};
   final Set<String> _pending = {};
+  final Set<String> _unsavedProfiles = {};
+  final Set<String> _unsavedAttempts = {};
   Future<void>? _cacheLoad;
   bool _cacheLoaded = false;
   bool _isFetching = false;
@@ -121,9 +123,9 @@ class DepotAllocationState extends ChangeNotifier {
         if (_disposed || generation != _generation) break;
         final chunk = entries.skip(start).take(_parallelRequests).toList();
         for (final entry in chunk) {
-          _attempts[entry.key] = _clock();
+          _markAttempt(entry.key);
         }
-        await _store.saveAssetProfileAttempts(_attempts);
+        await _persist();
         final results = await Future.wait([
           for (final entry in chunk)
             _fetch(
@@ -142,8 +144,7 @@ class DepotAllocationState extends ChangeNotifier {
     } finally {
       if (!_disposed && generation == _generation) {
         try {
-          if (changed) await _store.saveAssetProfiles(_profiles);
-          await _store.saveAssetProfileAttempts(_attempts);
+          await _persist();
         } catch (e) {
           errorLog('[DepotAllocationState] Saving profiles failed: $e');
         }
@@ -170,6 +171,26 @@ class DepotAllocationState extends ChangeNotifier {
   }
 
   Future<void> ensureLoaded() => _cacheLoad ??= _loadCache();
+
+  void _setProfile(String key, DepotAssetProfile profile) {
+    _profiles = {..._profiles, key: profile};
+    _unsavedProfiles.add(key);
+  }
+
+  void _markAttempt(String key) {
+    _attempts[key] = _clock();
+    _unsavedAttempts.add(key);
+  }
+
+  /// Writes only the entries changed since the last save.
+  Future<void> _persist() async {
+    final profiles = {for (final key in _unsavedProfiles) key: ?_profiles[key]};
+    final attempts = {for (final key in _unsavedAttempts) key: ?_attempts[key]};
+    _unsavedProfiles.clear();
+    _unsavedAttempts.clear();
+    await _store.saveAssetProfiles(profiles);
+    await _store.saveAssetProfileAttempts(attempts);
+  }
 
   bool _isDue(String key, DepotAssetProfile? cached) {
     final last =
@@ -289,7 +310,7 @@ class DepotAllocationState extends ChangeNotifier {
           fetchedAt: profile.fetchedAt,
         );
       }
-      _profiles = {..._profiles, key: profile};
+      _setProfile(key, profile);
       return true;
     } catch (e) {
       errorLog('[DepotAllocationState] Profile failed for $key: $e');
@@ -373,12 +394,10 @@ class DepotAllocationState extends ChangeNotifier {
           if ((alternate == null ||
                   (alternate.country == null && alternate.region == null)) &&
               _isDue(symbol, alternate)) {
-            _attempts[symbol] = _clock();
+            _markAttempt(symbol);
             alternate =
                 (await _profileLoader(symbol, session))?.profile ?? alternate;
-            if (alternate != null) {
-              _profiles = {..._profiles, symbol: alternate};
-            }
+            if (alternate != null) _setProfile(symbol, alternate);
           }
           if (alternate == null) continue;
           profile = DepotAssetProfile(
@@ -458,11 +477,11 @@ class DepotAllocationState extends ChangeNotifier {
       return cached?.country ?? cached?.region;
     }
     if (!_isDue(symbol, cached) || !_pending.add(symbol)) return null;
-    _attempts[symbol] = _clock();
+    _markAttempt(symbol);
     try {
       final result = await _profileLoader(symbol, session);
       if (result == null || _disposed) return null;
-      _profiles = {..._profiles, symbol: result.profile};
+      _setProfile(symbol, result.profile);
       return result.profile.country ?? result.profile.region;
     } catch (e) {
       debugLog('[DepotAllocationState] Constituent failed for $symbol: $e');
@@ -478,6 +497,8 @@ class DepotAllocationState extends ChangeNotifier {
     _pending.clear();
     _profiles = const {};
     _attempts = {};
+    _unsavedProfiles.clear();
+    _unsavedAttempts.clear();
     _cacheLoad = null;
     _cacheLoaded = false;
   }

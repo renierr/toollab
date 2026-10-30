@@ -10,6 +10,7 @@ import 'package:tool_lab/tools/depot/depot_store.dart';
 import 'package:tool_lab/tools/depot/market_data/onvista_api.dart';
 import 'package:tool_lab/tools/depot/market_data/yahoo_finance_api.dart';
 import 'package:tool_lab/tools/depot/models/depot_asset_profile.dart';
+import 'package:tool_lab/tools/depot/models/depot_fund_constituent.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 
 DepotHolding _holding(String id, {double value = 100, String? isin}) =>
@@ -116,7 +117,7 @@ void main() {
     });
 
     test('ignores normalized fund shares from old cache versions', () {
-      final profile = DepotAssetProfile.fromJson({
+      final profile = DepotAssetProfile.fromLegacyJson({
         'cacheVersion': 2,
         'sectorShares': {'Technology': 1.0},
         'countryShares': {'United States': 1.0},
@@ -152,12 +153,11 @@ void main() {
         region: 'asia',
         fetchedAt: DateTime.now(),
       );
-      final restored = DepotAssetProfile.fromJson(profile.toJson());
-      expect(restored.country, isNull);
+      expect(profile.country, isNull);
       expect(
         depotAllocationBreakdown(
           holdings: [_holding('TSM')],
-          profileOf: (_) => restored,
+          profileOf: (_) => profile,
           dimension: DepotAllocationDimension.region,
         ),
         {'asia': 100},
@@ -191,6 +191,48 @@ void main() {
     });
     tearDownAll(() async {
       await DatabaseService.instance.close();
+    });
+
+    test('stores profiles, shares and constituents in tables', () async {
+      final fetchedAt = DateTime(2026, 10, 30);
+      await store.saveAssetProfileAttempts({'IE00ETF': fetchedAt});
+      await store.saveAssetProfiles({
+        'IE00ETF': DepotAssetProfile(
+          kind: DepotHoldingKind.etf,
+          sectorShares: const {'Technology': 0.4},
+          countryShares: const {'USA': 0.7, 'Japan': 0.06},
+          constituents: const [
+            DepotFundConstituent(
+              name: 'Nvidia',
+              isin: 'US67066G1040',
+              weight: 0.058,
+            ),
+            DepotFundConstituent(name: 'Apple', symbol: 'AAPL', weight: 0.054),
+          ],
+          fetchedAt: fetchedAt,
+        ),
+      });
+      await store.saveAssetProfileAttempts({'FAILED': fetchedAt});
+
+      final profiles = await store.assetProfiles();
+      final etf = profiles['IE00ETF']!;
+      expect(profiles.keys, ['IE00ETF']);
+      expect(etf.kind, DepotHoldingKind.etf);
+      expect(etf.sectorShares, {'Technology': 0.4});
+      expect(etf.countryShares, {'USA': 0.7, 'Japan': 0.06});
+      expect(etf.constituents.map((c) => c.name), ['Nvidia', 'Apple']);
+      expect(etf.constituents.last.symbol, 'AAPL');
+      expect(etf.fetchedAt, fetchedAt);
+      expect(await store.assetProfileAttempts(), {
+        'IE00ETF': fetchedAt,
+        'FAILED': fetchedAt,
+      });
+      final tables = {
+        for (final table in await store.dumpTables()) table.name: table,
+      };
+      expect(tables['asset_profiles']!.rows, hasLength(2));
+      expect(tables['asset_shares']!.rows, hasLength(3));
+      expect(tables['fund_constituents']!.rows, hasLength(2));
     });
 
     test(

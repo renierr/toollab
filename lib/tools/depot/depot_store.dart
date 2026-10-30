@@ -9,6 +9,7 @@ import 'config.dart';
 import 'models/depot_asset_profile.dart';
 import 'models/depot_dividend.dart';
 import 'models/depot_filters.dart';
+import 'models/depot_fund_constituent.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_holding_logo.dart';
 import 'models/depot_period.dart';
@@ -62,6 +63,14 @@ class DepotStore {
   static const _wishlist = 'wishlist_items';
   static const _wishlistLogos = 'wishlist_logos';
 
+  /// Allocation metadata per ISIN or symbol. A row without `fetched_at`
+  /// only records a failed lookup.
+  static const _assetProfiles = 'asset_profiles';
+  static const _assetShares = 'asset_shares';
+  static const _fundConstituents = 'fund_constituents';
+  static const _sectorDimension = 'sector';
+  static const _countryDimension = 'country';
+
   /// Parqet mirror only; the dividend cache survives a sync.
   static const _tables = [
     _portfolios,
@@ -76,6 +85,7 @@ class DepotStore {
   static const _activityFullSyncKey = 'parqet_activity_full_sync_at';
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
+  // Legacy keys of the profile cache, read once by the version 11 migration.
   static const _assetProfilesKey = 'asset_profiles';
   static const _assetProfileAttemptsKey = 'asset_profile_attempts';
 
@@ -92,7 +102,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 10,
+        currentVersion: 11,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -318,6 +328,42 @@ class DepotStore {
               'UPDATE ${txn.nameTable(_wishlist)} SET updated_at = added_at',
             );
           }
+          if (oldVersion < 11) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_assetProfiles)} (
+                asset_key TEXT PRIMARY KEY,
+                kind TEXT,
+                sector TEXT,
+                industry TEXT,
+                country TEXT,
+                region TEXT,
+                cache_version INTEGER,
+                fetched_at INTEGER,
+                attempted_at INTEGER
+              )
+            ''');
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_assetShares)} (
+                asset_key TEXT NOT NULL,
+                dimension TEXT NOT NULL,
+                name TEXT NOT NULL,
+                share REAL NOT NULL,
+                PRIMARY KEY (asset_key, dimension, name)
+              )
+            ''');
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_fundConstituents)} (
+                asset_key TEXT NOT NULL,
+                rank INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                isin TEXT,
+                symbol TEXT,
+                weight REAL NOT NULL,
+                PRIMARY KEY (asset_key, rank)
+              )
+            ''');
+            await _migrateLegacyProfiles(txn);
+          }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {
             await txn.executor.delete(
@@ -427,69 +473,179 @@ class DepotStore {
   Future<void> setWishlistEuroDisplay(bool value) => DatabaseService.instance
       .setSetting(_toolId, _wishlistEuroKey, value.toString());
 
-  /// Sector/industry/region metadata cached per holding identifier.
+  /// Sector/industry/region metadata cached per ISIN or symbol.
   Future<Map<String, DepotAssetProfile>> assetProfiles() async {
-    final stored = await DatabaseService.instance.getSetting(
-      _toolId,
-      _assetProfilesKey,
-    );
-    if (stored == null || stored.isEmpty) return const {};
-    try {
-      final decoded = jsonDecode(stored);
-      if (decoded is! Map) return const {};
-      return {
-        for (final entry in decoded.entries)
-          if (entry.key is String && entry.value is Map<String, dynamic>)
-            entry.key as String: DepotAssetProfile.fromJson(
-              entry.value as Map<String, dynamic>,
-            ),
-      };
-    } catch (e) {
-      errorLog('[DepotStore] Reading asset profiles failed: $e');
-      return const {};
+    final db = await _getDb();
+    final sectorShares = <String, Map<String, double>>{};
+    final countryShares = <String, Map<String, double>>{};
+    for (final row in await db.query(_assetShares)) {
+      final target = row['dimension'] == _sectorDimension
+          ? sectorShares
+          : countryShares;
+      (target[row['asset_key'] as String] ??= {})[row['name'] as String] =
+          (row['share'] as num).toDouble();
     }
+    final constituents = <String, List<DepotFundConstituent>>{};
+    for (final row in await db.query(
+      _fundConstituents,
+      orderBy: 'asset_key, rank',
+    )) {
+      (constituents[row['asset_key'] as String] ??= []).add(
+        DepotFundConstituent.fromMap(row),
+      );
+    }
+    final rows = await db.query(
+      _assetProfiles,
+      where: 'fetched_at IS NOT NULL',
+    );
+    return {
+      for (final row in rows)
+        row['asset_key'] as String: DepotAssetProfile.fromMap(
+          row,
+          sectorShares: sectorShares[row['asset_key']] ?? const {},
+          countryShares: countryShares[row['asset_key']] ?? const {},
+          constituents: constituents[row['asset_key']] ?? const [],
+        ),
+    };
   }
 
-  Future<void> saveAssetProfiles(Map<String, DepotAssetProfile> profiles) =>
-      DatabaseService.instance.setSetting(
-        _toolId,
-        _assetProfilesKey,
-        jsonEncode({
-          for (final entry in profiles.entries) entry.key: entry.value.toJson(),
-        }),
-      );
+  /// Writes only the given profiles; others and attempt times stay.
+  Future<void> saveAssetProfiles(
+    Map<String, DepotAssetProfile> profiles,
+  ) async {
+    if (profiles.isEmpty) return;
+    final db = await _getDb();
+    await db.transaction((txn) async {
+      for (final entry in profiles.entries) {
+        await _writeAssetProfile(txn, entry.key, entry.value);
+      }
+    });
+  }
 
   Future<Map<String, DateTime>> assetProfileAttempts() async {
-    final stored = await DatabaseService.instance.getSetting(
-      _toolId,
-      _assetProfileAttemptsKey,
+    final db = await _getDb();
+    final rows = await db.query(
+      _assetProfiles,
+      columns: ['asset_key', 'attempted_at'],
+      where: 'attempted_at IS NOT NULL',
     );
-    if (stored == null || stored.isEmpty) return {};
-    try {
-      final decoded = jsonDecode(stored);
-      if (decoded is! Map) return {};
-      return {
-        for (final entry in decoded.entries)
-          if (entry.key is String && entry.value is int)
-            entry.key as String: DateTime.fromMillisecondsSinceEpoch(
-              entry.value as int,
-            ),
-      };
-    } catch (e) {
-      errorLog('[DepotStore] Reading profile attempts failed: $e');
-      return {};
+    return {
+      for (final row in rows)
+        row['asset_key'] as String: DateTime.fromMillisecondsSinceEpoch(
+          row['attempted_at'] as int,
+        ),
+    };
+  }
+
+  Future<void> saveAssetProfileAttempts(Map<String, DateTime> attempts) async {
+    if (attempts.isEmpty) return;
+    final db = await _getDb();
+    await db.transaction((txn) async {
+      for (final entry in attempts.entries) {
+        await _writeAttempt(txn, entry.key, entry.value);
+      }
+    });
+  }
+
+  // Update-then-insert instead of an UPSERT clause, which older Android
+  // SQLite versions reject.
+  Future<void> _writeAttempt(
+    ToolDatabaseExecutor txn,
+    String key,
+    DateTime at,
+  ) async {
+    final values = {'attempted_at': at.millisecondsSinceEpoch};
+    final updated = await txn.update(
+      _assetProfiles,
+      values,
+      where: 'asset_key = ?',
+      whereArgs: [key],
+    );
+    if (updated == 0) {
+      await txn.insert(_assetProfiles, {'asset_key': key, ...values});
     }
   }
 
-  Future<void> saveAssetProfileAttempts(Map<String, DateTime> attempts) =>
-      DatabaseService.instance.setSetting(
-        _toolId,
-        _assetProfileAttemptsKey,
-        jsonEncode({
-          for (final entry in attempts.entries)
-            entry.key: entry.value.millisecondsSinceEpoch,
-        }),
-      );
+  Future<void> _writeAssetProfile(
+    ToolDatabaseExecutor txn,
+    String key,
+    DepotAssetProfile profile,
+  ) async {
+    final values = profile.toMap();
+    final updated = await txn.update(
+      _assetProfiles,
+      values,
+      where: 'asset_key = ?',
+      whereArgs: [key],
+    );
+    if (updated == 0) {
+      await txn.insert(_assetProfiles, {'asset_key': key, ...values});
+    }
+    for (final table in [_assetShares, _fundConstituents]) {
+      await txn.delete(table, where: 'asset_key = ?', whereArgs: [key]);
+    }
+    for (final (dimension, shares) in [
+      (_sectorDimension, profile.sectorShares),
+      (_countryDimension, profile.countryShares),
+    ]) {
+      for (final share in shares.entries) {
+        await txn.insert(_assetShares, {
+          'asset_key': key,
+          'dimension': dimension,
+          'name': share.key,
+          'share': share.value,
+        });
+      }
+    }
+    for (final (rank, constituent) in profile.constituents.indexed) {
+      await txn.insert(_fundConstituents, {
+        'asset_key': key,
+        'rank': rank,
+        ...constituent.toMap(),
+      });
+    }
+  }
+
+  /// Moves the JSON profile cache out of tool settings into its tables.
+  Future<void> _migrateLegacyProfiles(ToolDatabaseExecutor txn) async {
+    final rows = await txn.executor.query(
+      'tool_settings',
+      columns: ['key', 'value'],
+      where: 'tool_id = ? AND key IN (?, ?)',
+      whereArgs: [_toolId, _assetProfilesKey, _assetProfileAttemptsKey],
+    );
+    for (final row in rows) {
+      try {
+        final decoded = jsonDecode(row['value'] as String);
+        if (decoded is! Map) continue;
+        for (final entry in decoded.entries) {
+          final key = entry.key;
+          final value = entry.value;
+          if (key is! String) continue;
+          if (row['key'] == _assetProfilesKey && value is Map) {
+            await _writeAssetProfile(
+              txn,
+              key,
+              DepotAssetProfile.fromLegacyJson(value.cast<String, dynamic>()),
+            );
+          } else if (row['key'] == _assetProfileAttemptsKey && value is int) {
+            await _writeAttempt(
+              txn,
+              key,
+              DateTime.fromMillisecondsSinceEpoch(value),
+            );
+          }
+        }
+      } catch (e) {
+        errorLog('[DepotStore] Migrating ${row['key']} failed: $e');
+      }
+    }
+    await txn.executor.delete(
+      'tool_settings',
+      where: 'tool_id = ? AND key IN (?, ?)',
+      whereArgs: [_toolId, _assetProfilesKey, _assetProfileAttemptsKey],
+    );
+  }
 
   Future<List<DepotHoldingLogo>> wishlistLogos() async {
     final db = await _getDb();
@@ -968,6 +1124,9 @@ class DepotStore {
       _holdingLogos,
       _wishlist,
       _wishlistLogos,
+      _assetProfiles,
+      _assetShares,
+      _fundConstituents,
     ]) {
       final stored = db.nameTable(table);
       final info = await db.rawQuery('PRAGMA table_info($stored)');
@@ -1008,16 +1167,14 @@ class DepotStore {
         _dividendAssets,
         _dividendEvents,
         _holdingLogos,
+        _assetProfiles,
+        _assetShares,
+        _fundConstituents,
       ]) {
         await txn.delete(table);
       }
     });
     await DatabaseService.instance.deleteSetting(_toolId, _lastSyncKey);
     await DatabaseService.instance.deleteSetting(_toolId, _activityFullSyncKey);
-    await DatabaseService.instance.deleteSetting(_toolId, _assetProfilesKey);
-    await DatabaseService.instance.deleteSetting(
-      _toolId,
-      _assetProfileAttemptsKey,
-    );
   }
 }

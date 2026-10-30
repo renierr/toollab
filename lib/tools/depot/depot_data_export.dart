@@ -23,6 +23,7 @@ class DepotDataExport {
     'quote_at',
     'earliest_activity',
     'fetched_at',
+    'attempted_at',
     'ex_date',
     'next_ex_date',
     'next_pay_date',
