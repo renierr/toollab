@@ -121,6 +121,11 @@ class DepotDividendState extends ChangeNotifier {
     }
   }
 
+  void reset() {
+    reduceCache();
+    _notify();
+  }
+
   /// Loads dividend data for open securities whose cache is missing, stale
   /// or in another currency; [force] reloads all of them.
   Future<void> refresh({

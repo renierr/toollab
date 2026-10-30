@@ -15,11 +15,11 @@ import 'package:tool_lab/widgets/settings_section_label.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../depot_background_sync.dart';
-import '../depot_logo_state.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../parqet/parqet_auth.dart';
 import 'depot_allocation_settings.dart';
+import 'depot_clear_data_tile.dart';
 import 'depot_data_export_tile.dart';
 import 'depot_logo_settings.dart';
 
@@ -88,9 +88,7 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
       confirmLabel: l10n.depotSettingsDisconnect,
     );
     if (confirmed == true && mounted) {
-      final logos = context.read<DepotLogoState>();
       await context.read<DepotPortfolioState>().disconnect();
-      logos.reset();
     }
   }
 
@@ -228,6 +226,7 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
             const DepotLogoSettings(),
             const DepotAllocationSettings(),
             const DepotDataExportTile(),
+            const DepotClearDataTile(),
             if (state.isConnected) ...[
               SettingsSectionLabel(title: l10n.depotSettingsSectionSync),
               ListTile(

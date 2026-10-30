@@ -503,6 +503,11 @@ class DepotAllocationState extends ChangeNotifier {
     _cacheLoaded = false;
   }
 
+  void reset() {
+    reduceCache();
+    _notify();
+  }
+
   void _notify() {
     if (!_disposed) notifyListeners();
   }

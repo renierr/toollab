@@ -19994,7 +19994,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotSettingsDisconnectConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Remove the Parqet login and all synced data from this device?'**
+  /// **'Remove the Parqet login? Synced data stays on this device as an offline copy.'**
   String get depotSettingsDisconnectConfirm;
 
   /// No description provided for @depotSettingsConnected.
@@ -20056,6 +20056,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data exported'**
   String get depotExportDone;
+
+  /// No description provided for @depotClearDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete local data'**
+  String get depotClearDataTitle;
+
+  /// No description provided for @depotClearDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes all synced depot data from this device. The wishlist and the Parqet login stay'**
+  String get depotClearDataSubtitle;
+
+  /// No description provided for @depotClearDataConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all depot data on this device, including positions, transactions, dividends, logos and allocation data? This cannot be undone. Export the data first if you want to keep a copy. While connected, the next sync downloads everything from Parqet again.'**
+  String get depotClearDataConfirm;
+
+  /// No description provided for @depotClearDataAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get depotClearDataAction;
+
+  /// No description provided for @depotClearDataDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Local data deleted'**
+  String get depotClearDataDone;
 
   /// No description provided for @depotReportPdf.
   ///

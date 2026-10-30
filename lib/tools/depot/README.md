@@ -43,7 +43,10 @@ only the client ID of an integration you create yourself.
 5. The first sync starts right away.
 
 Tokens live in secure storage, never in the database. The access token is refreshed
-automatically. **Disconnect** removes the tokens and every synced row from the device.
+automatically. **Disconnect** removes only the tokens; every synced row stays on the device
+as an offline copy. Reconnecting syncs again and mirrors the connected account.
+**Delete local data** (Settings → Data, with a confirmation) empties every synced table;
+the wishlist and the tokens stay, so a connected account syncs again from scratch.
 The settings page shows whether the grant includes write access; if not, reconnect after
 enabling write in the console.
 
@@ -293,9 +296,9 @@ listings:
 | `asset_shares` | A fund's sector and country weights, one row per `dimension` (`sector` / `country`) and name |
 | `fund_constituents` | A fund's top holdings by `rank`, with name, ISIN or symbol and weight |
 
-These tables are part of the data export and are emptied on **Disconnect**. Older versions
-kept this cache as JSON in tool settings; the schema migration moves it into the tables
-and deletes the settings entries.
+These tables are part of the data export, are kept on **Disconnect** and are emptied by
+**Delete local data**. Older versions kept this cache as JSON in tool settings; the schema
+migration moves it into the tables and deletes the settings entries.
 
 Depot tests use in-memory SQLite and block real HTTP requests. Run them with
 `flutter --suppress-analytics test --no-pub test/tools/depot` to also suppress Flutter CLI
@@ -303,7 +306,7 @@ telemetry and avoid dependency downloads.
 
 The wishlist is keyed by Yahoo symbol and stores name, type, exchange, currency, verified
 ISIN when available, the price when added and the date. It is never sent to Parqet and
-survives Parqet sync and **Disconnect**. When cloud sync is enabled for Depot, entries and
+survives Parqet sync. When cloud sync is enabled for Depot, entries and
 deletions sync through the backend; quotes, logos and the currency preference stay local.
 Existing entries are included in the first backend sync.
 

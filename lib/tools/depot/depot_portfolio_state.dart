@@ -328,11 +328,17 @@ class DepotPortfolioState extends ChangeNotifier {
     return _isConnected;
   }
 
+  /// Synced data stays on the device as an offline copy.
   Future<void> disconnect() async {
     await ParqetAuth.clearTokens();
-    await _store.clear();
     _isConnected = false;
     _error = null;
+    _notify();
+  }
+
+  /// Deletes every synced row; a connected account syncs again from scratch.
+  Future<void> clearLocalData() async {
+    await _store.clear();
     _lastSyncAt = null;
     _scope = DepotStore.allScope;
     await _reload();

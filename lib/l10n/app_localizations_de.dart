@@ -11276,7 +11276,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotSettingsDisconnectConfirm =>
-      'Parqet-Anmeldung und alle synchronisierten Daten von diesem Gerät entfernen?';
+      'Parqet-Anmeldung entfernen? Die synchronisierten Daten bleiben als Offline-Kopie auf diesem Gerät.';
 
   @override
   String get depotSettingsConnected => 'Verbunden';
@@ -11309,6 +11309,23 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotExportDone => 'Daten exportiert';
+
+  @override
+  String get depotClearDataTitle => 'Lokale Daten löschen';
+
+  @override
+  String get depotClearDataSubtitle =>
+      'Entfernt alle synchronisierten Depotdaten von diesem Gerät. Watchlist und Parqet-Anmeldung bleiben';
+
+  @override
+  String get depotClearDataConfirm =>
+      'Alle Depotdaten auf diesem Gerät löschen, inklusive Positionen, Transaktionen, Dividenden, Logos und Allokationsdaten? Das kann nicht rückgängig gemacht werden. Exportiere die Daten vorher, wenn du eine Kopie behalten willst. Solange eine Verbindung besteht, lädt die nächste Synchronisierung alles erneut von Parqet.';
+
+  @override
+  String get depotClearDataAction => 'Löschen';
+
+  @override
+  String get depotClearDataDone => 'Lokale Daten gelöscht';
 
   @override
   String get depotReportPdf => 'PDF-Bericht';
