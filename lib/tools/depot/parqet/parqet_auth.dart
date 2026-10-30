@@ -102,15 +102,17 @@ class ParqetAuth {
   }
 
   static Future<void> _saveTokens(ParqetTokens tokens) async {
-    _cached = tokens;
-    await _storage.write(key: _accessKey, value: tokens.accessToken);
+    // The refresh token first: it is the one a rotation consumes, so a write
+    // that stops halfway must not leave the consumed value behind.
     await _storage.write(key: _refreshKey, value: tokens.refreshToken);
     await _storage.write(
       key: _expiresKey,
       value: '${tokens.expiresAt.millisecondsSinceEpoch}',
     );
+    await _storage.write(key: _accessKey, value: tokens.accessToken);
     final scope = tokens.scope;
     if (scope != null) await _storage.write(key: _scopeKey, value: scope);
+    _cached = tokens;
   }
 
   static Future<void> clearTokens() async {
@@ -228,43 +230,56 @@ class ParqetAuth {
   }
 
   /// A token valid for at least another minute, refreshed when needed.
-  static Future<String> accessToken(String clientId) {
+  static Future<String> accessToken(String clientId) =>
+      _singleFlight(() => _accessToken(clientId, force: false));
+
+  /// A token other than [stale], for a caller the server just answered 401.
+  /// A refresh already in flight is reused, so two isolates do not race the
+  /// same refresh token.
+  static Future<String> accessTokenReplacing(
+    String clientId,
+    String stale,
+  ) async {
+    final pending = _pendingAccessToken;
+    if (pending != null) {
+      try {
+        final token = await pending;
+        if (token != stale) return token;
+      } on ParqetException {
+        // The in-flight attempt failed; try once more below.
+      }
+    }
+    return _singleFlight(() => _accessToken(clientId, force: true));
+  }
+
+  static Future<String> _singleFlight(Future<String> Function() request) {
     final pending = _pendingAccessToken;
     if (pending != null) return pending;
-    final request = _accessToken(clientId);
-    return _pendingAccessToken = request.whenComplete(
+    return _pendingAccessToken = request().whenComplete(
       () => _pendingAccessToken = null,
     );
   }
 
-  static Future<String> _accessToken(String clientId) async {
-    final cached = _cached;
-    if (cached != null && !cached.isExpiring) return cached.accessToken;
+  static Future<String> _accessToken(
+    String clientId, {
+    required bool force,
+  }) async {
+    if (!force) {
+      final cached = _cached;
+      if (cached != null && !cached.isExpiring) return cached.accessToken;
+    }
 
     final tokens = await readTokens();
     if (tokens == null) {
       throw const ParqetException(ParqetErrorKind.notConnected);
     }
-    if (!tokens.isExpiring) {
+    if (!force && !tokens.isExpiring) {
       _cached = tokens;
       return tokens.accessToken;
     }
 
     try {
-      final refreshed = await _tokenRequest({
-        'grant_type': 'refresh_token',
-        'refresh_token': tokens.refreshToken,
-        'client_id': clientId,
-      }, previousRefreshToken: tokens.refreshToken);
-      final merged = ParqetTokens(
-        accessToken: refreshed.accessToken,
-        refreshToken: refreshed.refreshToken,
-        expiresAt: refreshed.expiresAt,
-        // A refresh cannot widen the grant, so keep what is known.
-        scope: refreshed.scope ?? tokens.scope,
-      );
-      await _saveTokens(merged);
-      return merged.accessToken;
+      return (await _refresh(tokens, clientId)).accessToken;
     } on ParqetException catch (e) {
       // The app and a scheduled run are separate isolates; if the other one
       // just rotated the refresh token, its result is already stored.
@@ -278,6 +293,26 @@ class ParqetAuth {
       }
       rethrow;
     }
+  }
+
+  static Future<ParqetTokens> _refresh(
+    ParqetTokens tokens,
+    String clientId,
+  ) async {
+    final refreshed = await _tokenRequest({
+      'grant_type': 'refresh_token',
+      'refresh_token': tokens.refreshToken,
+      'client_id': clientId,
+    }, previousRefreshToken: tokens.refreshToken);
+    final merged = ParqetTokens(
+      accessToken: refreshed.accessToken,
+      refreshToken: refreshed.refreshToken,
+      expiresAt: refreshed.expiresAt,
+      // A refresh cannot widen the grant, so keep what is known.
+      scope: refreshed.scope ?? tokens.scope,
+    );
+    await _saveTokens(merged);
+    return merged;
   }
 
   static Future<ParqetTokens> _tokenRequest(
@@ -299,7 +334,15 @@ class ParqetAuth {
     }
 
     if (res.statusCode == 400 || res.statusCode == 401) {
-      throw ParqetException(ParqetErrorKind.unauthorized, res.body);
+      // Only a dead grant is fixed by logging in again; a wrong client id or
+      // a rejected request must not be reported as an expired session.
+      final kind = _isDeadGrant(res.body)
+          ? ParqetErrorKind.unauthorized
+          : ParqetErrorKind.server;
+      throw ParqetException(kind, 'HTTP ${res.statusCode}: ${res.body}');
+    }
+    if (res.statusCode == 429) {
+      throw ParqetException(ParqetErrorKind.rateLimited, res.body);
     }
     if (res.statusCode != 200) {
       throw ParqetException(
@@ -325,6 +368,27 @@ class ParqetAuth {
     } catch (e) {
       throw ParqetException(ParqetErrorKind.invalidResponse, '$e');
     }
+  }
+
+  /// Whether the token endpoint rejected the grant itself, the only failure a
+  /// new login can fix. Parqet answers with e.g. `{"message": "invalid_grant"}`.
+  static bool _isDeadGrant(String body) {
+    try {
+      final json = jsonDecode(body);
+      if (json is Map) {
+        for (final key in const ['error', 'message', 'code']) {
+          final value = json[key];
+          if (value is String &&
+              value.toLowerCase().contains('invalid_grant')) {
+            return true;
+          }
+        }
+        return false;
+      }
+    } catch (_) {
+      // Not JSON, fall through to the plain body.
+    }
+    return body.contains('invalid_grant');
   }
 
   static String _randomUrlSafe(int byteCount) {

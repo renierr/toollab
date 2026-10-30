@@ -219,25 +219,17 @@ class ParqetApi {
     Map<String, String>? query,
     Object? body,
   }) async {
-    final token = await ParqetAuth.accessToken(clientId);
     final uri = _baseUri.replace(
       path: path,
       queryParameters: query == null || query.isEmpty ? null : query,
     );
-    final headers = {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      if (body != null) 'Content-Type': 'application/json',
-    };
-    final client = await AppHttpClient.client;
-    final http.Response res;
-    try {
-      res = await switch (method) {
-        'POST' => client.post(uri, headers: headers, body: jsonEncode(body)),
-        _ => client.get(uri, headers: headers),
-      }.timeout(_timeout);
-    } catch (e) {
-      throw ParqetException(ParqetErrorKind.network, '$e');
+    var token = await ParqetAuth.accessToken(clientId);
+    var res = await _request(method, uri, token, body);
+    // A token can be rejected before its local expiry, e.g. when another
+    // isolate already rotated it; one refresh is worth a retry.
+    if (res.statusCode == 401) {
+      token = await ParqetAuth.accessTokenReplacing(clientId, token);
+      res = await _request(method, uri, token, body);
     }
 
     switch (res.statusCode) {
@@ -260,6 +252,28 @@ class ParqetApi {
       return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
     } catch (e) {
       throw ParqetException(ParqetErrorKind.invalidResponse, '$path: $e');
+    }
+  }
+
+  Future<http.Response> _request(
+    String method,
+    Uri uri,
+    String token,
+    Object? body,
+  ) async {
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+      if (body != null) 'Content-Type': 'application/json',
+    };
+    final client = await AppHttpClient.client;
+    try {
+      return await switch (method) {
+        'POST' => client.post(uri, headers: headers, body: jsonEncode(body)),
+        _ => client.get(uri, headers: headers),
+      }.timeout(_timeout);
+    } catch (e) {
+      throw ParqetException(ParqetErrorKind.network, '$e');
     }
   }
 }
