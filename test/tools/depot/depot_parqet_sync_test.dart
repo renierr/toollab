@@ -54,6 +54,7 @@ class _FakeApi extends ParqetApi {
   );
   bool complete = true;
   bool failActivities = false;
+  int rateLimitFailures = 0;
   bool emptyHoldings = false;
   int chartCount = 2;
   int portfolioCalls = 0;
@@ -71,6 +72,15 @@ class _FakeApi extends ParqetApi {
     required String currency,
   }) async {
     calls.add(key);
+    if (rateLimitFailures > 0) {
+      rateLimitFailures--;
+      throw const ParqetException.detailed(
+        ParqetErrorKind.rateLimited,
+        'slow down',
+        retryAfter: Duration.zero,
+        statusCode: 429,
+      );
+    }
     final started = periodStarted[key.period];
     if (started != null && !started.isCompleted) started.complete();
     await periodGates[key.period]?.future;
@@ -356,6 +366,32 @@ void main() {
       expect(await store.lastSyncAt(), lastSync);
     },
   );
+
+  test(
+    'rate-limited reads retry with the server wait before failing the sync',
+    () async {
+      final api = _FakeApi()..rateLimitFailures = 2;
+      await DepotParqetSync.run(api: api);
+      expect(api.calls, hasLength(4));
+      expect(await store.holdings(), hasLength(1));
+    },
+  );
+
+  test('a persistent rate limit stops after four attempts', () async {
+    final api = _FakeApi()..rateLimitFailures = 99;
+    await expectLater(
+      DepotParqetSync.run(api: api),
+      throwsA(
+        isA<ParqetException>().having(
+          (e) => e.kind,
+          'kind',
+          ParqetErrorKind.rateLimited,
+        ),
+      ),
+    );
+    expect(api.calls, hasLength(4));
+    expect(api.activityCalls, isEmpty);
+  });
 
   test(
     'lazy selection fetches only missing periods and reuses fresh cache',

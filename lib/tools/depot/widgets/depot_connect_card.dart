@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../config.dart';
+import '../depot_portfolio_state.dart';
 import 'depot_settings_page.dart';
+import 'depot_sync_error_card.dart';
 
 class DepotConnectCard extends StatelessWidget {
   const DepotConnectCard({super.key});
@@ -12,6 +15,7 @@ class DepotConnectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final error = context.watch<DepotPortfolioState>().error;
 
     return ReadableWidth(
       maxWidth: 520,
@@ -21,6 +25,10 @@ class DepotConnectCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (error != null) ...[
+                DepotSyncErrorCard(error: error),
+                const SizedBox(height: 24),
+              ],
               Icon(
                 Icons.pie_chart_outline,
                 size: 64,

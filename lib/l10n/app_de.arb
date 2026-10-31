@@ -4893,6 +4893,18 @@
   "depotErrorRateLimited": "Zu viele Anfragen, bitte später erneut versuchen",
   "depotErrorServer": "Parqet hat einen Fehler gemeldet",
   "depotErrorInvalidResponse": "Unerwartete Antwort von Parqet",
+  "depotErrorDetails": "Details",
+  "depotErrorDetailsTitle": "Fehlerdetails",
+  "depotErrorDetailsEmpty": "Keine weiteren Details",
+  "depotErrorDetailsCopied": "Fehlerdetails kopiert",
+  "depotErrorRetryAfter": "Parqet bittet, {seconds} Sekunden vor einem neuen Versuch zu warten",
+  "@depotErrorRetryAfter": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "depotImportTypeLabel": "PDF-Abrechnungen",
   "depotImportOpenTitle": "Depot-PDFs hinzufügen",
   "depotImportDropSubtitle": "Kauf-, Verkaufs- und Dividendenabrechnungen von DKB oder ING hier ablegen",

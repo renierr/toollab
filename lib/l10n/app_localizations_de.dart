@@ -12208,6 +12208,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotErrorInvalidResponse => 'Unerwartete Antwort von Parqet';
 
   @override
+  String get depotErrorDetails => 'Details';
+
+  @override
+  String get depotErrorDetailsTitle => 'Fehlerdetails';
+
+  @override
+  String get depotErrorDetailsEmpty => 'Keine weiteren Details';
+
+  @override
+  String get depotErrorDetailsCopied => 'Fehlerdetails kopiert';
+
+  @override
+  String depotErrorRetryAfter(int seconds) {
+    return 'Parqet bittet, $seconds Sekunden vor einem neuen Versuch zu warten';
+  }
+
+  @override
   String get depotImportTypeLabel => 'PDF-Abrechnungen';
 
   @override

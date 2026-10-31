@@ -6093,6 +6093,18 @@
   "depotErrorRateLimited": "Too many requests, try again later",
   "depotErrorServer": "Parqet reported an error",
   "depotErrorInvalidResponse": "Unexpected answer from Parqet",
+  "depotErrorDetails": "Details",
+  "depotErrorDetailsTitle": "Error details",
+  "depotErrorDetailsEmpty": "No further details",
+  "depotErrorDetailsCopied": "Error details copied",
+  "depotErrorRetryAfter": "Parqet asks to wait {seconds} seconds before retrying",
+  "@depotErrorRetryAfter": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "depotImportTypeLabel": "PDF statements",
   "depotImportOpenTitle": "Add depot PDFs",
   "depotImportDropSubtitle": "Drop DKB or ING buy, sell and dividend statements here",

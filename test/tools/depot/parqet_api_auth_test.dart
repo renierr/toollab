@@ -123,6 +123,48 @@ void main() {
       );
     });
   }
+
+  test('429 carries the server retry-after', () async {
+    AppHttpClient.testClient = MockClient(
+      (request) async => http.Response(
+        '{"message":"slow down"}',
+        429,
+        headers: {'retry-after': '7'},
+      ),
+    );
+
+    await expectLater(
+      const ParqetApi(clientId: 'test-client').portfolios(),
+      throwsA(
+        isA<ParqetException>()
+            .having((e) => e.kind, 'kind', ParqetErrorKind.rateLimited)
+            .having(
+              (e) => e.retryAfter,
+              'retryAfter',
+              const Duration(seconds: 7),
+            )
+            .having((e) => e.detail, 'detail', contains('slow down')),
+      ),
+    );
+  });
+
+  test('429 caps an unreasonable retry-after', () async {
+    AppHttpClient.testClient = MockClient(
+      (request) async =>
+          http.Response('{}', 429, headers: {'retry-after': '3600'}),
+    );
+
+    await expectLater(
+      const ParqetApi(clientId: 'test-client').portfolios(),
+      throwsA(
+        isA<ParqetException>().having(
+          (e) => e.retryAfter,
+          'retryAfter',
+          const Duration(seconds: 120),
+        ),
+      ),
+    );
+  });
 }
 
 class _OfflineHttpOverrides extends HttpOverrides {

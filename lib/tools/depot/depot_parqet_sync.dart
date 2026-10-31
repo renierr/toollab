@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
@@ -14,8 +16,15 @@ class DepotParqetSync {
   DepotParqetSync._();
 
   static const _maxCombined = 25;
-  static const _maxConcurrent = 4;
+  static const _maxConcurrent = 2;
   static const _activityOverlap = Duration(days: 3);
+
+  /// Parqet has no documented RPS budget, so request starts are spaced out.
+  static const _requestGap = Duration(milliseconds: 200);
+  static const _retryBase = Duration(seconds: 1);
+  static const _retryMax = Duration(seconds: 30);
+  static final _random = Random();
+  static DateTime _nextRequestAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   /// Beyond this many changed holdings one portfolio-wide read is cheaper.
   static const _maxHoldingReads = 10;
@@ -120,6 +129,10 @@ class DepotParqetSync {
   }
 
   static Future<void> _runPooled(List<Future<void> Function()> jobs) async {
+    debugLog(
+      '[DepotParqetSync] Running ${jobs.length} jobs, '
+      '$_maxConcurrent at a time',
+    );
     var next = 0;
     Object? failure;
     StackTrace? failureStack;
@@ -130,6 +143,7 @@ class DepotParqetSync {
         try {
           await _withRetry(job);
         } catch (e, stack) {
+          errorLog('[DepotParqetSync] Stopping pool after failure: $e');
           failure ??= e;
           failureStack ??= stack;
         }
@@ -143,15 +157,49 @@ class DepotParqetSync {
     if (error != null) Error.throwWithStackTrace(error, failureStack!);
   }
 
+  /// Spaced across all workers, so a sync does not start a burst of requests.
+  static Future<void> _throttle() {
+    final now = DateTime.now();
+    final slot = _nextRequestAt.isAfter(now) ? _nextRequestAt : now;
+    _nextRequestAt = slot.add(_requestGap);
+    final wait = slot.difference(now);
+    return wait <= Duration.zero ? Future.value() : Future<void>.delayed(wait);
+  }
+
+  /// Only reads run through the pool, so retrying is safe. Rate limits use
+  /// the server's wait; transient errors get one short exponential backoff.
   static Future<void> _withRetry(Future<void> Function() job) async {
-    for (var attempt = 0; ; attempt++) {
+    for (var attempt = 1; ; attempt++) {
+      await _throttle();
       try {
         return await job();
       } on ParqetException catch (e) {
-        if (e.kind != ParqetErrorKind.rateLimited || attempt >= 2) rethrow;
-        await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+        final maxAttempts = switch (e.kind) {
+          ParqetErrorKind.rateLimited => 4,
+          ParqetErrorKind.network => 2,
+          ParqetErrorKind.server when (e.statusCode ?? 500) >= 500 => 2,
+          _ => 1,
+        };
+        if (attempt >= maxAttempts) {
+          errorLog('[DepotParqetSync] Giving up after $attempt attempt(s): $e');
+          rethrow;
+        }
+        final delay = _retryDelay(e, attempt);
+        errorLog(
+          '[DepotParqetSync] Attempt $attempt failed '
+          '(${e.kind.name}), retrying in ${delay.inMilliseconds} ms: $e',
+        );
+        await Future<void>.delayed(delay);
       }
     }
+  }
+
+  static Duration _retryDelay(ParqetException error, int attempt) {
+    final serverWait = error.retryAfter;
+    if (serverWait != null) return serverWait;
+    final backoff = _retryBase * (1 << (attempt - 1));
+    final capped = backoff > _retryMax ? _retryMax : backoff;
+    return capped + Duration(milliseconds: _random.nextInt(500));
   }
 }
 

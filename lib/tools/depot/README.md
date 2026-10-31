@@ -201,8 +201,11 @@ up through the activity counts, even when the statement dates lie further back.
 | `POST /portfolios/{id}/activities` | Sending imported statements |
 | `GET /user` | Write permissions before sending |
 
-Pages of up to 500 activities are read, up to 4 requests run in parallel, and a
-rate-limited request is retried a few times with a short back-off.
+Pages of up to 500 activities are read, at most two requests run in parallel, and
+request starts are spaced out. A rate-limited request waits for Parqet's
+`Retry-After` header (or backs off exponentially) for up to four attempts;
+transient network and server errors are retried once. The error card on the
+overview and activities tabs links to a copyable details dialog.
 
 Parqet Connect has no watchlist and no security search endpoint, so the wishlist cannot be
 read from or written to Parqet. Its quotes come from Yahoo Finance instead:

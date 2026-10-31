@@ -141,6 +141,9 @@ class DepotPortfolioState extends ChangeNotifier {
       await _reload();
     } catch (e) {
       errorLog('[DepotPortfolioState] Loading failed: $e');
+      _error = e is ParqetException
+          ? e
+          : ParqetException(ParqetErrorKind.invalidResponse, '$e');
     }
     _isLoaded = true;
     _notify();

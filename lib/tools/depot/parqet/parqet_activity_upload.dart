@@ -37,6 +37,8 @@ class ParqetActivityUpload {
     // A dividend may come without a share count; Parqet still wants both.
     final shares = a.shares > 0 ? a.shares : 1.0;
     final price = a.price > 0 ? a.price : a.amount / shares;
+    // Only ISIN securities are uploaded; insurance/P2P holdings need their
+    // dedicated create endpoints and amount-based activities.
     return {
       'type': _type(a.type),
       'assetIdentifierType': 'isin',

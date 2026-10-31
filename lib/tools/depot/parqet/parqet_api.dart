@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show HttpDate;
 
 import 'package:http/http.dart' as http;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 
 import '../models/depot_holding.dart';
@@ -51,6 +53,8 @@ class ParqetApi {
   static const _timeout = Duration(seconds: 30);
   static const _activityPageSize = 500;
   static const _createBatchSize = 100;
+  static const _snippetLength = 500;
+  static const _maxRetryAfter = Duration(seconds: 120);
 
   Future<List<DepotPortfolio>> portfolios() async {
     final json = await _send('GET', '/portfolios');
@@ -232,28 +236,92 @@ class ParqetApi {
       res = await _request(method, uri, token, body);
     }
 
+    if (res.statusCode != 200 && res.statusCode != 201) {
+      _logHttpFailure(method, path, res);
+    }
+
     switch (res.statusCode) {
       case 200 || 201:
         break;
       case 401:
-        throw ParqetException(ParqetErrorKind.unauthorized, res.body);
+        throw ParqetException.detailed(
+          ParqetErrorKind.unauthorized,
+          '$method $path: HTTP 401 ${_snippet(res.body)}',
+          statusCode: 401,
+        );
       case 403:
-        throw ParqetException(ParqetErrorKind.scopeNotAllowed, res.body);
+        throw ParqetException.detailed(
+          ParqetErrorKind.scopeNotAllowed,
+          '$method $path: HTTP 403 ${_snippet(res.body)}',
+          statusCode: 403,
+        );
       case 429:
-        throw ParqetException(ParqetErrorKind.rateLimited, res.body);
+        throw ParqetException.detailed(
+          ParqetErrorKind.rateLimited,
+          '$method $path: HTTP 429 ${_snippet(res.body)}',
+          retryAfter: _retryAfter(res.headers),
+          statusCode: 429,
+        );
       default:
-        throw ParqetException(
+        throw ParqetException.detailed(
           ParqetErrorKind.server,
-          '$method $path: HTTP ${res.statusCode} ${res.body}',
+          '$method $path: HTTP ${res.statusCode} ${_snippet(res.body)}',
+          statusCode: res.statusCode,
         );
     }
 
     try {
       return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
     } catch (e) {
+      errorLog(
+        '[ParqetApi] $method $path -> invalid JSON: $e '
+        'body=${_snippet(res.body)}',
+      );
       throw ParqetException(ParqetErrorKind.invalidResponse, '$path: $e');
     }
   }
+
+  static void _logHttpFailure(String method, String path, http.Response res) {
+    final retryAfter = _retryAfter(res.headers);
+    final rateLimit = [
+      for (final name in _rateLimitHeaders)
+        if (res.headers[name] case final value?) '$name=$value',
+    ];
+    errorLog(
+      '[ParqetApi] $method $path -> HTTP ${res.statusCode}'
+      '${retryAfter == null ? '' : ' retry-after=${retryAfter.inSeconds}s'}'
+      '${rateLimit.isEmpty ? '' : ' ${rateLimit.join(' ')}'}'
+      ' body=${_snippet(res.body)}',
+    );
+  }
+
+  static const _rateLimitHeaders = [
+    'x-ratelimit-limit',
+    'x-ratelimit-remaining',
+    'x-ratelimit-reset',
+  ];
+
+  /// `Retry-After` is either seconds or an HTTP date; an absurd wait is capped.
+  static Duration? _retryAfter(Map<String, String> headers) {
+    final raw = headers['retry-after']?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    Duration? wait;
+    if (int.tryParse(raw) case final seconds?) {
+      wait = Duration(seconds: seconds);
+    } else {
+      try {
+        wait = HttpDate.parse(raw).difference(DateTime.now().toUtc());
+      } on FormatException {
+        return null;
+      }
+    }
+    if (wait.isNegative) return Duration.zero;
+    return wait > _maxRetryAfter ? _maxRetryAfter : wait;
+  }
+
+  static String _snippet(String body) => body.length <= _snippetLength
+      ? body
+      : '${body.substring(0, _snippetLength)}…';
 
   Future<http.Response> _request(
     String method,
@@ -273,7 +341,8 @@ class ParqetApi {
         _ => client.get(uri, headers: headers),
       }.timeout(_timeout);
     } catch (e) {
-      throw ParqetException(ParqetErrorKind.network, '$e');
+      errorLog('[ParqetApi] $method ${uri.path} -> network failure: $e');
+      throw ParqetException(ParqetErrorKind.network, '$method ${uri.path}: $e');
     }
   }
 }

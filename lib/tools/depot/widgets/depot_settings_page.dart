@@ -15,13 +15,13 @@ import 'package:tool_lab/widgets/settings_section_label.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../depot_background_sync.dart';
-import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../parqet/parqet_auth.dart';
 import 'depot_allocation_settings.dart';
 import 'depot_clear_data_tile.dart';
 import 'depot_data_export_tile.dart';
 import 'depot_logo_settings.dart';
+import 'depot_sync_error_card.dart';
 
 /// Pushed with a `MaterialPageRoute`, so a plain `Scaffold` instead of
 /// `ToolLayout`, whose back button needs a GoRouter state.
@@ -183,11 +183,10 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
             if (error != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Text(
-                  DepotPortfolioLabels.error(l10n, error),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.error,
-                  ),
+                child: DepotSyncErrorCard(
+                  error: error,
+                  onRetry: state.isConnected ? state.sync : null,
+                  onReconnect: error.needsLogin ? _connect : null,
                 ),
               ),
             Padding(

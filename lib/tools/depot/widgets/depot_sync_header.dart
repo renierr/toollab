@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../depot_store.dart';
 import 'depot_settings_page.dart';
+import 'depot_sync_error_card.dart';
 
 /// Portfolio picker, sync status and the last sync error, shared by the
 /// overview and activities tabs.
@@ -82,27 +82,12 @@ class DepotSyncHeader extends StatelessWidget {
           ],
         ),
         if (error != null)
-          Card(
-            color: theme.colorScheme.errorContainer,
-            child: ListTile(
-              leading: Icon(
-                Icons.error_outline,
-                color: theme.colorScheme.onErrorContainer,
-              ),
-              title: Text(
-                DepotPortfolioLabels.error(l10n, error),
-                style: TextStyle(color: theme.colorScheme.onErrorContainer),
-              ),
-              trailing: error.needsLogin
-                  ? TextButton(
-                      onPressed: () => DepotSettingsPage.open(context),
-                      child: Text(l10n.depotSettingsReconnect),
-                    )
-                  : TextButton(
-                      onPressed: state.sync,
-                      child: Text(l10n.commonRetry),
-                    ),
-            ),
+          DepotSyncErrorCard(
+            error: error,
+            onRetry: state.sync,
+            onReconnect: error.needsLogin
+                ? () => DepotSettingsPage.open(context)
+                : null,
           ),
       ],
     );

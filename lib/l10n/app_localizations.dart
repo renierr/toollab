@@ -21545,6 +21545,36 @@ abstract class AppLocalizations {
   /// **'Unexpected answer from Parqet'**
   String get depotErrorInvalidResponse;
 
+  /// No description provided for @depotErrorDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get depotErrorDetails;
+
+  /// No description provided for @depotErrorDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error details'**
+  String get depotErrorDetailsTitle;
+
+  /// No description provided for @depotErrorDetailsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No further details'**
+  String get depotErrorDetailsEmpty;
+
+  /// No description provided for @depotErrorDetailsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Error details copied'**
+  String get depotErrorDetailsCopied;
+
+  /// No description provided for @depotErrorRetryAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Parqet asks to wait {seconds} seconds before retrying'**
+  String depotErrorRetryAfter(int seconds);
+
   /// No description provided for @depotImportTypeLabel.
   ///
   /// In en, this message translates to:

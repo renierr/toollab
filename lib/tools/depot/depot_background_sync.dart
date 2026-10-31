@@ -1,4 +1,5 @@
 import 'package:tool_lab/core/background_task.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'config.dart';
 import 'depot_parqet_sync.dart';
@@ -20,9 +21,13 @@ class DepotBackgroundSync {
     }
     try {
       return BackgroundTaskResult.done(await DepotParqetSync.run());
-    } on ParqetException catch (e) {
+    } on ParqetException catch (e, stack) {
+      errorLog('[DepotBackgroundSync] Sync failed: $e\n$stack');
       // A platform retry cannot log in again; wait for the user instead.
       if (e.needsLogin) return BackgroundTaskResult.skipped('$e');
+      return BackgroundTaskResult.failed('$e');
+    } catch (e, stack) {
+      errorLog('[DepotBackgroundSync] Sync crashed: $e\n$stack');
       return BackgroundTaskResult.failed('$e');
     }
   }
