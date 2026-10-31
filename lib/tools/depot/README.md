@@ -90,6 +90,34 @@ overview hides the chart for Today; other periods still show it.
 Depot text and detail values can be selected and copied, including ISINs. On touch
 screens, long-press a value to select it; on desktop, select it with the mouse.
 
+### Risk, dividends and comparison
+
+The risk card uses open positive-value positions for top-one, top-three and crypto
+weights. Largest known country and sector use cached allocation metadata, including
+fund splits; unknown exposure is not assigned. Value drawdowns and daily changes use
+the selected period's chart and include deposits and withdrawals, so they are not
+cash-flow-adjusted investment returns. Daily changes need consecutive calendar days.
+
+The dividend position list shows the trailing 12 months of net booked dividends
+divided by the current cost basis as yield on cost. This is not a historical cost
+basis and may include payments from shares since sold. Estimated monthly income is
+the existing forward 12-month net estimate divided by 12, not a payment schedule.
+Yield on cost is omitted when a recent booking is in another currency; no historical
+exchange rate is assumed.
+
+The optional benchmark compares the portfolio with EUR-listed accumulating ETF
+proxies for MSCI World (EUNL.DE) or the S&P 500 (SXR8.DE). It fetches Yahoo daily
+closing prices on demand; EUR portfolios only. Both lines start at 100 on their
+first overlapping date. Portfolio returns approximate cash flows from changes in
+invested capital between chart points; the ETF line uses unadjusted closing prices.
+Differences are indicative, not risk-adjusted alpha, and can be affected by costs,
+taxes, missing data and timing. A failed or unavailable comparison leaves the
+original value chart untouched. Prices may be delayed.
+
+The Activities yearly card can export a CSV for the selected year and active
+activity filters. It contains individual bookings and their original currencies,
+not a tax calculation or filing. Check the broker's tax documents.
+
 ### Reading a holding
 
 A fictive position, **Example Corp**: 100 shares bought at 50 €, now quoted at 60 €,
@@ -327,3 +355,14 @@ available. The ZIP holds:
   `date`, `quote_at`, `synced_at`, …) are ISO 8601 in UTC. Logo images are left out.
 
 Amounts are in the portfolio currency, as Parqet booked them.
+
+## Possible future ideas
+
+These are ideas, not commitments or a roadmap:
+
+- Target allocations and rebalancing suggestions, including a new-money-only mode.
+- Price alerts for holdings and wishlist entries, and repeated sync failure alerts.
+- A local investment journal with theses and review dates.
+- Activity date-range filters, monthly grouping and filtered exports.
+- Additional broker statement parsers, such as Trade Republic or Scalable Capital.
+- An Android home-screen widget for portfolio value and daily change.

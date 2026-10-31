@@ -101,6 +101,8 @@ class _PositionRow extends StatelessWidget {
         l10n.depotDividendYieldShort(
           format.percent(yieldPercent, signed: false),
         ),
+      if (p.yieldOnCost != null)
+        l10n.depotYieldOnCost(format.percent(p.yieldOnCost!, signed: false)),
     ].join(' · ');
 
     return Padding(
@@ -144,8 +146,6 @@ class _PositionRow extends StatelessWidget {
                 if (details.isNotEmpty)
                   Text(
                     details,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.hintColor,
                     ),

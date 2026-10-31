@@ -13351,4 +13351,104 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sudokuTapToResume => 'Zum Fortsetzen tippen';
+
+  @override
+  String get depotRiskTitle => 'Risiko und Konzentration';
+
+  @override
+  String get depotRiskTopOne => 'Größte Position';
+
+  @override
+  String get depotRiskTopThree => 'Drei größte Positionen';
+
+  @override
+  String get depotRiskCrypto => 'Krypto';
+
+  @override
+  String get depotRiskCurrentDrawdown => 'Aktueller Wertrückgang';
+
+  @override
+  String get depotRiskMaxDrawdown => 'Maximaler Wertrückgang';
+
+  @override
+  String get depotRiskBestDay => 'Beste tägliche Wertänderung';
+
+  @override
+  String get depotRiskWorstDay => 'Schlechteste tägliche Wertänderung';
+
+  @override
+  String get depotRiskCountry => 'Größtes bekanntes Land';
+
+  @override
+  String get depotRiskSector => 'Größter bekannter Sektor';
+
+  @override
+  String get depotRiskDrawdownNote =>
+      'Wertänderungen und Rückgänge gelten für den gewählten Zeitraum und enthalten Ein- und Auszahlungen. Länder und Sektoren nutzen zwischengespeicherte, möglicherweise unvollständige Daten.';
+
+  @override
+  String depotYieldOnCost(String value) {
+    return 'Netto-Rendite auf Einstand (12 Monate): $value';
+  }
+
+  @override
+  String get depotDividendMonthlyEstimate => 'Geschätzter Monatsdurchschnitt';
+
+  @override
+  String get depotQuoteUnknown => 'Zeit des letzten Kurses unbekannt';
+
+  @override
+  String depotQuoteFreshness(String date, String status) {
+    return 'Letzter Kurs: $date · $status';
+  }
+
+  @override
+  String get depotQuoteRecent => 'aktuell';
+
+  @override
+  String get depotSyncStale => 'veraltet';
+
+  @override
+  String get depotQuoteStale =>
+      'über 24 Stunden alt; Börsen möglicherweise geschlossen';
+
+  @override
+  String get depotTaxExport => 'Gewähltes Jahr exportieren (CSV)';
+
+  @override
+  String get depotTaxExportFailed => 'Export fehlgeschlagen';
+
+  @override
+  String get depotTaxExportNote =>
+      'Exportiert Aktivitäten des gewählten Jahres mit den aktiven Filtern. Beträge in Buchungswährung; keine Steuererklärung.';
+
+  @override
+  String get depotBenchmarkTitle => 'Benchmark-Vergleich';
+
+  @override
+  String get depotBenchmarkNone => 'Aus';
+
+  @override
+  String get depotBenchmarkPortfolio => 'Depot (geschätzt)';
+
+  @override
+  String depotBenchmarkDifference(String value) {
+    return 'Differenz: $value Prozentpunkte';
+  }
+
+  @override
+  String get depotBenchmarkNote =>
+      'Auf 100 indexiert. Depot-Renditen schätzen Zahlungsflüsse aus Änderungen des Anlagekapitals. Benchmark mit unbereinigten Schlusskursen ohne Dividenden; kein risikobereinigtes Alpha.';
+
+  @override
+  String get depotBenchmarkUnavailable =>
+      'Vergleich für diesen Zeitraum oder diese Währung nicht verfügbar.';
+
+  @override
+  String get depotBenchmarkFailed =>
+      'Benchmark konnte nicht geladen werden. Zum Wiederholen tippen.';
+
+  @override
+  String get depotBenchmarkCurrency =>
+      'Benchmark- und Depotwährung müssen übereinstimmen.';
 }

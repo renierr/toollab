@@ -89,6 +89,7 @@ class DepotDividendPosition {
   final double receivedNet12m;
   final double expectedGross12m;
   final double expectedNet12m;
+  final bool receivedCurrencyMatches;
 
   const DepotDividendPosition({
     required this.holding,
@@ -99,12 +100,18 @@ class DepotDividendPosition {
     required this.receivedNet12m,
     required this.expectedGross12m,
     required this.expectedNet12m,
+    this.receivedCurrencyMatches = true,
   });
 
   /// Expected gross payout of the next twelve months against today's value.
   double? get yieldPercent => holding.currentValue <= 0 || expectedGross12m <= 0
       ? null
       : expectedGross12m / holding.currentValue * 100;
+
+  double? get yieldOnCost =>
+      holding.purchaseValue <= 0 || holding.isSold || !receivedCurrencyMatches
+      ? null
+      : receivedNet12m / holding.purchaseValue * 100;
 }
 
 /// Booked, missing, announced and projected dividends of a set of holdings.
@@ -223,6 +230,7 @@ class DepotDividendCalendar {
     required List<DepotHolding> holdings,
     required List<DepotTransaction> transactions,
     required Map<String, DepotDividendAsset> assets,
+    required String currency,
     required DateTime now,
   }) {
     final today = DateTime(now.year, now.month, now.day);
@@ -461,11 +469,13 @@ class DepotDividendCalendar {
         if (next == null || e.date.isBefore(next.date)) next = e;
       }
       var received = 0.0;
+      var receivedCurrencyMatches = true;
       for (final t in txs) {
         if (t.type == DepotTransactionType.dividend &&
             !t.datetime.isBefore(yearAgo) &&
             !t.datetime.isAfter(now)) {
           received += t.amountNet;
+          if (t.currency != currency) receivedCurrencyMatches = false;
         }
       }
       if (h.isSold && received == 0) continue;
@@ -480,6 +490,7 @@ class DepotDividendCalendar {
           receivedNet12m: received,
           expectedGross12m: expectedGross,
           expectedNet12m: expectedNet,
+          receivedCurrencyMatches: receivedCurrencyMatches,
         ),
       );
     }

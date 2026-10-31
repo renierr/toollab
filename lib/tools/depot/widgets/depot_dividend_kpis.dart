@@ -68,6 +68,13 @@ class DepotDividendKpis extends StatelessWidget {
             newestFirst: false,
           ),
         ),
+        MetricTile(
+          label: l10n.depotDividendMonthlyEstimate,
+          value: '≈ ${format.money(calendar.expectedNet12m / 12)}',
+          icon: Icons.calendar_month_outlined,
+          color: DepotColors.dividendExpected,
+          compact: true,
+        ),
         if (forwardYield != null)
           MetricTile(
             label: l10n.depotDividendYield,

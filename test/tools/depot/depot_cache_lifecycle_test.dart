@@ -9,6 +9,7 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/tools/depot/depot_allocation_state.dart';
+import 'package:tool_lab/tools/depot/depot_benchmark_state.dart';
 import 'package:tool_lab/tools/depot/depot_dividend_state.dart';
 import 'package:tool_lab/tools/depot/depot_holding_trend_state.dart';
 import 'package:tool_lab/tools/depot/depot_import_state.dart';
@@ -63,6 +64,15 @@ class _Portfolio extends DepotPortfolioState {
   Future<void> syncIfStale() async {}
 }
 
+class _Benchmark extends DepotBenchmarkState {
+  int reductions = 0;
+  @override
+  void reduceCache() {
+    reductions++;
+    super.reduceCache();
+  }
+}
+
 void main() {
   blockDepotNetwork();
   setUpAll(() {
@@ -84,6 +94,7 @@ void main() {
     final dividends = _Dividends();
     final logos = _Logos();
     final allocation = _Allocation();
+    final benchmark = _Benchmark();
     final portfolio = _Portfolio();
     final imports = DepotImportState();
     final tabs = DepotState();
@@ -103,6 +114,7 @@ void main() {
           ChangeNotifierProvider<DepotDividendState>.value(value: dividends),
           ChangeNotifierProvider<DepotLogoState>.value(value: logos),
           ChangeNotifierProvider<DepotAllocationState>.value(value: allocation),
+          ChangeNotifierProvider<DepotBenchmarkState>.value(value: benchmark),
           ChangeNotifierProvider<DepotPortfolioState>.value(value: portfolio),
           ChangeNotifierProvider<DepotImportState>.value(value: imports),
           ChangeNotifierProvider<DepotState>.value(value: tabs),
@@ -129,6 +141,7 @@ void main() {
     expect(dividends.reductions, 1);
     expect(logos.reductions, 1);
     expect(allocation.reductions, 1);
+    expect(benchmark.reductions, 1);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     router.dispose();
@@ -137,6 +150,7 @@ void main() {
     dividends.dispose();
     logos.dispose();
     allocation.dispose();
+    benchmark.dispose();
     portfolio.dispose();
     imports.dispose();
     tabs.dispose();

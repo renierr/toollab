@@ -4,15 +4,19 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../depot_format.dart';
+import '../depot_allocation_state.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
+import '../depot_risk.dart';
 import '../models/depot_period.dart';
 import 'depot_connect_card.dart';
+import 'depot_benchmark_card.dart';
 import 'depot_holding_filter_bar.dart';
 import 'depot_holding_tile.dart';
 import 'depot_kpi_grid.dart';
 import 'depot_movers_card.dart';
 import 'depot_period_selector.dart';
+import 'depot_risk_card.dart';
 import 'depot_sync_header.dart';
 import 'depot_value_card.dart';
 
@@ -24,11 +28,17 @@ class DepotOverviewView extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = context.watch<DepotPortfolioState>();
+    final allocation = context.watch<DepotAllocationState>();
 
     if (!state.isLoaded) {
       return const Center(child: CircularProgressIndicator());
     }
     if (!state.isConnected && !state.hasData) return const DepotConnectCard();
+    if (!allocation.isLoaded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) allocation.ensureLoaded();
+      });
+    }
 
     final summary = state.summary;
     final format = DepotFormat.of(context, state.currency);
@@ -72,6 +82,17 @@ class DepotOverviewView extends StatelessWidget {
                       allocation: state.allocation,
                       format: format,
                       showChart: state.period != DepotPeriod.today,
+                    ),
+                    const SizedBox(height: 12),
+                    const DepotBenchmarkCard(),
+                    const SizedBox(height: 12),
+                    DepotRiskCard(
+                      risk: DepotRisk.calculate(
+                        state.holdings,
+                        state.chart,
+                        profileOf: allocation.profileOf,
+                      ),
+                      format: format,
                     ),
                     if (state.movers.isNotEmpty) ...[
                       const SizedBox(height: 12),

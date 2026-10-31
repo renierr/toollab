@@ -20,6 +20,16 @@ class DepotSyncHeader extends StatelessWidget {
     final state = context.watch<DepotPortfolioState>();
     final error = state.error;
     final lastSync = state.lastSyncAt;
+    final now = DateTime.now();
+    DateTime? latestQuote;
+    for (final holding in state.holdings) {
+      final quote = holding.quoteAt;
+      if (!holding.isSold &&
+          quote != null &&
+          (latestQuote == null || quote.isAfter(latestQuote))) {
+        latestQuote = quote;
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -51,13 +61,14 @@ class DepotSyncHeader extends StatelessWidget {
                 state.portfolios.first.name,
                 style: theme.textTheme.titleSmall,
               ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   lastSync == null
                       ? l10n.depotNeverSynced
-                      : l10n.depotLastSync(FormatHelper.dateTime(lastSync)),
+                      : '${l10n.depotLastSync(FormatHelper.dateTime(lastSync))}'
+                            '${now.difference(lastSync) > const Duration(hours: 24) ? ' · ${l10n.depotSyncStale}' : ''}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.hintColor,
                   ),
@@ -81,6 +92,23 @@ class DepotSyncHeader extends StatelessWidget {
             ),
           ],
         ),
+        if (state.hasData)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              latestQuote == null
+                  ? l10n.depotQuoteUnknown
+                  : l10n.depotQuoteFreshness(
+                      FormatHelper.dateTime(latestQuote),
+                      now.difference(latestQuote) > const Duration(hours: 24)
+                          ? l10n.depotQuoteStale
+                          : l10n.depotQuoteRecent,
+                    ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+          ),
         if (error != null)
           DepotSyncErrorCard(
             error: error,

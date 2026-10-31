@@ -13251,4 +13251,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sudokuTapToResume => 'Tap to resume';
+
+  @override
+  String get depotRiskTitle => 'Risk and concentration';
+
+  @override
+  String get depotRiskTopOne => 'Largest position';
+
+  @override
+  String get depotRiskTopThree => 'Top three positions';
+
+  @override
+  String get depotRiskCrypto => 'Crypto';
+
+  @override
+  String get depotRiskCurrentDrawdown => 'Current value drawdown';
+
+  @override
+  String get depotRiskMaxDrawdown => 'Maximum value drawdown';
+
+  @override
+  String get depotRiskBestDay => 'Best daily value change';
+
+  @override
+  String get depotRiskWorstDay => 'Worst daily value change';
+
+  @override
+  String get depotRiskCountry => 'Largest known country';
+
+  @override
+  String get depotRiskSector => 'Largest known sector';
+
+  @override
+  String get depotRiskDrawdownNote =>
+      'Value changes and drawdowns cover the selected period and include deposits and withdrawals. Country and sector use cached, potentially incomplete data.';
+
+  @override
+  String depotYieldOnCost(String value) {
+    return 'Net yield on cost (12 months): $value';
+  }
+
+  @override
+  String get depotDividendMonthlyEstimate => 'Estimated monthly average';
+
+  @override
+  String get depotQuoteUnknown => 'Latest quote time unavailable';
+
+  @override
+  String depotQuoteFreshness(String date, String status) {
+    return 'Latest quote: $date · $status';
+  }
+
+  @override
+  String get depotQuoteRecent => 'recent';
+
+  @override
+  String get depotSyncStale => 'stale';
+
+  @override
+  String get depotQuoteStale => 'over 24 hours old; markets may be closed';
+
+  @override
+  String get depotTaxExport => 'Export selected year (CSV)';
+
+  @override
+  String get depotTaxExportFailed => 'Export failed';
+
+  @override
+  String get depotTaxExportNote =>
+      'Exports activities matching the current filters and year. Amounts keep their booking currencies; not a tax filing.';
+
+  @override
+  String get depotBenchmarkTitle => 'Benchmark comparison';
+
+  @override
+  String get depotBenchmarkNone => 'Off';
+
+  @override
+  String get depotBenchmarkPortfolio => 'Portfolio (estimated)';
+
+  @override
+  String depotBenchmarkDifference(String value) {
+    return 'Difference: $value percentage points';
+  }
+
+  @override
+  String get depotBenchmarkNote =>
+      'Indexed to 100. Portfolio returns approximate cash flows from changes in invested capital. Benchmark uses unadjusted closing prices, excluding dividends; not risk-adjusted alpha.';
+
+  @override
+  String get depotBenchmarkUnavailable =>
+      'Comparison unavailable for this period or currency.';
+
+  @override
+  String get depotBenchmarkFailed => 'Could not load benchmark. Tap to retry.';
+
+  @override
+  String get depotBenchmarkCurrency =>
+      'Benchmark currency must match the portfolio currency.';
 }

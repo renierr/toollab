@@ -35,6 +35,7 @@ class DepotDividendState extends ChangeNotifier {
   List<DepotTransaction>? _calendarTransactions;
   Map<String, DepotDividendAsset>? _calendarAssets;
   DateTime? _calendarDay;
+  String? _calendarCurrency;
 
   bool get isFetching => _isFetching;
 
@@ -55,6 +56,7 @@ class DepotDividendState extends ChangeNotifier {
   DepotDividendCalendar calendarFor(
     List<DepotHolding> holdings,
     List<DepotTransaction> transactions,
+    String currency,
   ) {
     final now = DateTime.now();
     final day = DateTime(now.year, now.month, now.day);
@@ -63,17 +65,20 @@ class DepotDividendState extends ChangeNotifier {
         identical(holdings, _calendarHoldings) &&
         identical(transactions, _calendarTransactions) &&
         identical(_assets, _calendarAssets) &&
+        currency == _calendarCurrency &&
         day == _calendarDay) {
       return cached;
     }
     _calendarHoldings = holdings;
     _calendarTransactions = transactions;
     _calendarAssets = _assets;
+    _calendarCurrency = currency;
     _calendarDay = day;
     return _calendar = DepotDividendCalendar.build(
       holdings: holdings,
       transactions: transactions,
       assets: _assets,
+      currency: currency,
       now: now,
     );
   }
@@ -113,6 +118,7 @@ class DepotDividendState extends ChangeNotifier {
     _calendarHoldings = null;
     _calendarTransactions = null;
     _calendarAssets = null;
+    _calendarCurrency = null;
     _calendarDay = null;
     _loading = null;
     _assets = const {};

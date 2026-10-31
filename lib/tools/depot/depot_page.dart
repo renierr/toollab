@@ -11,6 +11,7 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
 import 'depot_allocation_state.dart';
+import 'depot_benchmark_state.dart';
 import 'depot_import_state.dart';
 import 'depot_dividend_state.dart';
 import 'depot_holding_trend_state.dart';
@@ -62,6 +63,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     final dividends = context.read<DepotDividendState>();
     final logos = context.read<DepotLogoState>();
     final allocation = context.read<DepotAllocationState>();
+    final benchmark = context.read<DepotBenchmarkState>();
     logos.ensureLoaded();
     onDispose(() {
       trends.reduceCache();
@@ -69,6 +71,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
       dividends.reduceCache();
       logos.reduceCache();
       allocation.reduceCache();
+      benchmark.reduceCache();
     });
 
     final portfolioState = context.read<DepotPortfolioState>();

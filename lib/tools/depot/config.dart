@@ -4,6 +4,7 @@ import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'depot_background_sync.dart';
+import 'depot_benchmark_state.dart';
 import 'depot_allocation_state.dart';
 import 'depot_dividend_state.dart';
 import 'depot_import_state.dart';
@@ -35,6 +36,9 @@ class DepotTool {
     syncDelegateFactory: DepotWishlistSyncDelegate.new,
     stateProviders: () => [
       ChangeNotifierProvider<DepotState>(create: (_) => DepotState()),
+      ChangeNotifierProvider<DepotBenchmarkState>(
+        create: (_) => DepotBenchmarkState(),
+      ),
       ChangeNotifierProvider<DepotPortfolioState>(
         create: (_) => DepotPortfolioState(),
       ),

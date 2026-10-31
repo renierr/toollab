@@ -23536,6 +23536,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to resume'**
   String get sudokuTapToResume;
+
+  /// No description provided for @depotRiskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk and concentration'**
+  String get depotRiskTitle;
+
+  /// No description provided for @depotRiskTopOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest position'**
+  String get depotRiskTopOne;
+
+  /// No description provided for @depotRiskTopThree.
+  ///
+  /// In en, this message translates to:
+  /// **'Top three positions'**
+  String get depotRiskTopThree;
+
+  /// No description provided for @depotRiskCrypto.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get depotRiskCrypto;
+
+  /// No description provided for @depotRiskCurrentDrawdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Current value drawdown'**
+  String get depotRiskCurrentDrawdown;
+
+  /// No description provided for @depotRiskMaxDrawdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum value drawdown'**
+  String get depotRiskMaxDrawdown;
+
+  /// No description provided for @depotRiskBestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Best daily value change'**
+  String get depotRiskBestDay;
+
+  /// No description provided for @depotRiskWorstDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Worst daily value change'**
+  String get depotRiskWorstDay;
+
+  /// No description provided for @depotRiskCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest known country'**
+  String get depotRiskCountry;
+
+  /// No description provided for @depotRiskSector.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest known sector'**
+  String get depotRiskSector;
+
+  /// No description provided for @depotRiskDrawdownNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Value changes and drawdowns cover the selected period and include deposits and withdrawals. Country and sector use cached, potentially incomplete data.'**
+  String get depotRiskDrawdownNote;
+
+  /// No description provided for @depotYieldOnCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Net yield on cost (12 months): {value}'**
+  String depotYieldOnCost(String value);
+
+  /// No description provided for @depotDividendMonthlyEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated monthly average'**
+  String get depotDividendMonthlyEstimate;
+
+  /// No description provided for @depotQuoteUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest quote time unavailable'**
+  String get depotQuoteUnknown;
+
+  /// No description provided for @depotQuoteFreshness.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest quote: {date} · {status}'**
+  String depotQuoteFreshness(String date, String status);
+
+  /// No description provided for @depotQuoteRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'recent'**
+  String get depotQuoteRecent;
+
+  /// No description provided for @depotSyncStale.
+  ///
+  /// In en, this message translates to:
+  /// **'stale'**
+  String get depotSyncStale;
+
+  /// No description provided for @depotQuoteStale.
+  ///
+  /// In en, this message translates to:
+  /// **'over 24 hours old; markets may be closed'**
+  String get depotQuoteStale;
+
+  /// No description provided for @depotTaxExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export selected year (CSV)'**
+  String get depotTaxExport;
+
+  /// No description provided for @depotTaxExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed'**
+  String get depotTaxExportFailed;
+
+  /// No description provided for @depotTaxExportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Exports activities matching the current filters and year. Amounts keep their booking currencies; not a tax filing.'**
+  String get depotTaxExportNote;
+
+  /// No description provided for @depotBenchmarkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Benchmark comparison'**
+  String get depotBenchmarkTitle;
+
+  /// No description provided for @depotBenchmarkNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get depotBenchmarkNone;
+
+  /// No description provided for @depotBenchmarkPortfolio.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio (estimated)'**
+  String get depotBenchmarkPortfolio;
+
+  /// No description provided for @depotBenchmarkDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference: {value} percentage points'**
+  String depotBenchmarkDifference(String value);
+
+  /// No description provided for @depotBenchmarkNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexed to 100. Portfolio returns approximate cash flows from changes in invested capital. Benchmark uses unadjusted closing prices, excluding dividends; not risk-adjusted alpha.'**
+  String get depotBenchmarkNote;
+
+  /// No description provided for @depotBenchmarkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison unavailable for this period or currency.'**
+  String get depotBenchmarkUnavailable;
+
+  /// No description provided for @depotBenchmarkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load benchmark. Tap to retry.'**
+  String get depotBenchmarkFailed;
+
+  /// No description provided for @depotBenchmarkCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Benchmark currency must match the portfolio currency.'**
+  String get depotBenchmarkCurrency;
 }
 
 class _AppLocalizationsDelegate

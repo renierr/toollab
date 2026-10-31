@@ -77,6 +77,7 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
     final calendar = dividends.calendarFor(
       portfolio.holdings,
       portfolio.transactions,
+      portfolio.currency,
     );
 
     return RefreshIndicator(
