@@ -20957,11 +20957,17 @@ abstract class AppLocalizations {
   /// **'Net amounts as booked in Parqet. Taxes and fees are separate totals for all activities, not additional deductions from the net total. The total excludes invested capital and is not your available cash. Not a tax statement.'**
   String get depotYearNote;
 
-  /// No description provided for @depotYearMixedCurrencies.
+  /// No description provided for @depotYearCurrenciesNote.
   ///
   /// In en, this message translates to:
-  /// **'Some activities use another currency. Totals are not converted and cannot be compared as a single currency.'**
-  String get depotYearMixedCurrencies;
+  /// **'Amounts are grouped by booking currency; no currency conversion is applied.'**
+  String get depotYearCurrenciesNote;
+
+  /// No description provided for @depotYearUnknownCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 activity has an unknown currency} other{{count} activities have an unknown currency}} and cannot be included in the totals.'**
+  String depotYearUnknownCurrency(int count);
 
   /// No description provided for @depotAssetSecurity.
   ///

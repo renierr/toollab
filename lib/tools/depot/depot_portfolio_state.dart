@@ -73,8 +73,6 @@ class DepotPortfolioState extends ChangeNotifier {
   DepotActivityGroups? _activityGroups;
   List<DepotActivityRow>? _activityRows;
   String? _activityRowsScope;
-  List<DepotTransaction>? _currencySource;
-  final Map<int, Set<String>> _activityCurrencies = {};
 
   bool get isLoaded => _isLoaded;
   String get clientId => _clientId;
@@ -126,20 +124,6 @@ class DepotPortfolioState extends ChangeNotifier {
   /// [visibleHoldings] by return percentage, each largest first.
   List<DepotMover> get movers => _movers;
   List<DepotTransaction> get visibleTransactions => _visibleTransactions;
-
-  bool yearHasOtherCurrency(int year, String currency) {
-    final source = transactions;
-    if (!identical(source, _currencySource)) {
-      _currencySource = source;
-      _activityCurrencies.clear();
-      for (final t in source) {
-        if (t.currency.isNotEmpty) {
-          (_activityCurrencies[t.datetime.year] ??= {}).add(t.currency);
-        }
-      }
-    }
-    return (_activityCurrencies[year] ?? {}).any((value) => value != currency);
-  }
 
   List<DepotActivityRow> get activityRows {
     final source = visibleTransactions;
@@ -216,7 +200,7 @@ class DepotPortfolioState extends ChangeNotifier {
     if (_disposed || load != _scopeLoad || scope != _scope) return;
     _holdings = holdings;
     _transactions = transactions;
-    _yearReports = _reportsOf(transactions);
+    _yearReports = DepotYearReport.fromTransactions(transactions);
     _refilterTransactions();
     await _loadPeriod();
   }
@@ -502,34 +486,6 @@ class DepotPortfolioState extends ChangeNotifier {
           interest: interest[i],
         ),
     ];
-  }
-
-  static List<DepotYearReport> _reportsOf(List<DepotTransaction> transactions) {
-    final reports = <int, DepotYearReport>{};
-    for (final t in transactions) {
-      final year = t.datetime.year;
-      final report = reports[year] ?? DepotYearReport(year: year);
-      reports[year] = switch (t.type) {
-        DepotTransactionType.sell => report.add(
-          realizedGain: t.realizedGain ?? 0,
-          taxes: t.tax,
-          fees: t.fee,
-          sells: 1,
-        ),
-        DepotTransactionType.dividend => report.add(
-          dividends: t.amountNet,
-          taxes: t.tax,
-          fees: t.fee,
-        ),
-        DepotTransactionType.interest => report.add(
-          interest: t.amountNet,
-          taxes: t.tax,
-          fees: t.fee,
-        ),
-        _ => report.add(taxes: t.tax, fees: t.fee),
-      };
-    }
-    return reports.values.toList()..sort((a, b) => b.year.compareTo(a.year));
   }
 
   void _notify() {

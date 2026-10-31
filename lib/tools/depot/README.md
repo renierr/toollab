@@ -132,8 +132,10 @@ from the net total. The yearly summary covers the whole year and is not changed
 by the activity filters.
 The net total is profit and income, not sale proceeds or available cash; it
 excludes the invested capital returned when selling.
-The yearly summary does not convert currencies and warns when bookings use a
-currency different from the displayed portfolio currency.
+The yearly summary groups gains, income, taxes and fees by the activity's
+currency, without conversion or a combined total. The usual single-currency
+view stays compact. Activities without a currency are counted separately and
+excluded from the totals: their values may represent different currencies.
 
 The activity list groups bookings by month, newest first. The two newest matching
 months start expanded; older months start collapsed, and each can be toggled.

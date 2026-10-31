@@ -11838,8 +11838,21 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nettobeträge wie in Parqet gebucht. Steuern und Gebühren sind separate Summen aller Buchungen und werden nicht erneut von der Nettosumme abgezogen. Die Summe enthält nicht das eingesetzte Kapital und ist nicht dein verfügbares Guthaben. Keine Steuerbescheinigung.';
 
   @override
-  String get depotYearMixedCurrencies =>
-      'Einige Buchungen verwenden eine andere Währung. Die Summen sind nicht umgerechnet und nicht als einheitliche Währung vergleichbar.';
+  String get depotYearCurrenciesNote =>
+      'Beträge sind nach Buchungswährung getrennt; es wird nicht umgerechnet.';
+
+  @override
+  String depotYearUnknownCurrency(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Buchungen haben eine unbekannte Währung und sind nicht in den Summen enthalten.',
+      one:
+          '1 Buchung hat eine unbekannte Währung und ist nicht in den Summen enthalten.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get depotAssetSecurity => 'Wertpapiere';

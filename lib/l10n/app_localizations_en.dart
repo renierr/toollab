@@ -11753,8 +11753,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Net amounts as booked in Parqet. Taxes and fees are separate totals for all activities, not additional deductions from the net total. The total excludes invested capital and is not your available cash. Not a tax statement.';
 
   @override
-  String get depotYearMixedCurrencies =>
-      'Some activities use another currency. Totals are not converted and cannot be compared as a single currency.';
+  String get depotYearCurrenciesNote =>
+      'Amounts are grouped by booking currency; no currency conversion is applied.';
+
+  @override
+  String depotYearUnknownCurrency(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count activities have an unknown currency',
+      one: '1 activity has an unknown currency',
+    );
+    return '$_temp0 and cannot be included in the totals.';
+  }
 
   @override
   String get depotAssetSecurity => 'Securities';

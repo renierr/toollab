@@ -13,13 +13,11 @@ import 'depot_info_row.dart';
 class DepotYearReportCard extends StatelessWidget {
   final List<DepotYearReport> reports;
   final DepotYearReport report;
-  final DepotFormat format;
 
   const DepotYearReportCard({
     super.key,
     required this.reports,
     required this.report,
-    required this.format,
   });
 
   @override
@@ -32,12 +30,12 @@ class DepotYearReportCard extends StatelessWidget {
     final older = index + 1 < reports.length ? reports[index + 1] : null;
     final newer = index > 0 ? reports[index - 1] : null;
 
-    final rows = <(String, double)>[
-      (l10n.depotYearRealized(report.sells), report.realizedGain),
-      (l10n.depotKpiDividends, report.dividends),
-      (l10n.depotTxInterest, report.interest),
-      (l10n.depotYearIncomeTotal, report.total),
-    ];
+    final showCurrency =
+        report.currencies.length > 1 ||
+        report.unknownCurrencyCount > 0 ||
+        (report.currencies.isNotEmpty &&
+            report.currencies.single.currency !=
+                state.currency.trim().toUpperCase());
 
     return Card(
       child: Padding(
@@ -70,25 +68,25 @@ class DepotYearReportCard extends StatelessWidget {
                 ),
               ],
             ),
-            for (final (label, amount) in rows)
-              _ReportRow(label: label, amount: amount, format: format),
-            const Divider(height: 20),
-            Text(
-              l10n.depotYearCostsSeparate,
-              style: theme.textTheme.labelMedium,
-            ),
-            _ReportRow(
-              label: l10n.depotYearTaxes,
-              amount: report.taxes,
-              format: format,
-              isCost: true,
-            ),
-            _ReportRow(
-              label: l10n.depotYearFees,
-              amount: report.fees,
-              format: format,
-              isCost: true,
-            ),
+            if (showCurrency && report.currencies.isNotEmpty)
+              Text(
+                l10n.depotYearCurrenciesNote,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
+            for (final currency in report.currencies)
+              _CurrencyReport(report: currency, showCurrency: showCurrency),
+            if (report.unknownCurrencyCount > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  l10n.depotYearUnknownCurrency(report.unknownCurrencyCount),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ),
             const SizedBox(height: 6),
             Align(
               alignment: Alignment.centerLeft,
@@ -122,16 +120,54 @@ class DepotYearReportCard extends StatelessWidget {
                 color: theme.hintColor,
               ),
             ),
-            if (state.yearHasOtherCurrency(report.year, state.currency))
-              Text(
-                l10n.depotYearMixedCurrencies,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CurrencyReport extends StatelessWidget {
+  final DepotYearCurrencyReport report;
+  final bool showCurrency;
+
+  const _CurrencyReport({required this.report, required this.showCurrency});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final format = DepotFormat.of(context, report.currency);
+    final rows = <(String, double)>[
+      (l10n.depotYearRealized(report.sells), report.realizedGain),
+      (l10n.depotKpiDividends, report.dividends),
+      (l10n.depotTxInterest, report.interest),
+      (l10n.depotYearIncomeTotal, report.total),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showCurrency) ...[
+          const SizedBox(height: 12),
+          Text(report.currency, style: theme.textTheme.titleSmall),
+        ],
+        for (final (label, amount) in rows)
+          _ReportRow(label: label, amount: amount, format: format),
+        const Divider(height: 20),
+        Text(l10n.depotYearCostsSeparate, style: theme.textTheme.labelMedium),
+        _ReportRow(
+          label: l10n.depotYearTaxes,
+          amount: report.taxes,
+          format: format,
+          isCost: true,
+        ),
+        _ReportRow(
+          label: l10n.depotYearFees,
+          amount: report.fees,
+          format: format,
+          isCost: true,
+        ),
+      ],
     );
   }
 }

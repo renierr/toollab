@@ -50,7 +50,6 @@ class DepotActivitiesView extends StatelessWidget {
                     DepotYearReportCard(
                       reports: state.yearReports,
                       report: report,
-                      format: DepotFormat.of(context, state.currency),
                     ),
                   ],
                   const SizedBox(height: 8),

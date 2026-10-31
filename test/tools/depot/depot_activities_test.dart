@@ -14,6 +14,7 @@ import 'package:tool_lab/tools/depot/models/depot_transaction.dart';
 import 'package:tool_lab/tools/depot/models/depot_year_report.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_activities_view.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_transaction_tile.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_year_report_card.dart';
 
 DepotTransaction activity(
   String id,
@@ -22,6 +23,10 @@ DepotTransaction activity(
   String name = 'Example',
   String currency = 'EUR',
   String? broker,
+  double amountNet = 8,
+  double tax = 2,
+  double fee = 1,
+  double? realizedGain,
 }) => DepotTransaction(
   id: id,
   portfolioId: 'p',
@@ -33,9 +38,10 @@ DepotTransaction activity(
   shares: 1.5,
   price: 2,
   amount: -10,
-  amountNet: 8,
-  tax: 2,
-  fee: 1,
+  amountNet: amountNet,
+  tax: tax,
+  fee: fee,
+  realizedGain: realizedGain,
   currency: currency,
   broker: broker,
 );
@@ -43,9 +49,11 @@ DepotTransaction activity(
 class _Portfolio extends DepotPortfolioState {
   _Portfolio(this.items) {
     filtered = List.of(items);
+    reports = DepotYearReport.fromTransactions(items);
   }
   final List<DepotTransaction> items;
   late List<DepotTransaction> filtered;
+  late List<DepotYearReport> reports;
   DepotActivityFilter selected = const DepotActivityFilter();
   @override
   bool get isLoaded => true;
@@ -62,17 +70,7 @@ class _Portfolio extends DepotPortfolioState {
   @override
   List<DepotTransaction> get visibleTransactions => filtered;
   @override
-  List<DepotYearReport> get yearReports => const [
-    DepotYearReport(
-      year: 2026,
-      realizedGain: 100,
-      dividends: 80,
-      interest: 10,
-      taxes: 20,
-      fees: 5,
-      sells: 1,
-    ),
-  ];
+  List<DepotYearReport> get yearReports => reports;
   @override
   DepotYearReport? get yearReport => yearReports.first;
   @override
@@ -123,6 +121,69 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test(
+    'year reports never add amounts across currencies or assume unknown currency',
+    () {
+      final transactions = [
+        activity(
+          'eur-sale',
+          DateTime(2026, 3),
+          type: DepotTransactionType.sell,
+          realizedGain: 40,
+          tax: 3,
+          fee: 1,
+        ),
+        activity(
+          'eur-dividend',
+          DateTime(2026, 4),
+          currency: ' eur ',
+          amountNet: 8,
+          tax: 2,
+          fee: 0,
+        ),
+        activity(
+          'usd-sale',
+          DateTime(2026, 5),
+          type: DepotTransactionType.sell,
+          currency: 'USD',
+          realizedGain: -20,
+          tax: 4,
+          fee: 2,
+        ),
+        activity(
+          'usd-dividend',
+          DateTime(2026, 6),
+          currency: 'USD',
+          amountNet: 100,
+          tax: 10,
+          fee: 0,
+        ),
+        activity('unknown', DateTime(2026, 7), currency: '', amountNet: 999),
+        activity('space', DateTime(2026, 7), currency: '   ', amountNet: 888),
+        activity('last-year', DateTime(2025, 1), currency: 'EUR', amountNet: 3),
+      ];
+      final reports = DepotYearReport.fromTransactions(transactions);
+      expect(reports.map((r) => r.year), [2026, 2025]);
+      final report = reports.first;
+      expect(report.currencies.map((r) => r.currency), ['EUR', 'USD']);
+      expect(report.unknownCurrencyCount, 2);
+      expect(report.currencies[0].total, 48);
+      expect(report.currencies[0].taxes, 5);
+      expect(report.currencies[0].fees, 1);
+      expect(report.currencies[0].sells, 1);
+      expect(report.currencies[1].total, 80);
+      expect(report.currencies[1].taxes, 14);
+      expect(report.currencies[1].fees, 2);
+      expect(report.currencies[1].sells, 1);
+      expect(reports.last.currencies.single.total, 3);
+      final unknownOnly = DepotYearReport.fromTransactions([
+        activity('x', DateTime(2026), currency: ''),
+      ]).single;
+      expect(unknownOnly.currencies, isEmpty);
+      expect(unknownOnly.unknownCurrencyCount, 1);
+    },
+  );
 
   test(
     'monthly grouping is newest first, retains each booking and currency',
@@ -273,7 +334,9 @@ void main() {
         );
         expect(
           find.textContaining(
-            locale.languageCode == 'de' ? 'nicht umgerechnet' : 'not converted',
+            locale.languageCode == 'de'
+                ? 'nicht umgerechnet'
+                : 'no currency conversion',
           ),
           findsOneWidget,
         );
@@ -394,6 +457,88 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('March item'), findsNothing);
     expect(portfolio.visibleTransactions.length, 3);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('year card separates currencies and excludes unknown values', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final portfolio = _Portfolio([
+      activity('eur', DateTime(2026, 3), currency: 'EUR', amountNet: 48),
+      activity('usd', DateTime(2026, 3), currency: 'USD', amountNet: 80),
+      activity('unknown', DateTime(2026, 3), currency: '', amountNet: 999),
+    ]);
+    addTearDown(portfolio.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<DepotPortfolioState>.value(
+        value: portfolio,
+        child: const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: DepotActivitiesView()),
+        ),
+      ),
+    );
+    expect(find.text('EUR'), findsOneWidget);
+    expect(find.text('USD'), findsOneWidget);
+    expect(find.text('+€48.00'), findsNWidgets(2));
+    expect(find.text('+\$80.00'), findsNWidgets(2));
+    expect(
+      find.textContaining('1 activity has an unknown currency'),
+      findsOneWidget,
+    );
+    expect(find.text('+€128.00'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(DepotYearReportCard),
+        matching: find.textContaining('999.00'),
+      ),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('mixed currencies fit narrow screens with large German text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final portfolio = _Portfolio([
+      activity('eur', DateTime(2026, 3), currency: 'EUR'),
+      activity('usd', DateTime(2026, 3), currency: 'USD'),
+      activity('unknown', DateTime(2026, 3), currency: ''),
+    ]);
+    addTearDown(portfolio.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<DepotPortfolioState>.value(
+        value: portfolio,
+        child: MaterialApp(
+          locale: const Locale('de'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: const Scaffold(body: DepotActivitiesView()),
+        ),
+      ),
+    );
+    expect(find.text('EUR'), findsOneWidget);
+    expect(find.text('USD'), findsOneWidget);
+    expect(
+      find.textContaining('1 Buchung hat eine unbekannte Währung'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 }
