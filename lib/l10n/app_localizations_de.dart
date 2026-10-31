@@ -13356,7 +13356,72 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotRiskTitle => 'Risiko und Konzentration';
 
   @override
-  String get depotRiskTopOne => 'Größte Position';
+  String depotRiskLargestSummary(String name, String weight) {
+    return 'Größte Position: $name · $weight';
+  }
+
+  @override
+  String get depotRiskNoPositions => 'Keine offenen Positionen';
+
+  @override
+  String get depotRiskPortfolioWeights =>
+      'Anteile beziehen sich auf den Wert aller offenen Positionen, nicht nur auf den aktuellen Filter.';
+
+  @override
+  String depotRiskCoverage(String weight) {
+    return 'Depotabdeckung: $weight';
+  }
+
+  @override
+  String get depotRiskNoExposure => 'Keine Aufteilungsdaten';
+
+  @override
+  String get depotRiskMissingData => 'Fehlende Wertpapieraufteilungen';
+
+  @override
+  String get depotRiskOtherAssets => 'Andere Anlagearten';
+
+  @override
+  String get depotRiskCoverageNote =>
+      'Die Abdeckung bezieht sich auf alle offenen Positionen. Fehlende Aufteilungen enthalten nicht erfasste Fondsanteile; andere Anlagearten sind nicht in den Wertpapierdaten enthalten.';
+
+  @override
+  String get depotRiskOtherContributors => 'Weitere beitragende Positionen';
+
+  @override
+  String get depotRiskExposureNote =>
+      'Jeder Beitrag ist sein Anteil am gesamten Depotwert. Fondsanteile stammen aus zwischengespeicherten Aufteilungen und können unvollständig sein.';
+
+  @override
+  String get depotRiskOpenAllocation => 'Aufteilung öffnen';
+
+  @override
+  String get depotRiskUnderlying => 'Größte bekannte enthaltene Positionen';
+
+  @override
+  String get depotRiskUnderlyingNote =>
+      'Nur direkte Aktien und verfügbare größte Fondspositionen. Die Fondsabdeckung kann unvollständig sein.';
+
+  @override
+  String depotRiskVia(String names) {
+    return 'Über: $names';
+  }
+
+  @override
+  String get depotRiskValueChanges => 'Wertänderungen';
+
+  @override
+  String depotRiskPeriod(String period) {
+    return 'Wertänderungen · $period';
+  }
+
+  @override
+  String get depotRiskNoHistory =>
+      'Für diesen Zeitraum sind nicht genügend Diagrammdaten vorhanden.';
+
+  @override
+  String get depotRiskValueNote =>
+      'Basierend auf dem Depotwert, nicht auf Anlagerenditen. Ein- und Auszahlungen beeinflussen diese Werte.';
 
   @override
   String get depotRiskTopThree => 'Drei größte Positionen';
@@ -13381,10 +13446,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotRiskSector => 'Größter bekannter Sektor';
-
-  @override
-  String get depotRiskDrawdownNote =>
-      'Wertänderungen und Rückgänge gelten für den gewählten Zeitraum und enthalten Ein- und Auszahlungen. Länder und Sektoren nutzen zwischengespeicherte, möglicherweise unvollständige Daten.';
 
   @override
   String depotYieldOnCost(String value) {

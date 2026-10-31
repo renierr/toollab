@@ -13256,7 +13256,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotRiskTitle => 'Risk and concentration';
 
   @override
-  String get depotRiskTopOne => 'Largest position';
+  String depotRiskLargestSummary(String name, String weight) {
+    return 'Largest: $name · $weight';
+  }
+
+  @override
+  String get depotRiskNoPositions => 'No open positions';
+
+  @override
+  String get depotRiskPortfolioWeights =>
+      'Shares are percentages of the value of all open positions, not just the current filter.';
+
+  @override
+  String depotRiskCoverage(String weight) {
+    return 'Portfolio coverage: $weight';
+  }
+
+  @override
+  String get depotRiskNoExposure => 'No breakdown data';
+
+  @override
+  String get depotRiskMissingData => 'Missing security breakdowns';
+
+  @override
+  String get depotRiskOtherAssets => 'Other asset types';
+
+  @override
+  String get depotRiskCoverageNote =>
+      'Coverage uses all open positions. Missing breakdowns include the uncovered portion of funds; other asset types are not included in the security data.';
+
+  @override
+  String get depotRiskOtherContributors => 'Other contributing positions';
+
+  @override
+  String get depotRiskExposureNote =>
+      'Each contribution is its share of total portfolio value. Fund exposure uses cached breakdowns and can be incomplete.';
+
+  @override
+  String get depotRiskOpenAllocation => 'Open allocation';
+
+  @override
+  String get depotRiskUnderlying => 'Largest known underlying holdings';
+
+  @override
+  String get depotRiskUnderlyingNote =>
+      'Direct stocks and available fund top holdings only. Fund exposure can be incomplete.';
+
+  @override
+  String depotRiskVia(String names) {
+    return 'Via: $names';
+  }
+
+  @override
+  String get depotRiskValueChanges => 'Value changes';
+
+  @override
+  String depotRiskPeriod(String period) {
+    return 'Value changes · $period';
+  }
+
+  @override
+  String get depotRiskNoHistory => 'Not enough chart data for this period.';
+
+  @override
+  String get depotRiskValueNote =>
+      'Based on portfolio value, not investment returns. Deposits and withdrawals affect these figures.';
 
   @override
   String get depotRiskTopThree => 'Top three positions';
@@ -13281,10 +13345,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotRiskSector => 'Largest known sector';
-
-  @override
-  String get depotRiskDrawdownNote =>
-      'Value changes and drawdowns cover the selected period and include deposits and withdrawals. Country and sector use cached, potentially incomplete data.';
 
   @override
   String depotYieldOnCost(String value) {

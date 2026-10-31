@@ -8,6 +8,8 @@ import '../depot_allocation_state.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../depot_risk.dart';
+import '../depot_state.dart';
+import '../depot_xray.dart';
 import '../models/depot_period.dart';
 import 'depot_connect_card.dart';
 import 'depot_benchmark_chart.dart';
@@ -103,6 +105,21 @@ class DepotOverviewView extends StatelessWidget {
                         profileOf: allocation.profileOf,
                       ),
                       format: format,
+                      xray: depotXRay(
+                        holdings: state.holdings,
+                        profileOf: allocation.profileOf,
+                        kindOf: allocation.kindOf,
+                      ),
+                      periodLabel: DepotPortfolioLabels.period(
+                        l10n,
+                        state.period,
+                      ),
+                      portfolioNames: state.portfolios.length > 1
+                          ? {for (final p in state.portfolios) p.id: p.name}
+                          : const {},
+                      onOpenAllocation: () => context.read<DepotState>().setTab(
+                        DepotTab.allocation,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const DepotHoldingFilterBar(),

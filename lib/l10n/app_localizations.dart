@@ -23543,11 +23543,113 @@ abstract class AppLocalizations {
   /// **'Risk and concentration'**
   String get depotRiskTitle;
 
-  /// No description provided for @depotRiskTopOne.
+  /// No description provided for @depotRiskLargestSummary.
   ///
   /// In en, this message translates to:
-  /// **'Largest position'**
-  String get depotRiskTopOne;
+  /// **'Largest: {name} · {weight}'**
+  String depotRiskLargestSummary(String name, String weight);
+
+  /// No description provided for @depotRiskNoPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'No open positions'**
+  String get depotRiskNoPositions;
+
+  /// No description provided for @depotRiskPortfolioWeights.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares are percentages of the value of all open positions, not just the current filter.'**
+  String get depotRiskPortfolioWeights;
+
+  /// No description provided for @depotRiskCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio coverage: {weight}'**
+  String depotRiskCoverage(String weight);
+
+  /// No description provided for @depotRiskNoExposure.
+  ///
+  /// In en, this message translates to:
+  /// **'No breakdown data'**
+  String get depotRiskNoExposure;
+
+  /// No description provided for @depotRiskMissingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing security breakdowns'**
+  String get depotRiskMissingData;
+
+  /// No description provided for @depotRiskOtherAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'Other asset types'**
+  String get depotRiskOtherAssets;
+
+  /// No description provided for @depotRiskCoverageNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Coverage uses all open positions. Missing breakdowns include the uncovered portion of funds; other asset types are not included in the security data.'**
+  String get depotRiskCoverageNote;
+
+  /// No description provided for @depotRiskOtherContributors.
+  ///
+  /// In en, this message translates to:
+  /// **'Other contributing positions'**
+  String get depotRiskOtherContributors;
+
+  /// No description provided for @depotRiskExposureNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Each contribution is its share of total portfolio value. Fund exposure uses cached breakdowns and can be incomplete.'**
+  String get depotRiskExposureNote;
+
+  /// No description provided for @depotRiskOpenAllocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Open allocation'**
+  String get depotRiskOpenAllocation;
+
+  /// No description provided for @depotRiskUnderlying.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest known underlying holdings'**
+  String get depotRiskUnderlying;
+
+  /// No description provided for @depotRiskUnderlyingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct stocks and available fund top holdings only. Fund exposure can be incomplete.'**
+  String get depotRiskUnderlyingNote;
+
+  /// No description provided for @depotRiskVia.
+  ///
+  /// In en, this message translates to:
+  /// **'Via: {names}'**
+  String depotRiskVia(String names);
+
+  /// No description provided for @depotRiskValueChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Value changes'**
+  String get depotRiskValueChanges;
+
+  /// No description provided for @depotRiskPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Value changes · {period}'**
+  String depotRiskPeriod(String period);
+
+  /// No description provided for @depotRiskNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough chart data for this period.'**
+  String get depotRiskNoHistory;
+
+  /// No description provided for @depotRiskValueNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on portfolio value, not investment returns. Deposits and withdrawals affect these figures.'**
+  String get depotRiskValueNote;
 
   /// No description provided for @depotRiskTopThree.
   ///
@@ -23596,12 +23698,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Largest known sector'**
   String get depotRiskSector;
-
-  /// No description provided for @depotRiskDrawdownNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Value changes and drawdowns cover the selected period and include deposits and withdrawals. Country and sector use cached, potentially incomplete data.'**
-  String get depotRiskDrawdownNote;
 
   /// No description provided for @depotYieldOnCost.
   ///

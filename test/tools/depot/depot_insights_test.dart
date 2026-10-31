@@ -190,20 +190,37 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: DepotRiskCard(
-            risk: const DepotRisk(
-              topOne: 100,
-              topThree: 100,
-              crypto: 0,
-              country: (name: 'Germany', weight: 50),
-              sector: (name: 'Technology', weight: 40),
+          body: SingleChildScrollView(
+            child: DepotRiskCard(
+              risk: DepotRisk(
+                topOne: 100,
+                topThree: 100,
+                crypto: 0,
+                positions: [
+                  DepotRiskContribution(
+                    holding: holding('Example', 100),
+                    weight: 100,
+                  ),
+                ],
+                country: const DepotRiskBreakdown(
+                  largest: DepotRiskExposure(name: 'Germany', weight: 50),
+                  coverage: 50,
+                ),
+                sector: const DepotRiskBreakdown(
+                  largest: DepotRiskExposure(name: 'Technology', weight: 40),
+                  coverage: 40,
+                ),
+              ),
+              format: format,
             ),
-            format: format,
           ),
         ),
       ),
     );
     expect(tester.takeException(), isNull);
+    expect(find.textContaining('Largest: Example'), findsOneWidget);
+    await tester.tap(find.text('Risk and concentration'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('Germany'), findsOneWidget);
     expect(find.text('Current value drawdown'), findsNothing);
   });

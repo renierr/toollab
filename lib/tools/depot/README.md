@@ -92,11 +92,17 @@ screens, long-press a value to select it; on desktop, select it with the mouse.
 
 ### Risk, dividends and comparison
 
-The risk card uses open positive-value positions for top-one, top-three and crypto
-weights. Largest known country and sector use cached allocation metadata, including
-fund splits; unknown exposure is not assigned. Value drawdowns and daily changes use
-the selected period's chart and include deposits and withdrawals, so they are not
-cash-flow-adjusted investment returns. Daily changes need consecutive calendar days.
+The risk card starts collapsed with the largest open position's name and weight.
+Expanding it lists the three largest positions, and optional detail sections show the
+largest known underlying holdings, country and sector with their contributing positions.
+Weights are percentages of all open positive-value positions, regardless of filters.
+The country and sector sections show data coverage and identify missing security
+breakdowns separately from cash and other asset types. Fund breakdowns are cached;
+the stock look-through uses only available fund top holdings. Both can be incomplete.
+The Allocation link opens the full breakdown and its refresh controls.
+Value drawdowns and daily changes use the selected period's chart and include deposits
+and withdrawals, so they are not cash-flow-adjusted investment returns. Drawdown needs
+at least two valid chart points; daily changes need consecutive calendar days.
 
 The dividend position list shows the trailing 12 months of net booked dividends
 divided by the current cost basis as yield on cost. This is not a historical cost

@@ -7,6 +7,7 @@ import 'package:tool_lab/tools/depot/depot_benchmark_state.dart';
 import 'package:tool_lab/tools/depot/depot_holding_trend_state.dart';
 import 'package:tool_lab/tools/depot/depot_logo_state.dart';
 import 'package:tool_lab/tools/depot/depot_portfolio_state.dart';
+import 'package:tool_lab/tools/depot/depot_state.dart';
 import 'package:tool_lab/tools/depot/models/depot_asset_profile.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_period.dart';
@@ -114,11 +115,13 @@ void main() {
         final benchmark = DepotBenchmarkState();
         final logo = DepotLogoState();
         final trend = DepotHoldingTrendState();
+        final tabs = DepotState();
         addTearDown(portfolio.dispose);
         addTearDown(allocation.dispose);
         addTearDown(benchmark.dispose);
         addTearDown(logo.dispose);
         addTearDown(trend.dispose);
+        addTearDown(tabs.dispose);
         await tester.pumpWidget(
           MultiProvider(
             providers: [
@@ -131,6 +134,7 @@ void main() {
               ChangeNotifierProvider.value(value: benchmark),
               ChangeNotifierProvider.value(value: logo),
               ChangeNotifierProvider.value(value: trend),
+              ChangeNotifierProvider.value(value: tabs),
             ],
             child: MaterialApp(
               locale: const Locale('de'),
@@ -163,6 +167,15 @@ void main() {
           find.byType(DepotBenchmarkChart),
           period == DepotPeriod.today ? findsNothing : findsOneWidget,
         );
+        if (scale == 1 && period == DepotPeriod.today) {
+          await tester.ensureVisible(find.byType(DepotRiskCard));
+          await tester.tap(find.text('Risiko und Konzentration'));
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(find.text('Aufteilung öffnen'));
+          await tester.tap(find.text('Aufteilung öffnen'));
+          expect(tabs.tab, DepotTab.allocation);
+          expect(tester.takeException(), isNull);
+        }
       });
     }
   }
