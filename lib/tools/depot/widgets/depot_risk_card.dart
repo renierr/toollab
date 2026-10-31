@@ -18,14 +18,13 @@ class DepotRiskCard extends StatelessWidget {
       (l10n.depotRiskTopOne, risk.topOne),
       (l10n.depotRiskTopThree, risk.topThree),
       (l10n.depotRiskCrypto, risk.crypto),
-      if (risk.currentDrawdown != null ||
-          risk.country != null ||
-          risk.sector != null)
-        (l10n.depotRiskCurrentDrawdown, risk.currentDrawdown!),
-      if (risk.maxDrawdown != null)
-        (l10n.depotRiskMaxDrawdown, risk.maxDrawdown!),
-      if (risk.bestDay != null) (l10n.depotRiskBestDay, risk.bestDay!),
-      if (risk.worstDay != null) (l10n.depotRiskWorstDay, risk.worstDay!),
+      if (risk.currentDrawdown case final drawdown?)
+        (l10n.depotRiskCurrentDrawdown, drawdown),
+      if (risk.maxDrawdown case final drawdown?)
+        (l10n.depotRiskMaxDrawdown, drawdown),
+      if (risk.bestDay case final bestDay?) (l10n.depotRiskBestDay, bestDay),
+      if (risk.worstDay case final worstDay?)
+        (l10n.depotRiskWorstDay, worstDay),
       if (risk.country case final country?)
         ('${l10n.depotRiskCountry}: ${country.name}', country.weight),
       if (risk.sector case final sector?)
@@ -49,7 +48,9 @@ class DepotRiskCard extends StatelessWidget {
                   ],
                 ),
               ),
-            if (risk.currentDrawdown != null)
+            if (risk.currentDrawdown != null ||
+                risk.country != null ||
+                risk.sector != null)
               Text(
                 l10n.depotRiskDrawdownNote,
                 style: theme.textTheme.bodySmall?.copyWith(

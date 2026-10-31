@@ -19,11 +19,13 @@ DateStyle _dateStyle(List<DepotChartPoint> points) =>
 class DepotValueChart extends StatelessWidget {
   final List<DepotChartPoint> points;
   final DepotFormat format;
+  final bool interactive;
 
   const DepotValueChart({
     super.key,
     required this.points,
     required this.format,
+    this.interactive = true,
   });
 
   @override
@@ -43,7 +45,11 @@ class DepotValueChart extends StatelessWidget {
                     style: theme.textTheme.bodySmall,
                   ),
                 )
-              : _InteractiveChart(points: points, format: format),
+              : _InteractiveChart(
+                  points: points,
+                  format: format,
+                  interactive: interactive,
+                ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -67,8 +73,13 @@ class DepotValueChart extends StatelessWidget {
 class _InteractiveChart extends StatefulWidget {
   final List<DepotChartPoint> points;
   final DepotFormat format;
+  final bool interactive;
 
-  const _InteractiveChart({required this.points, required this.format});
+  const _InteractiveChart({
+    required this.points,
+    required this.format,
+    required this.interactive,
+  });
 
   @override
   State<_InteractiveChart> createState() => _InteractiveChartState();
@@ -80,7 +91,9 @@ class _InteractiveChartState extends State<_InteractiveChart> {
   @override
   void didUpdateWidget(covariant _InteractiveChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.points != widget.points) _selected = null;
+    if (oldWidget.points != widget.points || !widget.interactive) {
+      _selected = null;
+    }
   }
 
   void _select(Offset position, double width) {
@@ -103,12 +116,18 @@ class _InteractiveChartState extends State<_InteractiveChart> {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         return MouseRegion(
-          onHover: (e) => _select(e.localPosition, width),
-          onExit: (_) => _clear(),
+          onHover: widget.interactive
+              ? (e) => _select(e.localPosition, width)
+              : null,
+          onExit: widget.interactive ? (_) => _clear() : null,
           child: GestureDetector(
-            onTapDown: (d) => _select(d.localPosition, width),
-            onHorizontalDragUpdate: (d) => _select(d.localPosition, width),
-            onHorizontalDragEnd: (_) => _clear(),
+            onTapDown: widget.interactive
+                ? (d) => _select(d.localPosition, width)
+                : null,
+            onHorizontalDragUpdate: widget.interactive
+                ? (d) => _select(d.localPosition, width)
+                : null,
+            onHorizontalDragEnd: widget.interactive ? (_) => _clear() : null,
             child: Stack(
               children: [
                 Positioned.fill(

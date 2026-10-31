@@ -8,6 +8,7 @@ import '../depot_portfolio_labels.dart';
 import '../dividends/depot_dividend_calendar.dart';
 import 'depot_dividend_detail_dialog.dart';
 import 'depot_holding_avatar.dart';
+import 'depot_info_row.dart';
 
 class DepotDividendEntryTile extends StatelessWidget {
   final DepotDividendEntry entry;
@@ -41,10 +42,9 @@ class DepotDividendEntryTile extends StatelessWidget {
             '${NumberFormat.simpleCurrency(locale: locale, name: e.currency).format(perShare)}',
     ].join(' · ');
 
-    return ListTile(
-      dense: true,
+    return DepotInfoRow(
       onTap: () => DepotDividendDetailDialog.show(context, e, format),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       leading: DepotHoldingAvatar(name: e.name, colorSeed: e.colorSeed),
       title: Text(
         e.name,
@@ -69,11 +69,12 @@ class DepotDividendEntryTile extends StatelessWidget {
         style: theme.textTheme.bodySmall,
       ),
       trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
             '$approx${format.money(e.net)}',
+            textAlign: TextAlign.end,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: statusColor,
@@ -82,6 +83,7 @@ class DepotDividendEntryTile extends StatelessWidget {
           if (e.gross != e.net)
             Text(
               l10n.depotDividendGross(format.money(e.gross)),
+              textAlign: TextAlign.end,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

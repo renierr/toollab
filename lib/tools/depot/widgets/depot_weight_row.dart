@@ -5,6 +5,7 @@ import '../models/depot_fund_constituent.dart';
 import '../models/depot_holding.dart';
 import 'depot_constituent_list.dart';
 import 'depot_holding_avatar.dart';
+import 'depot_info_row.dart';
 import 'depot_kind_badge.dart';
 
 /// One position's share of the portfolio. A fund with known top holdings
@@ -46,54 +47,55 @@ class _DepotWeightRowState extends State<DepotWeightRow> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         children: [
-          Row(
-            children: [
-              DepotHoldingAvatar(
-                name: holding.name,
-                colorSeed: holding.identifier ?? holding.id,
-                size: 28,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      holding.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 2),
-                    DepotKindBadge(kind: widget.kind),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    widget.format.percent(widget.share * 100, signed: false),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+          DepotInfoRow(
+            leading: DepotHoldingAvatar(
+              name: holding.name,
+              colorSeed: holding.identifier ?? holding.id,
+              size: 28,
+            ),
+            title: Text(
+              holding.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium,
+            ),
+            subtitle: DepotKindBadge(kind: widget.kind),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        widget.format.percent(
+                          widget.share * 100,
+                          signed: false,
+                        ),
+                        textAlign: TextAlign.end,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        widget.format.money(holding.currentValue),
+                        textAlign: TextAlign.end,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    widget.format.money(holding.currentValue),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                    ),
-                  ),
-                ],
-              ),
-              if (expandable)
-                AnimatedRotation(
-                  turns: _expanded ? 0 : -0.25,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(Icons.expand_more, color: theme.hintColor),
                 ),
-            ],
+                if (expandable)
+                  AnimatedRotation(
+                    turns: _expanded ? 0 : -0.25,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(Icons.expand_more, color: theme.hintColor),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 4),
           LayoutBuilder(

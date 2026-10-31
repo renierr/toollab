@@ -14,6 +14,7 @@ class DepotValueCard extends StatelessWidget {
   final DepotRangeChange? change;
   final Map<DepotHoldingKind, double> allocation;
   final DepotFormat format;
+  final Widget? chart;
 
   final bool showChart;
 
@@ -23,6 +24,7 @@ class DepotValueCard extends StatelessWidget {
     required this.change,
     required this.allocation,
     required this.format,
+    this.chart,
     this.showChart = true,
   });
 
@@ -61,7 +63,10 @@ class DepotValueCard extends StatelessWidget {
             ],
             if (showChart) ...[
               const SizedBox(height: 12),
-              DepotValueChart(points: points, format: format),
+              if (points.length >= 2 && chart != null)
+                chart!
+              else
+                DepotValueChart(points: points, format: format),
             ],
             if (allocationTotal > 0) ...[
               const Divider(height: 24),

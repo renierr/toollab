@@ -15,8 +15,10 @@ import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_summary.dart';
 import 'package:tool_lab/tools/depot/models/depot_transaction.dart';
 import 'package:tool_lab/tools/depot/models/market_quote.dart';
-import 'package:tool_lab/tools/depot/widgets/depot_benchmark_card.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_benchmark_chart.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_risk_card.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_value_card.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_value_chart.dart';
 
 DepotChartPoint point(int day, double value, double capital) => DepotChartPoint(
   date: DateTime(2026, 1, day),
@@ -121,6 +123,8 @@ void main() {
     await state.load(chart, 'USD');
     expect(state.currencyMismatch, isTrue);
     expect(requests, hasLength(2));
+    state.reduceCache();
+    expect(state.selection, DepotBenchmark.off);
   });
 
   test('tax CSV selects year, escapes text and retains currencies', () {
@@ -177,6 +181,147 @@ void main() {
     expect(position('USD').yieldOnCost, isNull);
   });
 
+  testWidgets('risk card handles known exposure without drawdown', (
+    tester,
+  ) async {
+    final format = DepotFormat('en', 'EUR');
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: DepotRiskCard(
+            risk: const DepotRisk(
+              topOne: 100,
+              topThree: 100,
+              crypto: 0,
+              country: (name: 'Germany', weight: 50),
+              sector: (name: 'Technology', weight: 40),
+            ),
+            format: format,
+          ),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('Germany'), findsOneWidget);
+    expect(find.text('Current value drawdown'), findsNothing);
+  });
+
+  testWidgets('benchmark is inside the value card only when a chart is shown', (
+    tester,
+  ) async {
+    var requests = 0;
+    final benchmark = DepotBenchmarkState(
+      loader: (_, _, _) async {
+        requests++;
+        return MarketQuote(
+          price: 12,
+          previousClose: 10,
+          currency: 'EUR',
+          exchange: '',
+          points: [
+            MarketPricePoint(date: DateTime(2026, 1, 1), close: 10),
+            MarketPricePoint(date: DateTime(2026, 1, 2), close: 12),
+          ],
+        );
+      },
+    )..select(DepotBenchmark.world);
+    final portfolio = _Portfolio();
+    addTearDown(benchmark.dispose);
+    addTearDown(portfolio.dispose);
+    final format = DepotFormat('en', 'EUR');
+    Widget app(bool showChart, List<DepotChartPoint> points) => MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: benchmark),
+        ChangeNotifierProvider<DepotPortfolioState>.value(value: portfolio),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: DepotValueCard(
+              points: points,
+              change: null,
+              allocation: const {},
+              format: format,
+              showChart: showChart,
+              chart: DepotBenchmarkChart(format: format),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(app(false, portfolio.chart));
+    await tester.pumpAndSettle();
+    expect(find.byType(DepotBenchmarkChart), findsNothing);
+    expect(requests, 0);
+    await tester.pumpWidget(app(true, [portfolio.chart.first]));
+    await tester.pumpAndSettle();
+    expect(find.byType(DepotBenchmarkChart), findsNothing);
+    expect(find.byType(DepotValueChart), findsOneWidget);
+    expect(requests, 0);
+    await tester.pumpWidget(app(true, portfolio.chart));
+    await tester.pumpAndSettle();
+    expect(requests, 1);
+    expect(
+      find.descendant(
+        of: find.byType(DepotValueCard),
+        matching: find.byType(DepotBenchmarkChart),
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(DepotValueChart), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('benchmark starts off and disables chart hover while active', (
+    tester,
+  ) async {
+    final benchmark = DepotBenchmarkState(
+      loader: (_, _, _) async => throw StateError('offline'),
+    );
+    final portfolio = _Portfolio();
+    addTearDown(benchmark.dispose);
+    addTearDown(portfolio.dispose);
+    expect(benchmark.selection, DepotBenchmark.off);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: benchmark),
+          ChangeNotifierProvider<DepotPortfolioState>.value(value: portfolio),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: DepotBenchmarkChart(format: DepotFormat('en', 'EUR')),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.widget<DepotValueChart>(find.byType(DepotValueChart)).interactive,
+      isTrue,
+    );
+    benchmark.select(DepotBenchmark.world);
+    await tester.pumpAndSettle();
+    expect(benchmark.failed, isTrue);
+    expect(
+      tester.widget<DepotValueChart>(find.byType(DepotValueChart)).interactive,
+      isFalse,
+    );
+    benchmark.select(DepotBenchmark.off);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<DepotValueChart>(find.byType(DepotValueChart)).interactive,
+      isTrue,
+    );
+  });
+
   testWidgets('insight cards fit a narrow screen with larger text', (
     tester,
   ) async {
@@ -218,7 +363,7 @@ void main() {
           home: Scaffold(
             body: ListView(
               children: [
-                const DepotBenchmarkCard(),
+                DepotBenchmarkChart(format: DepotFormat('en', 'EUR')),
                 DepotRiskCard(
                   risk: DepotRisk.calculate(
                     [holding('asset', 100)],

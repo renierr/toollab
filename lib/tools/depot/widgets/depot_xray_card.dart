@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../depot_format.dart';
 import '../depot_xray.dart';
 import 'depot_holding_avatar.dart';
+import 'depot_info_row.dart';
 import 'depot_kind_badge.dart';
 
 /// The portfolio looked through its funds: largest underlying companies, each
@@ -62,22 +63,27 @@ class _DepotXRayCardState extends State<DepotXRayCard> {
             ),
           ),
         if (xray.uncovered > 0)
-          Padding(
+          DepotInfoRow(
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-            child: Row(
+            leading: Icon(Icons.more_horiz, size: 18, color: theme.hintColor),
+            title: Text(l10n.depotXRayUncovered, style: hint),
+            trailing: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Icon(Icons.more_horiz, size: 18, color: theme.hintColor),
-                const SizedBox(width: 10),
-                Expanded(child: Text(l10n.depotXRayUncovered, style: hint)),
                 Text(
                   format.percent(
                     xray.uncovered / xray.total * 100,
                     signed: false,
                   ),
                   style: hint,
+                  textAlign: TextAlign.end,
                 ),
-                const SizedBox(width: 12),
-                Text(format.money(xray.uncovered), style: hint),
+                Text(
+                  format.money(xray.uncovered),
+                  style: hint,
+                  textAlign: TextAlign.end,
+                ),
               ],
             ),
           ),
@@ -110,73 +116,69 @@ class _XRayTile extends StatelessWidget {
       childrenPadding: const EdgeInsets.fromLTRB(46, 0, 8, 8),
       shape: const Border(),
       collapsedShape: const Border(),
-      leading: DepotHoldingAvatar(
-        name: entry.name,
-        colorSeed: entry.key,
-        size: 28,
-      ),
-      title: Text(
-        entry.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyMedium,
-      ),
-      subtitle: Text(l10n.depotXRaySources(entry.sources.length), style: hint),
-      trailing: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            format.percent(entry.value / total * 100, signed: false),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+      showTrailingIcon: false,
+      title: DepotInfoRow(
+        leading: DepotHoldingAvatar(
+          name: entry.name,
+          colorSeed: entry.key,
+          size: 28,
+        ),
+        title: Text(
+          entry.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyMedium,
+        ),
+        subtitle: Text(
+          l10n.depotXRaySources(entry.sources.length),
+          style: hint,
+        ),
+        trailing: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              format.percent(entry.value / total * 100, signed: false),
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          Text(format.money(entry.value), style: hint),
-        ],
+            Text(
+              format.money(entry.value),
+              style: hint,
+              textAlign: TextAlign.end,
+            ),
+          ],
+        ),
       ),
       children: [
         for (final source in entry.sources)
-          Padding(
+          DepotInfoRow(
             padding: const EdgeInsets.symmetric(vertical: 3),
-            child: Row(
-              children: [
-                Icon(
-                  DepotKindBadge.icon(source.kind),
-                  size: 16,
-                  color: theme.hintColor,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        source.holding.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      Text(
-                        source.fundWeight == null
-                            ? l10n.depotXRayDirect
-                            : l10n.depotXRayFundShare(
-                                format.percent(
-                                  source.fundWeight! * 100,
-                                  signed: false,
-                                ),
-                              ),
-                        style: hint,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  format.money(source.value),
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
+            leading: Icon(
+              DepotKindBadge.icon(source.kind),
+              size: 16,
+              color: theme.hintColor,
+            ),
+            title: Text(
+              source.holding.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall,
+            ),
+            subtitle: Text(
+              source.fundWeight == null
+                  ? l10n.depotXRayDirect
+                  : l10n.depotXRayFundShare(
+                      format.percent(source.fundWeight! * 100, signed: false),
+                    ),
+              style: hint,
+            ),
+            trailing: Text(
+              format.money(source.value),
+              style: theme.textTheme.bodySmall,
+              textAlign: TextAlign.end,
             ),
           ),
       ],

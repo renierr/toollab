@@ -6,6 +6,7 @@ import 'package:tool_lab/theme/theme.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../models/depot_transaction.dart';
+import 'depot_info_row.dart';
 
 class DepotTransactionTile extends StatelessWidget {
   final DepotTransaction transaction;
@@ -52,7 +53,8 @@ class DepotTransactionTile extends StatelessWidget {
       ?t.broker,
     ].join(' · ');
 
-    return ListTile(
+    return DepotInfoRow(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: CircleAvatar(
         backgroundColor: color.withValues(alpha: 0.15),
         child: Icon(icon, color: color, size: 20),
@@ -64,16 +66,16 @@ class DepotTransactionTile extends StatelessWidget {
       ),
       subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
             format.money(t.amount),
+            textAlign: TextAlign.end,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
-          // One line for both: ListTile caps the trailing height at two.
           if (showNet || realized != null)
             Text.rich(
               TextSpan(
@@ -93,6 +95,7 @@ class DepotTransactionTile extends StatelessWidget {
                     ),
                 ],
               ),
+              textAlign: TextAlign.end,
               style: theme.textTheme.bodySmall,
             ),
         ],

@@ -112,6 +112,7 @@ class DepotBenchmarkState extends ChangeNotifier {
 
   void reduceCache() {
     _revision++;
+    selection = DepotBenchmark.off;
     _chart = null;
     _currency = null;
     points = const [];

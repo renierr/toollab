@@ -108,8 +108,11 @@ exchange rate is assumed.
 The optional benchmark compares the portfolio with EUR-listed accumulating ETF
 proxies for MSCI World (EUNL.DE) or the S&P 500 (SXR8.DE). It fetches Yahoo daily
 closing prices on demand; EUR portfolios only. Both lines start at 100 on their
-first overlapping date. Portfolio returns approximate cash flows from changes in
-invested capital between chart points; the ETF line uses unadjusted closing prices.
+first overlapping date. It starts off and resets when leaving Depot. The static
+comparison replaces the value plot inside its card; its selector is hidden when
+there is no chart, including Today. Portfolio returns approximate cash flows from
+changes in invested capital between chart points; the ETF line uses unadjusted
+closing prices.
 Differences are indicative, not risk-adjusted alpha, and can be affected by costs,
 taxes, missing data and timing. A failed or unavailable comparison leaves the
 original value chart untouched. Prices may be delayed.

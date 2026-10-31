@@ -73,6 +73,24 @@ class _DepotIncomePlotState extends State<DepotIncomePlot> with DisposeCleanup {
           return result;
         }) +
         12;
+    final valueStyle = labelStyle.copyWith(
+      color: theme.colorScheme.onSurface,
+      fontWeight: FontWeight.w600,
+    );
+    final valueWidth = widget.months.fold<double>(0, (width, month) {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: widget.format.money(month.total),
+          style: valueStyle,
+        ),
+        textScaler: MediaQuery.textScalerOf(context),
+        textDirection: Directionality.of(context),
+        maxLines: 1,
+      )..layout();
+      final result = math.max(width, painter.width);
+      painter.dispose();
+      return result;
+    });
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +116,8 @@ class _DepotIncomePlotState extends State<DepotIncomePlot> with DisposeCleanup {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final minWidth = widget.months.length * 82.0 * textScale;
+              final barWidth = math.max(82.0 * textScale, valueWidth + 8);
+              final minWidth = widget.months.length * barWidth;
               final scrolls = constraints.maxWidth < minWidth;
               return Scrollbar(
                 controller: _scrollController,
@@ -260,6 +279,8 @@ class _IncomeBar extends StatelessWidget {
           children: [
             Text(
               format.money(month.total),
+              maxLines: 1,
+              softWrap: false,
               style: labelStyle.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,

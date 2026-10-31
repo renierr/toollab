@@ -10,7 +10,7 @@ import '../depot_portfolio_state.dart';
 import '../depot_risk.dart';
 import '../models/depot_period.dart';
 import 'depot_connect_card.dart';
-import 'depot_benchmark_card.dart';
+import 'depot_benchmark_chart.dart';
 import 'depot_holding_filter_bar.dart';
 import 'depot_holding_tile.dart';
 import 'depot_kpi_grid.dart';
@@ -82,17 +82,7 @@ class DepotOverviewView extends StatelessWidget {
                       allocation: state.allocation,
                       format: format,
                       showChart: state.period != DepotPeriod.today,
-                    ),
-                    const SizedBox(height: 12),
-                    const DepotBenchmarkCard(),
-                    const SizedBox(height: 12),
-                    DepotRiskCard(
-                      risk: DepotRisk.calculate(
-                        state.holdings,
-                        state.chart,
-                        profileOf: allocation.profileOf,
-                      ),
-                      format: format,
+                      chart: DepotBenchmarkChart(format: format),
                     ),
                     if (state.movers.isNotEmpty) ...[
                       const SizedBox(height: 12),
@@ -105,6 +95,15 @@ class DepotOverviewView extends StatelessWidget {
                         format: format,
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    DepotRiskCard(
+                      risk: DepotRisk.calculate(
+                        state.holdings,
+                        state.chart,
+                        profileOf: allocation.profileOf,
+                      ),
+                      format: format,
+                    ),
                     const SizedBox(height: 16),
                     const DepotHoldingFilterBar(),
                   ],

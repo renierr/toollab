@@ -34,63 +34,82 @@ class DepotSyncHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          alignment: WrapAlignment.spaceBetween,
-          children: [
-            if (state.portfolios.length > 1)
-              DropdownButton<String>(
-                value: state.scope,
-                underline: const SizedBox.shrink(),
-                onChanged: (scope) {
-                  if (scope != null) state.setScope(scope);
-                },
-                items: [
-                  DropdownMenuItem(
-                    value: DepotStore.allScope,
-                    child: Text(l10n.depotAllPortfolios),
-                  ),
-                  for (final p in state.portfolios)
-                    DropdownMenuItem(value: p.id, child: Text(p.name)),
-                ],
-              )
-            else if (state.portfolios.length == 1)
-              Text(
-                state.portfolios.first.name,
-                style: theme.textTheme.titleSmall,
-              ),
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Text(
-                  lastSync == null
-                      ? l10n.depotNeverSynced
-                      : '${l10n.depotLastSync(FormatHelper.dateTime(lastSync))}'
-                            '${now.difference(lastSync) > const Duration(hours: 24) ? ' · ${l10n.depotSyncStale}' : ''}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                state.isSyncing
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+        LayoutBuilder(
+          builder: (context, constraints) => Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.spaceBetween,
+            children: [
+              if (state.portfolios.length > 1)
+                SizedBox(
+                  width: constraints.maxWidth < 280
+                      ? constraints.maxWidth
+                      : 280,
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: state.scope,
+                    underline: const SizedBox.shrink(),
+                    onChanged: (scope) {
+                      if (scope != null) state.setScope(scope);
+                    },
+                    items: [
+                      DropdownMenuItem(
+                        value: DepotStore.allScope,
+                        child: Text(
+                          l10n.depotAllPortfolios,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.sync_outlined),
-                        tooltip: l10n.depotSyncNow,
-                        onPressed: state.sync,
                       ),
-              ],
-            ),
-          ],
+                      for (final p in state.portfolios)
+                        DropdownMenuItem(
+                          value: p.id,
+                          child: Text(
+                            p.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                )
+              else if (state.portfolios.length == 1)
+                Text(
+                  state.portfolios.first.name,
+                  style: theme.textTheme.titleSmall,
+                ),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    lastSync == null
+                        ? l10n.depotNeverSynced
+                        : '${l10n.depotLastSync(FormatHelper.dateTime(lastSync))}'
+                              '${now.difference(lastSync) > const Duration(hours: 24) ? ' · ${l10n.depotSyncStale}' : ''}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  state.isSyncing
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.sync_outlined),
+                          tooltip: l10n.depotSyncNow,
+                          onPressed: state.sync,
+                        ),
+                ],
+              ),
+            ],
+          ),
         ),
         if (state.hasData)
           Padding(
