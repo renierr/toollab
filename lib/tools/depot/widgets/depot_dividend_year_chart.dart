@@ -4,17 +4,21 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../depot_colors.dart';
 import '../depot_format.dart';
 import '../dividends/depot_dividend_calendar.dart';
+import '../models/depot_dividend_history.dart';
+import 'depot_dividend_history_view.dart';
 import 'depot_dividend_stack_bar.dart';
 import 'depot_legend_dot.dart';
 
 class DepotDividendYearChart extends StatelessWidget {
   final DepotDividendCalendar calendar;
   final DepotFormat format;
+  final DepotDividendHistory? history;
 
   const DepotDividendYearChart({
     super.key,
     required this.calendar,
     required this.format,
+    this.history,
   });
 
   static const _maxYears = 12;
@@ -125,6 +129,12 @@ class DepotDividendYearChart extends StatelessWidget {
                 ],
               ),
             ),
+            if (history != null)
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: Text(l10n.depotDividendHistoryTitle),
+                children: [DepotDividendHistoryView(history: history!)],
+              ),
           ],
         ),
       ),

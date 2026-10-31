@@ -34,6 +34,15 @@ class DepotActivityFilterBar extends StatelessWidget {
           onChanged: (q) =>
               state.setActivityFilter(state.activityFilter.copyWith(query: q)),
         ),
+        if (filter.holdingId != null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: InputChip(
+              label: Text(filter.holdingName ?? filter.holdingId!),
+              onDeleted: () =>
+                  state.setActivityFilter(filter.copyWith(clearHolding: true)),
+            ),
+          ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 6,

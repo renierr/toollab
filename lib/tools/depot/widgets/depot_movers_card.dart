@@ -16,12 +16,16 @@ class DepotMoversCard extends StatefulWidget {
   final List<DepotMover> movers;
   final String periodLabel;
   final DepotFormat format;
+  final bool byGain;
+  final ValueChanged<bool>? onModeChanged;
 
   const DepotMoversCard({
     super.key,
     required this.movers,
     required this.periodLabel,
     required this.format,
+    this.byGain = false,
+    this.onModeChanged,
   });
 
   @override
@@ -103,6 +107,27 @@ class _DepotMoversCardState extends State<DepotMoversCard> {
                   ),
                 ],
               ),
+              if (widget.onModeChanged != null)
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: Text(l10n.depotMoversPercent),
+                      selected: !widget.byGain,
+                      onSelected: (_) => widget.onModeChanged!(false),
+                    ),
+                    ChoiceChip(
+                      label: Text(l10n.depotMoversAmount),
+                      selected: widget.byGain,
+                      onSelected: (_) => widget.onModeChanged!(true),
+                    ),
+                  ],
+                ),
+              if (widget.byGain)
+                Text(
+                  l10n.depotMoversAmountNote,
+                  style: theme.textTheme.bodySmall,
+                ),
               const SizedBox(height: 8),
               for (final mover in movers)
                 _MoverRow(
@@ -110,6 +135,7 @@ class _DepotMoversCardState extends State<DepotMoversCard> {
                   share: largest <= 0 ? 0 : mover.returnPercent.abs() / largest,
                   format: widget.format,
                   periodLabel: widget.periodLabel,
+                  byGain: widget.byGain,
                 ),
             ],
           ),
@@ -126,12 +152,14 @@ class _MoverRow extends StatelessWidget {
   final double share;
   final DepotFormat format;
   final String periodLabel;
+  final bool byGain;
 
   const _MoverRow({
     required this.mover,
     required this.share,
     required this.format,
     required this.periodLabel,
+    required this.byGain,
   });
 
   @override
@@ -151,7 +179,9 @@ class _MoverRow extends StatelessWidget {
       if (holding.currentPrice != 0)
         '${l10n.depotDetailCurrentPrice}: ${format.money(holding.currentPrice)}',
       '${l10n.depotDetailCurrentValue}: ${format.money(holding.currentValue)}',
-      '${l10n.depotDetailPeriodReturn(periodLabel)}: ${format.percent(returnPercent)}',
+      byGain
+          ? '${l10n.depotDetailPeriodGain(periodLabel)}: ${format.money(returnPercent, signed: true)}'
+          : '${l10n.depotDetailPeriodReturn(periodLabel)}: ${format.percent(returnPercent)}',
     ];
 
     return Tooltip(
@@ -204,14 +234,22 @@ class _MoverRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 76),
-              child: Text(
-                format.percent(returnPercent),
-                textAlign: TextAlign.right,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
+            Expanded(
+              flex: 4,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    byGain
+                        ? format.money(returnPercent, signed: true)
+                        : format.percent(returnPercent),
+                    textAlign: TextAlign.right,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),

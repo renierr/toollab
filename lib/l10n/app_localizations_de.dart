@@ -11805,6 +11805,73 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotYearTitle => 'Realisiert pro Jahr';
 
   @override
+  String get depotMoversPercent => 'Rendite %';
+
+  @override
+  String get depotMoversAmount => 'Beitrag';
+
+  @override
+  String get depotMoversAmountNote =>
+      'Nettogewinn im Zeitraum je sichtbarer Position, einschließlich realisierter Gewinne und Dividenden. Positionsfilter gelten; keine vollständige Depotüberleitung.';
+
+  @override
+  String get depotHoldingTotalGain => 'Gewinn und Erträge gesamt';
+
+  @override
+  String get depotHoldingTotalNote =>
+      'Netto-Gesamtwerte laut Parqet; Kosten werden nicht erneut abgezogen.';
+
+  @override
+  String get depotHoldingShowSales => 'Verkäufe anzeigen';
+
+  @override
+  String get depotSalesTitle => 'Verkäufe im Detail';
+
+  @override
+  String get depotSalesProceeds => 'Netto-Verkaufserlös';
+
+  @override
+  String get depotSalesKnownGain => 'Bekannte realisierte Gewinne';
+
+  @override
+  String get depotSalesLargestGains => 'Größte Gewinne · bis zu 3 Verkäufe';
+
+  @override
+  String get depotSalesLargestLosses => 'Größte Verluste · bis zu 3 Verkäufe';
+
+  @override
+  String depotSalesMissingGain(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Bei $count Verkäufen fehlt der Gewinn.',
+      one: 'Bei 1 Verkauf fehlt der Gewinn.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotSalesNote =>
+      'Nettobeträge laut Parqet. Größte Gewinne und Verluste sind einzelne Verkäufe, keine Steuerberechnung. Aktivitätsfilter beeinflussen die Übersicht nicht.';
+
+  @override
+  String get depotDividendHistoryTitle => 'Gebuchte Dividenden nach Jahr';
+
+  @override
+  String get depotDividendHistoryNote =>
+      'Nettobuchungen nach Währung. Das laufende Jahr kann unvollständig sein; Käufe und Verkäufe beeinflussen Vergleiche. Keine Währungsumrechnung.';
+
+  @override
+  String depotDividendHistoryChange(String value) {
+    return 'zum Vorjahr: $value';
+  }
+
+  @override
+  String depotDividendHistoryShare(String value) {
+    return 'Anteil: $value';
+  }
+
+  @override
   String depotYearRealized(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

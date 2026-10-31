@@ -67,6 +67,10 @@ class DepotPortfolioState extends ChangeNotifier {
   DepotActivityFilter _activityFilter = const DepotActivityFilter();
   List<DepotHolding> _visibleHoldings = const [];
   List<DepotMover> _movers = const [];
+  List<DepotMover> _gainMovers = const [];
+  bool _moversByGain = false;
+  List<DepotTransaction>? _salesSource;
+  Set<(String, String)> _salesHoldings = const {};
   List<DepotTransaction> _visibleTransactions = const [];
   final Map<(String, int, int), bool> _activityMonthExpansion = {};
   List<DepotTransaction>? _groupedActivitiesSource;
@@ -123,6 +127,27 @@ class DepotPortfolioState extends ChangeNotifier {
   /// Up to five gains, then up to five losses of the period among
   /// [visibleHoldings] by return percentage, each largest first.
   List<DepotMover> get movers => _movers;
+  List<DepotMover> get gainMovers => _gainMovers;
+  bool get moversByGain => _moversByGain;
+
+  void setMoversByGain(bool value) {
+    _moversByGain = value;
+    _notify();
+  }
+
+  bool hasSalesFor(DepotHolding holding) {
+    final source = transactions;
+    if (!identical(source, _salesSource)) {
+      _salesSource = source;
+      _salesHoldings = {
+        for (final transaction in source)
+          if (transaction.type == DepotTransactionType.sell)
+            (transaction.portfolioId, transaction.holdingId),
+      };
+    }
+    return _salesHoldings.contains((holding.portfolioId, holding.id));
+  }
+
   List<DepotTransaction> get visibleTransactions => _visibleTransactions;
 
   List<DepotActivityRow> get activityRows {
@@ -429,6 +454,19 @@ class DepotPortfolioState extends ChangeNotifier {
     final losses = moves.where((m) => m.returnPercent < 0).toList()
       ..sort((a, b) => a.returnPercent.compareTo(b.returnPercent));
     _movers = [...gains.take(5), ...losses.take(5).toList().reversed];
+    final amounts = [
+      for (final h in _visibleHoldings)
+        if (performanceOf(h)?.gain case final gain? when gain != 0)
+          (holding: h, returnPercent: gain),
+    ];
+    final gainAmounts = amounts.where((m) => m.returnPercent > 0).toList()
+      ..sort((a, b) => b.returnPercent.compareTo(a.returnPercent));
+    final lossAmounts = amounts.where((m) => m.returnPercent < 0).toList()
+      ..sort((a, b) => a.returnPercent.compareTo(b.returnPercent));
+    _gainMovers = [
+      ...gainAmounts.take(5),
+      ...lossAmounts.take(5).toList().reversed,
+    ];
   }
 
   void _refilterTransactions() {

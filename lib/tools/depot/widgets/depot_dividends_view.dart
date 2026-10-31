@@ -7,6 +7,7 @@ import '../depot_dividend_state.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_state.dart';
 import '../models/depot_holding.dart';
+import '../models/depot_dividend_history.dart';
 import 'depot_connect_card.dart';
 import 'depot_dividend_calendar_card.dart';
 import 'depot_dividend_kpis.dart';
@@ -79,6 +80,7 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
       portfolio.transactions,
       portfolio.currency,
     );
+    final history = DepotDividendHistory(portfolio.transactions);
 
     return RefreshIndicator(
       onRefresh: _pullToRefresh,
@@ -109,7 +111,11 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
                 format: format,
               ),
               DepotDividendCalendarCard(calendar: calendar, format: format),
-              DepotDividendYearChart(calendar: calendar, format: format),
+              DepotDividendYearChart(
+                calendar: calendar,
+                format: format,
+                history: history,
+              ),
               DepotIncomeChart(
                 months: portfolio.incomeByMonth(),
                 format: format,
@@ -117,6 +123,7 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
               DepotDividendPositionsCard(
                 positions: calendar.positions,
                 format: format,
+                history: history,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),

@@ -6,17 +6,21 @@ import '../depot_colors.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../dividends/depot_dividend_calendar.dart';
+import '../models/depot_dividend_history.dart';
+import 'depot_dividend_history_view.dart';
 import 'depot_holding_avatar.dart';
 
 /// Dividend payers with rhythm, next payment, yield and expected income.
 class DepotDividendPositionsCard extends StatelessWidget {
   final List<DepotDividendPosition> positions;
   final DepotFormat format;
+  final DepotDividendHistory? history;
 
   const DepotDividendPositionsCard({
     super.key,
     required this.positions,
     required this.format,
+    this.history,
   });
 
   @override
@@ -48,6 +52,7 @@ class DepotDividendPositionsCard extends StatelessWidget {
                 position: p,
                 format: format,
                 share: maxAmount <= 0 ? 0 : _amountOf(p) / maxAmount,
+                history: history,
               ),
           ],
         ),
@@ -63,11 +68,13 @@ class _PositionRow extends StatelessWidget {
   final DepotDividendPosition position;
   final DepotFormat format;
   final double share;
+  final DepotDividendHistory? history;
 
   const _PositionRow({
     required this.position,
     required this.format,
     required this.share,
+    this.history,
   });
 
   @override
@@ -105,7 +112,7 @@ class _PositionRow extends StatelessWidget {
         l10n.depotYieldOnCost(format.percent(p.yieldOnCost!, signed: false)),
     ].join(' · ');
 
-    return Padding(
+    final row = Padding(
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Row(
         children: [
@@ -166,6 +173,14 @@ class _PositionRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+    if (history == null) return row;
+    return ExpansionTile(
+      key: PageStorageKey('depot-dividend-history-${h.portfolioId}/${h.id}'),
+      tilePadding: EdgeInsets.zero,
+      title: row,
+      childrenPadding: const EdgeInsets.symmetric(horizontal: 12),
+      children: [DepotDividendHistoryView(history: history!, holding: h)],
     );
   }
 }

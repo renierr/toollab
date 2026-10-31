@@ -70,11 +70,17 @@ class DepotActivityFilter {
   /// Empty means every type.
   final Set<DepotTransactionType> types;
   final DepotActivityDateRange? dateRange;
+  final String? portfolioId;
+  final String? holdingId;
+  final String? holdingName;
 
   const DepotActivityFilter({
     this.query = '',
     this.types = const {},
     this.dateRange,
+    this.portfolioId,
+    this.holdingId,
+    this.holdingName,
   });
 
   DepotActivityFilter copyWith({
@@ -82,13 +88,24 @@ class DepotActivityFilter {
     Set<DepotTransactionType>? types,
     DepotActivityDateRange? dateRange,
     bool clearDateRange = false,
+    String? portfolioId,
+    String? holdingId,
+    String? holdingName,
+    bool clearHolding = false,
   }) => DepotActivityFilter(
     query: query ?? this.query,
     types: types ?? this.types,
     dateRange: clearDateRange ? null : dateRange ?? this.dateRange,
+    portfolioId: clearHolding ? null : portfolioId ?? this.portfolioId,
+    holdingId: clearHolding ? null : holdingId ?? this.holdingId,
+    holdingName: clearHolding ? null : holdingName ?? this.holdingName,
   );
 
   bool matches(DepotTransaction t) {
+    if (holdingId != null &&
+        (t.holdingId != holdingId || t.portfolioId != portfolioId)) {
+      return false;
+    }
     if (types.isNotEmpty && !types.contains(t.type)) return false;
     if (dateRange != null && !dateRange!.contains(t.datetime)) return false;
     return _matchesQuery(query, [t.holdingName, t.broker]);

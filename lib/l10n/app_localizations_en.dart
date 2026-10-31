@@ -11721,6 +11721,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotYearTitle => 'Realized per year';
 
   @override
+  String get depotMoversPercent => 'Return %';
+
+  @override
+  String get depotMoversAmount => 'Contribution';
+
+  @override
+  String get depotMoversAmountNote =>
+      'Net period gain per visible position, including realized gains and dividends. Position filters apply; this is not a full portfolio reconciliation.';
+
+  @override
+  String get depotHoldingTotalGain => 'Total gain and income';
+
+  @override
+  String get depotHoldingTotalNote =>
+      'All-time net figures as reported by Parqet; costs are not deducted again.';
+
+  @override
+  String get depotHoldingShowSales => 'Show sales';
+
+  @override
+  String get depotSalesTitle => 'Sales details';
+
+  @override
+  String get depotSalesProceeds => 'Net proceeds';
+
+  @override
+  String get depotSalesKnownGain => 'Known realized gains';
+
+  @override
+  String get depotSalesLargestGains => 'Largest gains · up to 3 sales';
+
+  @override
+  String get depotSalesLargestLosses => 'Largest losses · up to 3 sales';
+
+  @override
+  String depotSalesMissingGain(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sales have no reported gain.',
+      one: '1 sale has no reported gain.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotSalesNote =>
+      'Net amounts as booked by Parqet. Largest gains and losses are individual sales, not a tax calculation. The summary ignores activity filters.';
+
+  @override
+  String get depotDividendHistoryTitle => 'Booked dividends by year';
+
+  @override
+  String get depotDividendHistoryNote =>
+      'Net bookings by currency. The current year may be incomplete; purchases and sales affect comparisons. No currency conversion.';
+
+  @override
+  String depotDividendHistoryChange(String value) {
+    return 'vs previous year: $value';
+  }
+
+  @override
+  String depotDividendHistoryShare(String value) {
+    return 'share: $value';
+  }
+
+  @override
   String depotYearRealized(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

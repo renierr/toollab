@@ -104,12 +104,22 @@ Value drawdowns and daily changes use the selected period's chart and include de
 and withdrawals, so they are not cash-flow-adjusted investment returns. Drawdown needs
 at least two valid chart points; daily changes need consecutive calendar days.
 
+The movers card switches between period return and absolute net gain contribution.
+Both use the visible holdings filter; gains include realized gains and dividends and
+are not a complete reconciliation of the portfolio. Expanded holding details add
+the all-time total of the three Parqet net components and, when sales exist,
+a link to that exact holding's sales. The link replaces the existing activity filters.
+
 The dividend position list shows the trailing 12 months of net booked dividends
 divided by the current cost basis as yield on cost. This is not a historical cost
 basis and may include payments from shares since sold. Estimated monthly income is
 the existing forward 12-month net estimate divided by 12, not a payment schedule.
 Yield on cost is omitted when a recent booking is in another currency; no historical
 exchange rate is assumed.
+The expandable booked-dividend history compares each year with its preceding year
+by booking currency, with per-position totals and their share of that currency's
+booked dividends. Unknown currencies are excluded and counted. Purchases, sales and
+an incomplete current year affect comparisons; forecast amounts are excluded.
 
 The optional benchmark compares the portfolio with EUR-listed accumulating ETF
 proxies for MSCI World (EUNL.DE) or the S&P 500 (SXR8.DE). It fetches Yahoo daily
@@ -136,6 +146,10 @@ The yearly summary groups gains, income, taxes and fees by the activity's
 currency, without conversion or a combined total. The usual single-currency
 view stays compact. Activities without a currency are counted separately and
 excluded from the totals: their values may represent different currencies.
+The expandable sales section shows net proceeds and known realized gains per booking
+currency, plus the largest individual gains and losses. It counts sales without a
+reported gain and does not infer a returned cost basis or apply the activity filters.
+The yearly net totals also mark missing sale gains; their known totals can be incomplete.
 
 The activity list groups bookings by month, newest first. The two newest matching
 months start expanded; older months start collapsed, and each can be toggled.

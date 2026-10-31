@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/data_row.dart';
 
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
+import '../depot_portfolio_state.dart';
+import '../depot_state.dart';
+import '../models/depot_filters.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_period.dart';
+import '../models/depot_transaction.dart';
 
 /// Every figure of one holding, shown when its row is expanded.
 class DepotHoldingDetails extends StatelessWidget {
@@ -37,6 +42,9 @@ class DepotHoldingDetails extends StatelessWidget {
     final exchange = h.quoteExchange;
     final startPrice = performance?.startPrice;
     final earliest = h.earliestActivity;
+    final hasSales = context.select<DepotPortfolioState?, bool>(
+      (state) => state?.hasSalesFor(h) ?? false,
+    );
 
     final rows = <(String, String)>[
       (l10n.depotDetailType, DepotPortfolioLabels.kind(l10n, h.kind)),
@@ -80,6 +88,7 @@ class DepotHoldingDetails extends StatelessWidget {
       ),
       (l10n.depotDetailRealized, format.money(h.realizedGain, signed: true)),
       (l10n.depotDetailDividends, format.money(h.dividends)),
+      (l10n.depotHoldingTotalGain, format.money(h.totalGain, signed: true)),
       (l10n.depotKpiCosts, format.money(h.fees + h.taxes)),
       if (xirr != null) (l10n.depotKpiXirr, format.percent(xirr)),
       if (earliest != null)
@@ -94,14 +103,39 @@ class DepotHoldingDetails extends StatelessWidget {
         // Two label/value columns only once each still has room to read.
         final columns = constraints.maxWidth >= 520 ? 2 : 1;
         final width = (constraints.maxWidth - 24 * (columns - 1)) / columns;
-        return Wrap(
-          spacing: 24,
-          runSpacing: 6,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final (label, value) in rows)
-              SizedBox(
-                width: width,
-                child: InfoRow(label: label, value: value),
+            Wrap(
+              spacing: 24,
+              runSpacing: 6,
+              children: [
+                for (final (label, value) in rows)
+                  SizedBox(
+                    width: width,
+                    child: InfoRow(label: label, value: value),
+                  ),
+              ],
+            ),
+            Text(
+              l10n.depotHoldingTotalNote,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            if (hasSales)
+              TextButton.icon(
+                onPressed: () {
+                  context.read<DepotPortfolioState>().setActivityFilter(
+                    DepotActivityFilter(
+                      portfolioId: h.portfolioId,
+                      holdingId: h.id,
+                      holdingName: h.name,
+                      types: const {DepotTransactionType.sell},
+                    ),
+                  );
+                  context.read<DepotState>().setTab(DepotTab.activities);
+                },
+                icon: const Icon(Icons.sell_outlined),
+                label: Text(l10n.depotHoldingShowSales),
               ),
           ],
         );

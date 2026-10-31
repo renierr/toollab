@@ -8,6 +8,7 @@ class DepotYearCurrencyReport {
   final double taxes;
   final double fees;
   final int sells;
+  final int missingSaleGains;
 
   const DepotYearCurrencyReport({
     required this.currency,
@@ -17,6 +18,7 @@ class DepotYearCurrencyReport {
     this.taxes = 0,
     this.fees = 0,
     this.sells = 0,
+    this.missingSaleGains = 0,
   });
 
   double get total => realizedGain + dividends + interest;
@@ -42,6 +44,12 @@ class DepotYearCurrencyReport {
         taxes: taxes + transaction.tax,
         fees: fees + transaction.fee,
         sells: sells + (transaction.type == DepotTransactionType.sell ? 1 : 0),
+        missingSaleGains:
+            missingSaleGains +
+            (transaction.type == DepotTransactionType.sell &&
+                    transaction.realizedGain == null
+                ? 1
+                : 0),
       );
 }
 

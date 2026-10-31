@@ -8,6 +8,7 @@ import '../depot_portfolio_state.dart';
 import '../depot_tax_export.dart';
 import '../models/depot_year_report.dart';
 import 'depot_info_row.dart';
+import 'depot_sales_summary.dart';
 
 /// Realized gains, income, taxes and fees of one calendar year.
 class DepotYearReportCard extends StatelessWidget {
@@ -87,6 +88,10 @@ class DepotYearReportCard extends StatelessWidget {
                   ),
                 ),
               ),
+            DepotSalesSummary(
+              transactions: state.transactions,
+              year: report.year,
+            ),
             const SizedBox(height: 6),
             Align(
               alignment: Alignment.centerLeft,
@@ -153,6 +158,13 @@ class _CurrencyReport extends StatelessWidget {
         ],
         for (final (label, amount) in rows)
           _ReportRow(label: label, amount: amount, format: format),
+        if (report.missingSaleGains > 0)
+          Text(
+            l10n.depotSalesMissingGain(report.missingSaleGains),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
         const Divider(height: 20),
         Text(l10n.depotYearCostsSeparate, style: theme.textTheme.labelMedium),
         _ReportRow(

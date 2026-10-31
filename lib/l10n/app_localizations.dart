@@ -20915,6 +20915,108 @@ abstract class AppLocalizations {
   /// **'Realized per year'**
   String get depotYearTitle;
 
+  /// No description provided for @depotMoversPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Return %'**
+  String get depotMoversPercent;
+
+  /// No description provided for @depotMoversAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Contribution'**
+  String get depotMoversAmount;
+
+  /// No description provided for @depotMoversAmountNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Net period gain per visible position, including realized gains and dividends. Position filters apply; this is not a full portfolio reconciliation.'**
+  String get depotMoversAmountNote;
+
+  /// No description provided for @depotHoldingTotalGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Total gain and income'**
+  String get depotHoldingTotalGain;
+
+  /// No description provided for @depotHoldingTotalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'All-time net figures as reported by Parqet; costs are not deducted again.'**
+  String get depotHoldingTotalNote;
+
+  /// No description provided for @depotHoldingShowSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Show sales'**
+  String get depotHoldingShowSales;
+
+  /// No description provided for @depotSalesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales details'**
+  String get depotSalesTitle;
+
+  /// No description provided for @depotSalesProceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Net proceeds'**
+  String get depotSalesProceeds;
+
+  /// No description provided for @depotSalesKnownGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Known realized gains'**
+  String get depotSalesKnownGain;
+
+  /// No description provided for @depotSalesLargestGains.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest gains · up to 3 sales'**
+  String get depotSalesLargestGains;
+
+  /// No description provided for @depotSalesLargestLosses.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest losses · up to 3 sales'**
+  String get depotSalesLargestLosses;
+
+  /// No description provided for @depotSalesMissingGain.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 sale has no reported gain.} other{{count} sales have no reported gain.}}'**
+  String depotSalesMissingGain(int count);
+
+  /// No description provided for @depotSalesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Net amounts as booked by Parqet. Largest gains and losses are individual sales, not a tax calculation. The summary ignores activity filters.'**
+  String get depotSalesNote;
+
+  /// No description provided for @depotDividendHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked dividends by year'**
+  String get depotDividendHistoryTitle;
+
+  /// No description provided for @depotDividendHistoryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Net bookings by currency. The current year may be incomplete; purchases and sales affect comparisons. No currency conversion.'**
+  String get depotDividendHistoryNote;
+
+  /// No description provided for @depotDividendHistoryChange.
+  ///
+  /// In en, this message translates to:
+  /// **'vs previous year: {value}'**
+  String depotDividendHistoryChange(String value);
+
+  /// No description provided for @depotDividendHistoryShare.
+  ///
+  /// In en, this message translates to:
+  /// **'share: {value}'**
+  String depotDividendHistoryShare(String value);
+
   /// No description provided for @depotYearRealized.
   ///
   /// In en, this message translates to:

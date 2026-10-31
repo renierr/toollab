@@ -86,10 +86,15 @@ class DepotOverviewView extends StatelessWidget {
                       showChart: state.period != DepotPeriod.today,
                       chart: DepotBenchmarkChart(format: format),
                     ),
-                    if (state.movers.isNotEmpty) ...[
+                    if (state.movers.isNotEmpty ||
+                        state.gainMovers.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       DepotMoversCard(
-                        movers: state.movers,
+                        movers: state.moversByGain
+                            ? state.gainMovers
+                            : state.movers,
+                        byGain: state.moversByGain,
+                        onModeChanged: state.setMoversByGain,
                         periodLabel: DepotPortfolioLabels.period(
                           l10n,
                           state.period,
