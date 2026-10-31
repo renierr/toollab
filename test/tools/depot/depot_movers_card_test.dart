@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -41,6 +42,123 @@ void main() {
     fees: 0,
     taxes: 0,
   );
+
+  testWidgets('copies the card after its pending paint', (tester) async {
+    var copied = false;
+    await tester.pumpWidget(
+      ChangeNotifierProvider<DepotLogoState>.value(
+        value: _LogoState(),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: DepotMoversCard(
+              movers: const [(holding: holding, returnPercent: 3.5)],
+              periodLabel: 'Today',
+              format: DepotFormat('en', 'EUR'),
+              captureAndCopy: (boundary, pixelRatio) async {
+                expect(boundary.debugNeedsPaint, isFalse);
+                copied = true;
+                return true;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find
+          .ancestor(
+            of: find.byType(Card),
+            matching: find.byType(RepaintBoundary),
+          )
+          .first,
+    );
+    boundary.markNeedsPaint();
+    await tester.tap(find.byTooltip('Copy as image'));
+    await tester.pumpAndSettle();
+    expect(copied, isTrue);
+    expect(find.text('Movers copied to clipboard'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('does not capture after the card is removed', (tester) async {
+    var captured = false;
+    await tester.pumpWidget(
+      ChangeNotifierProvider<DepotLogoState>.value(
+        value: _LogoState(),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: DepotMoversCard(
+              movers: const [(holding: holding, returnPercent: 3.5)],
+              periodLabel: 'Today',
+              format: DepotFormat('en', 'EUR'),
+              captureAndCopy: (boundary, pixelRatio) async {
+                captured = true;
+                return true;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byTooltip('Copy as image'));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(captured, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('mover mode chips use compact height and switch modes', (
+    tester,
+  ) async {
+    bool? selected;
+    await tester.pumpWidget(
+      ChangeNotifierProvider<DepotLogoState>.value(
+        value: _LogoState(),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Column(
+              children: [
+                DepotMoversCard(
+                  movers: const [(holding: holding, returnPercent: 3.5)],
+                  periodLabel: 'Today',
+                  format: DepotFormat('en', 'EUR'),
+                  onModeChanged: (value) => selected = value,
+                ),
+                const ChoiceChip(
+                  key: ValueKey('default-chip'),
+                  label: Text('Contribution'),
+                  selected: false,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    final chip = find.descendant(
+      of: find.byType(DepotMoversCard),
+      matching: find.widgetWithText(ChoiceChip, 'Contribution'),
+    );
+    final standardChip = find.byKey(const ValueKey('default-chip'));
+    expect(
+      tester.getSize(chip).height,
+      lessThan(tester.getSize(standardChip).height),
+    );
+    expect(
+      tester.getSize(chip).width,
+      lessThan(tester.getSize(standardChip).width),
+    );
+    expect(tester.widget<ChoiceChip>(chip).showCheckmark, isFalse);
+    await tester.tap(chip);
+    expect(selected, isTrue);
+    expect(tester.takeException(), isNull);
+  });
 
   for (final locale in ['en', 'de']) {
     testWidgets('mover tooltip works on touch and hover in $locale', (

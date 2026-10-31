@@ -18,6 +18,8 @@ class DepotMoversCard extends StatefulWidget {
   final DepotFormat format;
   final bool byGain;
   final ValueChanged<bool>? onModeChanged;
+  @visibleForTesting
+  final Future<bool> Function(RenderRepaintBoundary, double)? captureAndCopy;
 
   const DepotMoversCard({
     super.key,
@@ -26,6 +28,7 @@ class DepotMoversCard extends StatefulWidget {
     required this.format,
     this.byGain = false,
     this.onModeChanged,
+    this.captureAndCopy,
   });
 
   @override
@@ -39,6 +42,8 @@ class _DepotMoversCardState extends State<DepotMoversCard> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
     final boundary =
         _captureKey.currentContext?.findRenderObject()
             as RenderRepaintBoundary?;
@@ -46,12 +51,16 @@ class _DepotMoversCardState extends State<DepotMoversCard> {
     if (boundary != null) {
       ui.Image? image;
       try {
-        image = await boundary.toImage(pixelRatio: pixelRatio);
-        final data = await image.toByteData(format: ui.ImageByteFormat.png);
-        if (data != null) {
-          copied = await ClipboardHelper.copyImageBytes(
-            data.buffer.asUint8List(),
-          );
+        if (widget.captureAndCopy case final capture?) {
+          copied = await capture(boundary, pixelRatio);
+        } else {
+          image = await boundary.toImage(pixelRatio: pixelRatio);
+          final data = await image.toByteData(format: ui.ImageByteFormat.png);
+          if (data != null) {
+            copied = await ClipboardHelper.copyImageBytes(
+              data.buffer.asUint8List(),
+            );
+          }
         }
       } catch (e) {
         errorLog('DepotMoversCard: copy as image failed: $e');
@@ -113,12 +122,24 @@ class _DepotMoversCardState extends State<DepotMoversCard> {
                   children: [
                     ChoiceChip(
                       label: Text(l10n.depotMoversPercent),
+                      labelStyle: theme.textTheme.labelSmall,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: EdgeInsets.zero,
+                      showCheckmark: false,
                       selected: !widget.byGain,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       onSelected: (_) => widget.onModeChanged!(false),
                     ),
                     ChoiceChip(
                       label: Text(l10n.depotMoversAmount),
+                      labelStyle: theme.textTheme.labelSmall,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: EdgeInsets.zero,
+                      showCheckmark: false,
                       selected: widget.byGain,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       onSelected: (_) => widget.onModeChanged!(true),
                     ),
                   ],
