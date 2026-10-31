@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_parqet_sync.dart';
+import 'depot_activity_groups.dart';
 import 'depot_store.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
@@ -67,6 +68,13 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotHolding> _visibleHoldings = const [];
   List<DepotMover> _movers = const [];
   List<DepotTransaction> _visibleTransactions = const [];
+  final Map<(String, int, int), bool> _activityMonthExpansion = {};
+  List<DepotTransaction>? _groupedActivitiesSource;
+  DepotActivityGroups? _activityGroups;
+  List<DepotActivityRow>? _activityRows;
+  String? _activityRowsScope;
+  List<DepotTransaction>? _currencySource;
+  final Map<int, Set<String>> _activityCurrencies = {};
 
   bool get isLoaded => _isLoaded;
   String get clientId => _clientId;
@@ -118,6 +126,49 @@ class DepotPortfolioState extends ChangeNotifier {
   /// [visibleHoldings] by return percentage, each largest first.
   List<DepotMover> get movers => _movers;
   List<DepotTransaction> get visibleTransactions => _visibleTransactions;
+
+  bool yearHasOtherCurrency(int year, String currency) {
+    final source = transactions;
+    if (!identical(source, _currencySource)) {
+      _currencySource = source;
+      _activityCurrencies.clear();
+      for (final t in source) {
+        if (t.currency.isNotEmpty) {
+          (_activityCurrencies[t.datetime.year] ??= {}).add(t.currency);
+        }
+      }
+    }
+    return (_activityCurrencies[year] ?? {}).any((value) => value != currency);
+  }
+
+  List<DepotActivityRow> get activityRows {
+    final source = visibleTransactions;
+    if (!identical(source, _groupedActivitiesSource)) {
+      _groupedActivitiesSource = source;
+      _activityGroups = DepotActivityGroups(source);
+      _activityRows = null;
+    }
+    if (_activityRowsScope != _scope) {
+      _activityRowsScope = _scope;
+      _activityRows = null;
+    }
+    return _activityRows ??= _activityGroups!.rows(
+      isExpanded: (month, initial) =>
+          activityMonthExpanded(month, defaultExpanded: initial),
+    );
+  }
+
+  bool activityMonthExpanded(DateTime month, {required bool defaultExpanded}) =>
+      _activityMonthExpansion[(_scope, month.year, month.month)] ??
+      defaultExpanded;
+
+  void toggleActivityMonth(DateTime month, {required bool defaultExpanded}) {
+    final key = (_scope, month.year, month.month);
+    _activityMonthExpansion[key] =
+        !(_activityMonthExpansion[key] ?? defaultExpanded);
+    _activityRows = null;
+    _notify();
+  }
 
   /// The selected period's figures for [holding], if Parqet had any.
   DepotHoldingPerformance? performanceOf(DepotHolding holding) =>

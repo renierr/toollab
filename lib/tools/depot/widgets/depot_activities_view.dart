@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../depot_format.dart';
+import '../depot_activity_groups.dart';
 import '../depot_portfolio_state.dart';
 import 'depot_activity_filter_bar.dart';
 import 'depot_connect_card.dart';
@@ -26,6 +28,7 @@ class DepotActivitiesView extends StatelessWidget {
     if (!state.isConnected && !state.hasData) return const DepotConnectCard();
 
     final transactions = state.visibleTransactions;
+    final rows = state.activityRows;
     final report = state.yearReport;
     final locale = Localizations.localeOf(context).toString();
     // Activities keep their own currency; one formatter per currency.
@@ -69,16 +72,34 @@ class DepotActivitiesView extends StatelessWidget {
             SliverPadding(
               padding: const EdgeInsets.only(bottom: 24),
               sliver: SliverList.builder(
-                itemCount: transactions.length,
+                itemCount: rows.length,
                 itemBuilder: (context, index) {
-                  final t = transactions[index];
-                  return DepotTransactionTile(
-                    transaction: t,
-                    format: formats.putIfAbsent(
-                      t.currency,
-                      () => DepotFormat(locale, t.currency),
-                    ),
-                  );
+                  return switch (rows[index]) {
+                    DepotActivityMonth(
+                      :final month,
+                      :final count,
+                      :final expanded,
+                      :final defaultExpanded,
+                    ) =>
+                      _MonthHeader(
+                        month: month,
+                        count: count,
+                        expanded: expanded,
+                        onTap: () => state.toggleActivityMonth(
+                          month,
+                          defaultExpanded: defaultExpanded,
+                        ),
+                        locale: locale,
+                      ),
+                    DepotActivityItem(transaction: final t) =>
+                      DepotTransactionTile(
+                        transaction: t,
+                        format: formats.putIfAbsent(
+                          t.currency,
+                          () => DepotFormat(locale, t.currency),
+                        ),
+                      ),
+                  };
                 },
               ),
             ),
@@ -87,4 +108,52 @@ class DepotActivitiesView extends StatelessWidget {
       ),
     );
   }
+}
+
+class _MonthHeader extends StatelessWidget {
+  final DateTime month;
+  final String locale;
+  final int count;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  const _MonthHeader({
+    required this.month,
+    required this.locale,
+    required this.count,
+    required this.expanded,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    expanded: expanded,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    DateFormat.yMMMM(locale).format(month),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  Text(
+                    AppLocalizations.of(context).depotActivitiesCount(count),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            Icon(expanded ? Icons.expand_less : Icons.expand_more),
+          ],
+        ),
+      ),
+    ),
+  );
 }

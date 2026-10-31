@@ -6,6 +6,8 @@ import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../models/depot_transaction.dart';
 import 'depot_search_field.dart';
+import 'depot_activity_range_filter.dart';
+import 'depot_activity_export_button.dart';
 
 class DepotActivityFilterBar extends StatelessWidget {
   const DepotActivityFilterBar({super.key});
@@ -29,7 +31,8 @@ class DepotActivityFilterBar extends StatelessWidget {
         DepotSearchField(
           initialText: filter.query,
           hint: l10n.depotActivitiesSearch,
-          onChanged: (q) => state.setActivityFilter(filter.copyWith(query: q)),
+          onChanged: (q) =>
+              state.setActivityFilter(state.activityFilter.copyWith(query: q)),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -43,15 +46,18 @@ class DepotActivityFilterBar extends StatelessWidget {
                   selected: filter.types.contains(type),
                   visualDensity: VisualDensity.compact,
                   onSelected: (on) => state.setActivityFilter(
-                    filter.copyWith(
+                    state.activityFilter.copyWith(
                       types: on
-                          ? {...filter.types, type}
-                          : ({...filter.types}..remove(type)),
+                          ? {...state.activityFilter.types, type}
+                          : ({...state.activityFilter.types}..remove(type)),
                     ),
                   ),
                 ),
           ],
         ),
+        const SizedBox(height: 8),
+        const DepotActivityRangeFilter(),
+        const DepotActivityExportButton(),
       ],
     );
   }

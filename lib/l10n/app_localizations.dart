@@ -20924,8 +20924,14 @@ abstract class AppLocalizations {
   /// No description provided for @depotYearIncomeTotal.
   ///
   /// In en, this message translates to:
-  /// **'Total realized'**
+  /// **'Total gains and income'**
   String get depotYearIncomeTotal;
+
+  /// No description provided for @depotYearNetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} (net)'**
+  String depotYearNetLabel(String label);
 
   /// No description provided for @depotYearTaxes.
   ///
@@ -20939,11 +20945,23 @@ abstract class AppLocalizations {
   /// **'Fees paid'**
   String get depotYearFees;
 
+  /// No description provided for @depotYearCostsSeparate.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs overview · do not subtract again'**
+  String get depotYearCostsSeparate;
+
   /// No description provided for @depotYearNote.
   ///
   /// In en, this message translates to:
-  /// **'Net amounts as booked in Parqet; not a tax statement.'**
+  /// **'Net amounts as booked in Parqet. Taxes and fees are separate totals for all activities, not additional deductions from the net total. The total excludes invested capital and is not your available cash. Not a tax statement.'**
   String get depotYearNote;
+
+  /// No description provided for @depotYearMixedCurrencies.
+  ///
+  /// In en, this message translates to:
+  /// **'Some activities use another currency. Totals are not converted and cannot be compared as a single currency.'**
+  String get depotYearMixedCurrencies;
 
   /// No description provided for @depotAssetSecurity.
   ///
@@ -20998,6 +21016,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search holding or broker'**
   String get depotActivitiesSearch;
+
+  /// No description provided for @depotActivitiesChooseRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose dates'**
+  String get depotActivitiesChooseRange;
+
+  /// No description provided for @depotActivitiesStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose start date'**
+  String get depotActivitiesStartDate;
+
+  /// No description provided for @depotActivitiesEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose end date'**
+  String get depotActivitiesEndDate;
+
+  /// No description provided for @depotActivitiesClearRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date filter'**
+  String get depotActivitiesClearRange;
+
+  /// No description provided for @depotActivitiesRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String depotActivitiesRange(String start, String end);
+
+  /// No description provided for @depotActivitiesExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export filtered CSV'**
+  String get depotActivitiesExport;
+
+  /// No description provided for @depotActivitiesExportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Exports all matching activities, including collapsed months, in their original currencies. Not a tax filing.'**
+  String get depotActivitiesExportNote;
 
   /// No description provided for @depotActivitiesEmpty.
   ///

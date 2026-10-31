@@ -126,6 +126,23 @@ original value chart untouched. Prices may be delayed.
 The Activities yearly card can export a CSV for the selected year and active
 activity filters. It contains individual bookings and their original currencies,
 not a tax calculation or filing. Check the broker's tax documents.
+Its realized gains, dividends and interest use Parqet's net amounts. Taxes and
+fees are separate totals across all activity types, not additional deductions
+from the net total. The yearly summary covers the whole year and is not changed
+by the activity filters.
+The net total is profit and income, not sale proceeds or available cash; it
+excludes the invested capital returned when selling.
+The yearly summary does not convert currencies and warns when bookings use a
+currency different from the displayed portfolio currency.
+
+The activity list groups bookings by month, newest first. The two newest matching
+months start expanded; older months start collapsed, and each can be toggled.
+Search, type and an
+optional inclusive date range filter the selected portfolio's activities. The
+filtered CSV exports all matching bookings, including collapsed months, across all matching years,
+including their original currencies and booking details. Date filtering and
+month grouping use the same local calendar dates shown in the list. Clearing the
+date range leaves the other filters intact.
 
 ### Reading a holding
 
@@ -364,14 +381,3 @@ available. The ZIP holds:
   `date`, `quote_at`, `synced_at`, …) are ISO 8601 in UTC. Logo images are left out.
 
 Amounts are in the portfolio currency, as Parqet booked them.
-
-## Possible future ideas
-
-These are ideas, not commitments or a roadmap:
-
-- Target allocations and rebalancing suggestions, including a new-money-only mode.
-- Price alerts for holdings and wishlist entries, and repeated sync failure alerts.
-- A local investment journal with theses and review dates.
-- Activity date-range filters, monthly grouping and filtered exports.
-- Additional broker statement parsers, such as Trade Republic or Scalable Capital.
-- An Android home-screen widget for portfolio value and daily change.

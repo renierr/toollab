@@ -11732,7 +11732,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get depotYearIncomeTotal => 'Total realized';
+  String get depotYearIncomeTotal => 'Total gains and income';
+
+  @override
+  String depotYearNetLabel(String label) {
+    return '$label (net)';
+  }
 
   @override
   String get depotYearTaxes => 'Taxes paid';
@@ -11741,8 +11746,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotYearFees => 'Fees paid';
 
   @override
+  String get depotYearCostsSeparate => 'Costs overview · do not subtract again';
+
+  @override
   String get depotYearNote =>
-      'Net amounts as booked in Parqet; not a tax statement.';
+      'Net amounts as booked in Parqet. Taxes and fees are separate totals for all activities, not additional deductions from the net total. The total excludes invested capital and is not your available cash. Not a tax statement.';
+
+  @override
+  String get depotYearMixedCurrencies =>
+      'Some activities use another currency. Totals are not converted and cannot be compared as a single currency.';
 
   @override
   String get depotAssetSecurity => 'Securities';
@@ -11770,6 +11782,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotActivitiesSearch => 'Search holding or broker';
+
+  @override
+  String get depotActivitiesChooseRange => 'Choose dates';
+
+  @override
+  String get depotActivitiesStartDate => 'Choose start date';
+
+  @override
+  String get depotActivitiesEndDate => 'Choose end date';
+
+  @override
+  String get depotActivitiesClearRange => 'Clear date filter';
+
+  @override
+  String depotActivitiesRange(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String get depotActivitiesExport => 'Export filtered CSV';
+
+  @override
+  String get depotActivitiesExportNote =>
+      'Exports all matching activities, including collapsed months, in their original currencies. Not a tax filing.';
 
   @override
   String get depotActivitiesEmpty => 'No activities match the filter';

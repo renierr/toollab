@@ -11816,7 +11816,12 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get depotYearIncomeTotal => 'Summe realisiert';
+  String get depotYearIncomeTotal => 'Gewinne und Erträge gesamt';
+
+  @override
+  String depotYearNetLabel(String label) {
+    return '$label (netto)';
+  }
 
   @override
   String get depotYearTaxes => 'Gezahlte Steuern';
@@ -11825,8 +11830,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotYearFees => 'Gezahlte Gebühren';
 
   @override
+  String get depotYearCostsSeparate =>
+      'Kostenübersicht · nicht erneut abziehen';
+
+  @override
   String get depotYearNote =>
-      'Nettobeträge wie in Parqet gebucht; keine Steuerbescheinigung.';
+      'Nettobeträge wie in Parqet gebucht. Steuern und Gebühren sind separate Summen aller Buchungen und werden nicht erneut von der Nettosumme abgezogen. Die Summe enthält nicht das eingesetzte Kapital und ist nicht dein verfügbares Guthaben. Keine Steuerbescheinigung.';
+
+  @override
+  String get depotYearMixedCurrencies =>
+      'Einige Buchungen verwenden eine andere Währung. Die Summen sind nicht umgerechnet und nicht als einheitliche Währung vergleichbar.';
 
   @override
   String get depotAssetSecurity => 'Wertpapiere';
@@ -11854,6 +11867,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotActivitiesSearch => 'Position oder Broker suchen';
+
+  @override
+  String get depotActivitiesChooseRange => 'Zeitraum wählen';
+
+  @override
+  String get depotActivitiesStartDate => 'Startdatum wählen';
+
+  @override
+  String get depotActivitiesEndDate => 'Enddatum wählen';
+
+  @override
+  String get depotActivitiesClearRange => 'Datumsfilter entfernen';
+
+  @override
+  String depotActivitiesRange(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String get depotActivitiesExport => 'Gefilterte CSV exportieren';
+
+  @override
+  String get depotActivitiesExportNote =>
+      'Exportiert alle gefilterten Buchungen einschließlich zugeklappter Monate in ihren ursprünglichen Währungen. Keine Steuererklärung.';
 
   @override
   String get depotActivitiesEmpty => 'Keine Aktivitäten passen zum Filter';

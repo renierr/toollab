@@ -69,20 +69,47 @@ class DepotActivityFilter {
 
   /// Empty means every type.
   final Set<DepotTransactionType> types;
+  final DepotActivityDateRange? dateRange;
 
-  const DepotActivityFilter({this.query = '', this.types = const {}});
+  const DepotActivityFilter({
+    this.query = '',
+    this.types = const {},
+    this.dateRange,
+  });
 
   DepotActivityFilter copyWith({
     String? query,
     Set<DepotTransactionType>? types,
+    DepotActivityDateRange? dateRange,
+    bool clearDateRange = false,
   }) => DepotActivityFilter(
     query: query ?? this.query,
     types: types ?? this.types,
+    dateRange: clearDateRange ? null : dateRange ?? this.dateRange,
   );
 
   bool matches(DepotTransaction t) {
     if (types.isNotEmpty && !types.contains(t.type)) return false;
+    if (dateRange != null && !dateRange!.contains(t.datetime)) return false;
     return _matchesQuery(query, [t.holdingName, t.broker]);
+  }
+}
+
+class DepotActivityDateRange {
+  final DateTime start;
+  final DateTime end;
+
+  DepotActivityDateRange(DateTime start, DateTime end)
+    : start = DateTime(start.year, start.month, start.day),
+      end = DateTime(end.year, end.month, end.day) {
+    if (this.end.isBefore(this.start)) {
+      throw ArgumentError('End date must not precede start date');
+    }
+  }
+
+  bool contains(DateTime datetime) {
+    final day = DateTime(datetime.year, datetime.month, datetime.day);
+    return !day.isBefore(start) && !day.isAfter(end);
   }
 }
 
