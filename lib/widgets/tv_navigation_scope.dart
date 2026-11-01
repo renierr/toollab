@@ -70,26 +70,69 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
     skipTraversal: true,
   );
   final ValueNotifier<int> _focusRepaint = ValueNotifier<int>(0);
+  bool _keyboardFocusActive = false;
   late final _MoveFocusAction _moveFocus = _MoveFocusAction(
     isTvMode: () => widget.enabled,
     fallbackFocusNode: _fallbackFocusNode,
     scopeContext: () => context,
-    onMovedOrScrolled: _triggerFocusRepaint,
+    onMovedOrScrolled: () {
+      _keyboardFocusActive = true;
+      _triggerFocusRepaint();
+    },
   );
   final _MediaAction _mediaAction = _MediaAction();
 
   @override
   void initState() {
     super.initState();
+    _keyboardFocusActive = widget.enabled;
     FocusManager.instance.addListener(_triggerFocusRepaint);
+    HardwareKeyboard.instance.addHandler(_handleHardwareKey);
+  }
+
+  @override
+  void didUpdateWidget(covariant TvNavigationScope oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.enabled != oldWidget.enabled) {
+      _keyboardFocusActive = widget.enabled;
+      _triggerFocusRepaint();
+    }
   }
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
     FocusManager.instance.removeListener(_triggerFocusRepaint);
     _fallbackFocusNode.dispose();
     _focusRepaint.dispose();
     super.dispose();
+  }
+
+  bool _handleHardwareKey(KeyEvent event) {
+    if (event is KeyDownEvent && _isNavigationKey(event.logicalKey)) {
+      if (!_keyboardFocusActive) {
+        _keyboardFocusActive = true;
+        _triggerFocusRepaint();
+      }
+    }
+    return false;
+  }
+
+  static bool _isNavigationKey(LogicalKeyboardKey key) =>
+      key == LogicalKeyboardKey.tab ||
+      key == LogicalKeyboardKey.arrowUp ||
+      key == LogicalKeyboardKey.arrowDown ||
+      key == LogicalKeyboardKey.arrowLeft ||
+      key == LogicalKeyboardKey.arrowRight ||
+      key == LogicalKeyboardKey.pageUp ||
+      key == LogicalKeyboardKey.pageDown ||
+      key == LogicalKeyboardKey.select;
+
+  void _onPointerDown(PointerDownEvent event) {
+    if (!widget.enabled && _keyboardFocusActive) {
+      _keyboardFocusActive = false;
+      _triggerFocusRepaint();
+    }
   }
 
   void _triggerFocusRepaint() {
@@ -146,17 +189,23 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
             onNotification: _onScrollNotification,
             child: NotificationListener<ScrollMetricsNotification>(
               onNotification: _onScrollMetricsNotification,
-              child: Focus(
-                focusNode: _fallbackFocusNode,
-                autofocus: true,
-                child: CustomPaint(
-                  key: _paintKey,
-                  foregroundPainter: _GlobalFocusRingPainter(
-                    paintKey: _paintKey,
-                    fallbackFocusNode: _fallbackFocusNode,
-                    repaint: _focusRepaint,
+              child: Listener(
+                behavior: HitTestBehavior.translucent,
+                onPointerDown: _onPointerDown,
+                child: Focus(
+                  focusNode: _fallbackFocusNode,
+                  autofocus: true,
+                  child: CustomPaint(
+                    key: _paintKey,
+                    foregroundPainter: _GlobalFocusRingPainter(
+                      paintKey: _paintKey,
+                      fallbackFocusNode: _fallbackFocusNode,
+                      isKeyboardFocusActive: () =>
+                          widget.enabled || _keyboardFocusActive,
+                      repaint: _focusRepaint,
+                    ),
+                    child: widget.child,
                   ),
-                  child: widget.child,
                 ),
               ),
             ),
@@ -227,7 +276,11 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
 
     if (direction == TraversalDirection.left ||
         direction == TraversalDirection.right) {
-      if (primary.focusInDirection(direction)) {
+      if (_focusInDirectionSkippingContainers(
+        primary,
+        direction,
+        fallbackFocusNode,
+      )) {
         _ensureFocusedVisible();
         onMovedOrScrolled();
         return;
@@ -248,18 +301,26 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
       return;
     }
 
-    if (primary is FocusScopeNode || identical(primary, fallbackFocusNode)) {
+    if (_isContainerOrRegionFocus(primary, fallbackFocusNode)) {
       final scope = primary is FocusScopeNode
           ? primary
           : (primary.nearestScope ?? FocusManager.instance.rootScope);
       if (scrollable != null &&
           _canScrollInDirection(scrollable, direction) &&
-          !_hasVisibleFocusableInScrollable(scope, scrollable)) {
+          !_hasVisibleFocusableInScrollable(
+            scope,
+            scrollable,
+            fallbackFocusNode,
+          )) {
         _scrollVertical(scrollable, direction);
         onMovedOrScrolled();
         return;
       }
-      if (primary.focusInDirection(direction)) {
+      if (_focusInDirectionSkippingContainers(
+        primary,
+        direction,
+        fallbackFocusNode,
+      )) {
         _ensureFocusedVisible();
         onMovedOrScrolled();
         return;
@@ -277,14 +338,23 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
 
     if (scrollable != null &&
         _canScrollInDirection(scrollable, direction) &&
-        !_hasNearbyFocusTarget(primary, scrollable, direction)) {
+        !_hasNearbyFocusTarget(
+          primary,
+          scrollable,
+          direction,
+          fallbackFocusNode,
+        )) {
       if (_scrollVertical(scrollable, direction)) {
         onMovedOrScrolled();
         return;
       }
     }
 
-    if (primary.focusInDirection(direction)) {
+    if (_focusInDirectionSkippingContainers(
+      primary,
+      direction,
+      fallbackFocusNode,
+    )) {
       _ensureFocusedVisible();
       onMovedOrScrolled();
       return;
@@ -377,9 +447,29 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
     };
   }
 
+  static bool _focusInDirectionSkippingContainers(
+    FocusNode primary,
+    TraversalDirection direction,
+    FocusNode fallbackFocusNode,
+  ) {
+    if (!primary.focusInDirection(direction)) return false;
+    final next = FocusManager.instance.primaryFocus;
+    if (next != null && !_isContainerOrRegionFocus(next, fallbackFocusNode)) {
+      return true;
+    }
+    if (_focusOutOfBandTarget(primary, direction, fallbackFocusNode)) {
+      return true;
+    }
+    if (!identical(primary, next) && primary.canRequestFocus) {
+      primary.requestFocus();
+    }
+    return false;
+  }
+
   static bool _hasVisibleFocusableInScrollable(
     FocusScopeNode scope,
     ScrollableState scrollable,
+    FocusNode fallbackFocusNode,
   ) {
     final scrollContext = scrollable.context;
     final scrollBox = scrollContext.findRenderObject();
@@ -389,6 +479,7 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
     final viewportRect = scrollBox.localToGlobal(Offset.zero) & scrollBox.size;
     for (final node in scope.traversalDescendants) {
       if (!node.canRequestFocus || node.context == null) continue;
+      if (_isContainerOrRegionFocus(node, fallbackFocusNode)) continue;
       if (!_isDescendantOf(node.context!, scrollContext)) continue;
       final rect = _nodeGlobalRect(node);
       if (rect != null && rect.overlaps(viewportRect)) {
@@ -402,6 +493,7 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
     FocusNode primary,
     ScrollableState scrollable,
     TraversalDirection direction,
+    FocusNode fallbackFocusNode,
   ) {
     final primaryContext = primary.context;
     final scrollContext = scrollable.context;
@@ -420,6 +512,7 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
 
     for (final node in scope.traversalDescendants) {
       if (node == primary || !node.canRequestFocus) continue;
+      if (_isContainerOrRegionFocus(node, fallbackFocusNode)) continue;
       final nodeContext = node.context;
       if (nodeContext == null || !nodeContext.mounted) continue;
       if (_isDescendantOf(nodeContext, primaryContext) ||
@@ -473,7 +566,7 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
         if (ctx == null || !ctx.mounted) continue;
         final route = ModalRoute.of(ctx);
         if (route != null && !route.isCurrent) continue;
-        if (node.traversalDescendants.any((d) => d.canRequestFocus)) continue;
+        if (_isContainerOrRegionFocus(node, fallbackFocusNode)) continue;
         result.add(node);
       }
     }
@@ -656,22 +749,24 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
 class _GlobalFocusRingPainter extends CustomPainter {
   final GlobalKey paintKey;
   final FocusNode fallbackFocusNode;
+  final bool Function() isKeyboardFocusActive;
 
   _GlobalFocusRingPainter({
     required this.paintKey,
     required this.fallbackFocusNode,
+    required this.isKeyboardFocusActive,
     required super.repaint,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (FocusManager.instance.highlightMode != FocusHighlightMode.traditional) {
+    if (!isKeyboardFocusActive() ||
+        FocusManager.instance.highlightMode != FocusHighlightMode.traditional) {
       return;
     }
     final primary = FocusManager.instance.primaryFocus;
     if (primary == null ||
-        primary is FocusScopeNode ||
-        identical(primary, fallbackFocusNode)) {
+        _isContainerOrRegionFocus(primary, fallbackFocusNode)) {
       return;
     }
     final targetContext = primary.context;
@@ -686,11 +781,15 @@ class _GlobalFocusRingPainter extends CustomPainter {
     if (targetBox == null || !targetBox.attached || !targetBox.hasSize) return;
 
     final targetSize = targetBox.size;
+    final isEditableText =
+        targetContext.findAncestorStateOfType<EditableTextState>() != null;
     if (targetSize.isEmpty ||
         targetSize.width <= 4 ||
         targetSize.height <= 4 ||
-        (targetSize.width >= size.width * 0.98 &&
-            targetSize.height >= size.height * 0.85)) {
+        (!isEditableText &&
+            (targetSize.height > 200 ||
+                (targetSize.width >= size.width * 0.5 &&
+                    targetSize.height >= size.height * 0.35)))) {
       return;
     }
 
@@ -764,4 +863,56 @@ class _GlobalFocusRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _GlobalFocusRingPainter oldDelegate) =>
       oldDelegate.paintKey != paintKey;
+}
+
+bool _isContainerOrRegionFocus(FocusNode node, FocusNode fallbackFocusNode) {
+  if (node is FocusScopeNode ||
+      identical(node, fallbackFocusNode) ||
+      node.skipTraversal) {
+    return true;
+  }
+  final context = node.context;
+  if (context == null || !context.mounted) return true;
+  if (_isSelectableRegionFocus(context)) return true;
+  if (node.traversalDescendants.any((d) => d.canRequestFocus)) return true;
+  if (context.findAncestorStateOfType<EditableTextState>() == null &&
+      _containsScrollable(context)) {
+    return true;
+  }
+  return false;
+}
+
+bool _isSelectableRegionFocus(BuildContext context) {
+  bool isSelectable = false;
+  context.visitAncestorElements((element) {
+    final widget = element.widget;
+    if (widget is SelectableRegion || widget is SelectionArea) {
+      isSelectable = true;
+      return false;
+    }
+    if (widget is FocusableActionDetector && !widget.includeFocusSemantics) {
+      isSelectable = true;
+      return false;
+    }
+    if (widget is Focus) {
+      return false;
+    }
+    return true;
+  });
+  return isSelectable;
+}
+
+bool _containsScrollable(BuildContext context) {
+  bool found = false;
+  void visit(Element element) {
+    if (found) return;
+    if (element is StatefulElement && element.state is ScrollableState) {
+      found = true;
+      return;
+    }
+    element.visitChildren(visit);
+  }
+
+  context.visitChildElements(visit);
+  return found;
 }

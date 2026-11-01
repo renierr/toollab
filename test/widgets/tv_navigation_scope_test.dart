@@ -345,4 +345,55 @@ void main() {
       expect(pageButtonNode.hasFocus, isTrue);
     },
   );
+
+  testWidgets(
+    'SelectionArea content wrapper does not trap directional focus or take focus ring',
+    (tester) async {
+      final topButtonNode = FocusNode(debugLabel: 'TopButton');
+      final innerButtonNode = FocusNode(debugLabel: 'InnerButton');
+      addTearDown(topButtonNode.dispose);
+      addTearDown(innerButtonNode.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TvNavigationScope(
+              enabled: true,
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    focusNode: topButtonNode,
+                    onPressed: () {},
+                    child: const Text('Top'),
+                  ),
+                  Expanded(
+                    child: SelectionArea(
+                      child: ListView(
+                        children: [
+                          const Text('Selectable text block'),
+                          ElevatedButton(
+                            focusNode: innerButtonNode,
+                            onPressed: () {},
+                            child: const Text('Inner'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      topButtonNode.requestFocus();
+      await tester.pump();
+      expect(topButtonNode.hasFocus, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(innerButtonNode.hasFocus, isTrue);
+    },
+  );
 }
