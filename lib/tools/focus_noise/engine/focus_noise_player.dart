@@ -300,6 +300,13 @@ class FocusNoisePlayer {
       case 'play':
         resume();
         break;
+      case 'play_pause':
+        if (_isPaused) {
+          resume();
+        } else {
+          pause();
+        }
+        break;
     }
   }
 

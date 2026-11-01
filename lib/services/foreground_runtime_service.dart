@@ -151,10 +151,22 @@ class ForegroundRuntimeService {
   static Future<void> _handleMethodCall(MethodCall call) async {
     if (call.method == 'onAction') {
       final action = call.arguments as String;
-      final leaseId = _activeLeases.keys.lastOrNull;
-      final listener = leaseId == null ? null : _actionListeners[leaseId];
-      listener?.call(action);
+      dispatchAction(action);
     }
+  }
+
+  /// Dispatches a media/runtime control action (`play`, `pause`, `play_pause`,
+  /// `stop`, `next`, `previous`) to the most recent active lease with an
+  /// action listener.
+  static bool dispatchAction(String action) {
+    for (final leaseId in _activeLeases.keys.toList().reversed) {
+      final listener = _actionListeners[leaseId];
+      if (listener != null) {
+        listener(action);
+        return true;
+      }
+    }
+    return false;
   }
 
   static Future<bool> requestNotificationPermission() async {

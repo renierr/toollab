@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/focus_outline.dart';
 
@@ -35,6 +36,12 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
     SingleActivator(LogicalKeyboardKey.arrowDown): _MoveFocusIntent(
       TraversalDirection.down,
     ),
+    SingleActivator(LogicalKeyboardKey.arrowLeft): _MoveFocusIntent(
+      TraversalDirection.left,
+    ),
+    SingleActivator(LogicalKeyboardKey.arrowRight): _MoveFocusIntent(
+      TraversalDirection.right,
+    ),
     SingleActivator(LogicalKeyboardKey.pageUp): _MoveFocusIntent(
       TraversalDirection.up,
       page: true,
@@ -42,6 +49,18 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
     SingleActivator(LogicalKeyboardKey.pageDown): _MoveFocusIntent(
       TraversalDirection.down,
       page: true,
+    ),
+    SingleActivator(LogicalKeyboardKey.mediaPlayPause): _MediaActionIntent(
+      'play_pause',
+    ),
+    SingleActivator(LogicalKeyboardKey.mediaPlay): _MediaActionIntent('play'),
+    SingleActivator(LogicalKeyboardKey.mediaPause): _MediaActionIntent('pause'),
+    SingleActivator(LogicalKeyboardKey.mediaStop): _MediaActionIntent('stop'),
+    SingleActivator(LogicalKeyboardKey.mediaTrackNext): _MediaActionIntent(
+      'next',
+    ),
+    SingleActivator(LogicalKeyboardKey.mediaTrackPrevious): _MediaActionIntent(
+      'previous',
     ),
   };
 
@@ -57,6 +76,7 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
     scopeContext: () => context,
     onMovedOrScrolled: _triggerFocusRepaint,
   );
+  final _MediaAction _mediaAction = _MediaAction();
 
   @override
   void initState() {
@@ -118,7 +138,10 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
       child: Shortcuts(
         shortcuts: _shortcuts,
         child: Actions(
-          actions: <Type, Action<Intent>>{_MoveFocusIntent: _moveFocus},
+          actions: <Type, Action<Intent>>{
+            _MoveFocusIntent: _moveFocus,
+            _MediaActionIntent: _mediaAction,
+          },
           child: NotificationListener<ScrollNotification>(
             onNotification: _onScrollNotification,
             child: NotificationListener<ScrollMetricsNotification>(
@@ -141,6 +164,23 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
         ),
       ),
     );
+  }
+}
+
+class _MediaActionIntent extends Intent {
+  final String action;
+
+  const _MediaActionIntent(this.action);
+}
+
+class _MediaAction extends Action<_MediaActionIntent> {
+  @override
+  bool isEnabled(_MediaActionIntent intent) =>
+      ForegroundRuntimeService.isActive;
+
+  @override
+  void invoke(_MediaActionIntent intent) {
+    ForegroundRuntimeService.dispatchAction(intent.action);
   }
 }
 
@@ -169,8 +209,13 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
 
   @override
   bool isEnabled(_MoveFocusIntent intent) {
-    if (isTvMode()) return true;
     final primary = FocusManager.instance.primaryFocus;
+    if (intent.direction == TraversalDirection.left ||
+        intent.direction == TraversalDirection.right) {
+      if (primary == null) return true;
+      return !_isEditingText(primary) && !_isHorizontalSlider(primary);
+    }
+    if (isTvMode()) return true;
     return primary == null || !_isEditingText(primary);
   }
 
@@ -179,6 +224,21 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
     final primary = FocusManager.instance.primaryFocus;
     if (primary == null) return;
     final direction = intent.direction;
+
+    if (direction == TraversalDirection.left ||
+        direction == TraversalDirection.right) {
+      if (primary.focusInDirection(direction)) {
+        _ensureFocusedVisible();
+        onMovedOrScrolled();
+        return;
+      }
+      if (_focusOutOfBandTarget(primary, direction, fallbackFocusNode)) {
+        _ensureFocusedVisible();
+        onMovedOrScrolled();
+      }
+      return;
+    }
+
     final scrollable = _findVerticalScrollable(primary, scopeContext());
 
     if (intent.page) {
@@ -206,6 +266,11 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
       }
       if (_scrollVertical(scrollable, direction)) {
         onMovedOrScrolled();
+        return;
+      }
+      if (_focusOutOfBandTarget(primary, direction, fallbackFocusNode)) {
+        _ensureFocusedVisible();
+        onMovedOrScrolled();
       }
       return;
     }
@@ -230,7 +295,7 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
       return;
     }
 
-    if (_focusOutOfBandTarget(primary, direction)) {
+    if (_focusOutOfBandTarget(primary, direction, fallbackFocusNode)) {
       _ensureFocusedVisible();
       onMovedOrScrolled();
       return;
@@ -249,6 +314,12 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
     final context = node.context;
     return context != null &&
         context.findAncestorStateOfType<EditableTextState>() != null;
+  }
+
+  static bool _isHorizontalSlider(FocusNode node) {
+    final context = node.context;
+    return context != null &&
+        context.findAncestorWidgetOfExactType<Slider>() != null;
   }
 
   static void _ensureFocusedVisible() {
@@ -379,50 +450,112 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
     return false;
   }
 
+  static List<FocusNode> _collectFocusableLeaves(
+    FocusNode primary,
+    FocusNode fallbackFocusNode,
+  ) {
+    final result = <FocusNode>[];
+    final visited = <FocusNode>{};
+
+    void visitScope(FocusScopeNode scope) {
+      for (final node in scope.traversalDescendants) {
+        if (!visited.add(node)) continue;
+        if (node is FocusScopeNode) {
+          visitScope(node);
+          continue;
+        }
+        if (node == primary ||
+            identical(node, fallbackFocusNode) ||
+            !node.canRequestFocus) {
+          continue;
+        }
+        final ctx = node.context;
+        if (ctx == null || !ctx.mounted) continue;
+        final route = ModalRoute.of(ctx);
+        if (route != null && !route.isCurrent) continue;
+        if (node.traversalDescendants.any((d) => d.canRequestFocus)) continue;
+        result.add(node);
+      }
+    }
+
+    visitScope(FocusManager.instance.rootScope);
+    return result;
+  }
+
   static bool _focusOutOfBandTarget(
     FocusNode primary,
     TraversalDirection direction,
+    FocusNode fallbackFocusNode,
   ) {
-    if (direction != TraversalDirection.up &&
-        direction != TraversalDirection.down) {
-      return false;
-    }
     final primaryContext = primary.context;
     final primaryRect = _nodeGlobalRect(primary);
     if (primaryContext == null || primaryRect == null) return false;
-    final scope = primary.nearestScope ?? FocusManager.instance.rootScope;
+    final candidates = _collectFocusableLeaves(primary, fallbackFocusNode);
+    if (candidates.isEmpty) return false;
 
     FocusNode? best;
     double bestPrimaryDist = double.infinity;
     double bestCrossDist = double.infinity;
 
-    for (final node in scope.traversalDescendants) {
-      if (node == primary || !node.canRequestFocus) continue;
-      final nodeContext = node.context;
-      if (nodeContext == null || !nodeContext.mounted) continue;
+    for (final node in candidates) {
+      final nodeContext = node.context!;
       if (_isDescendantOf(nodeContext, primaryContext) ||
           _isDescendantOf(primaryContext, nodeContext)) {
         continue;
       }
-      if (node.traversalDescendants.any((d) => d.canRequestFocus)) continue;
       final rect = _nodeGlobalRect(node);
       if (rect == null || rect.isEmpty) continue;
 
       final double primaryDist;
-      if (direction == TraversalDirection.down) {
-        if (rect.top < primaryRect.bottom - 2.0) continue;
-        primaryDist = rect.top - primaryRect.bottom;
-      } else {
-        if (rect.bottom > primaryRect.top + 2.0) continue;
-        primaryDist = primaryRect.top - rect.bottom;
+      final double crossDist;
+      switch (direction) {
+        case TraversalDirection.down:
+          if (rect.top < primaryRect.bottom - 2.0) continue;
+          primaryDist = rect.top - primaryRect.bottom;
+          crossDist = (rect.center.dx - primaryRect.center.dx).abs();
+        case TraversalDirection.up:
+          if (rect.bottom > primaryRect.top + 2.0) continue;
+          primaryDist = primaryRect.top - rect.bottom;
+          crossDist = (rect.center.dx - primaryRect.center.dx).abs();
+        case TraversalDirection.right:
+          if (rect.left < primaryRect.right - 2.0) continue;
+          primaryDist = rect.left - primaryRect.right;
+          crossDist = (rect.center.dy - primaryRect.center.dy).abs();
+        case TraversalDirection.left:
+          if (rect.right > primaryRect.left + 2.0) continue;
+          primaryDist = primaryRect.left - rect.right;
+          crossDist = (rect.center.dy - primaryRect.center.dy).abs();
       }
-      final crossDist = (rect.center.dx - primaryRect.center.dx).abs();
       if (primaryDist < bestPrimaryDist - 1.0 ||
           ((primaryDist - bestPrimaryDist).abs() <= 1.0 &&
               crossDist < bestCrossDist)) {
         best = node;
         bestPrimaryDist = primaryDist;
         bestCrossDist = crossDist;
+      }
+    }
+
+    // Floating overlays (e.g. ChiptuneMiniPlayer) sit above Navigator in their
+    // own scope and can overlap the bottom/left edge of the active route.
+    if (best == null) {
+      final primaryIsOverlay = ModalRoute.of(primaryContext) == null;
+      double bestDist = double.infinity;
+      for (final node in candidates) {
+        final nodeContext = node.context!;
+        final nodeIsOverlay = ModalRoute.of(nodeContext) == null;
+        if (primaryIsOverlay == nodeIsOverlay) continue;
+        if (!primaryIsOverlay &&
+            direction != TraversalDirection.down &&
+            direction != TraversalDirection.left) {
+          continue;
+        }
+        final rect = _nodeGlobalRect(node);
+        if (rect == null || rect.isEmpty) continue;
+        final dist = (rect.center - primaryRect.center).distance;
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = node;
+        }
       }
     }
 
@@ -467,6 +600,17 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
         return false;
       });
       current = parent;
+    }
+
+    final primaryContext = primary.context;
+    if (primaryContext != null &&
+        primaryContext.mounted &&
+        !identical(primary, FocusManager.instance.rootScope) &&
+        primary is! FocusScopeNode &&
+        ModalRoute.of(primaryContext) == null) {
+      // Focused widget is inside an app-wide overlay above Navigator; arrow
+      // keys should traverse the overlay rather than scrolling the route below.
+      return null;
     }
 
     final searchRoot =

@@ -106,6 +106,7 @@ class ChiptunePlaybackState extends ChangeNotifier with WidgetsBindingObserver {
     );
     player.onEnded = _onPlaybackEnded;
     player.onNext = _onPlaybackNext;
+    player.canSkipNext = () => hasNext;
     player.onNearEnd = _onNearEnd;
     player.onPlaybackError = (error) =>
         _emit((l10n) => l10n.chipAudioPlaybackFailed(error));

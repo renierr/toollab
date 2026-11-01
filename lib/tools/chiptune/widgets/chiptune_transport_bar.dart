@@ -37,46 +37,59 @@ class ChiptuneTransportBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton.filled(
-          onPressed: onPlayPause,
-          icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-          style: IconButton.styleFrom(backgroundColor: ChiptuneColors.accent),
-          tooltip: isPlaying ? l10n.chipPauseTooltip : l10n.chipPlayTooltip,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton.filled(
+              onPressed: onPlayPause,
+              icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+              style: IconButton.styleFrom(
+                backgroundColor: ChiptuneColors.accent,
+              ),
+              tooltip: isPlaying ? l10n.chipPauseTooltip : l10n.chipPlayTooltip,
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: onStop,
+              icon: const Icon(Icons.stop),
+              tooltip: l10n.chipStopTooltip,
+            ),
+            if (onNext != null)
+              IconButton(
+                onPressed: onNext,
+                icon: const Icon(Icons.skip_next),
+                tooltip: nextTooltip ?? l10n.chipNextRandomTooltip,
+              ),
+            IconButton(
+              onPressed: () => onLoopChanged(!looping),
+              icon: Icon(
+                Icons.repeat,
+                color: looping ? ChiptuneColors.accentBright : null,
+              ),
+              tooltip: looping
+                  ? l10n.chipLoopingTooltip
+                  : l10n.chipLoopOffTooltip,
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        IconButton(
-          onPressed: onStop,
-          icon: const Icon(Icons.stop),
-          tooltip: l10n.chipStopTooltip,
-        ),
-        if (onNext != null)
-          IconButton(
-            onPressed: onNext,
-            icon: const Icon(Icons.skip_next),
-            tooltip: nextTooltip ?? l10n.chipNextRandomTooltip,
-          ),
-        IconButton(
-          onPressed: () => onLoopChanged(!looping),
-          icon: Icon(
-            Icons.repeat,
-            color: looping ? ChiptuneColors.accentBright : null,
-          ),
-          tooltip: looping ? l10n.chipLoopingTooltip : l10n.chipLoopOffTooltip,
-        ),
-        const SizedBox(width: 8),
-        Icon(
-          volume <= 0 ? Icons.volume_off : Icons.volume_up,
-          size: 18,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-        Expanded(
-          child: Slider(
-            value: volume.clamp(0.0, 1.0),
-            activeColor: ChiptuneColors.accent,
-            onChanged: onVolumeChanged,
-          ),
+        Row(
+          children: [
+            Icon(
+              volume <= 0 ? Icons.volume_off : Icons.volume_up,
+              size: 18,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            Expanded(
+              child: Slider(
+                value: volume.clamp(0.0, 1.0),
+                activeColor: ChiptuneColors.accent,
+                onChanged: onVolumeChanged,
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -155,6 +155,9 @@ class ChiptunePlayer {
   /// Fired when 'next' is clicked in the foreground service notification.
   VoidCallback? onNext;
 
+  /// Whether 'next' is currently available (playlist, random, or archive).
+  bool Function()? canSkipNext;
+
   /// Fired once per song, [_prefetchLead] before its end; re-armed when a fresh
   /// song starts. Lets the page prefetch the next track for a gapless jump.
   VoidCallback? onNearEnd;
@@ -558,6 +561,12 @@ class ChiptunePlayer {
       return;
     }
     if (_handle == null) return;
+    if (_isNative) {
+      elapsed.value = SoLoud.instance.getPosition(_handle!);
+    } else if (_stream != null) {
+      elapsed.value =
+          _elapsedBase + SoLoud.instance.getStreamTimeConsumed(_stream!);
+    }
     SoLoud.instance.setPause(_handle!, true);
     _feedTimer?.cancel();
     _feedTimer = null;
@@ -828,6 +837,7 @@ class ChiptunePlayer {
             .toInt();
         int guard = 0;
         while (!_ended && guard < maxIterations) {
+          if (!initial && state.value != ChiptunePlaybackState.playing) break;
           int buffered;
           try {
             buffered = SoLoud.instance.getBufferSize(stream);
@@ -842,7 +852,10 @@ class ChiptunePlayer {
           // restart) while this render await is pending. Touching the old native
           // source after that is a use-after-free that can hang the app, so bail
           // if it is no longer the current stream.
-          if (!identical(_stream, stream)) break;
+          if (!identical(_stream, stream) ||
+              (!initial && state.value != ChiptunePlaybackState.playing)) {
+            break;
+          }
 
           try {
             SoLoud.instance.addAudioDataStream(
@@ -1041,6 +1054,8 @@ class ChiptunePlayer {
         media: _mediaData(playing: true),
       );
       _foregroundRuntimeLease!.addActionListener(_handleNotificationAction);
+    } else {
+      _updateNotificationForResume();
     }
   }
 
@@ -1086,13 +1101,11 @@ class ChiptunePlayer {
     );
   }
 
-  /// Action order matches the MediaStyle compact-view layout:
-  /// previous | play/pause | next, with stop only in the expanded view.
   List<String> _notificationActions({required bool playing}) {
     final actions = <String>[];
     if (onPrevious != null) actions.add('previous');
     actions.add(playing ? 'pause' : 'play');
-    if (onNext != null) actions.add('next');
+    if (onNext != null && (canSkipNext?.call() ?? true)) actions.add('next');
     actions.add('stop');
     return actions;
   }
@@ -1180,6 +1193,13 @@ class ChiptunePlayer {
         break;
       case 'pause':
         pause();
+        break;
+      case 'play_pause':
+        if (state.value == ChiptunePlaybackState.playing) {
+          pause();
+        } else {
+          unawaited(play());
+        }
         break;
       case 'stop':
         stop();

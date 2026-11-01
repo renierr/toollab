@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/tools/chiptune/widgets/chiptune_seek_bar.dart';
+import 'package:tool_lab/tools/chiptune/widgets/chiptune_transport_bar.dart';
 import 'package:tool_lab/widgets/tv_navigation_scope.dart';
 
 void main() {
@@ -197,6 +200,149 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
       await tester.pump();
       expect(scrollController.offset, 0.0);
+    },
+  );
+
+  testWidgets(
+    'chiptune transport play/stop buttons are reachable between seek bar and volume slider',
+    (tester) async {
+      bool stopped = false;
+      double seeked = 0.1;
+      double volume = 0.7;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) =>
+              TvNavigationScope(enabled: true, child: child!),
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) => Column(
+                children: [
+                  ChiptuneSeekBar(
+                    elapsed: const Duration(seconds: 10),
+                    total: const Duration(seconds: 100),
+                    onSeekFraction: (f) => setState(() => seeked = f),
+                  ),
+                  ChiptuneTransportBar(
+                    isPlaying: true,
+                    looping: false,
+                    volume: volume,
+                    onPlayPause: () {},
+                    onStop: () => setState(() => stopped = true),
+                    onLoopChanged: (_) {},
+                    onVolumeChanged: (v) => setState(() => volume = v),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // 1st ArrowDown focuses ChiptuneSeekBar.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(seeked, greaterThan(0.1));
+
+      // 2nd ArrowDown moves from ChiptuneSeekBar to the transport buttons row.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+
+      final stopFinder = find.byIcon(Icons.stop);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+      await tester.pump();
+      for (int i = 0; i < 4; i++) {
+        final primaryContext = FocusManager.instance.primaryFocus?.context;
+        if (primaryContext != null &&
+            find
+                .descendant(
+                  of: find.byWidget(primaryContext.widget),
+                  matching: stopFinder,
+                )
+                .evaluate()
+                .isNotEmpty) {
+          break;
+        }
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pump();
+      }
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(stopped, isTrue);
+
+      // 3rd ArrowDown moves from the transport buttons to the volume slider.
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      expect(volume, greaterThan(0.7));
+    },
+  );
+
+  testWidgets(
+    'floating overlay button outside Navigator FocusScope is reachable and escapable',
+    (tester) async {
+      final pageButtonNode = FocusNode(debugLabel: 'PageButton');
+      final overlayButtonNode = FocusNode(debugLabel: 'OverlayButton');
+      addTearDown(pageButtonNode.dispose);
+      addTearDown(overlayButtonNode.dispose);
+
+      bool overlayPressed = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => TvNavigationScope(
+            enabled: true,
+            child: Stack(
+              children: [
+                child!,
+                Positioned(
+                  left: 12,
+                  bottom: 12,
+                  child: IconButton(
+                    focusNode: overlayButtonNode,
+                    icon: const Icon(Icons.music_note_outlined),
+                    onPressed: () => overlayPressed = true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton(
+                  focusNode: pageButtonNode,
+                  onPressed: () {},
+                  child: const Text('Page Action'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      pageButtonNode.requestFocus();
+      await tester.pump();
+      expect(pageButtonNode.hasFocus, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(overlayButtonNode.hasFocus, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(overlayPressed, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowUp);
+      await tester.pump();
+      expect(pageButtonNode.hasFocus, isTrue);
     },
   );
 }

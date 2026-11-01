@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/focus_outline.dart';
 
 import '../config.dart';
 import '../chiptune_playback_state.dart';
@@ -87,6 +88,30 @@ class _MiniPlayerStack extends StatefulWidget {
 
 class _MiniPlayerStackState extends State<_MiniPlayerStack> {
   bool _expanded = false;
+  final FocusNode _buttonFocusNode = FocusNode(debugLabel: 'MiniPlayerButton');
+  final FocusNode _playPauseFocusNode = FocusNode(
+    debugLabel: 'MiniPlayerPlayPause',
+  );
+
+  @override
+  void dispose() {
+    _buttonFocusNode.dispose();
+    _playPauseFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _toggleExpanded() {
+    final nextExpanded = !_expanded;
+    setState(() => _expanded = nextExpanded);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (nextExpanded) {
+        _playPauseFocusNode.requestFocus();
+      } else {
+        _buttonFocusNode.requestFocus();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,13 +124,17 @@ class _MiniPlayerStackState extends State<_MiniPlayerStack> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_expanded) ...[
-            _MiniPlayerCard(router: widget.router),
+            _MiniPlayerCard(
+              router: widget.router,
+              playPauseFocusNode: _playPauseFocusNode,
+            ),
             const SizedBox(height: 8),
           ],
           _MiniPlayerButton(
+            focusNode: _buttonFocusNode,
             expanded: _expanded,
             label: l10n.chipMiniPlayerTooltip,
-            onToggle: () => setState(() => _expanded = !_expanded),
+            onToggle: _toggleExpanded,
           ),
         ],
       ),
@@ -114,11 +143,13 @@ class _MiniPlayerStackState extends State<_MiniPlayerStack> {
 }
 
 class _MiniPlayerButton extends StatelessWidget {
+  final FocusNode focusNode;
   final bool expanded;
   final String label;
   final VoidCallback onToggle;
 
   const _MiniPlayerButton({
+    required this.focusNode,
     required this.expanded,
     required this.label,
     required this.onToggle,
@@ -130,25 +161,30 @@ class _MiniPlayerButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: label,
-      child: Material(
-        color: colors.primaryContainer,
-        elevation: 6,
-        shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onToggle,
-          child: SizedBox(
-            width: 52,
-            height: 52,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              child: Icon(
-                expanded
-                    ? Icons.expand_more_outlined
-                    : Icons.music_note_outlined,
-                key: ValueKey(expanded),
-                size: 26,
-                color: colors.onPrimaryContainer,
+      child: FocusOutline(
+        borderRadius: BorderRadius.circular(26),
+        child: Material(
+          color: colors.primaryContainer,
+          elevation: 6,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            focusNode: focusNode,
+            customBorder: const CircleBorder(),
+            onTap: onToggle,
+            child: SizedBox(
+              width: 52,
+              height: 52,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                child: Icon(
+                  expanded
+                      ? Icons.expand_more_outlined
+                      : Icons.music_note_outlined,
+                  key: ValueKey(expanded),
+                  size: 26,
+                  color: colors.onPrimaryContainer,
+                ),
               ),
             ),
           ),
@@ -160,8 +196,12 @@ class _MiniPlayerButton extends StatelessWidget {
 
 class _MiniPlayerCard extends StatelessWidget {
   final GoRouter router;
+  final FocusNode playPauseFocusNode;
 
-  const _MiniPlayerCard({required this.router});
+  const _MiniPlayerCard({
+    required this.router,
+    required this.playPauseFocusNode,
+  });
 
   static const double _maxWidth = 320;
 
@@ -235,6 +275,7 @@ class _MiniPlayerCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton.filledTonal(
+                      focusNode: playPauseFocusNode,
                       onPressed: playback.playPause,
                       icon: Icon(
                         state == engine.ChiptunePlaybackState.playing
