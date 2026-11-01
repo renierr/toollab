@@ -10,6 +10,7 @@ import '../../../services/database_service.dart';
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/media_controls_service.dart';
 import '../../../services/power_wake_lock_service.dart';
+import '../../../services/tv_service.dart';
 import 'mixer.dart';
 import 'module.dart';
 import 'render_worker.dart';
@@ -981,8 +982,14 @@ class ChiptunePlayer {
         '_app',
         'low_latency_audio',
       );
-      final lowLatency = lowLatencyVal != 'false';
-      await SoLoud.instance.init(device: savedDevice, lowLatency: lowLatency);
+      final isTv = await TvService.isTelevision();
+      final lowLatency = !isTv && lowLatencyVal == 'true';
+      try {
+        await SoLoud.instance.init(device: savedDevice, lowLatency: lowLatency);
+      } catch (e) {
+        errorLog('$_logPrefix SoLoud init failed ($e), retrying with defaults');
+        await SoLoud.instance.init(lowLatency: false);
+      }
     } else if (savedDevice != null) {
       try {
         SoLoud.instance.changeDevice(newDevice: savedDevice);

@@ -8,6 +8,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import '../health_dashboard_state.dart';
 import '../store/health_models.dart';
@@ -99,7 +100,10 @@ class HealthBackupActions {
   }
 
   static Future<void> import(BuildContext context) async {
-    final file = await openFile(acceptedTypeGroups: const [_typeGroup]);
+    final file = await TvFilePickerDialog.openSingleFile(
+      context,
+      acceptedTypeGroups: const [_typeGroup],
+    );
     if (file == null || !context.mounted) return;
     final l10n = AppLocalizations.of(context);
     // Read the marker before warning: an unusable file should fail before the

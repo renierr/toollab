@@ -8,6 +8,7 @@ import 'package:tool_lab/helpers/qr_codec.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/qr_scanner/qr_mlkit_camera_scanner.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import '../totp_colors.dart';
 import '../totp_import.dart';
@@ -73,7 +74,10 @@ class _TotpScanDialogState extends State<TotpScanDialog> with DisposeCleanup {
       extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'],
       mimeTypes: ['image/*'],
     );
-    final file = await openFile(acceptedTypeGroups: const [typeGroup]);
+    final file = await TvFilePickerDialog.openSingleFile(
+      context,
+      acceptedTypeGroups: const [typeGroup],
+    );
     if (file == null || !mounted) return;
 
     QrDecodeResult? result;

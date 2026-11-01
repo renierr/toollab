@@ -15,6 +15,7 @@ import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/custom_notification.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 class MaintenancePage extends StatelessWidget {
   const MaintenancePage({super.key});
@@ -78,7 +79,10 @@ class MaintenancePage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     const typeGroup = XTypeGroup(label: 'SQLite Database', extensions: ['db']);
-    final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+    final XFile? file = await TvFilePickerDialog.openSingleFile(
+      context,
+      acceptedTypeGroups: const [typeGroup],
+    );
     if (file == null) return;
 
     // Validate the picked file before any destructive action.

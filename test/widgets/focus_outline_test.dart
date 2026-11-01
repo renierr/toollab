@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/focus_outline.dart';
@@ -42,5 +44,51 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(decoration().border!.top.color, AppTheme.accentBlue);
+  });
+
+  testWidgets('short and long press on remote select trigger callbacks', (
+    tester,
+  ) async {
+    final node = FocusNode();
+    addTearDown(node.dispose);
+
+    int taps = 0;
+    int longPresses = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FocusOutline(
+            onTap: () => taps++,
+            onLongPress: () => longPresses++,
+            child: Focus(
+              focusNode: node,
+              child: const SizedBox(width: 100, height: 48),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    node.requestFocus();
+    await tester.pump();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.select);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.select);
+    await tester.pump();
+
+    expect(taps, 1);
+    expect(longPresses, 0);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.select);
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    expect(longPresses, 1);
+    expect(taps, 1);
+
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.select);
+    await tester.pump();
+    expect(taps, 1);
+    expect(longPresses, 1);
   });
 }

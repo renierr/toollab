@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
+import 'package:file_selector/file_selector.dart' show XTypeGroup;
 import 'package:tool_lab/widgets/collapsible_section.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import '../audio/doppler_analyzer.dart';
 import '../sound_finder_state.dart';
@@ -34,7 +35,10 @@ class _SfDopplerViewState extends State<SfDopplerView> {
       mimeTypes: ['audio/wav', 'audio/x-wav'],
     );
     try {
-      final file = await openFile(acceptedTypeGroups: const [typeGroup]);
+      final file = await TvFilePickerDialog.openSingleFile(
+        context,
+        acceptedTypeGroups: const [typeGroup],
+      );
       if (file != null) {
         final bytes = await file.readAsBytes();
         if (context.mounted) {

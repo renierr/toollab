@@ -7,6 +7,7 @@ import '../../../services/database_service.dart';
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/media_controls_service.dart';
 import '../../../services/power_wake_lock_service.dart';
+import '../../../services/tv_service.dart';
 import '../focus_noise_sound.dart';
 import 'noise_loop_builder.dart';
 import 'noise_pcm_generator.dart';
@@ -216,8 +217,13 @@ class FocusNoisePlayer {
         '_app',
         'low_latency_audio',
       );
-      final lowLatency = lowLatencyVal != 'false';
-      await SoLoud.instance.init(lowLatency: lowLatency);
+      final isTv = await TvService.isTelevision();
+      final lowLatency = !isTv && lowLatencyVal == 'true';
+      try {
+        await SoLoud.instance.init(lowLatency: lowLatency);
+      } catch (_) {
+        await SoLoud.instance.init(lowLatency: false);
+      }
     }
   }
 

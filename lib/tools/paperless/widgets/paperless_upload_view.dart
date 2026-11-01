@@ -1,5 +1,4 @@
-import 'package:file_selector/file_selector.dart'
-    show XFile, XTypeGroup, openFiles;
+import 'package:file_selector/file_selector.dart' show XFile, XTypeGroup;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -7,6 +6,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/file_name_dialog.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import '../config.dart';
 import '../models/paperless_upload.dart';
@@ -33,7 +33,8 @@ class PaperlessUploadView extends StatelessWidget {
 
   Future<void> _pickMore(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final files = await openFiles(
+    final files = await TvFilePickerDialog.openMultipleFiles(
+      context,
       acceptedTypeGroups: [
         XTypeGroup(
           label: l10n.paperlessUploadTypeLabel,

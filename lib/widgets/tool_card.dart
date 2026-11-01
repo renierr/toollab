@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/focus_outline.dart';
 import 'package:tool_lab/widgets/tool_card_normal.dart';
 import 'package:tool_lab/widgets/tool_card_compact.dart';
@@ -19,7 +21,10 @@ class ToolCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FocusOutline(
+      onTap: onTap,
+      onLongPress: () => context.read<AppState>().toggleFavorite(tool.id),
       child: Card(
+        margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,

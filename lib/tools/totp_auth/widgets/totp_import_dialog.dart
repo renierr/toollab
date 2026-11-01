@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import '../totp_import.dart';
 
@@ -43,7 +44,10 @@ class _TotpImportDialogState extends State<TotpImportDialog> {
       extensions: ['json', '2fas', 'totpbackup', 'txt', 'backup'],
       mimeTypes: ['application/json', 'text/plain'],
     );
-    final file = await openFile(acceptedTypeGroups: const [typeGroup]);
+    final file = await TvFilePickerDialog.openSingleFile(
+      context,
+      acceptedTypeGroups: const [typeGroup],
+    );
     if (file == null || !mounted) return;
 
     setState(() {

@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 /// Draws a focus ring around [child] whenever it or one of its descendants is
@@ -7,16 +11,24 @@ import 'package:tool_lab/theme/theme.dart';
 ///
 /// The ring follows [FocusHighlightMode]: it only appears for keyboard or D-pad
 /// focus, so touch and mouse use is unchanged.
+///
+/// When [onLongPress] is provided, holding the remote's OK / Select / Enter key
+/// for [kLongPressTimeout] invokes [onLongPress], while a short press invokes
+/// [onTap] on release instead of firing immediately on key-down.
 class FocusOutline extends StatefulWidget {
   final Widget child;
   final BorderRadius borderRadius;
   final double width;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const FocusOutline({
     super.key,
     required this.child,
     this.borderRadius = const BorderRadius.all(Radius.circular(16)),
     this.width = 3,
+    this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -26,6 +38,9 @@ class FocusOutline extends StatefulWidget {
 class _FocusOutlineState extends State<FocusOutline> {
   bool _focused = false;
   bool _showRing = false;
+  Timer? _longPressTimer;
+  bool _activationKeyDown = false;
+  bool _longPressFired = false;
 
   @override
   void initState() {
@@ -35,12 +50,62 @@ class _FocusOutlineState extends State<FocusOutline> {
 
   @override
   void dispose() {
+    _cancelLongPressTimer();
     FocusManager.instance.removeListener(_syncHighlightMode);
     super.dispose();
   }
 
   static bool _isKeyboardFocus() =>
       FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
+
+  static bool _isActivationKey(LogicalKeyboardKey key) =>
+      key == LogicalKeyboardKey.select ||
+      key == LogicalKeyboardKey.enter ||
+      key == LogicalKeyboardKey.numpadEnter ||
+      key == LogicalKeyboardKey.gameButtonA;
+
+  void _cancelLongPressTimer() {
+    _longPressTimer?.cancel();
+    _longPressTimer = null;
+    _activationKeyDown = false;
+    _longPressFired = false;
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (widget.onLongPress == null || !_isActivationKey(event.logicalKey)) {
+      return KeyEventResult.ignored;
+    }
+    if (event is KeyDownEvent) {
+      _longPressTimer?.cancel();
+      _activationKeyDown = true;
+      _longPressFired = false;
+      _longPressTimer = Timer(kLongPressTimeout, () {
+        if (!mounted || !_activationKeyDown) return;
+        _longPressFired = true;
+        widget.onLongPress?.call();
+      });
+      return KeyEventResult.handled;
+    }
+    if (event is KeyRepeatEvent) {
+      return KeyEventResult.handled;
+    }
+    if (event is KeyUpEvent && _activationKeyDown) {
+      final firedLongPress = _longPressFired;
+      _cancelLongPressTimer();
+      if (!firedLongPress) {
+        if (widget.onTap != null) {
+          widget.onTap!();
+        } else {
+          final primaryContext = FocusManager.instance.primaryFocus?.context;
+          if (primaryContext != null) {
+            Actions.maybeInvoke(primaryContext, const ActivateIntent());
+          }
+        }
+      }
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
 
   void _syncHighlightMode() {
     final showRing = _focused && _isKeyboardFocus();
@@ -50,6 +115,7 @@ class _FocusOutlineState extends State<FocusOutline> {
 
   void _handleFocusChange(bool focused) {
     if (focused == _focused) return;
+    if (!focused) _cancelLongPressTimer();
     _focused = focused;
     _showRing = focused && _isKeyboardFocus();
     setState(() {});
@@ -60,6 +126,7 @@ class _FocusOutlineState extends State<FocusOutline> {
     return Focus(
       canRequestFocus: false,
       onFocusChange: _handleFocusChange,
+      onKeyEvent: _handleKeyEvent,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import '../../services/database_service.dart';
+import '../../services/tv_service.dart';
 
 class AudioService {
   AudioSource? _audioSource;
@@ -37,7 +38,8 @@ class AudioService {
           '_app',
           'low_latency_audio',
         );
-        final lowLatency = lowLatencyVal != 'false';
+        final isTv = await TvService.isTelevision();
+        final lowLatency = !isTv && lowLatencyVal != 'false';
         await SoLoud.instance.init(lowLatency: lowLatency);
       }
 

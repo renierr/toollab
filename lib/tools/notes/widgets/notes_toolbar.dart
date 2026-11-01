@@ -8,6 +8,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/notes/note_thread.dart';
 import 'package:tool_lab/tools/notes/notes_state.dart';
@@ -71,7 +72,10 @@ class _NotesToolbarState extends State<NotesToolbar> {
       mimeTypes: ['text/markdown', 'text/plain'],
     );
     try {
-      final XFile? file = await openFile(acceptedTypeGroups: const [typeGroup]);
+      final XFile? file = await TvFilePickerDialog.openSingleFile(
+        context,
+        acceptedTypeGroups: const [typeGroup],
+      );
       if (file != null) {
         final content = await file.readAsString();
         widget.onImportMarkdown(content);
@@ -93,7 +97,10 @@ class _NotesToolbarState extends State<NotesToolbar> {
       mimeTypes: ['application/json'],
     );
     try {
-      final XFile? file = await openFile(acceptedTypeGroups: const [typeGroup]);
+      final XFile? file = await TvFilePickerDialog.openSingleFile(
+        context,
+        acceptedTypeGroups: const [typeGroup],
+      );
       if (file != null) {
         final content = await file.readAsString();
         final Map<String, dynamic> data = jsonDecode(content);

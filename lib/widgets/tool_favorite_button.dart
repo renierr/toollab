@@ -17,17 +17,22 @@ class ToolFavoriteButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final isFav = appState.isFavorite(toolId);
-    return IconButton(
-      icon: Icon(
-        isFav ? Icons.star : Icons.star_outline,
-        size: iconSize,
-        color: isFav
-            ? AppTheme.favoriteStar
-            : Theme.of(context).colorScheme.onSurface.withAlpha(100),
+    return Focus(
+      canRequestFocus: false,
+      descendantsAreFocusable: false,
+      skipTraversal: true,
+      child: IconButton(
+        icon: Icon(
+          isFav ? Icons.star : Icons.star_outline,
+          size: iconSize,
+          color: isFav
+              ? AppTheme.favoriteStar
+              : Theme.of(context).colorScheme.onSurface.withAlpha(100),
+        ),
+        onPressed: () => appState.toggleFavorite(toolId),
+        visualDensity: VisualDensity.compact,
+        tooltip: isFav ? 'Remove from favorites' : 'Add to favorites',
       ),
-      onPressed: () => appState.toggleFavorite(toolId),
-      visualDensity: VisualDensity.compact,
-      tooltip: isFav ? 'Remove from favorites' : 'Add to favorites',
     );
   }
 }

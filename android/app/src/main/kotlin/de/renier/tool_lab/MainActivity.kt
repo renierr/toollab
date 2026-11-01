@@ -452,7 +452,10 @@ open class MainActivity : FlutterFragmentActivity() {
                     result.success(true)
                 }
                 "requestNotificationPermission" -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isDestroyed) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        !isDestroyed &&
+                        !isTelevisionDisplay()
+                    ) {
                         if (checkSelfPermission(
                                 android.Manifest.permission.POST_NOTIFICATIONS,
                             ) != PackageManager.PERMISSION_GRANTED

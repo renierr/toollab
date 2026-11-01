@@ -3,8 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
-import 'package:file_selector/file_selector.dart'
-    show XFile, XTypeGroup, openFiles;
+import 'package:file_selector/file_selector.dart' show XFile, XTypeGroup;
 import 'package:image_picker/image_picker.dart' show ImagePicker;
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
@@ -15,6 +14,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/drop_zone_action_button.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 import 'package:tool_lab/tools/images_to_pdf/config.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_preview.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_progress.dart';
@@ -300,12 +300,13 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
             isProcessing: _isProcessing,
             onPaste: _pasteFromClipboard,
             onAddMore: () async {
-              final files = await openFiles(
+              final files = await TvFilePickerDialog.openMultipleFiles(
+                context,
                 acceptedTypeGroups: [
                   XTypeGroup(
                     label: l10n.img2pdfImagesLabel,
                     extensions: ImagesToPdfTool.config.fileExtensions,
-                    mimeTypes: ['image/*'],
+                    mimeTypes: const ['image/*'],
                   ),
                 ],
               );

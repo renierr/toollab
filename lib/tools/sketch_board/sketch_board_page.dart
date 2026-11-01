@@ -14,6 +14,7 @@ import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 import 'package:file_selector/file_selector.dart';
 
 import 'config.dart';
@@ -209,7 +210,8 @@ class _SketchBoardPageState extends State<SketchBoardPage>
 
   Future<void> _insertImage() async {
     final l10n = AppLocalizations.of(context);
-    final file = await openFile(
+    final file = await TvFilePickerDialog.openSingleFile(
+      context,
       acceptedTypeGroups: [
         XTypeGroup(
           label: l10n.sketchImageLabel,

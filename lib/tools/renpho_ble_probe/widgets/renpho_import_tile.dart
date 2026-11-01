@@ -4,6 +4,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import '../renpho_ble_probe_state.dart';
 
@@ -44,7 +45,10 @@ class _RenphoImportTileState extends State<RenphoImportTile> {
   }
 
   Future<void> _import() async {
-    final file = await openFile(acceptedTypeGroups: const [_typeGroup]);
+    final file = await TvFilePickerDialog.openSingleFile(
+      context,
+      acceptedTypeGroups: const [_typeGroup],
+    );
     if (file == null || !mounted) return;
     final l10n = AppLocalizations.of(context);
     final state = context.read<RenphoBleProbeState>();

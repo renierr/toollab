@@ -12,6 +12,7 @@ import 'package:tool_lab/widgets/workout/workout_details_sheet.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../helpers/file_save_helper.dart';
 import '../../../../widgets/collapsible_section.dart';
+import '../../../../widgets/tv_file_picker_dialog.dart';
 
 class SessionHistoryList extends StatelessWidget {
   const SessionHistoryList({super.key});
@@ -244,7 +245,10 @@ class SessionHistoryList extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     try {
       const typeGroup = fs.XTypeGroup(label: 'JSON', extensions: ['json']);
-      final file = await fs.openFile(acceptedTypeGroups: [typeGroup]);
+      final file = await TvFilePickerDialog.openSingleFile(
+        context,
+        acceptedTypeGroups: const [typeGroup],
+      );
       if (file == null) return;
 
       final content = await file.readAsString();

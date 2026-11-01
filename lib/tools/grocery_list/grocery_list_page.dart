@@ -12,6 +12,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 import 'config.dart';
 import 'grocery_item.dart';
 import 'grocery_list_state.dart';
@@ -161,7 +162,10 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
         extensions: ['json'],
         mimeTypes: ['application/json'],
       );
-      final XFile? file = await openFile(acceptedTypeGroups: const [typeGroup]);
+      final XFile? file = await TvFilePickerDialog.openSingleFile(
+        context,
+        acceptedTypeGroups: const [typeGroup],
+      );
       if (file == null) return;
 
       final text = await file.readAsString();

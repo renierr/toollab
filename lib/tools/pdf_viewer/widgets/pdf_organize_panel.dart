@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
+import 'package:file_selector/file_selector.dart' show XTypeGroup;
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
@@ -9,6 +9,7 @@ import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_result_view.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 class PdfOrganizePanel extends StatefulWidget {
   final PdfOperationSession session;
@@ -114,7 +115,8 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   }
 
   Future<void> _insertPages() async {
-    final xFile = await openFile(
+    final xFile = await TvFilePickerDialog.openSingleFile(
+      context,
       acceptedTypeGroups: [
         const XTypeGroup(
           label: 'PDF',

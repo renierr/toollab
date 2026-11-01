@@ -5,6 +5,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 class FileDropZone extends StatefulWidget {
   final ValueChanged<XFile>? onFileSelected;
@@ -63,6 +64,23 @@ class _FileDropZoneState extends State<FileDropZone> {
 
   Future<void> _pickFile() async {
     try {
+      if (await TvFilePickerDialog.shouldUse(context)) {
+        if (!mounted) return;
+        final files = await TvFilePickerDialog.pick(
+          context,
+          allowedExtensions: widget.allowedExtensions,
+          allowedMimeTypes: widget.allowedMimeTypes ?? const <String>[],
+          allowMultiple: widget.multiple,
+        );
+        if (files.isNotEmpty && mounted) {
+          if (widget.onFilesSelected != null) {
+            widget.onFilesSelected!(files);
+          } else {
+            widget.onFileSelected?.call(files.first);
+          }
+        }
+        return;
+      }
       final hasFilters =
           widget.allowedExtensions.isNotEmpty ||
           widget.allowedMimeTypes != null;

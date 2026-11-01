@@ -20,6 +20,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import 'chiptune_archive.dart';
 import 'chiptune_playback_state.dart';
@@ -129,6 +130,19 @@ class _ChiptunePageState extends State<ChiptunePage>
   // ---- File picking ----
 
   Future<void> _pickFiles() async {
+    if (await TvFilePickerDialog.shouldUse(context)) {
+      if (!mounted) return;
+      final files = await TvFilePickerDialog.pick(
+        context,
+        allowedExtensions: ChiptuneTool.config.fileExtensions,
+        allowedMimeTypes: const ['audio/*'],
+        allowMultiple: true,
+      );
+      if (files.isEmpty || !mounted) return;
+      await _playback.startFiles(files);
+      return;
+    }
+    if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     final files = await openFiles(
       acceptedTypeGroups: [

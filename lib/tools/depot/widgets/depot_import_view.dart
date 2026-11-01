@@ -1,7 +1,6 @@
 import 'dart:convert';
 
-import 'package:file_selector/file_selector.dart'
-    show XFile, XTypeGroup, openFiles;
+import 'package:file_selector/file_selector.dart' show XFile, XTypeGroup;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -13,6 +12,7 @@ import 'package:tool_lab/widgets/custom_notification.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import '../config.dart';
 import '../depot_import_state.dart';
@@ -44,7 +44,8 @@ class _DepotImportViewState extends State<DepotImportView> {
   }
 
   Future<void> _pickMore() async {
-    final files = await openFiles(
+    final files = await TvFilePickerDialog.openMultipleFiles(
+      context,
       acceptedTypeGroups: const [
         XTypeGroup(
           label: 'PDF',

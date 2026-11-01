@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
+import 'package:file_selector/file_selector.dart' show XTypeGroup;
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -12,6 +12,7 @@ import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 import 'chat_ai_state.dart';
 import 'widgets/chat_message_bubble.dart';
 import 'widgets/chat_session_drawer.dart';
@@ -136,7 +137,10 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
         label: l10n.chatAiDocumentsLabel,
         extensions: ['txt', 'md', 'markdown', 'pdf'],
       );
-      final file = await openFile(acceptedTypeGroups: [typeGroup]);
+      final file = await TvFilePickerDialog.openSingleFile(
+        context,
+        acceptedTypeGroups: [typeGroup],
+      );
       if (file == null) return;
 
       if (file.name.toLowerCase().endsWith('.pdf')) {
