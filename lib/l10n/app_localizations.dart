@@ -20783,6 +20783,12 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get depotSortName;
 
+  /// No description provided for @depotSortCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get depotSortCustom;
+
   /// No description provided for @depotKindStock.
   ///
   /// In en, this message translates to:

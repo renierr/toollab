@@ -21,6 +21,7 @@ class DepotHoldingTile extends StatelessWidget {
 
   /// Share of the scope's open value, in percent.
   final double weight;
+  final int? reorderIndex;
 
   const DepotHoldingTile({
     super.key,
@@ -29,6 +30,7 @@ class DepotHoldingTile extends StatelessWidget {
     required this.period,
     required this.format,
     required this.weight,
+    this.reorderIndex,
   });
 
   @override
@@ -44,6 +46,14 @@ class DepotHoldingTile extends StatelessWidget {
     final sold = holding.isSold;
     final kindColor = sold ? theme.hintColor : DepotColors.kind(kind);
     final mainColor = sold ? theme.hintColor : null;
+
+    final avatar = Opacity(
+      opacity: sold ? 0.4 : 1,
+      child: DepotHoldingAvatar(
+        name: name,
+        colorSeed: holding.identifier ?? holding.id,
+      ),
+    );
 
     return ExpansionTile(
       // Sold positions only show when the filter asks for them; tint them so
@@ -61,13 +71,25 @@ class DepotHoldingTile extends StatelessWidget {
       dense: true,
       showTrailingIcon: false,
       title: DepotInfoRow(
-        leading: Opacity(
-          opacity: sold ? 0.4 : 1,
-          child: DepotHoldingAvatar(
-            name: name,
-            colorSeed: holding.identifier ?? holding.id,
-          ),
-        ),
+        leading: reorderIndex == null
+            ? avatar
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ReorderableDragStartListener(
+                    index: reorderIndex!,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Icon(
+                        Icons.drag_handle,
+                        size: 20,
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  ),
+                  avatar,
+                ],
+              ),
         title: LayoutBuilder(
           builder: (context, constraints) {
             final hasRoomForTrend = constraints.maxWidth >= 240;

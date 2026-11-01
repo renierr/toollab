@@ -11734,6 +11734,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotSortName => 'Name';
 
   @override
+  String get depotSortCustom => 'Eigene';
+
+  @override
   String get depotKindStock => 'Aktie';
 
   @override

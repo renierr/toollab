@@ -11650,6 +11650,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotSortName => 'Name';
 
   @override
+  String get depotSortCustom => 'Custom';
+
+  @override
   String get depotKindStock => 'Stock';
 
   @override

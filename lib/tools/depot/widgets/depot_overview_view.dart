@@ -10,6 +10,7 @@ import '../depot_portfolio_state.dart';
 import '../depot_risk.dart';
 import '../depot_state.dart';
 import '../depot_xray.dart';
+import '../models/depot_filters.dart';
 import '../models/depot_period.dart';
 import 'depot_connect_card.dart';
 import 'depot_benchmark_chart.dart';
@@ -146,21 +147,47 @@ class DepotOverviewView extends StatelessWidget {
             if (state.hasData)
               SliverPadding(
                 padding: const EdgeInsets.only(bottom: 24),
-                sliver: SliverList.builder(
-                  itemCount: holdings.length,
-                  itemBuilder: (context, index) {
-                    final holding = holdings[index];
-                    return DepotHoldingTile(
-                      holding: holding,
-                      performance: state.performanceOf(holding),
-                      period: state.period,
-                      format: format,
-                      weight: openValue <= 0
-                          ? 0
-                          : holding.currentValue / openValue * 100,
-                    );
-                  },
-                ),
+                sliver: state.holdingFilter.sort == DepotHoldingSort.custom
+                    ? SliverReorderableList(
+                        itemCount: holdings.length,
+                        onReorderItem: state.reorderHolding,
+                        proxyDecorator: (child, index, animation) => Material(
+                          elevation: 4,
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          child: child,
+                        ),
+                        itemBuilder: (context, index) {
+                          final holding = holdings[index];
+                          return DepotHoldingTile(
+                            key: ValueKey(holding.key),
+                            holding: holding,
+                            performance: state.performanceOf(holding),
+                            period: state.period,
+                            format: format,
+                            weight: openValue <= 0
+                                ? 0
+                                : holding.currentValue / openValue * 100,
+                            reorderIndex: index,
+                          );
+                        },
+                      )
+                    : SliverList.builder(
+                        itemCount: holdings.length,
+                        itemBuilder: (context, index) {
+                          final holding = holdings[index];
+                          return DepotHoldingTile(
+                            key: ValueKey(holding.key),
+                            holding: holding,
+                            performance: state.performanceOf(holding),
+                            period: state.period,
+                            format: format,
+                            weight: openValue <= 0
+                                ? 0
+                                : holding.currentValue / openValue * 100,
+                          );
+                        },
+                      ),
               ),
           ],
         ),

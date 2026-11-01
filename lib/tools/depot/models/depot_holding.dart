@@ -121,6 +121,8 @@ class DepotHolding {
   /// ISIN or crypto symbol, whichever identifies the asset.
   String? get identifier => isin ?? symbol;
 
+  String get key => DepotHoldingPerformance.keyOf(portfolioId, id);
+
   factory DepotHolding.fromJson(String portfolioId, Map<String, dynamic> json) {
     final asset = ParqetJson.object(json['asset']);
     final position = ParqetJson.object(json['position']);
@@ -306,5 +308,32 @@ class DepotHoldingPerformance {
     'gain': gain,
     'return_percent': returnPercent,
     'start_price': startPrice,
+  };
+}
+
+class DepotHoldingOrder {
+  final String portfolioId;
+  final String holdingId;
+  final int position;
+
+  const DepotHoldingOrder({
+    required this.portfolioId,
+    required this.holdingId,
+    required this.position,
+  });
+
+  String get key => DepotHoldingPerformance.keyOf(portfolioId, holdingId);
+
+  factory DepotHoldingOrder.fromMap(Map<String, Object?> map) =>
+      DepotHoldingOrder(
+        portfolioId: map['portfolio_id'] as String,
+        holdingId: map['holding_id'] as String,
+        position: map['position'] as int,
+      );
+
+  Map<String, Object?> toMap() => {
+    'portfolio_id': portfolioId,
+    'holding_id': holdingId,
+    'position': position,
   };
 }

@@ -69,6 +69,7 @@ class DepotPortfolioLabels {
         DepotHoldingSort.gain => l10n.depotSortGain,
         DepotHoldingSort.returnPercent => l10n.depotSortGainPercent,
         DepotHoldingSort.name => l10n.depotSortName,
+        DepotHoldingSort.custom => l10n.depotSortCustom,
       };
 
   static String dividendStatus(

@@ -4586,6 +4586,7 @@
   "depotSortGain": "Gewinn",
   "depotSortGainPercent": "Rendite %",
   "depotSortName": "Name",
+  "depotSortCustom": "Eigene",
   "depotKindStock": "Aktie",
   "depotKindStocks": "Aktien",
   "depotKindEtf": "ETF",

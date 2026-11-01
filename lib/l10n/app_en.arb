@@ -5789,6 +5789,7 @@
   "depotSortGain": "Gain",
   "depotSortGainPercent": "Return %",
   "depotSortName": "Name",
+  "depotSortCustom": "Custom",
   "depotKindStock": "Stock",
   "depotKindStocks": "Stocks",
   "depotKindEtf": "ETF",

@@ -2,7 +2,7 @@ import 'depot_holding.dart';
 import 'depot_transaction.dart';
 
 /// Gain and return sort by the selected period's figures.
-enum DepotHoldingSort { returnPercent, gain, value, name }
+enum DepotHoldingSort { returnPercent, gain, value, name, custom }
 
 class DepotHoldingFilter {
   final String query;
@@ -41,8 +41,9 @@ class DepotHoldingFilter {
   int compare(
     DepotHolding a,
     DepotHolding b,
-    DepotHoldingPerformance? Function(DepotHolding) performanceOf,
-  ) => switch (sort) {
+    DepotHoldingPerformance? Function(DepotHolding) performanceOf, {
+    int? Function(DepotHolding)? orderOf,
+  }) => switch (sort) {
     DepotHoldingSort.returnPercent => _descending(
       performanceOf(a)?.returnPercent,
       performanceOf(b)?.returnPercent,
@@ -55,7 +56,23 @@ class DepotHoldingFilter {
     DepotHoldingSort.name => a.name.toLowerCase().compareTo(
       b.name.toLowerCase(),
     ),
+    DepotHoldingSort.custom => _customOrder(a, b, orderOf),
   };
+
+  static int _customOrder(
+    DepotHolding a,
+    DepotHolding b,
+    int? Function(DepotHolding)? orderOf,
+  ) {
+    final posA = orderOf?.call(a);
+    final posB = orderOf?.call(b);
+    if (posA != null && posB != null && posA != posB) {
+      return posA.compareTo(posB);
+    }
+    if (posA != null && posB == null) return -1;
+    if (posA == null && posB != null) return 1;
+    return b.currentValue.compareTo(a.currentValue);
+  }
 
   static int _descending(double? a, double? b) {
     if (a == null) return b == null ? 0 : 1;

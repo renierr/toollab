@@ -53,6 +53,7 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotChartPoint> _chart = const [];
   DepotRangeChange? _rangeChange;
   List<DepotHolding> _holdings = const [];
+  Map<String, int> _holdingOrder = const {};
   Map<String, DepotHoldingPerformance> _holdingPerformance = const {};
   List<DepotTransaction> _transactions = const [];
   List<DepotYearReport> _yearReports = const [];
@@ -186,6 +187,8 @@ class DepotPortfolioState extends ChangeNotifier {
         holding.id,
       )];
 
+  int? orderOf(DepotHolding holding) => _holdingOrder[holding.key];
+
   String? get _portfolioId => _scope == DepotStore.allScope ? null : _scope;
 
   Future<void> ensureLoaded() => _loading ??= _load();
@@ -221,9 +224,11 @@ class DepotPortfolioState extends ChangeNotifier {
     final scope = _scope;
     final portfolioId = _portfolioId;
     final holdings = await _store.holdings(portfolioId: portfolioId);
+    final holdingOrder = await _store.holdingOrder();
     final transactions = await _store.transactions(portfolioId: portfolioId);
     if (_disposed || load != _scopeLoad || scope != _scope) return;
     _holdings = holdings;
+    _holdingOrder = holdingOrder;
     _transactions = transactions;
     _yearReports = DepotYearReport.fromTransactions(transactions);
     _refilterTransactions();
@@ -434,6 +439,72 @@ class DepotPortfolioState extends ChangeNotifier {
     _notify();
   }
 
+  Future<void> reorderHolding(int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex ||
+        oldIndex < 0 ||
+        newIndex < 0 ||
+        oldIndex >= _visibleHoldings.length ||
+        newIndex >= _visibleHoldings.length) {
+      return;
+    }
+    final full = List<DepotHolding>.of(_holdings)
+      ..sort(
+        (a, b) => _holdingFilter.compare(a, b, performanceOf, orderOf: orderOf),
+      );
+    final matchingIndices = [
+      for (var i = 0; i < full.length; i++)
+        if (_holdingFilter.matches(full[i])) i,
+    ];
+    final visible = List<DepotHolding>.of(_visibleHoldings);
+    final moved = visible.removeAt(oldIndex);
+    visible.insert(newIndex, moved);
+    for (var i = 0; i < matchingIndices.length; i++) {
+      full[matchingIndices[i]] = visible[i];
+    }
+
+    final inFull = {for (final h in full) h.key};
+    final existingSorted = _holdingOrder.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+    final globalKeys = [
+      for (final entry in existingSorted) entry.key,
+      for (final h in full)
+        if (!_holdingOrder.containsKey(h.key)) h.key,
+    ];
+    final fullIter = full.iterator;
+    final nextOrder = <String, int>{};
+    final updates = <DepotHoldingOrder>[];
+    for (var i = 0; i < globalKeys.length; i++) {
+      final key = globalKeys[i];
+      if (inFull.contains(key) && fullIter.moveNext()) {
+        final holding = fullIter.current;
+        nextOrder[holding.key] = i;
+        updates.add(
+          DepotHoldingOrder(
+            portfolioId: holding.portfolioId,
+            holdingId: holding.id,
+            position: i,
+          ),
+        );
+      } else {
+        nextOrder[key] = i;
+        final parts = key.split('/');
+        if (parts.length == 2) {
+          updates.add(
+            DepotHoldingOrder(
+              portfolioId: parts[0],
+              holdingId: parts[1],
+              position: i,
+            ),
+          );
+        }
+      }
+    }
+    _holdingOrder = nextOrder;
+    _refilterHoldings();
+    _notify();
+    await _store.saveHoldingOrder(updates);
+  }
+
   void setActivityFilter(DepotActivityFilter filter) {
     _activityFilter = filter;
     _refilterTransactions();
@@ -442,7 +513,9 @@ class DepotPortfolioState extends ChangeNotifier {
 
   void _refilterHoldings() {
     _visibleHoldings = _holdings.where(_holdingFilter.matches).toList()
-      ..sort((a, b) => _holdingFilter.compare(a, b, performanceOf));
+      ..sort(
+        (a, b) => _holdingFilter.compare(a, b, performanceOf, orderOf: orderOf),
+      );
     final moves = [
       for (final h in _visibleHoldings)
         if (performanceOf(h)?.returnPercent case final percent?

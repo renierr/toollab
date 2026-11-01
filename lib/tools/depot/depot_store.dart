@@ -54,6 +54,7 @@ class DepotStore {
   static const _chartPoints = 'chart_points';
   static const _holdingPerformance = 'holding_performance';
   static const _holdingLogos = 'holding_logos';
+  static const _holdingOrder = 'holding_order';
 
   /// Parqet's activity count per holding when its activities were last read.
   static const _activityCounts = 'activity_counts';
@@ -102,7 +103,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 11,
+        currentVersion: 12,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -363,6 +364,16 @@ class DepotStore {
               )
             ''');
             await _migrateLegacyProfiles(txn);
+          }
+          if (oldVersion < 12) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_holdingOrder)} (
+                portfolio_id TEXT NOT NULL,
+                holding_id TEXT NOT NULL,
+                position INTEGER NOT NULL,
+                PRIMARY KEY (portfolio_id, holding_id)
+              )
+            ''');
           }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {
@@ -822,6 +833,30 @@ class DepotStore {
   Future<void> setHoldingSort(DepotHoldingSort sort) =>
       DatabaseService.instance.setSetting(_toolId, _holdingSortKey, sort.name);
 
+  /// Custom sort position keyed by [DepotHoldingOrder.key].
+  Future<Map<String, int>> holdingOrder() async {
+    final db = await _getDb();
+    final rows = await db.query(_holdingOrder, orderBy: 'position ASC');
+    final orders = rows.map(DepotHoldingOrder.fromMap);
+    return {for (final o in orders) o.key: o.position};
+  }
+
+  Future<void> saveHoldingOrder(List<DepotHoldingOrder> orders) async {
+    if (orders.isEmpty) return;
+    final db = await _getDb();
+    await db.transaction((txn) async {
+      final batch = txn.batch();
+      for (final order in orders) {
+        batch.insert(
+          _holdingOrder,
+          order.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
   Future<List<DepotChartPoint>> chart(DepotPeriodKey key) async {
     final db = await _getDb();
     final rows = await db.query(
@@ -1023,6 +1058,7 @@ class DepotStore {
       _holdings,
       _transactions,
       _activityCounts,
+      _holdingOrder,
     ]) {
       final column = table == _summaries || table == _chartPoints
           ? 'scope'
@@ -1122,6 +1158,7 @@ class DepotStore {
       _dividendAssets,
       _dividendEvents,
       _holdingLogos,
+      _holdingOrder,
       _wishlist,
       _wishlistLogos,
       _assetProfiles,
@@ -1167,6 +1204,7 @@ class DepotStore {
         _dividendAssets,
         _dividendEvents,
         _holdingLogos,
+        _holdingOrder,
         _assetProfiles,
         _assetShares,
         _fundConstituents,

@@ -357,8 +357,9 @@ ones; cached values stay until replaced. Portfolio sync remains independent.
 Tables in the tool database (`DepotStore`): portfolios, holdings, holding performance per
 period, summaries and chart points per scope and period, transactions, activity counts per
 holding, dividend data from Yahoo Finance, holding logos (downloaded only on request from
-the settings), the wishlist, and allocation metadata. Summaries and charts exist per
-portfolio and for all portfolios combined (scope `_all`).
+the settings), custom holding order (`holding_order`), the wishlist, and allocation
+metadata. Summaries and charts exist per portfolio and for all portfolios combined (scope
+`_all`).
 
 Allocation metadata is keyed by ISIN, or by symbol for fund constituents and alternate
 listings:
