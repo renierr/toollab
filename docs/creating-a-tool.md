@@ -116,6 +116,8 @@ Always reuse existing custom widgets in `lib/widgets/` to ensure visual consiste
   Used by `ToolLayout` for fullscreen navigation overlay.
 - **`ToolCard`** (`lib/widgets/tool_card.dart`):
   Standardized card presentation layout for selection interfaces.
+- **`FocusOutline`** (`lib/widgets/focus_outline.dart`):
+  Wraps any tappable surface and draws a focus ring while it or a descendant holds focus. Wrap custom cards and tiles with it so TV builds stay usable with a D-pad; `ToolCard` already does.
 
 ---
 

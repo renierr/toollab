@@ -82,6 +82,8 @@
     <uses-permission android:name="android.permission.health.WRITE_BODY_WATER_MASS" />
     <uses-permission android:name="android.permission.health.WRITE_BASAL_METABOLIC_RATE" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
         <!-- Android 14+ keeps Health Connect in the platform controller instead of the
@@ -114,6 +116,7 @@
         android:label="ToolLab"
         android:name="${applicationName}"
         android:allowAudioPlaybackCapture="true"
+        android:banner="@drawable/tv_banner"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -138,6 +141,8 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+                <!-- Android TV / Google TV home screen row. -->
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
             </intent-filter>
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />

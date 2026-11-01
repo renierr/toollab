@@ -43,6 +43,22 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kleinere Karten, mehr Tools pro Zeile';
 
   @override
+  String get settingsTvMode => 'TV-Modus';
+
+  @override
+  String get settingsTvModeSubtitle =>
+      'Pfeiltasten verlassen Eingabefelder, Fokus wird hervorgehoben';
+
+  @override
+  String get settingsTvModeAuto => 'Automatisch';
+
+  @override
+  String get settingsTvModeOn => 'An';
+
+  @override
+  String get settingsTvModeOff => 'Aus';
+
+  @override
   String get settingsSystemNotifications => 'Systembenachrichtigungen';
 
   @override

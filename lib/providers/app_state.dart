@@ -9,6 +9,7 @@ import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
+import 'package:tool_lab/services/tv_service.dart';
 
 class AppState extends ChangeNotifier {
   /// Per-tool setting key prefix a [SyncDelegate] stores its cursor under.
@@ -25,10 +26,12 @@ class AppState extends ChangeNotifier {
     _systemNotificationsEnabled = _settingsService
         .getSystemNotificationsEnabled();
     _lowLatencyAudio = _settingsService.getLowLatencyAudio();
+    _tvModeSetting = _settingsService.getTvMode();
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();
     _syncLastSynced = _settingsService.getSyncLastSynced();
     _loadPersistedState();
+    _detectTelevision();
     for (final tool in ToolRegistry.all) {
       final factory = tool.syncDelegateFactory;
       if (factory != null) registerSyncDelegate(factory());
@@ -66,6 +69,8 @@ class AppState extends ChangeNotifier {
   bool _syncEnabled = false;
   bool _systemNotificationsEnabled = true;
   bool _lowLatencyAudio = true;
+  TvMode _tvModeSetting = TvMode.auto;
+  bool _isTelevision = false;
   String _syncServerUrl = '';
   String _syncUserId = '';
   int _syncLastSynced = 0;
@@ -89,6 +94,15 @@ class AppState extends ChangeNotifier {
   bool get syncEnabled => _syncEnabled;
   bool get systemNotificationsEnabled => _systemNotificationsEnabled;
   bool get lowLatencyAudio => _lowLatencyAudio;
+  TvMode get tvModeSetting => _tvModeSetting;
+
+  /// Whether remote-control navigation rules apply.
+  bool get tvMode => switch (_tvModeSetting) {
+    TvMode.auto => _isTelevision,
+    TvMode.on => true,
+    TvMode.off => false,
+  };
+
   String get syncServerUrl => _syncServerUrl;
   String get syncUserId => _syncUserId;
   int get syncLastSynced => _syncLastSynced;
@@ -231,6 +245,19 @@ class AppState extends ChangeNotifier {
   Future<void> setLowLatencyAudio(bool value) async {
     _lowLatencyAudio = value;
     await _settingsService.setLowLatencyAudio(value);
+    notifyListeners();
+  }
+
+  Future<void> setTvMode(TvMode mode) async {
+    _tvModeSetting = mode;
+    await _settingsService.setTvMode(mode);
+    notifyListeners();
+  }
+
+  Future<void> _detectTelevision() async {
+    final isTelevision = await TvService.isTelevision();
+    if (isTelevision == _isTelevision) return;
+    _isTelevision = isTelevision;
     notifyListeners();
   }
 
@@ -401,6 +428,7 @@ class AppState extends ChangeNotifier {
     _systemNotificationsEnabled = _settingsService
         .getSystemNotificationsEnabled();
     _lowLatencyAudio = _settingsService.getLowLatencyAudio();
+    _tvModeSetting = _settingsService.getTvMode();
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();
     _syncLastSynced = _settingsService.getSyncLastSynced();

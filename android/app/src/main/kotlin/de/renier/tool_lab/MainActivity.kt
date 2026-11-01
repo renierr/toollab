@@ -3,6 +3,7 @@ package de.renier.tool_lab
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
@@ -27,6 +28,7 @@ open class MainActivity : FlutterFragmentActivity() {
     private val MULTICAST_CHANNEL = "de.renier.tool_lab/multicast"
     private val STORAGE_ACCESS_CHANNEL = "de.renier.tool_lab/storage_access"
     private val NATIVE_MEDIA_PLAYER_CHANNEL = "de.renier.tool_lab/native_media_player"
+    private val TV_CHANNEL = "de.renier.tool_lab/tv"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
     private var launchRoute: String? = null
@@ -251,6 +253,12 @@ open class MainActivity : FlutterFragmentActivity() {
         }
     }
 
+    // A TV reports UI_MODE_TYPE_TELEVISION; phones and tablets never do.
+    private fun isTelevisionDisplay(): Boolean {
+        val uiMode = resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK
+        return uiMode == Configuration.UI_MODE_TYPE_TELEVISION
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger
@@ -258,6 +266,13 @@ open class MainActivity : FlutterFragmentActivity() {
         HealthConnectSettingsHelper(this).registerChannel(messenger)
 
         InstalledAppsHelper.register(this, messenger)
+
+        MethodChannel(messenger, TV_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "isTelevision" -> result.success(isTelevisionDisplay())
+                else -> result.notImplemented()
+            }
+        }
 
         MethodChannel(messenger, FILE_PICKER_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {

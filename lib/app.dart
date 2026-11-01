@@ -22,6 +22,7 @@ import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/widgets/tv_navigation_scope.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
 import 'package:tool_lab/tools/gps_location_store/gps_info_page.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_history_page.dart';
@@ -282,8 +283,12 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
       routerConfig: _router,
       builder: (context, child) {
         final content = child ?? const SizedBox.shrink();
-        if (_toolOverlays.isEmpty) return content;
-        return Stack(children: [content, ..._toolOverlays]);
+        return TvNavigationScope(
+          enabled: appState.tvMode,
+          child: _toolOverlays.isEmpty
+              ? content
+              : Stack(children: [content, ..._toolOverlays]),
+        );
       },
       debugShowCheckedModeBanner: false,
     );

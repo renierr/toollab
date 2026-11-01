@@ -7,6 +7,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_icon.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_file_name.dart';
+import 'package:tool_lab/widgets/focus_outline.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class FileManagerEntryTile extends StatelessWidget {
@@ -61,150 +62,159 @@ class FileManagerEntryTile extends StatelessWidget {
       builder: (context, constraints) {
         final isCompact = constraints.isCompact;
         final iconSize = isCompact ? 40.0 : 48.0;
-        return ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
-          minLeadingWidth: iconSize,
-          leading: SizedBox(
-            width: iconSize,
-            height: iconSize,
-            child: Center(
-              child: FileManagerEntryIcon(
-                entry: entry,
-                showPreview: showImagePreviews,
+        return FocusOutline(
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          child: ListTile(
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 12 : 16,
+            ),
+            minLeadingWidth: iconSize,
+            leading: SizedBox(
+              width: iconSize,
+              height: iconSize,
+              child: Center(
+                child: FileManagerEntryIcon(
+                  entry: entry,
+                  showPreview: showImagePreviews,
+                ),
               ),
             ),
-          ),
-          selected: selected,
-          title: isCompact
-              ? FileManagerFileName(
-                  name: entry.name,
-                  style: Theme.of(context).textTheme.titleMedium,
-                )
-              : FileManagerFileName(name: entry.name, maxLines: 1),
-          subtitle: Row(
-            children: [
-              Expanded(
-                child: _EntryMetadata(
-                  entry: entry,
-                  metadata: metadata,
-                  childCount: childCount,
+            selected: selected,
+            title: isCompact
+                ? FileManagerFileName(
+                    name: entry.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  )
+                : FileManagerFileName(name: entry.name, maxLines: 1),
+            subtitle: Row(
+              children: [
+                Expanded(
+                  child: _EntryMetadata(
+                    entry: entry,
+                    metadata: metadata,
+                    childCount: childCount,
+                  ),
                 ),
-              ),
-              if (isInClipboard)
-                Icon(
-                  clipboardIsCut ? Icons.content_cut : Icons.copy_outlined,
-                  size: 14,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-            ],
-          ),
-          trailing: selectionMode
-              ? Checkbox(
-                  value: selected,
-                  onChanged: (_) => onToggleSelection(entry),
-                )
-              : PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'rename') {
-                      onRename(entry);
-                    } else if (value == 'details') {
-                      onDetails(entry);
-                    } else if (value == 'system') {
-                      onOpenWithSystem(entry);
-                    } else if (value == 'install') {
-                      onOpenWithSystem(entry);
-                    } else if (value == 'share') {
-                      onShare(entry);
-                    } else if (value == 'extract') {
-                      onExtract(entry);
-                    } else if (value == 'copy') {
-                      onCopy(entry);
-                    } else if (value == 'cut') {
-                      onCut(entry);
-                    } else {
-                      onDelete(entry);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'details',
-                      child: _MenuAction(
-                        icon: Icons.info_outline,
-                        label: AppLocalizations.of(context).fileManagerDetails,
-                      ),
-                    ),
-                    if (!readOnly && _isApk(entry))
+                if (isInClipboard)
+                  Icon(
+                    clipboardIsCut ? Icons.content_cut : Icons.copy_outlined,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+              ],
+            ),
+            trailing: selectionMode
+                ? Checkbox(
+                    value: selected,
+                    onChanged: (_) => onToggleSelection(entry),
+                  )
+                : PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'rename') {
+                        onRename(entry);
+                      } else if (value == 'details') {
+                        onDetails(entry);
+                      } else if (value == 'system') {
+                        onOpenWithSystem(entry);
+                      } else if (value == 'install') {
+                        onOpenWithSystem(entry);
+                      } else if (value == 'share') {
+                        onShare(entry);
+                      } else if (value == 'extract') {
+                        onExtract(entry);
+                      } else if (value == 'copy') {
+                        onCopy(entry);
+                      } else if (value == 'cut') {
+                        onCut(entry);
+                      } else {
+                        onDelete(entry);
+                      }
+                    },
+                    itemBuilder: (context) => [
                       PopupMenuItem(
-                        value: 'install',
+                        value: 'details',
                         child: _MenuAction(
-                          icon: Icons.install_mobile_outlined,
+                          icon: Icons.info_outline,
                           label: AppLocalizations.of(
                             context,
-                          ).fileManagerInstallApk,
+                          ).fileManagerDetails,
                         ),
                       ),
-                    if (!readOnly && entry.name.toLowerCase().endsWith('.zip'))
+                      if (!readOnly && _isApk(entry))
+                        PopupMenuItem(
+                          value: 'install',
+                          child: _MenuAction(
+                            icon: Icons.install_mobile_outlined,
+                            label: AppLocalizations.of(
+                              context,
+                            ).fileManagerInstallApk,
+                          ),
+                        ),
+                      if (!readOnly &&
+                          entry.name.toLowerCase().endsWith('.zip'))
+                        PopupMenuItem(
+                          value: 'extract',
+                          child: _MenuAction(
+                            icon: Icons.unarchive_outlined,
+                            label: AppLocalizations.of(
+                              context,
+                            ).fileManagerExtract,
+                          ),
+                        ),
                       PopupMenuItem(
-                        value: 'extract',
+                        value: 'system',
                         child: _MenuAction(
-                          icon: Icons.unarchive_outlined,
+                          icon: Icons.open_in_new,
                           label: AppLocalizations.of(
                             context,
-                          ).fileManagerExtract,
+                          ).fileManagerOpenWithSystem,
                         ),
                       ),
-                    PopupMenuItem(
-                      value: 'system',
-                      child: _MenuAction(
-                        icon: Icons.open_in_new,
-                        label: AppLocalizations.of(
-                          context,
-                        ).fileManagerOpenWithSystem,
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'share',
-                      child: _MenuAction(
-                        icon: Icons.share_outlined,
-                        label: AppLocalizations.of(context).commonShare,
-                      ),
-                    ),
-                    if (!readOnly)
                       PopupMenuItem(
-                        value: 'rename',
+                        value: 'share',
                         child: _MenuAction(
-                          icon: Icons.drive_file_rename_outline,
-                          label: AppLocalizations.of(context).commonRename,
+                          icon: Icons.share_outlined,
+                          label: AppLocalizations.of(context).commonShare,
                         ),
                       ),
-                    if (showClipboardActions)
-                      PopupMenuItem(
-                        value: 'copy',
-                        child: _MenuAction(
-                          icon: Icons.copy_outlined,
-                          label: AppLocalizations.of(context).commonCopy,
+                      if (!readOnly)
+                        PopupMenuItem(
+                          value: 'rename',
+                          child: _MenuAction(
+                            icon: Icons.drive_file_rename_outline,
+                            label: AppLocalizations.of(context).commonRename,
+                          ),
                         ),
-                      ),
-                    if (showClipboardActions && !readOnly)
-                      PopupMenuItem(
-                        value: 'cut',
-                        child: _MenuAction(
-                          icon: Icons.content_cut,
-                          label: AppLocalizations.of(context).fileManagerCut,
+                      if (showClipboardActions)
+                        PopupMenuItem(
+                          value: 'copy',
+                          child: _MenuAction(
+                            icon: Icons.copy_outlined,
+                            label: AppLocalizations.of(context).commonCopy,
+                          ),
                         ),
-                      ),
-                    if (!readOnly)
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: _MenuAction(
-                          icon: Icons.delete_outline,
-                          label: AppLocalizations.of(context).commonDelete,
+                      if (showClipboardActions && !readOnly)
+                        PopupMenuItem(
+                          value: 'cut',
+                          child: _MenuAction(
+                            icon: Icons.content_cut,
+                            label: AppLocalizations.of(context).fileManagerCut,
+                          ),
                         ),
-                      ),
-                  ],
-                ),
-          onTap: () => selectionMode ? onToggleSelection(entry) : onOpen(entry),
-          onLongPress: () => onToggleSelection(entry),
+                      if (!readOnly)
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: _MenuAction(
+                            icon: Icons.delete_outline,
+                            label: AppLocalizations.of(context).commonDelete,
+                          ),
+                        ),
+                    ],
+                  ),
+            onTap: () =>
+                selectionMode ? onToggleSelection(entry) : onOpen(entry),
+            onLongPress: () => onToggleSelection(entry),
+          ),
         );
       },
     );

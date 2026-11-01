@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/tv_service.dart';
 
 class SettingsService {
   static const String _toolId = '_app';
@@ -15,6 +16,7 @@ class SettingsService {
   static const String _keySystemNotificationsEnabled =
       'system_notifications_enabled';
   static const String _keyLowLatencyAudio = 'low_latency_audio';
+  static const String _keyTvMode = 'tv_mode';
 
   static Future<SettingsService> init() async {
     final allSettings = await DatabaseService.instance.getAllSettings(_toolId);
@@ -109,6 +111,17 @@ class SettingsService {
       _toolId,
       _keyLowLatencyAudio,
       str,
+    );
+  }
+
+  TvMode getTvMode() => TvMode.fromStorage(_cache[_keyTvMode]);
+
+  Future<void> setTvMode(TvMode mode) async {
+    _cache[_keyTvMode] = mode.storageValue;
+    await DatabaseService.instance.setSetting(
+      _toolId,
+      _keyTvMode,
+      mode.storageValue,
     );
   }
 

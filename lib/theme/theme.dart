@@ -16,10 +16,15 @@ class AppTheme {
   static const Color statusOrange = Color(0xFFFF9800);
   static const Color favoriteStar = Color(0xFFFFCA28);
 
+  /// Focus overlay that still reads from across a room. Only keyboard and
+  /// D-pad navigation show it, so a stronger value costs touch users nothing.
+  static Color get focusColor => accentBlue.withValues(alpha: 0.35);
+
   static ThemeData get light => ThemeData(
     useMaterial3: true,
     colorSchemeSeed: accentBlue,
     brightness: Brightness.light,
+    focusColor: focusColor,
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
     cardTheme: CardThemeData(
       elevation: 1,
@@ -31,6 +36,7 @@ class AppTheme {
     useMaterial3: true,
     colorSchemeSeed: accentBlue,
     brightness: Brightness.dark,
+    focusColor: focusColor,
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
     cardTheme: CardThemeData(
       elevation: 1,

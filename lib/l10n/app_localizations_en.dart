@@ -42,6 +42,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsCompactViewSubtitle => 'Smaller cards, more tools per row';
 
   @override
+  String get settingsTvMode => 'TV Mode';
+
+  @override
+  String get settingsTvModeSubtitle =>
+      'Arrow keys leave input fields, focused items are outlined';
+
+  @override
+  String get settingsTvModeAuto => 'Automatic';
+
+  @override
+  String get settingsTvModeOn => 'On';
+
+  @override
+  String get settingsTvModeOff => 'Off';
+
+  @override
   String get settingsSystemNotifications => 'System Notifications';
 
   @override

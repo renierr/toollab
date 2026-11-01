@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/services/tv_service.dart';
 
 class AppearanceSettingsPage extends StatelessWidget {
   const AppearanceSettingsPage({super.key});
@@ -93,6 +94,37 @@ class AppearanceSettingsPage extends StatelessWidget {
                       value: appState.compactMode,
                       onChanged: (_) =>
                           context.read<AppState>().toggleCompactMode(),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    ListTile(
+                      leading: Icon(
+                        Icons.tv_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      title: Text(l10n.settingsTvMode),
+                      subtitle: Text(l10n.settingsTvModeSubtitle),
+                      trailing: DropdownButton<TvMode>(
+                        value: appState.tvModeSetting,
+                        underline: const SizedBox(),
+                        items: [
+                          DropdownMenuItem(
+                            value: TvMode.auto,
+                            child: Text(l10n.settingsTvModeAuto),
+                          ),
+                          DropdownMenuItem(
+                            value: TvMode.on,
+                            child: Text(l10n.settingsTvModeOn),
+                          ),
+                          DropdownMenuItem(
+                            value: TvMode.off,
+                            child: Text(l10n.settingsTvModeOff),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          context.read<AppState>().setTvMode(value);
+                        },
+                      ),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SwitchListTile(

@@ -164,6 +164,36 @@ abstract class AppLocalizations {
   /// **'Smaller cards, more tools per row'**
   String get settingsCompactViewSubtitle;
 
+  /// Setting that enables remote-control navigation for Android TV
+  ///
+  /// In en, this message translates to:
+  /// **'TV Mode'**
+  String get settingsTvMode;
+
+  /// No description provided for @settingsTvModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow keys leave input fields, focused items are outlined'**
+  String get settingsTvModeSubtitle;
+
+  /// No description provided for @settingsTvModeAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get settingsTvModeAuto;
+
+  /// No description provided for @settingsTvModeOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get settingsTvModeOn;
+
+  /// No description provided for @settingsTvModeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get settingsTvModeOff;
+
   /// No description provided for @settingsSystemNotifications.
   ///
   /// In en, this message translates to:
