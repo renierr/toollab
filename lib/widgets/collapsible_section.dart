@@ -38,27 +38,39 @@ class _CollapsibleSectionState extends State<CollapsibleSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: _toggle,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(widget.icon, size: 18, color: widget.iconColor),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(widget.title, style: theme.textTheme.titleSmall),
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: _toggle,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(widget.icon, size: 18, color: widget.iconColor),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          widget.title,
+                          style: theme.textTheme.titleSmall,
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: _expanded ? 0.0 : -0.25,
+                        duration: const Duration(milliseconds: 200),
+                        child: const Icon(Icons.expand_more, size: 22),
+                      ),
+                    ],
+                  ),
                 ),
-                ...widget.actions,
-                AnimatedRotation(
-                  turns: _expanded ? 0.0 : -0.25,
-                  duration: const Duration(milliseconds: 200),
-                  child: const Icon(Icons.expand_more, size: 22),
-                ),
-              ],
+              ),
             ),
-          ),
+            ...widget.actions,
+          ],
         ),
         AnimatedCrossFade(
           firstChild: SizedBox(width: double.infinity, child: widget.child),

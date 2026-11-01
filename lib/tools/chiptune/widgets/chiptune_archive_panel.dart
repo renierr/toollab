@@ -115,36 +115,51 @@ class _ArchiveItem extends StatelessWidget {
       color: isCurrent
           ? ChiptuneColors.accent.withValues(alpha: 0.15)
           : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-      child: InkWell(
-        onTap: onPlay,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
-          child: Row(
-            children: [
-              StatusBadge(label: module.format, color: ChiptuneColors.accent),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  module.title.isEmpty ? module.fileName : module.title,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: onPlay,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    children: [
+                      StatusBadge(
+                        label: module.format,
+                        color: ChiptuneColors.accent,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          module.title.isEmpty ? module.fileName : module.title,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              IconButton(
-                onPressed: onDownload,
-                tooltip: l10n.chipDownloadTooltip,
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.download_outlined, size: 18),
-              ),
-              IconButton(
-                onPressed: onDelete,
-                tooltip: l10n.commonDelete,
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.delete_outline, size: 18),
-              ),
-            ],
-          ),
+            ),
+            IconButton(
+              onPressed: onDownload,
+              tooltip: l10n.chipDownloadTooltip,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.download_outlined, size: 18),
+            ),
+            IconButton(
+              onPressed: onDelete,
+              tooltip: l10n.commonDelete,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.delete_outline, size: 18),
+            ),
+          ],
         ),
       ),
     );

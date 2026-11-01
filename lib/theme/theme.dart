@@ -20,11 +20,20 @@ class AppTheme {
   /// D-pad navigation show it, so a stronger value costs touch users nothing.
   static Color get focusColor => accentBlue.withValues(alpha: 0.35);
 
+  static const InputDecorationTheme _inputDecorationTheme =
+      InputDecorationTheme(
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: accentBlue, width: 2.5),
+        ),
+      );
+
   static ThemeData get light => ThemeData(
     useMaterial3: true,
     colorSchemeSeed: accentBlue,
     brightness: Brightness.light,
     focusColor: focusColor,
+    inputDecorationTheme: _inputDecorationTheme,
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
     cardTheme: CardThemeData(
       elevation: 1,
@@ -37,6 +46,7 @@ class AppTheme {
     colorSchemeSeed: accentBlue,
     brightness: Brightness.dark,
     focusColor: focusColor,
+    inputDecorationTheme: _inputDecorationTheme,
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
     cardTheme: CardThemeData(
       elevation: 1,

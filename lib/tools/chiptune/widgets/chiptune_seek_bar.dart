@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../chiptune_colors.dart';
 import '../engine/chiptune_player.dart';
@@ -64,49 +65,65 @@ class _ChiptuneSeekBarState extends State<ChiptuneSeekBar> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: 44,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final w = constraints.maxWidth;
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapDown: (details) {
-                  final f = (details.localPosition.dx / w).clamp(0.0, 1.0);
-                  widget.onSeekFraction(f);
-                },
-                onHorizontalDragStart: (details) {
-                  setState(() {
-                    _isDragging = true;
-                    _dragFraction = (details.localPosition.dx / w).clamp(
-                      0.0,
-                      1.0,
-                    );
-                  });
-                },
-                onHorizontalDragUpdate: (details) {
-                  setState(() {
-                    _dragFraction = (details.localPosition.dx / w).clamp(
-                      0.0,
-                      1.0,
-                    );
-                  });
-                },
-                onHorizontalDragEnd: (details) {
-                  widget.onSeekFraction(_dragFraction.clamp(0.0, 1.0));
-                  setState(() => _isDragging = false);
-                },
-                child: _SeekBarPaint(
-                  fraction: displayFraction,
-                  accent: ChiptuneColors.accent,
-                  accentBright: ChiptuneColors.accentBright,
-                  surfaceContainer: theme.colorScheme.surfaceContainerHighest,
-                  timeText: _isDragging
-                      ? _durationAtFraction(_dragFraction)
-                      : null,
-                ),
-              );
-            },
+        Focus(
+          onKeyEvent: (node, event) {
+            if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+              return KeyEventResult.ignored;
+            }
+            if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+              widget.onSeekFraction((fraction - 0.05).clamp(0.0, 1.0));
+              return KeyEventResult.handled;
+            }
+            if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+              widget.onSeekFraction((fraction + 0.05).clamp(0.0, 1.0));
+              return KeyEventResult.handled;
+            }
+            return KeyEventResult.ignored;
+          },
+          child: SizedBox(
+            height: 44,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.maxWidth;
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (details) {
+                    final f = (details.localPosition.dx / w).clamp(0.0, 1.0);
+                    widget.onSeekFraction(f);
+                  },
+                  onHorizontalDragStart: (details) {
+                    setState(() {
+                      _isDragging = true;
+                      _dragFraction = (details.localPosition.dx / w).clamp(
+                        0.0,
+                        1.0,
+                      );
+                    });
+                  },
+                  onHorizontalDragUpdate: (details) {
+                    setState(() {
+                      _dragFraction = (details.localPosition.dx / w).clamp(
+                        0.0,
+                        1.0,
+                      );
+                    });
+                  },
+                  onHorizontalDragEnd: (details) {
+                    widget.onSeekFraction(_dragFraction.clamp(0.0, 1.0));
+                    setState(() => _isDragging = false);
+                  },
+                  child: _SeekBarPaint(
+                    fraction: displayFraction,
+                    accent: ChiptuneColors.accent,
+                    accentBright: ChiptuneColors.accentBright,
+                    surfaceContainer: theme.colorScheme.surfaceContainerHighest,
+                    timeText: _isDragging
+                        ? _durationAtFraction(_dragFraction)
+                        : null,
+                  ),
+                );
+              },
+            ),
           ),
         ),
         Padding(
