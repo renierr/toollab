@@ -12279,7 +12279,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotImportDropSubtitle =>
-      'Drop DKB or ING buy, sell and dividend statements here';
+      'Drop DKB, ING or Postbank buy, sell and dividend statements here';
 
   @override
   String get depotImportAdd => 'Add PDFs';

@@ -9,7 +9,9 @@ class QuantityParser {
     'Stück',
     'Stk',
     'St.',
+    'Nominal ST',
     'Nominale',
+    'Nominal',
     'Nennwert',
     'Anteile',
   ];
@@ -18,6 +20,8 @@ class QuantityParser {
     'je stück',
     'per stück',
     'pro anteil',
+    'inhaber-anteil',
+    'namens-anteil',
   ];
 
   static double? parse(StatementText text) =>

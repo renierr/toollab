@@ -19,12 +19,21 @@ class BankDetector {
     'www.ing.de',
     'ing bank',
   ];
+  static const _postbankMarkers = [
+    'deutsche postbank',
+    'postbank.de',
+    'pbnkdeff',
+    'postbank – eine niederlassung',
+    'postbank - eine niederlassung',
+  ];
 
   static DepotBank detect(StatementText text) {
     if (text.containsAny(_dkbMarkers)) return DepotBank.dkb;
     if (text.containsAny(_ingMarkers)) return DepotBank.ing;
+    if (text.containsAny(_postbankMarkers)) return DepotBank.postbank;
     if (text.contains('dkb')) return DepotBank.dkb;
     if (text.contains('ing')) return DepotBank.ing;
+    if (text.contains('postbank')) return DepotBank.postbank;
     return DepotBank.unknown;
   }
 }

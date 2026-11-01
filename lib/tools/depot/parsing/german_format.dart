@@ -77,24 +77,24 @@ class GermanFormat {
   /// number — a bare quantity ("Stück 10") is not money.
   static Money? explicitMoney(String text) {
     final matches = numberPattern.allMatches(text).toList();
-    if (matches.isEmpty) return null;
-    final match = matches.last;
-    final value = _fromMatch(match);
-    if (value == null) return null;
+    for (final match in matches.reversed) {
+      final value = _fromMatch(match);
+      if (value == null) continue;
 
-    final after = text.substring(match.end);
-    final afterCode = _currencyPattern.firstMatch(after);
-    if (afterCode != null &&
-        after.substring(0, afterCode.start).trim().isEmpty) {
-      return Money(value, afterCode.group(1)!);
-    }
+      final after = text.substring(match.end);
+      final afterCode = _currencyPattern.firstMatch(after);
+      if (afterCode != null &&
+          after.substring(0, afterCode.start).trim().isEmpty) {
+        return Money(value, afterCode.group(1)!);
+      }
 
-    final before = text.substring(0, match.start);
-    final beforeCodes = _currencyPattern.allMatches(before).toList();
-    if (beforeCodes.isNotEmpty) {
-      final code = beforeCodes.last;
-      if (before.substring(code.end).trim().isEmpty) {
-        return Money(value, code.group(1)!);
+      final before = text.substring(0, match.start);
+      final beforeCodes = _currencyPattern.allMatches(before).toList();
+      if (beforeCodes.isNotEmpty) {
+        final code = beforeCodes.last;
+        if (before.substring(code.end).trim().isEmpty) {
+          return Money(value, code.group(1)!);
+        }
       }
     }
 

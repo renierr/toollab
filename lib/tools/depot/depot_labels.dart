@@ -33,6 +33,7 @@ class DepotLabels {
   static String bank(AppLocalizations l10n, DepotBank bank) => switch (bank) {
     DepotBank.dkb => 'DKB',
     DepotBank.ing => 'ING',
+    DepotBank.postbank => 'Postbank',
     DepotBank.unknown => l10n.depotImportBankUnknown,
   };
 

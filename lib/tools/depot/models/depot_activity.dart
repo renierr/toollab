@@ -1,4 +1,4 @@
-enum DepotBank { dkb, ing, unknown }
+enum DepotBank { dkb, ing, postbank, unknown }
 
 enum DepotActivityType { buy, sell, dividend }
 

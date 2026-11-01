@@ -427,6 +427,114 @@ void main() {
     });
   });
 
+  group('Postbank statements', () {
+    test('parses dwpbank buy statement with exchange fees', () {
+      final parsed = DepotStatementParser.parse(
+        id: 'pb1',
+        fileName: 'postbank_kauf_dwp.pdf',
+        rawText: '''
+Deutsche Postbank AG
+Wertpapier Abrechnung Kauf
+Nominale Wertpapierbezeichnung ISIN (WKN)
+Stück 158 XTR.(IE) - MSCI WORLD IE00BJ0KDQ92 (A1XB5U)
+REGISTERED SHARES 1C O.N.
+Schlusstag 24.07.2023
+Ausführungskurs 62,821 EUR
+Kurswert 9.925,72- EUR
+Provision 39,95- EUR
+Abwicklungskosten Börse 0,04- EUR
+Transaktionsentgelt Börse 11,82- EUR
+Übertragungs-/Liefergebühr 0,65- EUR
+Ausmachender Betrag 9.978,18- EUR
+''',
+      );
+
+      final activity = parsed.activity!;
+      expect(parsed.bank, DepotBank.postbank);
+      expect(activity.type, DepotActivityType.buy);
+      expect(activity.date, DateTime(2023, 7, 24));
+      expect(activity.isin, 'IE00BJ0KDQ92');
+      expect(activity.wkn, 'A1XB5U');
+      expect(activity.securityName, 'XTR.(IE) - MSCI WORLD');
+      expect(activity.shares, 158);
+      expect(activity.price, closeTo(62.821, 0.0001));
+      expect(activity.fee, closeTo(52.46, 0.005));
+      expect(activity.amount, closeTo(9925.72, 0.005));
+      expect(parsed.issues, isEmpty);
+    });
+
+    test('parses newer Deutsche Bank layout buy statement', () {
+      final parsed = DepotStatementParser.parse(
+        id: 'pb2',
+        fileName: 'postbank_kauf_neu.pdf',
+        rawText: '''
+Postbank – eine Niederlassung der Deutsche Bank AG
+Wertpapier Abrechnung Kauf
+123 4567890 00 DWS ESG TOP ASIEN INHABER-ANTEILE LC 1/1
+WKN 976976 Nominal ST 88
+ISIN DE0009769760 Kurs EUR 196,05
+Kurswert EUR 17.252,40
+Provision EUR 39,95
+XETRA-Kosten EUR 0,60
+Fremde Spesen und Auslagen EUR 3,12
+Buchung auf Kontonummer 4567890 00 mit Wertstellung 26.07.2023 EUR 17.296,07
+''',
+      );
+
+      final activity = parsed.activity!;
+      expect(parsed.bank, DepotBank.postbank);
+      expect(activity.type, DepotActivityType.buy);
+      expect(activity.date, DateTime(2023, 7, 26));
+      expect(activity.isin, 'DE0009769760');
+      expect(activity.wkn, '976976');
+      expect(activity.securityName, 'DWS ESG TOP ASIEN INHABER-ANTEILE LC');
+      expect(activity.shares, 88);
+      expect(activity.price, closeTo(196.05, 0.0001));
+      expect(activity.fee, closeTo(43.67, 0.005));
+      expect(activity.amount, closeTo(17252.40, 0.005));
+      expect(parsed.issues, isEmpty);
+    });
+
+    test('parses newer Deutsche Bank layout USD dividend statement', () {
+      final parsed = DepotStatementParser.parse(
+        id: 'pb3',
+        fileName: 'postbank_dividende_neu.pdf',
+        rawText: '''
+Postbank – eine Niederlassung der Deutsche Bank AG
+Dividendengutschrift
+Stück WKN ISIN
+60,000000 890454 US6819361006
+OMEGA HEALTHCARE INVEST. INC.RG.SH. DL -,10
+Ausschüttung pro Stück 0,6700000000 USD Zahlbar 15.05.2024
+Bruttoertrag 40,20 USD 36,77 EUR
+15,0000000 % Ausländische Quellensteuer - 6,03 USD - 5,52 EUR
+Kapitalertragsteuer (KESt) - 4,02 USD - 3,68 EUR
+Solidaritätszuschlag auf KESt - 0,22 USD - 0,20 EUR
+Umrechnungskurs USD zu EUR 1,0933000000
+Gutschrift mit Wert 17.05.2024 27,37 EUR
+''',
+      );
+
+      final activity = parsed.activity!;
+      expect(parsed.bank, DepotBank.postbank);
+      expect(activity.type, DepotActivityType.dividend);
+      expect(activity.date, DateTime(2024, 5, 15));
+      expect(activity.isin, 'US6819361006');
+      expect(activity.wkn, '890454');
+      expect(
+        activity.securityName,
+        'OMEGA HEALTHCARE INVEST. INC.RG.SH. DL -,10',
+      );
+      expect(activity.shares, 60);
+      expect(activity.sourceCurrency, 'USD');
+      expect(activity.fxRate, closeTo(1.0933, 0.00005));
+      expect(activity.price, closeTo(0.67 / 1.0933, 0.0001));
+      expect(activity.tax, closeTo(9.40, 0.005));
+      expect(activity.amount, closeTo(36.77, 0.005));
+      expect(parsed.issues, isEmpty);
+    });
+  });
+
   group('revalidate after manual edit', () {
     DepotActivity activity({
       double shares = 10,

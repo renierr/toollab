@@ -20,6 +20,7 @@ class ParqetActivityUpload {
   static String? _broker(DepotBank bank) => switch (bank) {
     DepotBank.dkb => 'dkb',
     DepotBank.ing => 'ing',
+    DepotBank.postbank => 'postbank',
     DepotBank.unknown => null,
   };
 

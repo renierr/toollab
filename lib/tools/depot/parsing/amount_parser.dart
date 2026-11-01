@@ -18,7 +18,17 @@ class AmountParser {
   static const _totalGroups = [
     ['Ausmachender Betrag'],
     ['Zu Ihren Lasten', 'Zu Ihren Gunsten'],
-    ['Endbetrag', 'Gesamtbetrag', 'Auszahlungsbetrag'],
+    [
+      'Endbetrag',
+      'Gesamtbetrag',
+      'Auszahlungsbetrag',
+      'Buchung auf Kontonummer',
+    ],
+    [
+      'Gutschrift mit Wert',
+      'Belastung mit Wert',
+      'Wir überweisen den Betrag von',
+    ],
     ['Gutschrift'],
   ];
 

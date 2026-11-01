@@ -22,7 +22,7 @@ Only imported statements and the local wishlist are edited here.
 | Dividends | Calendar, missing and upcoming payments, per year and per position | Parqet bookings plus Yahoo Finance for ex-dates and amounts |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
 | Wishlist | Stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database, optional backend sync and Yahoo Finance |
-| Import | Parse DKB / ING PDF statements, export as Parqet CSV or send to Parqet | `POST /portfolios/{id}/activities` |
+| Import | Parse DKB / ING / Postbank PDF statements, export as Parqet CSV or send to Parqet | `POST /portfolios/{id}/activities` |
 
 ## Creating a connection
 
@@ -251,7 +251,7 @@ the initials badge from the app is drawn.
 
 ## Importing statements
 
-1. Add DKB or ING PDF statements (file picker or Android share sheet). They are parsed
+1. Add DKB, ING or Postbank PDF statements (file picker or Android share sheet). They are parsed
    locally; nothing leaves the device at this step.
 2. Review and edit the parsed activities.
 3. Either export a Parqet CSV, or **Send to Parqet**: the app asks `GET /user` which

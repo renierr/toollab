@@ -4941,7 +4941,7 @@
   },
   "depotImportTypeLabel": "PDF-Abrechnungen",
   "depotImportOpenTitle": "Depot-PDFs hinzufügen",
-  "depotImportDropSubtitle": "Kauf-, Verkaufs- und Dividendenabrechnungen von DKB oder ING hier ablegen",
+  "depotImportDropSubtitle": "Kauf-, Verkaufs- und Dividendenabrechnungen von DKB, ING oder Postbank hier ablegen",
   "depotImportAdd": "PDFs hinzufügen",
   "depotImportClear": "Leeren",
   "depotImportExport": "CSV exportieren",

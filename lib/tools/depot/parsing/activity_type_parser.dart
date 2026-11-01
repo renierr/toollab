@@ -15,7 +15,8 @@ class ActivityTypeParser {
     r'|r(ü|ue)ckzahlung|einl(ö|oe)sung',
   );
   static final RegExp _buy = RegExp(
-    r'wertpapierkauf|\bkauf\b|sparplanausf(ü|ue)hrung|einmalanlage',
+    r'wertpapierkauf|\bkauf\b|sparplanausf(ü|ue)hrung|einmalanlage'
+    r'|ausgabe investmentfonds|zeichnung von wertpapieren',
   );
 
   static DepotActivityType? parse(String rawText) {

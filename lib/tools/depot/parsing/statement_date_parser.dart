@@ -17,8 +17,20 @@ class StatementDateParser {
     'Orderausführung',
     'Fälligkeit',
   ];
-  static const _payout = ['Zahlbarkeitstag', 'Zahltag', 'Zahlbar am', 'Ex-Tag'];
-  static const _value = ['Valuta', 'Wertstellung', 'Buchungstag', 'Belegdatum'];
+  static const _payout = [
+    'Zahlbarkeitstag',
+    'Zahltag',
+    'Zahlbar am',
+    'Zahlbar',
+    'Ex-Tag',
+  ];
+  static const _value = [
+    'Valuta',
+    'Wertstellung',
+    'mit Wert',
+    'Buchungstag',
+    'Belegdatum',
+  ];
 
   static DateTime? parse(StatementText text, DepotActivityType type) {
     final order = type == DepotActivityType.dividend

@@ -23,8 +23,18 @@ class SecurityParser {
   static final RegExp _bracketWkn = RegExp(r'\(([A-Z0-9]{6})\)');
 
   static final RegExp _leadingLabel = RegExp(
-    r'^\s*(Gattungsbezeichnung|Wertpapierbezeichnung|Bezeichnung|Wertpapier)\s+',
+    r'^\s*(Gattungsbezeichnung|Wertpapierbezeichnung|Bezeichnung|Wertpapier(?!\s+Abrechnung))\s+',
     caseSensitive: false,
+  );
+  static final RegExp _postbankDepotRow = RegExp(
+    r'^\d+\s+\d+\s+\d+\s+(.+?)\s+\d+/\d+$',
+  );
+  static final RegExp _trailingPrice = RegExp(
+    r'\bKurs\s+(?:[A-Z]{3}\s+)?[\d.,]+(?:\s*%|\s+[A-Z]{3})?\s*$',
+    caseSensitive: false,
+  );
+  static final RegExp _leadingTableQuantityAndWkn = RegExp(
+    r'^\s*[\d.,]+\s+(?:[A-Z]{3}\s+)?[A-Z0-9]{6}\s*$',
   );
 
   static String isin(String rawText) =>
@@ -59,15 +69,20 @@ class SecurityParser {
   }
 
   static String? wkn(String rawText) {
-    final labelled = _wkn.firstMatch(rawText)?.group(1);
-    if (labelled != null) return labelled;
+    for (final match in _wkn.allMatches(rawText)) {
+      final candidate = match.group(1)!;
+      if (_looksLikeWkn(candidate)) return candidate;
+    }
     final code = isin(rawText);
     if (code.isEmpty) return null;
+    final precedingWkn = RegExp('(?<![.,\\d])\\b([A-Z0-9]{6})\\s+$code\\b');
     for (final line in rawText.split('\n')) {
       if (!line.contains(code)) continue;
       for (final match in _bracketWkn.allMatches(line)) {
         if (_looksLikeWkn(match.group(1)!)) return match.group(1);
       }
+      final preceding = precedingWkn.firstMatch(line)?.group(1);
+      if (preceding != null && _looksLikeWkn(preceding)) return preceding;
       return null;
     }
     return null;
@@ -99,9 +114,15 @@ class SecurityParser {
 
   static String? _labelledName(StatementText text) {
     for (final line in text.lines) {
-      if (!_leadingLabel.hasMatch(line)) continue;
-      final cleaned = _clean(line);
-      if (cleaned.length > 3) return cleaned;
+      if (_leadingLabel.hasMatch(line)) {
+        final cleaned = _clean(line);
+        if (cleaned.length > 3) return cleaned;
+      }
+      final postbankMatch = _postbankDepotRow.firstMatch(line);
+      if (postbankMatch != null) {
+        final cleaned = _clean(postbankMatch.group(1)!);
+        if (cleaned.length > 3) return cleaned;
+      }
     }
     return null;
   }
@@ -113,6 +134,8 @@ class SecurityParser {
       )
       .replaceAll(_identifierWords, '')
       .replaceFirst(_leadingQuantity, '')
+      .replaceFirst(_leadingTableQuantityAndWkn, '')
+      .replaceFirst(_trailingPrice, '')
       .replaceFirst(_leadingLabel, '')
       .replaceAll(RegExp(r'\s{2,}'), ' ')
       .trim();

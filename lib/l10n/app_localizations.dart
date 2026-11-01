@@ -21794,7 +21794,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotImportDropSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Drop DKB or ING buy, sell and dividend statements here'**
+  /// **'Drop DKB, ING or Postbank buy, sell and dividend statements here'**
   String get depotImportDropSubtitle;
 
   /// No description provided for @depotImportAdd.
