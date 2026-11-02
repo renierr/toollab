@@ -39,14 +39,14 @@ class _TotpImportDialogState extends State<TotpImportDialog> {
   }
 
   Future<void> _pickFile() async {
-    const typeGroup = XTypeGroup(
-      label: 'Authenticator backups',
-      extensions: ['json', '2fas', 'totpbackup', 'txt', 'backup'],
-      mimeTypes: ['application/json', 'text/plain'],
+    final typeGroup = XTypeGroup(
+      label: AppLocalizations.of(context).totpBackupFileType,
+      extensions: const ['json', '2fas', 'totpbackup', 'txt', 'backup'],
+      mimeTypes: const ['application/json', 'text/plain'],
     );
     final file = await TvFilePickerDialog.openSingleFile(
       context,
-      acceptedTypeGroups: const [typeGroup],
+      acceptedTypeGroups: [typeGroup],
     );
     if (file == null || !mounted) return;
 

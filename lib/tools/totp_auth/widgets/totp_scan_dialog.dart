@@ -69,14 +69,14 @@ class _TotpScanDialogState extends State<TotpScanDialog> with DisposeCleanup {
   }
 
   Future<void> _pickImage() async {
-    const typeGroup = XTypeGroup(
-      label: 'Images',
-      extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp'],
-      mimeTypes: ['image/*'],
+    final typeGroup = XTypeGroup(
+      label: AppLocalizations.of(context).totpImageFileType,
+      extensions: const ['png', 'jpg', 'jpeg', 'webp', 'bmp'],
+      mimeTypes: const ['image/*'],
     );
     final file = await TvFilePickerDialog.openSingleFile(
       context,
-      acceptedTypeGroups: const [typeGroup],
+      acceptedTypeGroups: [typeGroup],
     );
     if (file == null || !mounted) return;
 

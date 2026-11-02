@@ -12920,6 +12920,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get totpImportAccounts => 'Konten importieren';
 
   @override
+  String get totpBackupFileType => 'Authenticator-Sicherungen';
+
+  @override
+  String get totpImageFileType => 'Bilder';
+
+  @override
   String get totpImportShortHint =>
       'Aus einem anderen Authenticator wiederherstellen';
 

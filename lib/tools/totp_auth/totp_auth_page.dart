@@ -351,7 +351,7 @@ class _TotpAuthPageState extends State<TotpAuthPage>
         bytes: Uint8List.fromList(utf8.encode(content)),
         acceptedTypeGroups: [
           XTypeGroup(
-            label: 'TOTP backup',
+            label: l10n.totpBackupFileType,
             extensions: [selection.format.fileExtension],
             mimeTypes: [selection.format.mimeType],
           ),

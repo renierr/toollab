@@ -12824,6 +12824,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totpImportAccounts => 'Import accounts';
 
   @override
+  String get totpBackupFileType => 'Authenticator backups';
+
+  @override
+  String get totpImageFileType => 'Images';
+
+  @override
   String get totpImportShortHint => 'Restore from another authenticator';
 
   @override

@@ -22733,6 +22733,18 @@ abstract class AppLocalizations {
   /// **'Import accounts'**
   String get totpImportAccounts;
 
+  /// No description provided for @totpBackupFileType.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator backups'**
+  String get totpBackupFileType;
+
+  /// No description provided for @totpImageFileType.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get totpImageFileType;
+
   /// No description provided for @totpImportShortHint.
   ///
   /// In en, this message translates to:

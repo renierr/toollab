@@ -37,6 +37,7 @@ class TotpAuthState extends ChangeNotifier {
   static const _schemaVersion = 3;
 
   final List<TotpAccount> _accounts = [];
+  final Set<String> _codeErrorsLogged = {};
   bool _rotationPending = false;
   bool _rotationBusy = false;
   bool get rotationPending => _rotationPending;
@@ -591,7 +592,10 @@ class TotpAuthState extends ChangeNotifier {
             );
       return Totp.formatCode(code, account.digits);
     } catch (e) {
-      errorLog('[TotpAuthState] Failed to generate code: $e');
+      // Called every second per card; one entry per account is enough.
+      if (_codeErrorsLogged.add(account.id)) {
+        errorLog('[TotpAuthState] Failed to generate code: $e');
+      }
       return '-' * account.digits;
     }
   }

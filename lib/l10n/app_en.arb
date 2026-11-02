@@ -6466,6 +6466,8 @@
   "totpEnterManually": "Enter manually",
   "totpEnterManuallyHint": "Paste a setup link or type the secret",
   "totpImportAccounts": "Import accounts",
+  "totpBackupFileType": "Authenticator backups",
+  "totpImageFileType": "Images",
   "totpImportShortHint": "Restore from another authenticator",
   "totpMoreActions": "More actions",
   "totpAccountActions": "Account actions",

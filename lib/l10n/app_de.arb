@@ -5139,6 +5139,8 @@
   "totpEnterManually": "Manuell eingeben",
   "totpEnterManuallyHint": "Einrichtungslink einfügen oder Geheimnis eingeben",
   "totpImportAccounts": "Konten importieren",
+  "totpBackupFileType": "Authenticator-Sicherungen",
+  "totpImageFileType": "Bilder",
   "totpImportShortHint": "Aus einem anderen Authenticator wiederherstellen",
   "totpMoreActions": "Weitere Aktionen",
   "totpAccountActions": "Kontoaktionen",
