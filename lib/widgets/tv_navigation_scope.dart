@@ -77,6 +77,7 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
     scopeContext: () => context,
     onMovedOrScrolled: () {
       _keyboardFocusActive = true;
+      _publishKeyboardNavigation();
       _triggerFocusRepaint();
     },
   );
@@ -88,6 +89,9 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
     _keyboardFocusActive = widget.enabled;
     FocusManager.instance.addListener(_triggerFocusRepaint);
     HardwareKeyboard.instance.addHandler(_handleHardwareKey);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _publishKeyboardNavigation(),
+    );
   }
 
   @override
@@ -95,8 +99,18 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
     super.didUpdateWidget(oldWidget);
     if (widget.enabled != oldWidget.enabled) {
       _keyboardFocusActive = widget.enabled;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _publishKeyboardNavigation(),
+      );
       _triggerFocusRepaint();
     }
+  }
+
+  // FocusOutline rings read this, so they follow the same input as the
+  // global ring instead of the highlight mode a desktop mouse also reports.
+  void _publishKeyboardNavigation() {
+    if (!mounted) return;
+    KeyboardNavigation.active.value = widget.enabled || _keyboardFocusActive;
   }
 
   @override
@@ -112,6 +126,7 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
     if (event is KeyDownEvent && _isNavigationKey(event.logicalKey)) {
       if (!_keyboardFocusActive) {
         _keyboardFocusActive = true;
+        _publishKeyboardNavigation();
         _triggerFocusRepaint();
       }
     }
@@ -131,6 +146,7 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
   void _onPointerDown(PointerDownEvent event) {
     if (!widget.enabled && _keyboardFocusActive) {
       _keyboardFocusActive = false;
+      _publishKeyboardNavigation();
       _triggerFocusRepaint();
     }
   }
@@ -212,7 +228,7 @@ class _MediaAction extends Action<_MediaActionIntent> {
 
   @override
   void invoke(_MediaActionIntent intent) {
-    ForegroundRuntimeService.dispatchAction(intent.action);
+    ForegroundRuntimeService.dispatchAction(intent.action, mediaKey: true);
   }
 }
 

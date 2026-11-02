@@ -9,12 +9,19 @@ import 'package:tool_lab/theme/theme.dart';
 /// focused. Material's default focus overlay is far too subtle across a room,
 /// so TV builds need an outline a viewer can follow from the sofa.
 ///
-/// The ring follows [FocusHighlightMode]: it only appears for keyboard or D-pad
-/// focus, so touch and mouse use is unchanged.
+/// The ring only appears while [KeyboardNavigation.active] says the user is
+/// navigating by keyboard or D-pad, so touch and mouse use is unchanged.
 ///
 /// When [onLongPress] is provided, holding the remote's OK / Select / Enter key
 /// for [kLongPressTimeout] invokes [onLongPress], while a short press invokes
 /// [onTap] on release instead of firing immediately on key-down.
+/// Whether focus is being moved by keyboard or D-pad. Desktop reports the
+/// traditional highlight mode for mouse use too, so [TvNavigationScope] sets
+/// this from the last input instead. Without a scope it stays true.
+abstract final class KeyboardNavigation {
+  static final ValueNotifier<bool> active = ValueNotifier<bool>(true);
+}
+
 class FocusOutline extends StatefulWidget {
   final Widget child;
   final BorderRadius borderRadius;
@@ -46,16 +53,19 @@ class _FocusOutlineState extends State<FocusOutline> {
   void initState() {
     super.initState();
     FocusManager.instance.addListener(_syncHighlightMode);
+    KeyboardNavigation.active.addListener(_syncHighlightMode);
   }
 
   @override
   void dispose() {
     _cancelLongPressTimer();
+    KeyboardNavigation.active.removeListener(_syncHighlightMode);
     FocusManager.instance.removeListener(_syncHighlightMode);
     super.dispose();
   }
 
   static bool _isKeyboardFocus() =>
+      KeyboardNavigation.active.value &&
       FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
 
   static bool _isActivationKey(LogicalKeyboardKey key) =>

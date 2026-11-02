@@ -163,6 +163,7 @@ class _TvFilePickerDialogState extends State<TvFilePickerDialog>
     if (!mounted) return;
     if (switchToRootIfGranted && hasAccess) {
       final external = await FileManagerStorageAccess.externalStoragePath();
+      if (!mounted) return;
       if (external != null) _path = external;
     }
     setState(() => _hasAllFilesAccess = hasAccess);
@@ -196,11 +197,13 @@ class _TvFilePickerDialogState extends State<TvFilePickerDialog>
   }
 
   Future<void> _load() async {
+    final path = _path;
     setState(() => _isLoading = true);
     final folders = <Directory>[];
     final files = <File>[];
     try {
-      for (final entity in Directory(_path).listSync(followLinks: false)) {
+      // Async listing keeps the dialog responsive in large folders.
+      await for (final entity in Directory(path).list(followLinks: false)) {
         final name = p.basename(entity.path);
         if (name.startsWith('.')) continue;
         if (entity is Directory) {
@@ -218,7 +221,8 @@ class _TvFilePickerDialogState extends State<TvFilePickerDialog>
     folders.sort(compareByName);
     files.sort(compareByName);
 
-    if (!mounted) return;
+    // A folder opened while this one was still listing wins.
+    if (!mounted || path != _path) return;
     setState(() {
       _entries = [...folders, ...files];
       _isLoading = false;

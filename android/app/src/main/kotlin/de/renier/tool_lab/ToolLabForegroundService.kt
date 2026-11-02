@@ -43,6 +43,7 @@ open class ToolLabForegroundService : Service() {
         private const val ACTION_STOP = "de.renier.tool_lab.foreground.STOP"
         private const val ACTION_NOTIFICATION_CONTROL = "de.renier.tool_lab.foreground.CONTROL"
         private const val EXTRA_ACTION_NAME = "actionName"
+        private const val MEDIA_ACTION_PREFIX = "media:"
 
         // Stop has no dedicated slot in Android 13+ system-drawn media
         // notifications, so it is exposed as a custom session action.
@@ -338,7 +339,18 @@ open class ToolLabForegroundService : Service() {
         manager.notify(notificationId, notification)
     }
 
-    private fun handleMediaAction(actionName: String) {
+    /**
+     * [fromSession] marks media keys and system media controls; Dart routes
+     * those to the playing media lease rather than the newest lease.
+     */
+    private fun handleMediaAction(actionName: String, fromSession: Boolean = false) {
+        // Only a notification that offers play/pause may show a toggled state;
+        // a stop-only lease (tone generator, recorder) keeps playing regardless.
+        val togglesPlayback = lastActions.orEmpty().any { it == "play" || it == "pause" }
+        if (!togglesPlayback) {
+            sendActionToFlutter(actionName, fromSession)
+            return
+        }
         when (actionName) {
             "pause" -> {
                 lastPlaying = false
@@ -370,10 +382,10 @@ open class ToolLabForegroundService : Service() {
                 if (lastMediaTitle != null) notify(buildNotification())
             }
         }
-        sendActionToFlutter(actionName)
+        sendActionToFlutter(actionName, fromSession)
     }
 
-    private fun sendActionToFlutter(actionName: String) {
+    private fun sendActionToFlutter(actionName: String, fromSession: Boolean) {
         val channel = MainActivity.channel
         if (channel == null || !isActive) {
             // Nothing is listening any more, so the notification would be a
@@ -382,7 +394,10 @@ open class ToolLabForegroundService : Service() {
             return
         }
         android.os.Handler(android.os.Looper.getMainLooper()).post {
-            channel.invokeMethod("onAction", actionName)
+            channel.invokeMethod(
+                "onAction",
+                if (fromSession) "$MEDIA_ACTION_PREFIX$actionName" else actionName,
+            )
         }
     }
 
@@ -404,14 +419,15 @@ open class ToolLabForegroundService : Service() {
         )
         session.setMediaButtonReceiver(actionPendingIntent("play_pause"))
         session.setCallback(object : MediaSessionCompat.Callback() {
-            override fun onPlay() = handleMediaAction("play")
-            override fun onPause() = handleMediaAction("pause")
-            override fun onStop() = handleMediaAction("stop")
-            override fun onSkipToNext() = handleMediaAction("next")
-            override fun onSkipToPrevious() = handleMediaAction("previous")
-            override fun onSeekTo(pos: Long) = handleMediaAction("seek:${pos.toInt()}")
+            override fun onPlay() = handleMediaAction("play", fromSession = true)
+            override fun onPause() = handleMediaAction("pause", fromSession = true)
+            override fun onStop() = handleMediaAction("stop", fromSession = true)
+            override fun onSkipToNext() = handleMediaAction("next", fromSession = true)
+            override fun onSkipToPrevious() = handleMediaAction("previous", fromSession = true)
+            override fun onSeekTo(pos: Long) =
+                handleMediaAction("seek:${pos.toInt()}", fromSession = true)
             override fun onCustomAction(action: String, extras: android.os.Bundle?) {
-                if (action == CUSTOM_ACTION_STOP) handleMediaAction("stop")
+                if (action == CUSTOM_ACTION_STOP) handleMediaAction("stop", fromSession = true)
             }
 
             override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
@@ -432,7 +448,7 @@ open class ToolLabForegroundService : Service() {
                     else -> null
                 }
                 if (mapped != null) {
-                    handleMediaAction(mapped)
+                    handleMediaAction(mapped, fromSession = true)
                     return true
                 }
                 return super.onMediaButtonEvent(mediaButtonEvent)

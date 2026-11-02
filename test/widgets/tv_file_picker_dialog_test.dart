@@ -15,9 +15,9 @@ void main() {
     await Directory(p.join(tempDir.path, 'Subfolder')).create();
     await File(p.join(tempDir.path, 'song.mod')).writeAsString('mod');
     await File(p.join(tempDir.path, 'notes.txt')).writeAsString('txt');
-    await File(p.join(tempDir.path, 'Subfolder', 'nested.xm')).writeAsString(
-      'xm',
-    );
+    await File(
+      p.join(tempDir.path, 'Subfolder', 'nested.xm'),
+    ).writeAsString('xm');
   });
 
   tearDown(() async {
@@ -25,6 +25,20 @@ void main() {
       await tempDir.delete(recursive: true);
     }
   });
+
+  // Folder listing is real async I/O that fake time never runs, and the
+  // loading spinner never settles, so pump until the listing replaced it.
+  Future<void> settleListing(WidgetTester tester) async {
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+      if (find.byType(CircularProgressIndicator).evaluate().isEmpty) break;
+    }
+    await tester.pumpAndSettle();
+  }
 
   testWidgets('filters by extension and selects a file via D-pad/OK', (
     tester,
@@ -56,7 +70,7 @@ void main() {
     );
 
     await tester.tap(find.text('Pick'));
-    await tester.pumpAndSettle();
+    await settleListing(tester);
 
     expect(find.text('Subfolder'), findsOneWidget);
     expect(find.text('song.mod'), findsOneWidget);
@@ -99,12 +113,12 @@ void main() {
     );
 
     await tester.tap(find.text('Pick'));
-    await tester.pumpAndSettle();
+    await settleListing(tester);
 
     await tester.tap(find.text('song.mod'));
     await tester.pump();
     await tester.tap(find.text('Subfolder'));
-    await tester.pumpAndSettle();
+    await settleListing(tester);
 
     expect(find.text('nested.xm'), findsOneWidget);
     await tester.tap(find.text('nested.xm'));

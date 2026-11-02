@@ -150,16 +150,37 @@ class ForegroundRuntimeService {
 
   static Future<void> _handleMethodCall(MethodCall call) async {
     if (call.method == 'onAction') {
-      final action = call.arguments as String;
-      dispatchAction(action);
+      final raw = call.arguments as String;
+      final fromMediaKey = raw.startsWith(_mediaActionPrefix);
+      dispatchAction(
+        fromMediaKey ? raw.substring(_mediaActionPrefix.length) : raw,
+        mediaKey: fromMediaKey,
+      );
     }
   }
 
-  /// Dispatches a media/runtime control action (`play`, `pause`, `play_pause`,
-  /// `stop`, `next`, `previous`) to the most recent active lease with an
-  /// action listener.
-  static bool dispatchAction(String action) {
-    for (final leaseId in _activeLeases.keys.toList().reversed) {
+  static const _mediaActionPrefix = 'media:';
+
+  /// Dispatches a control action (`play`, `pause`, `play_pause`, `stop`,
+  /// `next`, `previous`, `seek:<ms>`) to the newest lease with a listener.
+  /// A [mediaKey] press (remote, headset, system media controls) and
+  /// `play_pause` go to the newest media lease that offers the action first,
+  /// so a recorder started later does not take the music's Stop.
+  static bool dispatchAction(String action, {bool mediaKey = false}) {
+    final newestFirst = _activeLeases.keys.toList().reversed;
+    if (mediaKey || action == 'play_pause') {
+      for (final leaseId in newestFirst) {
+        final listener = _actionListeners[leaseId];
+        final lease = _activeLeases[leaseId]!;
+        if (listener != null &&
+            lease.media != null &&
+            _offers(lease.actions, action)) {
+          listener(action);
+          return true;
+        }
+      }
+    }
+    for (final leaseId in newestFirst) {
       final listener = _actionListeners[leaseId];
       if (listener != null) {
         listener(action);
@@ -167,6 +188,17 @@ class ForegroundRuntimeService {
       }
     }
     return false;
+  }
+
+  static bool _offers(List<String>? actions, String action) {
+    final offered = actions ?? const <String>[];
+    return switch (action) {
+      'play' ||
+      'pause' ||
+      'play_pause' => offered.contains('play') || offered.contains('pause'),
+      _ when action.startsWith('seek:') => true,
+      _ => offered.contains(action),
+    };
   }
 
   static Future<bool> requestNotificationPermission() async {
