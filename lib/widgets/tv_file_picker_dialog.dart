@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/external_activity.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
@@ -53,7 +54,9 @@ class TvFilePickerDialog extends StatefulWidget {
       );
       return files.firstOrNull;
     }
-    return openFile(acceptedTypeGroups: acceptedTypeGroups);
+    return ExternalActivity.run(
+      () => openFile(acceptedTypeGroups: acceptedTypeGroups),
+    );
   }
 
   /// Picks one or more files, using [TvFilePickerDialog] on Android TV and
@@ -70,7 +73,9 @@ class TvFilePickerDialog extends StatefulWidget {
         allowMultiple: true,
       );
     }
-    return openFiles(acceptedTypeGroups: acceptedTypeGroups);
+    return ExternalActivity.run(
+      () => openFiles(acceptedTypeGroups: acceptedTypeGroups),
+    );
   }
 
   /// Opens a single-file or multi-file chooser dialog on Android TV.

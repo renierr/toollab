@@ -143,6 +143,34 @@ void main() {
       expect(result.accounts.single.accountName, 'alice');
     });
 
+    test('FreeOTP tokens with byte-array secrets', () async {
+      final result = await TotpImporter.parseText(
+        jsonEncode({
+          'tokens': [
+            {
+              'algo': 'SHA256',
+              'counter': 0,
+              'digits': 8,
+              'issuerExt': 'GitHub',
+              'issuerInt': 'GitHub',
+              'label': 'bob',
+              'period': 30,
+              'secret': [72, 101, 108, 108, 111, 33, -34, -83, -66, -17],
+              'type': 'TOTP',
+            },
+          ],
+          'tokenOrder': ['GitHub:bob'],
+        }),
+      );
+      final account = result.accounts.single;
+      expect(result.format, 'FreeOTP');
+      expect(account.secret, 'JBSWY3DPEHPK3PXP');
+      expect(account.issuer, 'GitHub');
+      expect(account.accountName, 'bob');
+      expect(account.algorithm, TotpAlgorithm.sha256);
+      expect(account.digits, 8);
+    });
+
     test('Aegis plaintext database', () async {
       final result = await TotpImporter.parseText(
         jsonEncode({

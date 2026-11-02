@@ -65,6 +65,10 @@ abstract interface class SyncWorkflowDelegate {
 
 abstract interface class SyncControlRecordDelegate {
   bool isSyncControlRecord(String id);
+
+  /// Re-verified before every push, so a password rotated by another device
+  /// after preflight stops this run instead of mixing passwords on the server.
+  List<String> get controlRecordIds;
 }
 
 class SyncPasswordMismatchException implements Exception {
@@ -620,6 +624,19 @@ class SyncService {
       final pushUri = Uri.parse('$sanitizedUrl/api/sync/$toolId');
       await for (final records in _pushBatches(delegate, toPush)) {
         await requireReady();
+        if (delegate is SyncControlRecordDelegate) {
+          final controls = await pullRecords(
+            baseUrl: baseUrl,
+            userId: userId,
+            toolId: delegate.toolId,
+            ids: (delegate as SyncControlRecordDelegate).controlRecordIds,
+            timeout: httpTimeout,
+          );
+          await (delegate as SyncPreflightDelegate).verifyRemotePayloads(
+            controls,
+          );
+          await requireReady();
+        }
         final pushResponse = await client
             .post(
               pushUri,

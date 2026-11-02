@@ -131,6 +131,45 @@ void main() {
     },
   );
 
+  test('legacy records are pulled and re-uploaded encrypted', () async {
+    final legacy = TotpAccount.newAccount(
+      issuer: 'Legacy issuer',
+      accountName: 'bob',
+      secret: 'JBSWY3DPEHPK3PXP',
+    );
+    final sealed = TotpAccount.newAccount(
+      issuer: 'Sealed issuer',
+      accountName: 'carol',
+      secret: 'KRSXG5CTMVRXEZLU',
+    );
+    final sealedData = sealed.toMap()
+      ..['secret'] = await TotpCrypto.encrypt(sealed.secret, 'shared password')
+      ..['encrypted'] = true;
+    for (final (account, data) in [
+      (legacy, legacy.toMap()),
+      (sealed, sealedData),
+    ]) {
+      server[account.id] = {
+        'id': account.id,
+        'data': data,
+        'updatedAt': account.updatedAt.millisecondsSinceEpoch,
+        'deleted': false,
+      };
+    }
+
+    expect((await sync())['pulled'], 2);
+    await state.reload();
+    expect(state.findById(legacy.id)?.secret, legacy.secret);
+    expect(state.findById(sealed.id)?.secret, sealed.secret);
+
+    expect((await sync())['pushed'], 2);
+    for (final id in [legacy.id, sealed.id]) {
+      final data = server[id]!['data'] as Map;
+      expect(data['version'], 2);
+      expect(jsonEncode(data), isNot(contains('issuer')));
+    }
+  });
+
   test(
     'wrong password blocks uploads even when local record is newer',
     () async {

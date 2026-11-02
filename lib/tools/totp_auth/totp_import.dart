@@ -387,12 +387,18 @@ class TotpImporter {
     for (final raw in entries) {
       if (raw is! Map) continue;
       final entry = Map<String, dynamic>.from(raw);
-      final secret = _asString(entry['secret']);
+      final secret = _entrySecret(entry['secret']);
       if (secret == null || !Totp.isValidSecret(secret)) continue;
-      if (_asString(entry['algorithm'])?.toUpperCase() == 'MD5') continue;
+      final algorithm =
+          _asString(entry['algorithm']) ?? _asString(entry['algo']);
+      if (algorithm?.toUpperCase() == 'MD5') continue;
       accounts.add(
         TotpAccount.newAccount(
-          issuer: _asString(entry['issuer']) ?? '',
+          issuer:
+              _asString(entry['issuer']) ??
+              _asString(entry['issuerExt']) ??
+              _asString(entry['issuerInt']) ??
+              '',
           accountName:
               _asString(entry['label']) ??
               _asString(entry['account']) ??
@@ -400,9 +406,7 @@ class TotpImporter {
               _asString(entry['name']) ??
               '',
           secret: secret,
-          algorithm: Totp.algorithmFromName(
-            _asString(entry['algorithm']) ?? _asString(entry['algo']),
-          ),
+          algorithm: Totp.algorithmFromName(algorithm),
           digits: _asInt(entry['digits']) ?? 6,
           period: _asInt(entry['period']) ?? 30,
           type:
@@ -683,6 +687,17 @@ class TotpImporter {
     if (raw.contains('HOTP')) return TotpType.hotp;
     if (raw.contains('TOTP')) return TotpType.totp;
     return null;
+  }
+
+  /// FreeOTP stores the raw secret as a list of signed bytes, not Base32.
+  static String? _entrySecret(dynamic value) {
+    if (value is List) {
+      if (value.isEmpty || value.any((b) => b is! int)) return null;
+      return Totp.encodeBase32(
+        Uint8List.fromList([for (final b in value) (b as int) & 0xff]),
+      );
+    }
+    return _asString(value);
   }
 
   static String? _asString(dynamic value) {

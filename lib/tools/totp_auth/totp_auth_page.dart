@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/external_activity.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/sync_error_message.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -48,6 +51,8 @@ class _TotpAuthPageState extends State<TotpAuthPage>
   String _query = '';
   bool _syncing = false;
   bool _wasUnlocked = false;
+  DateTime _lastActivity = DateTime.now();
+  static const _idleTimeout = Duration(minutes: 5);
 
   @override
   void initState() {
@@ -56,13 +61,26 @@ class _TotpAuthPageState extends State<TotpAuthPage>
     final totpState = context.read<TotpAuthState>();
     void onLockChanged() {
       final unlocked = totpState.lockController.unlocked;
+      if (unlocked && !_wasUnlocked) _lastActivity = DateTime.now();
       if (unlocked && !_wasUnlocked && mounted) _autoSync();
       _wasUnlocked = unlocked;
     }
 
     totpState.lockController.addListener(onLockChanged);
     WidgetsBinding.instance.addObserver(this);
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
+    HardwareKeyboard.instance.addHandler(_onKey);
+    final idleCheck = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (DateTime.now().difference(_lastActivity) >= _idleTimeout &&
+          !ExternalActivity.active &&
+          mounted) {
+        _lock();
+      }
+    });
     onDispose(() {
+      idleCheck.cancel();
+      HardwareKeyboard.instance.removeHandler(_onKey);
+      GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
       WidgetsBinding.instance.removeObserver(this);
       totpState.lockController.removeListener(onLockChanged);
       totpState.lockController.lock();
@@ -105,14 +123,31 @@ class _TotpAuthPageState extends State<TotpAuthPage>
     }
   }
 
+  void _lock() {
+    final controller = context.read<TotpAuthState>().lockController;
+    if (!controller.unlocked) return;
+    final pageRoute = ModalRoute.of(context);
+    if (pageRoute != null) {
+      Navigator.of(context).popUntil((route) => route == pageRoute);
+    }
+    controller.lock();
+  }
+
+  void _onPointer(PointerEvent event) => _lastActivity = DateTime.now();
+
+  bool _onKey(KeyEvent event) {
+    _lastActivity = DateTime.now();
+    return false;
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      final pageRoute = ModalRoute.of(context);
-      if (pageRoute != null) {
-        Navigator.of(context).popUntil((route) => route == pageRoute);
-      }
-      context.read<TotpAuthState>().lockController.lock();
+    // Desktop minimize only reaches hidden; a picker the page opened itself
+    // returns here and must not drop its result.
+    if ((state == AppLifecycleState.hidden ||
+            state == AppLifecycleState.paused) &&
+        !ExternalActivity.active) {
+      _lock();
     } else if (state == AppLifecycleState.resumed) {
       context.read<TotpAuthState>().unlockAutomatically().catchError((
         Object e,

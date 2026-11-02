@@ -5,7 +5,9 @@ import 'package:tool_lab/services/app_http_client.dart';
 import 'package:tool_lab/services/sync_service.dart';
 
 import 'config.dart';
+import 'totp_account.dart';
 import 'totp_crypto.dart';
+import 'totp_sync_delegate.dart';
 
 class TotpPasswordRotation {
   TotpPasswordRotation({
@@ -112,12 +114,26 @@ class TotpPasswordRotation {
     return account;
   }
 
+  Future<Map<String, dynamic>> _legacy(
+    String id,
+    Map<String, dynamic> data,
+    String password,
+  ) async {
+    final decoded = await TotpLegacySyncRecord.decode(data, password);
+    if (decoded['id'] != id) throw const FormatException('Invalid sync record');
+    return Map<String, dynamic>.from(TotpAccount.fromMap(decoded).toJson());
+  }
+
   Future<void> verifyPassword(String password) async {
     final metadata = await _metadata();
     if (metadata.isEmpty) throw StateError('No backend records to verify');
     final records = await _pull(metadata.keys.toList());
     for (final entry in records.entries) {
       checkSession();
+      if (TotpLegacySyncRecord.matches(entry.value)) {
+        await _legacy(entry.key, entry.value, password);
+        continue;
+      }
       try {
         await _decrypt(entry.key, entry.value, password);
       } on SecretBoxAuthenticationError {
@@ -133,6 +149,16 @@ class TotpPasswordRotation {
     final oldRecords = <String, Map<String, dynamic>>{};
     for (final entry in records.entries) {
       checkSession();
+      // A legacy record is clear text or sealed with the old password; either
+      // way it is rewritten in the current format under the new one.
+      if (TotpLegacySyncRecord.matches(entry.value)) {
+        oldRecords[entry.key] = await _legacy(
+          entry.key,
+          entry.value,
+          oldPassword,
+        );
+        continue;
+      }
       try {
         await _decrypt(entry.key, entry.value, newPassword);
       } on SecretBoxAuthenticationError {

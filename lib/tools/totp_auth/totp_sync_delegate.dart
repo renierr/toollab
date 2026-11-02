@@ -20,11 +20,13 @@ class TotpSyncDelegate
   static String get _toolId => TotpAuthTool.config.id;
 
   final _vault = TotpVaultStore();
+  final _legacyRemoteIds = <String>{};
   ToolLockSession? _runSession;
 
   @override
   void beginSyncSession() {
     _runSession = ToolLockController.sessionFor(_toolId);
+    _legacyRemoteIds.clear();
   }
 
   @override
@@ -57,6 +59,9 @@ class TotpSyncDelegate
   }
 
   Future<Map<String, dynamic>> _decryptRecord(Map<String, dynamic> data) async {
+    if (TotpLegacySyncRecord.matches(data)) {
+      return TotpLegacySyncRecord.decode(data, await _requiredPassword());
+    }
     if ((data['version'] != 2 && data['version'] != 3) ||
         data['payload'] is! String) {
       throw const SyncUnsupportedPayloadException();
@@ -85,10 +90,16 @@ class TotpSyncDelegate
   bool isSyncControlRecord(String id) => id == TotpCrypto.syncCheckRecordId;
 
   @override
+  List<String> get controlRecordIds => const [TotpCrypto.syncCheckRecordId];
+
+  @override
   Future<void> verifyRemotePayloads(
     Map<String, Map<String, dynamic>> records,
   ) async {
     for (final entry in records.entries) {
+      if (TotpLegacySyncRecord.matches(entry.value)) {
+        _legacyRemoteIds.add(entry.key);
+      }
       final account = await _decryptRecord(entry.value);
       if (account['id'] != entry.key) {
         throw const FormatException('Sync record ID does not match');
@@ -103,6 +114,13 @@ class TotpSyncDelegate
   Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {
     final session = _session();
     final accounts = await _vault.load(session.key);
+    // Marking a legacy copy as locally newer pushes it back encrypted, which
+    // also replaces the clear-text secret still stored on the server.
+    for (final account in accounts) {
+      if (account.deleted || !_legacyRemoteIds.contains(account.id)) continue;
+      account.updatedAt = DateTime.now();
+      await _vault.save(account, session.key);
+    }
     return accounts
         .map(
           (account) => {
@@ -152,6 +170,36 @@ class TotpSyncDelegate
     if (!wasDeleted) return;
     _session();
     await _vault.delete(id);
+  }
+}
+
+/// Records written before versioned payloads: a plain account map whose
+/// `secret` is clear text or, with `encrypted`, sealed with the password.
+abstract final class TotpLegacySyncRecord {
+  static bool matches(Map<String, dynamic> data) =>
+      data['version'] == null &&
+      data['payload'] == null &&
+      data['id'] is String &&
+      data['id'] != TotpCrypto.syncCheckRecordId &&
+      data['secret'] is String;
+
+  static Future<Map<String, dynamic>> decode(
+    Map<String, dynamic> data,
+    String password,
+  ) async {
+    final map = Map<String, dynamic>.from(data);
+    if (map['encrypted'] == true) {
+      try {
+        map['secret'] = await TotpCrypto.decrypt(
+          map['secret'] as String,
+          password,
+        );
+      } on SecretBoxAuthenticationError {
+        throw const SyncPasswordMismatchException();
+      }
+    }
+    map.remove('encrypted');
+    return map;
   }
 }
 
