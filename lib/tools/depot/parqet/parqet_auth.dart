@@ -115,7 +115,12 @@ class ParqetAuth {
     _cached = tokens;
   }
 
+  /// Bumped when the stored grant is replaced or removed, so a refresh still in
+  /// flight cannot write its result back over a disconnect or a new login.
+  static int _grantGeneration = 0;
+
   static Future<void> clearTokens() async {
+    _grantGeneration++;
     _cached = null;
     for (final key in [_accessKey, _refreshKey, _expiresKey, _scopeKey]) {
       await _storage.delete(key: key);
@@ -199,6 +204,7 @@ class ParqetAuth {
         'client_id': clientId,
         'code_verifier': verifier,
       });
+      _grantGeneration++;
       await _saveTokens(tokens);
       // A login that does not name its scopes leaves the stored grant
       // unknown rather than showing the scopes that were merely requested.
@@ -231,11 +237,11 @@ class ParqetAuth {
 
   /// A token valid for at least another minute, refreshed when needed.
   static Future<String> accessToken(String clientId) =>
-      _singleFlight(() => _accessToken(clientId, force: false));
+      _singleFlight(() => _accessToken(clientId));
 
   /// A token other than [stale], for a caller the server just answered 401.
-  /// A refresh already in flight is reused, so two isolates do not race the
-  /// same refresh token.
+  /// A refresh already in flight or just finished is reused, so concurrent
+  /// 401s rotate the refresh token once.
   static Future<String> accessTokenReplacing(
     String clientId,
     String stale,
@@ -249,7 +255,7 @@ class ParqetAuth {
         // The in-flight attempt failed; try once more below.
       }
     }
-    return _singleFlight(() => _accessToken(clientId, force: true));
+    return _singleFlight(() => _accessToken(clientId, stale: stale));
   }
 
   static Future<String> _singleFlight(Future<String> Function() request) {
@@ -260,20 +266,18 @@ class ParqetAuth {
     );
   }
 
-  static Future<String> _accessToken(
-    String clientId, {
-    required bool force,
-  }) async {
-    if (!force) {
-      final cached = _cached;
-      if (cached != null && !cached.isExpiring) return cached.accessToken;
+  /// With [stale], refreshes unless a different valid token is already known.
+  static Future<String> _accessToken(String clientId, {String? stale}) async {
+    final cached = _cached;
+    if (cached != null && !cached.isExpiring && cached.accessToken != stale) {
+      return cached.accessToken;
     }
 
     final tokens = await readTokens();
     if (tokens == null) {
       throw const ParqetException(ParqetErrorKind.notConnected);
     }
-    if (!force && !tokens.isExpiring) {
+    if (!tokens.isExpiring && tokens.accessToken != stale) {
       _cached = tokens;
       return tokens.accessToken;
     }
@@ -299,11 +303,15 @@ class ParqetAuth {
     ParqetTokens tokens,
     String clientId,
   ) async {
+    final generation = _grantGeneration;
     final refreshed = await _tokenRequest({
       'grant_type': 'refresh_token',
       'refresh_token': tokens.refreshToken,
       'client_id': clientId,
     }, previousRefreshToken: tokens.refreshToken);
+    if (generation != _grantGeneration) {
+      throw const ParqetException(ParqetErrorKind.notConnected);
+    }
     final merged = ParqetTokens(
       accessToken: refreshed.accessToken,
       refreshToken: refreshed.refreshToken,
@@ -339,15 +347,25 @@ class ParqetAuth {
       final kind = _isDeadGrant(res.body)
           ? ParqetErrorKind.unauthorized
           : ParqetErrorKind.server;
-      throw ParqetException(kind, 'HTTP ${res.statusCode}: ${res.body}');
+      // The status keeps the retry loop from treating a 4xx as transient.
+      throw ParqetException.detailed(
+        kind,
+        'HTTP ${res.statusCode}: ${res.body}',
+        statusCode: res.statusCode,
+      );
     }
     if (res.statusCode == 429) {
-      throw ParqetException(ParqetErrorKind.rateLimited, res.body);
+      throw ParqetException.detailed(
+        ParqetErrorKind.rateLimited,
+        res.body,
+        statusCode: res.statusCode,
+      );
     }
     if (res.statusCode != 200) {
-      throw ParqetException(
+      throw ParqetException.detailed(
         ParqetErrorKind.server,
         'HTTP ${res.statusCode}: ${res.body}',
+        statusCode: res.statusCode,
       );
     }
 

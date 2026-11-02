@@ -119,10 +119,70 @@ void main() {
 
       await expectLater(
         const ParqetApi(clientId: 'test-client').portfolios(),
-        throwsA(isA<ParqetException>().having((e) => e.kind, 'kind', kind)),
+        throwsA(
+          isA<ParqetException>()
+              .having((e) => e.kind, 'kind', kind)
+              .having((e) => e.statusCode, 'statusCode', status),
+        ),
       );
     });
   }
+
+  test('a disconnect during a refresh is not undone', () async {
+    AppHttpClient.testClient = MockClient((request) async {
+      if (request.url.path == '/oauth2/token') {
+        await ParqetAuth.clearTokens();
+        return http.Response(
+          jsonEncode({
+            'access_token': 'fresh',
+            'refresh_token': 'refresh-2',
+            'expires_in': 3600,
+          }),
+          200,
+        );
+      }
+      return http.Response('{}', 401);
+    });
+
+    await expectLater(
+      const ParqetApi(clientId: 'test-client').portfolios(),
+      throwsA(
+        isA<ParqetException>().having(
+          (e) => e.kind,
+          'kind',
+          ParqetErrorKind.notConnected,
+        ),
+      ),
+    );
+    expect(await ParqetAuth.readTokens(), isNull);
+  });
+
+  test('a 401 after another request refreshed reuses that token', () async {
+    var refreshes = 0;
+    AppHttpClient.testClient = MockClient((request) async {
+      if (request.url.path == '/oauth2/token') {
+        refreshes++;
+        return http.Response(
+          jsonEncode({
+            'access_token': 'fresh-$refreshes',
+            'refresh_token': 'refresh-${refreshes + 1}',
+            'expires_in': 3600,
+          }),
+          200,
+        );
+      }
+      return http.Response('{}', 401);
+    });
+
+    final first = await ParqetAuth.accessTokenReplacing('test-client', 'stale');
+    final second = await ParqetAuth.accessTokenReplacing(
+      'test-client',
+      'stale',
+    );
+    expect(first, 'fresh-1');
+    expect(second, 'fresh-1');
+    expect(refreshes, 1);
+  });
 
   test('429 carries the server retry-after', () async {
     AppHttpClient.testClient = MockClient(

@@ -635,13 +635,20 @@ class DepotStore {
       whereArgs: [_toolId, _assetProfilesKey, _assetProfileAttemptsKey],
     );
     for (final row in rows) {
+      final Object? decoded;
       try {
-        final decoded = jsonDecode(row['value'] as String);
-        if (decoded is! Map) continue;
-        for (final entry in decoded.entries) {
-          final key = entry.key;
-          final value = entry.value;
-          if (key is! String) continue;
+        decoded = jsonDecode(row['value'] as String);
+      } catch (e) {
+        errorLog('[DepotStore] Migrating ${row['key']} failed: $e');
+        continue;
+      }
+      if (decoded is! Map) continue;
+      // Per entry: one malformed profile must not drop the ones after it.
+      for (final entry in decoded.entries) {
+        final key = entry.key;
+        final value = entry.value;
+        if (key is! String) continue;
+        try {
           if (row['key'] == _assetProfilesKey && value is Map) {
             await _writeAssetProfile(
               txn,
@@ -655,9 +662,9 @@ class DepotStore {
               DateTime.fromMillisecondsSinceEpoch(value),
             );
           }
+        } catch (e) {
+          errorLog('[DepotStore] Migrating ${row['key']}/$key failed: $e');
         }
-      } catch (e) {
-        errorLog('[DepotStore] Migrating ${row['key']} failed: $e');
       }
     }
     await txn.executor.delete(
