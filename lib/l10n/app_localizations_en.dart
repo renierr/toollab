@@ -13189,7 +13189,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get totpRotationPendingDescription =>
-      'Keep other devices closed. Resume the password change on this device before syncing or editing accounts.';
+      'Keep other devices closed. Sync stays paused until you resume the password change on this device.';
 
   @override
   String get totpRotationResume => 'Resume password change';
@@ -13207,10 +13207,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String toolLockError(String error) {
     return 'Security operation failed: $error';
   }
-
-  @override
-  String get toolLockExistingPassword =>
-      'Enter the sync password already set on this device.';
 
   @override
   String get toolLockBackupNeedsSetup =>

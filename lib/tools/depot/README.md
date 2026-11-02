@@ -47,6 +47,9 @@ automatically. **Disconnect** removes only the tokens; every synced row stays on
 as an offline copy. Reconnecting syncs again and mirrors the connected account.
 **Delete local data** (Settings → Data, with a confirmation) empties every synced table;
 the wishlist and the tokens stay, so a connected account syncs again from scratch.
+It is disabled while a sync runs, and a sync already running when data is cleared
+(for example the background one) discards its result instead of writing a partial
+history back.
 The settings page shows whether the grant includes write access; if not, reconnect after
 enabling write in the console.
 
@@ -97,7 +100,8 @@ Expanding it lists the three largest positions, and optional detail sections sho
 largest known underlying holdings, country and sector with their contributing positions.
 Weights are percentages of all open positive-value positions, regardless of filters.
 The country and sector sections show data coverage and identify missing security
-breakdowns separately from cash and other asset types. Fund breakdowns are cached;
+breakdowns separately from cash and other asset types. Country names from Yahoo
+(English) and onvista (German) are merged under one English name. Fund breakdowns are cached;
 the stock look-through uses only available fund top holdings. Both can be incomplete.
 The Allocation link opens the full breakdown and its refresh controls.
 Value drawdowns and daily changes use the selected period's chart and include deposits

@@ -147,10 +147,8 @@ void main() {
       );
       expect(state.rotationPending, isTrue);
       expect(await TotpSyncDelegate().isReadyToSync(), isFalse);
-      await expectLater(
-        state.addAccount(account('Blocked', 'JBSWY3DPEHPK3PXP')),
-        throwsStateError,
-      );
+      expect(state.accounts, hasLength(2));
+      await state.addAccount(account('Offline', 'MFRGGZDFMZTWQ2LK'));
       final journal = await DatabaseService.instance.getSetting(
         TotpAuthTool.config.id,
         TotpVaultStore.rotationSetting,
@@ -174,7 +172,7 @@ void main() {
       }
       await sync();
       await state.reload();
-      expect(state.accounts, hasLength(2));
+      expect(state.accounts, hasLength(3));
     },
   );
 

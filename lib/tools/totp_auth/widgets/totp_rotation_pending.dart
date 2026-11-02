@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/info_card.dart';
 
 class TotpRotationPending extends StatelessWidget {
   const TotpRotationPending({
@@ -14,32 +16,30 @@ class TotpRotationPending extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.lock_clock_outlined, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                l10n.totpRotationPending,
-                style: Theme.of(context).textTheme.headlineSmall,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: InfoCard(
+        icon: Icons.lock_clock_outlined,
+        title: l10n.totpRotationPending,
+        titleColor: AppTheme.statusAmber,
+        child: Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(l10n.totpRotationPendingDescription),
+            if (busy)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              FilledButton(
+                onPressed: onResume,
+                child: Text(l10n.totpRotationResume),
               ),
-              const SizedBox(height: 12),
-              Text(l10n.totpRotationPendingDescription),
-              const SizedBox(height: 16),
-              if (busy)
-                const CircularProgressIndicator()
-              else
-                FilledButton(
-                  onPressed: onResume,
-                  child: Text(l10n.totpRotationResume),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );

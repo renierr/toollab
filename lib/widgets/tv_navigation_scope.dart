@@ -155,29 +155,12 @@ class _TvNavigationScopeState extends State<TvNavigationScope> {
 
   @override
   Widget build(BuildContext context) {
+    // Overriding one field needs the whole data; rebuilding it field by field
+    // silently drops accessibility settings Flutter adds later.
     return MediaQuery(
-      data: MediaQueryData(
-        size: MediaQuery.sizeOf(context),
-        devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-        textScaler: MediaQuery.textScalerOf(context),
-        platformBrightness: MediaQuery.platformBrightnessOf(context),
-        padding: MediaQuery.paddingOf(context),
-        viewInsets: MediaQuery.viewInsetsOf(context),
-        systemGestureInsets: MediaQuery.systemGestureInsetsOf(context),
-        viewPadding: MediaQuery.viewPaddingOf(context),
-        alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-        accessibleNavigation: MediaQuery.accessibleNavigationOf(context),
-        invertColors: MediaQuery.invertColorsOf(context),
-        highContrast: MediaQuery.highContrastOf(context),
-        onOffSwitchLabels: MediaQuery.onOffSwitchLabelsOf(context),
-        disableAnimations: MediaQuery.disableAnimationsOf(context),
-        boldText: MediaQuery.boldTextOf(context),
-        navigationMode: NavigationMode.directional,
-        gestureSettings: MediaQuery.gestureSettingsOf(context),
-        displayFeatures: MediaQuery.displayFeaturesOf(context),
-        supportsShowingSystemContextMenu:
-            MediaQuery.supportsShowingSystemContextMenu(context),
-      ),
+      data: MediaQuery.of(
+        context,
+      ).copyWith(navigationMode: NavigationMode.directional),
       child: Shortcuts(
         shortcuts: _shortcuts,
         child: Actions(

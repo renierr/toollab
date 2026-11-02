@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/tool_lock_controller.dart';
 import 'package:tool_lab/tools/totp_auth/totp.dart';
 import 'package:tool_lab/tools/totp_auth/totp_account.dart';
 import 'package:tool_lab/tools/totp_auth/totp_auth_state.dart';
@@ -134,23 +135,38 @@ void main() {
     expect(state.accounts, isEmpty);
   });
 
-  test('forgotten previous sync password permits local reset', () async {
+  test('forgotten previous sync password still sets up the vault', () async {
     FlutterSecureStorage.setMockInitialValues({
       TotpCrypto.syncPasswordKey: 'old password',
     });
     final state = TotpAuthState();
     await state.ready;
     addTearDown(state.dispose);
-    for (var i = 0; i < 5; i++) {
-      await expectLater(
-        state.setupVault('different password'),
-        throwsException,
-      );
-    }
-    expect(state.lockController.canReset, isTrue);
-    await state.resetVault();
     await state.setupVault('different password');
-    expect(state.accounts, isEmpty);
+    expect(state.lockController.configured, isTrue);
+    expect(state.lockController.unlocked, isTrue);
+  });
+
+  test('short previous sync password is accepted for setup', () async {
+    FlutterSecureStorage.setMockInitialValues({
+      TotpCrypto.syncPasswordKey: '1234',
+    });
+    final state = TotpAuthState();
+    await state.ready;
+    addTearDown(state.dispose);
+    await state.setupVault('1234');
+    expect(state.lockController.configured, isTrue);
+  });
+
+  test('short new password is rejected for setup', () async {
+    final state = TotpAuthState();
+    await state.ready;
+    addTearDown(state.dispose);
+    await expectLater(
+      state.setupVault('1234'),
+      throwsA(isA<ToolPasswordTooShort>()),
+    );
+    expect(state.lockController.configured, isFalse);
   });
 
   test('HOTP counter advance persists', () async {

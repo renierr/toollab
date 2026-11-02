@@ -13291,7 +13291,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get totpRotationPendingDescription =>
-      'Lass andere Geräte geschlossen. Setze die Passwortänderung auf diesem Gerät fort, bevor du synchronisierst oder Konten bearbeitest.';
+      'Lass andere Geräte geschlossen. Die Synchronisierung bleibt pausiert, bis du die Passwortänderung auf diesem Gerät fortsetzt.';
 
   @override
   String get totpRotationResume => 'Passwortänderung fortsetzen';
@@ -13309,10 +13309,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String toolLockError(String error) {
     return 'Sicherheitsvorgang fehlgeschlagen: $error';
   }
-
-  @override
-  String get toolLockExistingPassword =>
-      'Gib das auf diesem Gerät bereits festgelegte Sync-Passwort ein.';
 
   @override
   String get toolLockBackupNeedsSetup =>

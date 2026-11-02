@@ -192,11 +192,13 @@ class TotpAuthState extends ChangeNotifier {
     await _vault.finishCleanup();
     final previous = await _storage.read(key: TotpCrypto.syncPasswordKey);
     if (generation != lockController.generation) return;
-    if (previous != null && previous.isNotEmpty && previous != password) {
-      await lockController.recordFailure();
-      throw ExistingToolPasswordMismatch();
-    }
-    await lockController.setup(password, _vault.migrateLegacy);
+    // A forgotten or short legacy sync password must not block migrating the
+    // plaintext accounts; a mismatching backend is resolved by adopting later.
+    await lockController.setup(
+      password,
+      _vault.migrateLegacy,
+      allowShort: previous != null && previous == password,
+    );
     await _storage.delete(key: TotpCrypto.syncPasswordKey);
     await _load();
   }
@@ -231,18 +233,25 @@ class TotpAuthState extends ChangeNotifier {
   }
 
   Future<void> resetVault() async {
-    if (_rotationPending || _rotationBusy) {
+    if (_rotationBusy) {
       throw StateError('Password rotation must be completed first');
     }
     await lockController.reset(() async {
       await _vault.reset();
       await _storage.delete(key: TotpCrypto.syncPasswordKey);
+      await DatabaseService.instance.deleteSetting(
+        TotpAuthTool.config.id,
+        TotpVaultStore.rotationSetting,
+      );
     });
+    _rotationPending = false;
     _accounts.clear();
   }
 
+  // Local edits stay allowed while a rotation is pending: they use the data
+  // key, which rotation never changes, and sync is held until it completes.
   ToolLockSession _session() {
-    if (_rotationPending || _rotationBusy) {
+    if (_rotationBusy) {
       throw StateError('Password rotation must be completed first');
     }
     final session = ToolLockController.sessionFor(TotpAuthTool.config.id);
@@ -351,6 +360,12 @@ class TotpAuthState extends ChangeNotifier {
     _rotationBusy = true;
     notifyListeners();
     try {
+      if (appState.syncServerUrl.isEmpty ||
+          !appState.isToolSyncEnabled(TotpAuthTool.config.id)) {
+        // Without sync there is no backend copy to re-encrypt.
+        await _commitPassword(session, newPassword, clearRotation: false);
+        return;
+      }
       await _withSyncWorkflow(appState, session, (url, userId) async {
         _requireRotationSession(session);
         await SyncService.sync(

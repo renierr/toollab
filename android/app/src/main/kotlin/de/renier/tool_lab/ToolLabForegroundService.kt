@@ -226,6 +226,11 @@ open class ToolLabForegroundService : Service() {
     private var mediaSession: MediaSessionCompat? = null
     private var receiverRegistered = false
 
+    // Each service process listens on its own action, so a control tapped on one
+    // notification never reaches the player in the other process.
+    private val controlAction: String
+        get() = "$ACTION_NOTIFICATION_CONTROL.$notificationId"
+
     private val actionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val actionName = intent?.getStringExtra(EXTRA_ACTION_NAME) ?: return
@@ -238,7 +243,7 @@ open class ToolLabForegroundService : Service() {
         ContextCompat.registerReceiver(
             this,
             actionReceiver,
-            IntentFilter(ACTION_NOTIFICATION_CONTROL),
+            IntentFilter(controlAction),
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
         receiverRegistered = true
@@ -572,7 +577,7 @@ open class ToolLabForegroundService : Service() {
     }
 
     private fun actionPendingIntent(name: String): PendingIntent {
-        val actionIntent = Intent(ACTION_NOTIFICATION_CONTROL).apply {
+        val actionIntent = Intent(controlAction).apply {
             setPackage(packageName)
             putExtra(EXTRA_ACTION_NAME, name)
         }

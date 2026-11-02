@@ -45,10 +45,6 @@ class _ToolLockGateState extends State<ToolLockGate> {
     if (_busy) return;
     final l10n = AppLocalizations.of(context);
     final value = _password.text;
-    if (!widget.controller.configured && value.length < 8) {
-      setState(() => _error = l10n.toolLockPasswordTooShort);
-      return;
-    }
     if (!widget.controller.configured && value != _confirm.text) {
       setState(() => _error = l10n.toolLockPasswordMismatch);
       return;
@@ -65,8 +61,8 @@ class _ToolLockGateState extends State<ToolLockGate> {
       } else {
         await widget.setup(value);
       }
-    } on ExistingToolPasswordMismatch {
-      if (mounted) setState(() => _error = l10n.toolLockExistingPassword);
+    } on ToolPasswordTooShort {
+      if (mounted) setState(() => _error = l10n.toolLockPasswordTooShort);
     } on ToolVaultCleanupPending {
       if (mounted) setState(() => _error = l10n.toolLockCleanupPending);
     } catch (e) {

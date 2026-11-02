@@ -55,7 +55,11 @@ class _DepotClearDataTileState extends State<DepotClearDataTile> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final error = Theme.of(context).colorScheme.error;
+    final syncing = context.select<DepotPortfolioState, bool>(
+      (s) => s.isSyncing,
+    );
     return ListTile(
+      enabled: !syncing,
       leading: Icon(Icons.delete_forever_outlined, color: error),
       title: Text(l10n.depotClearDataTitle, style: TextStyle(color: error)),
       subtitle: Text(l10n.depotClearDataSubtitle),
@@ -65,7 +69,7 @@ class _DepotClearDataTileState extends State<DepotClearDataTile> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : null,
-      onTap: _clearing ? null : _clear,
+      onTap: _clearing || syncing ? null : _clear,
     );
   }
 }

@@ -23384,7 +23384,7 @@ abstract class AppLocalizations {
   /// No description provided for @totpRotationPendingDescription.
   ///
   /// In en, this message translates to:
-  /// **'Keep other devices closed. Resume the password change on this device before syncing or editing accounts.'**
+  /// **'Keep other devices closed. Sync stays paused until you resume the password change on this device.'**
   String get totpRotationPendingDescription;
 
   /// No description provided for @totpRotationResume.
@@ -23416,12 +23416,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Security operation failed: {error}'**
   String toolLockError(String error);
-
-  /// No description provided for @toolLockExistingPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter the sync password already set on this device.'**
-  String get toolLockExistingPassword;
 
   /// No description provided for @toolLockBackupNeedsSetup.
   ///

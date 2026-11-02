@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'depot_region.dart';
 import 'models/depot_asset_profile.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_summary.dart';
@@ -117,8 +118,9 @@ class DepotRisk {
       final missing = <DepotRiskContribution>[];
       final other = <DepotRiskContribution>[];
       var classified = 0.0;
-      void add(String name, DepotHolding holding, double value) {
-        if (name.trim().isEmpty || !value.isFinite || value <= 0) return;
+      void add(String raw, DepotHolding holding, double value) {
+        if (raw.trim().isEmpty || !value.isFinite || value <= 0) return;
+        final name = country ? DepotCountry.canonical(raw) : raw;
         classified += value;
         (values[name] ??= []).add(
           DepotRiskContribution(holding: holding, weight: value / total * 100),

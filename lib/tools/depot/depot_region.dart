@@ -179,3 +179,75 @@ enum DepotRegion {
     'kenia': africa,
   };
 }
+
+/// One spelling per country, so Yahoo's English and onvista's German names
+/// for the same country add up instead of splitting a concentration.
+abstract final class DepotCountry {
+  static String canonical(String country) {
+    final name = country.trim();
+    return _aliases[name.toLowerCase()] ?? name;
+  }
+
+  static const Map<String, String> _aliases = {
+    'usa': 'United States',
+    'u.s.': 'United States',
+    'great britain': 'United Kingdom',
+    'czechia': 'Czech Republic',
+    'korea': 'South Korea',
+    'vereinigte staaten': 'United States',
+    'kanada': 'Canada',
+    'mexiko': 'Mexico',
+    'kayman inseln': 'Cayman Islands',
+    'kaimaninseln': 'Cayman Islands',
+    'bermudas': 'Bermuda',
+    'brasilien': 'Brazil',
+    'kolumbien': 'Colombia',
+    'deutschland': 'Germany',
+    'großbritannien': 'United Kingdom',
+    'vereinigtes königreich': 'United Kingdom',
+    'irland': 'Ireland',
+    'frankreich': 'France',
+    'niederlande': 'Netherlands',
+    'schweiz': 'Switzerland',
+    'schweden': 'Sweden',
+    'dänemark': 'Denmark',
+    'norwegen': 'Norway',
+    'finnland': 'Finland',
+    'spanien': 'Spain',
+    'italien': 'Italy',
+    'belgien': 'Belgium',
+    'luxemburg': 'Luxembourg',
+    'österreich': 'Austria',
+    'polen': 'Poland',
+    'tschechien': 'Czech Republic',
+    'ungarn': 'Hungary',
+    'rumänien': 'Romania',
+    'griechenland': 'Greece',
+    'türkei': 'Turkey',
+    'russland': 'Russia',
+    'island': 'Iceland',
+    'zypern': 'Cyprus',
+    'slowakei': 'Slovakia',
+    'slowenien': 'Slovenia',
+    'kroatien': 'Croatia',
+    'bulgarien': 'Bulgaria',
+    'hongkong': 'Hong Kong',
+    'macao': 'Macau',
+    'südkorea': 'South Korea',
+    'indien': 'India',
+    'singapur': 'Singapore',
+    'indonesien': 'Indonesia',
+    'philippinen': 'Philippines',
+    'saudi-arabien': 'Saudi Arabia',
+    'vereinigte arabische emirate': 'United Arab Emirates',
+    'katar': 'Qatar',
+    'kasachstan': 'Kazakhstan',
+    'jordanien': 'Jordan',
+    'australien': 'Australia',
+    'neuseeland': 'New Zealand',
+    'südafrika': 'South Africa',
+    'ägypten': 'Egypt',
+    'marokko': 'Morocco',
+    'kenia': 'Kenya',
+  };
+}

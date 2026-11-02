@@ -32,8 +32,11 @@ class BankDetector {
     if (text.containsAny(_ingMarkers)) return DepotBank.ing;
     if (text.containsAny(_postbankMarkers)) return DepotBank.postbank;
     if (text.contains('dkb')) return DepotBank.dkb;
-    if (text.contains('ing')) return DepotBank.ing;
     if (text.contains('postbank')) return DepotBank.postbank;
+    // Whole word only: "ing" is inside "Holding", "Accumulating", ...
+    if (text.lines.any(_ingWord.hasMatch)) return DepotBank.ing;
     return DepotBank.unknown;
   }
+
+  static final _ingWord = RegExp(r'\bing\b', caseSensitive: false);
 }

@@ -18,6 +18,10 @@ import 'models/depot_summary.dart';
 import 'models/depot_transaction.dart';
 import 'models/depot_wishlist.dart';
 
+class DepotLocalDataCleared implements Exception {
+  const DepotLocalDataCleared();
+}
+
 /// One table's content for the data export.
 class DepotTableDump {
   final String name;
@@ -84,6 +88,7 @@ class DepotStore {
   static const _clientIdKey = 'parqet_client_id';
   static const _lastSyncKey = 'parqet_last_sync_at';
   static const _activityFullSyncKey = 'parqet_activity_full_sync_at';
+  static const _clearMarkerKey = 'local_data_cleared_at';
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
   // Legacy keys of the profile cache, read once by the version 11 migration.
@@ -395,6 +400,10 @@ class DepotStore {
 
   Future<String?> clientId() =>
       DatabaseService.instance.getSetting(_toolId, _clientIdKey);
+
+  /// Changes on every [clear]; a sync started before it must not write back.
+  Future<String> clearMarker() async =>
+      await DatabaseService.instance.getSetting(_toolId, _clearMarkerKey) ?? '';
 
   Future<void> setClientId(String clientId) =>
       DatabaseService.instance.setSetting(_toolId, _clientIdKey, clientId);
@@ -882,9 +891,22 @@ class DepotStore {
     required Set<String> completeActivityPortfolios,
     Map<String, Set<String>> reloadedHoldings = const {},
     Map<String, Map<String, int>> activityCounts = const {},
+    String? expectedClearMarker,
   }) async {
     final db = await _getDb();
     await db.transaction((txn) async {
+      if (expectedClearMarker != null) {
+        final rows = await txn.executor.query(
+          'tool_settings',
+          columns: ['value'],
+          where: 'tool_id = ? AND key = ?',
+          whereArgs: [_toolId, _clearMarkerKey],
+        );
+        final current = rows.isEmpty ? '' : rows.first['value'] as String;
+        if (current != expectedClearMarker) {
+          throw const DepotLocalDataCleared();
+        }
+      }
       await _replacePortfolios(txn, portfolios);
       await txn.delete(_holdings);
       await _pruneTransactions(txn, portfolios, completeActivityPortfolios);
@@ -1211,6 +1233,12 @@ class DepotStore {
       ]) {
         await txn.delete(table);
       }
+      await txn.executor.insert('tool_settings', {
+        'tool_id': _toolId,
+        'key': _clearMarkerKey,
+        'value': '${DateTime.now().microsecondsSinceEpoch}',
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     });
     await DatabaseService.instance.deleteSetting(_toolId, _lastSyncKey);
     await DatabaseService.instance.deleteSetting(_toolId, _activityFullSyncKey);

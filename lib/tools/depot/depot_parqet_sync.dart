@@ -53,6 +53,7 @@ class DepotParqetSync {
   }) async {
     final store = DepotStore.instance;
     final client = api ?? await _api();
+    final clearMarker = await store.clearMarker();
     final portfolios = await client.portfolios();
     final knownCounts = await store.activityCounts();
     final priority = _PerformancePull(client, portfolios);
@@ -87,20 +88,27 @@ class DepotParqetSync {
     ]);
 
     final holdings = [...priority.holdings, ...remaining.holdings];
-    await store.replaceAll(
-      portfolios: portfolios,
-      holdings: holdings,
-      holdingPerformance: remaining.holdingPerformance,
-      transactions: activities.transactions,
-      summaries: remaining.summaries,
-      charts: remaining.charts,
-      completeActivityPortfolios: activities.complete,
-      reloadedHoldings: activities.reloaded,
-      activityCounts: {
-        for (final MapEntry(:key, :value) in counts.entries)
-          if (value.isNotEmpty) key: value,
-      },
-    );
+    try {
+      await store.replaceAll(
+        expectedClearMarker: clearMarker,
+        portfolios: portfolios,
+        holdings: holdings,
+        holdingPerformance: remaining.holdingPerformance,
+        transactions: activities.transactions,
+        summaries: remaining.summaries,
+        charts: remaining.charts,
+        completeActivityPortfolios: activities.complete,
+        reloadedHoldings: activities.reloaded,
+        activityCounts: {
+          for (final MapEntry(:key, :value) in counts.entries)
+            if (value.isNotEmpty) key: value,
+        },
+      );
+    } on DepotLocalDataCleared {
+      // An incremental write after a clear would pass for a complete history.
+      debugLog('[DepotParqetSync] Local data cleared during sync; discarded');
+      return 'discarded: local data cleared during sync';
+    }
 
     final detail =
         '${portfolios.length} portfolios, ${holdings.length} holdings, '

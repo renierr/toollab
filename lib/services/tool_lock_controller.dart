@@ -8,7 +8,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/tool_vault_crypto.dart';
 import 'package:tool_lab/services/database_service.dart';
 
-class ExistingToolPasswordMismatch implements Exception {}
+class ToolPasswordTooShort implements Exception {}
 
 class ToolLockSession {
   const ToolLockSession(this.key, this.password);
@@ -80,11 +80,19 @@ class ToolLockController extends ChangeNotifier {
     notifyListeners();
   }
 
+  static const minPasswordLength = 8;
+
+  /// [allowShort] keeps a password the user already had before the vault
+  /// existed, so upgrading never strands their data behind a length rule.
   Future<void> setup(
     String password,
-    Future<void> Function(SecretKey key, String wrappedKey) migrate,
-  ) async {
+    Future<void> Function(SecretKey key, String wrappedKey) migrate, {
+    bool allowShort = false,
+  }) async {
     if (configured) throw StateError('Vault already exists');
+    if (!allowShort && password.length < minPasswordLength) {
+      throw ToolPasswordTooShort();
+    }
     final generation = _generation;
     final key = await ToolVaultCrypto.newDataKey();
     final envelope = await ToolVaultCrypto.wrapKey(key, password);
@@ -171,11 +179,23 @@ class ToolLockController extends ChangeNotifier {
       await _biometricOperation<void>('write', value: session.password);
       await _storage.write(key: _biometricKey, value: 'true');
     } else {
-      await _biometricOperation<void>('delete');
+      await _deleteBiometricCredential();
       await _storage.delete(key: _biometricKey);
     }
     biometric = enabled;
     notifyListeners();
+  }
+
+  // An invalidated keystore key or a cancelled prompt must not block turning
+  // biometrics off; the flag alone stops the stale credential being used.
+  Future<void> _deleteBiometricCredential() async {
+    try {
+      await _biometricOperation<void>('delete');
+    } catch (e) {
+      errorLog(
+        '[ToolLockController] Could not remove biometric credential: $e',
+      );
+    }
   }
 
   Future<void> setBiometricTimeout(int minutes) async {
@@ -193,7 +213,9 @@ class ToolLockController extends ChangeNotifier {
     required Future<void> Function(String oldEnvelope, String newEnvelope)
     commit,
   }) async {
-    if (newPassword.length < 8) throw ArgumentError('Password too short');
+    if (newPassword.length < minPasswordLength) {
+      throw ArgumentError('Password too short');
+    }
     final oldEnvelope = _envelope;
     final session = _sessions[toolId];
     if (session == null || oldEnvelope == null) {
@@ -236,15 +258,7 @@ class ToolLockController extends ChangeNotifier {
     await _storage.delete(key: _attemptKey);
     await _storage.delete(key: _biometricKey);
     await _storage.delete(key: _biometricTimeoutKey);
-    if (supportsBiometric && biometric) {
-      try {
-        await _biometricOperation<void>('delete');
-      } catch (e) {
-        errorLog(
-          '[ToolLockController] Could not remove biometric credential: $e',
-        );
-      }
-    }
+    if (supportsBiometric && biometric) await _deleteBiometricCredential();
     automatic = false;
     biometric = false;
     biometricTimeoutMinutes = 5;

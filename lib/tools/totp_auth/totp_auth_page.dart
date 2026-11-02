@@ -138,19 +138,13 @@ class _TotpAuthPageState extends State<TotpAuthPage>
         ),
       );
     }
-    if (state.rotationPending) {
-      return ToolLayout(
-        title: TotpAuthTool.config.localizedName(l10n),
-        child: TotpRotationPending(busy: _syncing, onResume: _resumeRotation),
-      );
-    }
     final filtered = state.search(_query);
     final empty = !state.hasAccounts;
 
     return ToolLayout(
       title: TotpAuthTool.config.localizedName(l10n),
       actions: [
-        if (state.hasSyncPassword)
+        if (state.hasSyncPassword && !state.rotationPending)
           IconButton(
             icon: _syncing
                 ? const SizedBox(
@@ -216,6 +210,8 @@ class _TotpAuthPageState extends State<TotpAuthPage>
       ],
       child: Column(
         children: [
+          if (state.rotationPending)
+            TotpRotationPending(busy: _syncing, onResume: _resumeRotation),
           if (!empty)
             TotpSearchField(
               onChanged: (query) => setState(() => _query = query),
