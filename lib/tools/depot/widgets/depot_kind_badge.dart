@@ -14,6 +14,7 @@ class DepotKindBadge extends StatelessWidget {
   static IconData icon(DepotHoldingKind kind) => switch (kind) {
     DepotHoldingKind.stock => Icons.business_outlined,
     DepotHoldingKind.etf || DepotHoldingKind.fund => Icons.layers_outlined,
+    DepotHoldingKind.etc => Icons.diamond_outlined,
     _ => Icons.category_outlined,
   };
 

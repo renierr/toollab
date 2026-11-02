@@ -194,7 +194,7 @@ Expanded details (German UI labels in brackets), on **Today**:
 
 | Row | Example | Meaning |
 |---|---|---|
-| Type (Typ) | Stock | Stock, ETF or fund is guessed from the name; Parqet only says "security". |
+| Type (Typ) | Stock | Stock, ETF, ETC or fund is guessed from the name; Parqet only says "security". ETC covers exchange-traded commodities and notes (ETC, ETN, ETP, physical gold or silver, Xetra-Gold, EUWAX Gold). |
 | ISIN / Symbol | DE000EXAMPLE | ISIN for securities, symbol for crypto. |
 | Shares (Anteile) | 100 | Shares held now. |
 | Avg. buy price (Ø Kaufkurs) | 50.00 € | Average price paid per share still held. |
@@ -337,7 +337,9 @@ onvista's German names are mapped onto Yahoo's sector names and into the region 
 cash and "other" buckets stay "Unclassified". Only when onvista lacks a split is Yahoo
 asked: its `topHoldings` sector weights, and a region split approximated from the domicile
 of up to ten largest constituents. Yahoo's `quoteType` also overrides the name heuristic,
-so a fund without "ETF" or "Fonds" in its name is no longer counted as a stock.
+so a fund without "ETF" or "Fonds" in its name is no longer counted as a stock. An ETC
+name wins over that, since Yahoo reports most ETCs as "ETF"; ETCs are not looked up and
+count as other assets, not as missing data, in the sector and country risk split.
 Stocks use Yahoo for sector, industry and country, then onvista's stock snapshot for a
 missing country, then Nasdaq region data and up to three US-format listings confirmed by
 Parqet for the same ISIN.

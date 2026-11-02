@@ -18,14 +18,19 @@ class DepotMarketSearchResult {
   DepotHoldingKind get kind => marketKind(quoteType, name);
 }
 
-DepotHoldingKind marketKind(String quoteType, String name) =>
-    switch (quoteType.toUpperCase()) {
-      'EQUITY' => DepotHoldingKind.of(DepotAssetType.security, name),
-      'ETF' || 'ETC' || 'ETN' => DepotHoldingKind.etf,
-      'MUTUALFUND' => DepotHoldingKind.fund,
-      'CRYPTOCURRENCY' => DepotHoldingKind.crypto,
-      _ => DepotHoldingKind.other,
-    };
+DepotHoldingKind marketKind(String quoteType, String name) => switch (quoteType
+    .toUpperCase()) {
+  'EQUITY' => DepotHoldingKind.of(DepotAssetType.security, name),
+  'ETC' || 'ETN' => DepotHoldingKind.etc,
+  // Yahoo lists many ETCs, e.g. physical gold, as "ETF".
+  'ETF' =>
+    DepotHoldingKind.of(DepotAssetType.security, name) == DepotHoldingKind.etc
+        ? DepotHoldingKind.etc
+        : DepotHoldingKind.etf,
+  'MUTUALFUND' => DepotHoldingKind.fund,
+  'CRYPTOCURRENCY' => DepotHoldingKind.crypto,
+  _ => DepotHoldingKind.other,
+};
 
 const marketQuoteTypes = {
   'EQUITY',

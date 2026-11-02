@@ -125,6 +125,23 @@ void main() {
       DepotHoldingKind.crypto,
     );
     expect(wishlistKind('FUTURE', 'Apple Futures'), DepotHoldingKind.other);
+    expect(
+      wishlistKind('ETF', 'iShares Physical Gold ETC'),
+      DepotHoldingKind.etc,
+    );
+    expect(wishlistKind('ETN', 'Some Note'), DepotHoldingKind.etc);
+    expect(wishlistKind('EQUITY', 'Xetra-Gold'), DepotHoldingKind.etc);
+  });
+
+  test('holding kind tells ETCs apart from ETFs and stocks', () {
+    DepotHoldingKind of(String name) =>
+        DepotHoldingKind.of(DepotAssetType.security, name);
+    expect(of('Xtrackers IE Physical Gold ETC'), DepotHoldingKind.etc);
+    expect(of('WisdomTree Physical Swiss Gold'), DepotHoldingKind.etc);
+    expect(of('EUWAX Gold II'), DepotHoldingKind.etc);
+    expect(of('21Shares Bitcoin ETP'), DepotHoldingKind.etc);
+    expect(of('VanEck Gold Miners UCITS ETF'), DepotHoldingKind.etf);
+    expect(of('Barrick Gold Corp.'), DepotHoldingKind.stock);
   });
 
   test('ISIN lookup only accepts symbols from the matching asset', () async {

@@ -20813,6 +20813,18 @@ abstract class AppLocalizations {
   /// **'ETFs'**
   String get depotKindEtfs;
 
+  /// No description provided for @depotKindEtc.
+  ///
+  /// In en, this message translates to:
+  /// **'ETC'**
+  String get depotKindEtc;
+
+  /// No description provided for @depotKindEtcs.
+  ///
+  /// In en, this message translates to:
+  /// **'ETCs'**
+  String get depotKindEtcs;
+
   /// No description provided for @depotKindFund.
   ///
   /// In en, this message translates to:

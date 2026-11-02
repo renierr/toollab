@@ -5794,6 +5794,8 @@
   "depotKindStocks": "Stocks",
   "depotKindEtf": "ETF",
   "depotKindEtfs": "ETFs",
+  "depotKindEtc": "ETC",
+  "depotKindEtcs": "ETCs",
   "depotKindFund": "Fund",
   "depotKindFunds": "Funds",
   "depotDetailType": "Type",

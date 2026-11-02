@@ -18,6 +18,7 @@ class DepotPortfolioLabels {
       switch (kind) {
         DepotHoldingKind.stock => l10n.depotKindStocks,
         DepotHoldingKind.etf => l10n.depotKindEtfs,
+        DepotHoldingKind.etc => l10n.depotKindEtcs,
         DepotHoldingKind.fund => l10n.depotKindFunds,
         DepotHoldingKind.crypto => l10n.depotAssetCrypto,
         DepotHoldingKind.commodity => l10n.depotAssetCommodity,
@@ -33,6 +34,7 @@ class DepotPortfolioLabels {
       switch (kind) {
         DepotHoldingKind.stock => l10n.depotKindStock,
         DepotHoldingKind.etf => l10n.depotKindEtf,
+        DepotHoldingKind.etc => l10n.depotKindEtc,
         DepotHoldingKind.fund => l10n.depotKindFund,
         _ => kinds(l10n, kind),
       };

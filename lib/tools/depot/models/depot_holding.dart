@@ -22,10 +22,14 @@ enum DepotAssetType {
 }
 
 /// What a holding is, with securities split further. Parqet only reports
-/// "security", so stock, ETF and fund are told apart by the name.
+/// "security", so stock, ETF, ETC and fund are told apart by the name.
 enum DepotHoldingKind {
   stock,
   etf,
+
+  /// Exchange-traded commodity or note: a debt security tracking gold, a
+  /// commodity or crypto, not a fund.
+  etc,
   fund,
   crypto,
   commodity,
@@ -35,7 +39,13 @@ enum DepotHoldingKind {
   realEstate,
   other;
 
-  static final _etf = RegExp(r'\b(ETF|ETC|ETN)\b', caseSensitive: false);
+  static final _etf = RegExp(r'\bETF\b', caseSensitive: false);
+  static final _etc = RegExp(
+    r'\b(ETC|ETN|ETP)\b|\b(Xetra|EUWAX)[- ]Gold\b|\bGold Bullion Securities\b'
+    r'|\bPhysical (Swiss )?(Gold|Silver|Platinum|Palladium|Precious Metals?'
+    r'|Bitcoin|Ethereum)\b',
+    caseSensitive: false,
+  );
   static final _fund = RegExp(
     r'\b(Fonds|Funds?|SICAV|UCITS|Investmentfonds)\b',
     caseSensitive: false,
@@ -44,7 +54,9 @@ enum DepotHoldingKind {
   static DepotHoldingKind of(DepotAssetType type, String name) =>
       switch (type) {
         DepotAssetType.security =>
-          _etf.hasMatch(name)
+          _etc.hasMatch(name)
+              ? etc
+              : _etf.hasMatch(name)
               ? etf
               : _fund.hasMatch(name)
               ? fund

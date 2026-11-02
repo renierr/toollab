@@ -11665,6 +11665,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotKindEtfs => 'ETFs';
 
   @override
+  String get depotKindEtc => 'ETC';
+
+  @override
+  String get depotKindEtcs => 'ETCs';
+
+  @override
   String get depotKindFund => 'Fund';
 
   @override

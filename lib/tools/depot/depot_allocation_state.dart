@@ -62,10 +62,15 @@ class DepotAllocationState extends ChangeNotifier {
       _profiles[_keyOf(holding)];
 
   /// The reported instrument type wins over the name heuristic, which files
-  /// every security without "ETF" or "Fonds" in its name as a stock.
+  /// every security without "ETF" or "Fonds" in its name as a stock. An ETC
+  /// name wins back, as Yahoo reports most ETCs as "ETF".
   DepotHoldingKind kindOf(DepotHolding holding) {
-    if (holding.assetType != DepotAssetType.security) return holding.kind;
-    return profileOf(holding)?.kind ?? holding.kind;
+    final named = holding.kind;
+    if (holding.assetType != DepotAssetType.security ||
+        named == DepotHoldingKind.etc) {
+      return named;
+    }
+    return profileOf(holding)?.kind ?? named;
   }
 
   static Future<YahooAssetProfile?> _loadProfile(
@@ -203,6 +208,8 @@ class DepotAllocationState extends ChangeNotifier {
   }
 
   bool _needsProfile(DepotHolding holding, DepotAssetProfile? profile) {
+    // An ETC has no sector, country or holdings to look up.
+    if (holding.kind == DepotHoldingKind.etc) return false;
     if (profile == null) return true;
     final kind = profile.kind ?? holding.kind;
     if (_isFund(kind)) {
@@ -259,7 +266,7 @@ class DepotAllocationState extends ChangeNotifier {
         profile = result?.profile;
         topHoldings = result?.topHoldings ?? const [];
         final reported = profile?.kind;
-        if (reported != null) kind = reported;
+        if (reported != null && kind != DepotHoldingKind.etc) kind = reported;
         if (fund == null &&
             _isFund(kind) &&
             !_isFund(holding.kind) &&

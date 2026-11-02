@@ -7,9 +7,12 @@ import 'models/depot_holding.dart';
 class DepotColors {
   DepotColors._();
 
+  static const Color etc = Color(0xFFB8860B);
+
   static Color kind(DepotHoldingKind kind) => switch (kind) {
     DepotHoldingKind.stock => AppTheme.accentGreen,
     DepotHoldingKind.etf => AppTheme.accentBlue,
+    DepotHoldingKind.etc => etc,
     DepotHoldingKind.fund => AppTheme.accentTeal,
     DepotHoldingKind.crypto => AppTheme.accentAmber,
     DepotHoldingKind.commodity => AppTheme.accentAmberLight,
