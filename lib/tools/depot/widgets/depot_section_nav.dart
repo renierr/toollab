@@ -4,13 +4,9 @@ import 'package:tool_lab/widgets/tool_chip.dart';
 class DepotSectionLink<T> {
   final T id;
   final String label;
-  final IconData icon;
+  final IconData? icon;
 
-  const DepotSectionLink({
-    required this.id,
-    required this.label,
-    required this.icon,
-  });
+  const DepotSectionLink({required this.id, required this.label, this.icon});
 }
 
 /// A scrolling row of jump links to the sections of a long view.

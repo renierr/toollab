@@ -4765,6 +4765,11 @@
   "depotDividendYearsTitle": "Dividenden pro Jahr (netto)",
   "depotDividendExpectedLegend": "Erwartet",
   "depotDividendPositionsTitle": "Dividenden je Position",
+  "depotDividendNavMissing": "Nicht verbucht",
+  "depotDividendNavCalendar": "Kalender",
+  "depotDividendNavYears": "Pro Jahr",
+  "depotDividendNavIncome": "Erträge",
+  "depotDividendNavPositions": "Je Position",
   "depotDividendNext": "nächste {date}",
   "@depotDividendNext": {
     "placeholders": {

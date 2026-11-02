@@ -16,6 +16,12 @@ import 'package:tool_lab/tools/depot/widgets/depot_activities_view.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_transaction_tile.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_year_report_card.dart';
 
+// The year jump row above the list is a horizontal scrollable of its own.
+final _verticalList = find.byWidgetPredicate(
+  (widget) =>
+      widget is Scrollable && widget.axisDirection == AxisDirection.down,
+);
+
 DepotTransaction activity(
   String id,
   DateTime date, {
@@ -347,7 +353,7 @@ void main() {
         await tester.scrollUntilVisible(
           rangeButton,
           300,
-          scrollable: find.byType(Scrollable).first,
+          scrollable: _verticalList,
         );
         await tester.ensureVisible(rangeButton);
         await tester.pumpAndSettle();
@@ -445,7 +451,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('January 2026'),
       300,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _verticalList,
     );
     expect(find.text('January item'), findsNothing);
     await tester.ensureVisible(find.text('January 2026'));

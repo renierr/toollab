@@ -12058,6 +12058,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotDividendPositionsTitle => 'Dividends per position';
 
   @override
+  String get depotDividendNavMissing => 'Not booked';
+
+  @override
+  String get depotDividendNavCalendar => 'Calendar';
+
+  @override
+  String get depotDividendNavYears => 'Per year';
+
+  @override
+  String get depotDividendNavIncome => 'Income';
+
+  @override
+  String get depotDividendNavPositions => 'Per position';
+
+  @override
   String depotDividendNext(String date) {
     return 'next $date';
   }

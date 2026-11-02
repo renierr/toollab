@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../depot_dividend_state.dart';
 import '../depot_format.dart';
@@ -16,7 +15,10 @@ import 'depot_dividend_positions_card.dart';
 import 'depot_dividend_source_bar.dart';
 import 'depot_dividend_year_chart.dart';
 import 'depot_income_chart.dart';
+import 'depot_section_scroll_view.dart';
 import 'depot_sync_header.dart';
+
+enum _Section { missing, calendar, years, income, positions }
 
 class DepotDividendsView extends StatefulWidget {
   const DepotDividendsView({super.key});
@@ -82,62 +84,99 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
     );
     final history = DepotDividendHistory(portfolio.transactions);
 
-    return RefreshIndicator(
+    final empty = calendar.entries.isEmpty && calendar.positions.isEmpty;
+
+    return DepotSectionScrollView<_Section>(
       onRefresh: _pullToRefresh,
-      child: ReadableWidth(
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
-          children: [
-            const DepotSyncHeader(),
-            DepotDividendSourceBar(onRefresh: () => _refresh(force: true)),
-            if (calendar.entries.isEmpty && calendar.positions.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(32),
-                child: Text(
-                  dividends.isFetching
-                      ? l10n.depotDividendLoading
-                      : l10n.depotDividendNone,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium,
-                ),
-              )
-            else ...[
-              const SizedBox(height: 4),
-              DepotDividendKpis(calendar: calendar, format: format),
-              const SizedBox(height: 12),
-              DepotDividendMissingCard(
-                entries: calendar.missing,
-                format: format,
-              ),
-              DepotDividendCalendarCard(calendar: calendar, format: format),
-              DepotDividendYearChart(
-                calendar: calendar,
-                format: format,
-                history: history,
-              ),
-              DepotIncomeChart(
-                months: portfolio.incomeByMonth(),
-                format: format,
-              ),
-              DepotDividendPositionsCard(
-                positions: calendar.positions,
-                format: format,
-                history: history,
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
-                child: Text(
-                  l10n.depotDividendDisclaimer,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+      // The cards carry their own margins.
+      spacing: 0,
+      header: [
+        const DepotSyncHeader(),
+        DepotDividendSourceBar(onRefresh: () => _refresh(force: true)),
+        if (empty)
+          Padding(
+            padding: const EdgeInsets.all(32),
+            child: Text(
+              dividends.isFetching
+                  ? l10n.depotDividendLoading
+                  : l10n.depotDividendNone,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+          )
+        else ...[
+          const SizedBox(height: 4),
+          DepotDividendKpis(calendar: calendar, format: format),
+          const SizedBox(height: 12),
+        ],
+      ],
+      sections: empty
+          ? const []
+          : [
+              if (calendar.missing.isNotEmpty)
+                DepotSection(
+                  id: _Section.missing,
+                  label: l10n.depotDividendNavMissing,
+                  icon: Icons.report_outlined,
+                  child: DepotDividendMissingCard(
+                    entries: calendar.missing,
+                    format: format,
                   ),
                 ),
+              DepotSection(
+                id: _Section.calendar,
+                label: l10n.depotDividendNavCalendar,
+                icon: Icons.event_outlined,
+                child: DepotDividendCalendarCard(
+                  calendar: calendar,
+                  format: format,
+                ),
               ),
+              if (calendar.years.isNotEmpty)
+                DepotSection(
+                  id: _Section.years,
+                  label: l10n.depotDividendNavYears,
+                  icon: Icons.bar_chart_outlined,
+                  child: DepotDividendYearChart(
+                    calendar: calendar,
+                    format: format,
+                    history: history,
+                  ),
+                ),
+              DepotSection(
+                id: _Section.income,
+                label: l10n.depotDividendNavIncome,
+                icon: Icons.savings_outlined,
+                child: DepotIncomeChart(
+                  months: portfolio.incomeByMonth(),
+                  format: format,
+                ),
+              ),
+              if (calendar.positions.isNotEmpty)
+                DepotSection(
+                  id: _Section.positions,
+                  label: l10n.depotDividendNavPositions,
+                  icon: Icons.list_alt_outlined,
+                  child: DepotDividendPositionsCard(
+                    positions: calendar.positions,
+                    format: format,
+                    history: history,
+                  ),
+                ),
             ],
-          ],
-        ),
-      ),
+      footer: [
+        if (!empty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
+            child: Text(
+              l10n.depotDividendDisclaimer,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

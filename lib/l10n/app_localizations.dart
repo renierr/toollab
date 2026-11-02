@@ -21443,6 +21443,36 @@ abstract class AppLocalizations {
   /// **'Dividends per position'**
   String get depotDividendPositionsTitle;
 
+  /// No description provided for @depotDividendNavMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not booked'**
+  String get depotDividendNavMissing;
+
+  /// No description provided for @depotDividendNavCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get depotDividendNavCalendar;
+
+  /// No description provided for @depotDividendNavYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Per year'**
+  String get depotDividendNavYears;
+
+  /// No description provided for @depotDividendNavIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get depotDividendNavIncome;
+
+  /// No description provided for @depotDividendNavPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'Per position'**
+  String get depotDividendNavPositions;
+
   /// No description provided for @depotDividendNext.
   ///
   /// In en, this message translates to:

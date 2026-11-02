@@ -5974,6 +5974,11 @@
   "depotDividendYearsTitle": "Dividends per year (net)",
   "depotDividendExpectedLegend": "Expected",
   "depotDividendPositionsTitle": "Dividends per position",
+  "depotDividendNavMissing": "Not booked",
+  "depotDividendNavCalendar": "Calendar",
+  "depotDividendNavYears": "Per year",
+  "depotDividendNavIncome": "Income",
+  "depotDividendNavPositions": "Per position",
   "depotDividendNext": "next {date}",
   "@depotDividendNext": {
     "placeholders": {

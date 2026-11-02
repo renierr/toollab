@@ -330,8 +330,9 @@ symbols explicitly listed on the matching asset. If Yahoo's ISIN search returns 
 the app searches by a confirmed symbol instead. Existing entries can be linked from the
 search result; if Parqet cannot confirm the match, the ISIN remains unknown.
 
-A row of jump links above the Allocation tab scrolls to each section (positions, X-Ray,
-ETF overlap, region, sector, industry, asset type) and highlights the one in view.
+A row of jump links above the Allocation and Dividends tabs scrolls to each section and
+highlights the one in view; sections without data get no link. Activities has a row of
+years instead, which jumps to that year's latest month and follows the year in view.
 
 The Allocation tab resolves sector, industry and country per open holding. A fund has no
 single sector or country, so ETFs and funds are looked up on onvista by ISIN first: its
