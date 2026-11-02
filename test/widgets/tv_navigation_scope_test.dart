@@ -396,4 +396,111 @@ void main() {
       expect(innerButtonNode.hasFocus, isTrue);
     },
   );
+
+  testWidgets('arrow keys do not leave a dialog for an app-wide overlay', (
+    tester,
+  ) async {
+    final overlayButtonNode = FocusNode(debugLabel: 'OverlayButton');
+    final dialogButtonNode = FocusNode(debugLabel: 'DialogButton');
+    addTearDown(overlayButtonNode.dispose);
+    addTearDown(dialogButtonNode.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => TvNavigationScope(
+          enabled: true,
+          child: Stack(
+            children: [
+              child!,
+              Positioned(
+                left: 12,
+                bottom: 12,
+                child: IconButton(
+                  focusNode: overlayButtonNode,
+                  icon: const Icon(Icons.music_note_outlined),
+                  onPressed: () {},
+                ),
+              ),
+            ],
+          ),
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    content: const Text('Dialog'),
+                    actions: [
+                      TextButton(
+                        focusNode: dialogButtonNode,
+                        onPressed: () {},
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    dialogButtonNode.requestFocus();
+    await tester.pump();
+
+    for (final key in [
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.arrowLeft,
+    ]) {
+      await tester.sendKeyEvent(key);
+      await tester.pump();
+      expect(overlayButtonNode.hasFocus, isFalse);
+    }
+  });
+
+  testWidgets('a FocusTargetNode around a scrollable stays a focus target', (
+    tester,
+  ) async {
+    final topButtonNode = FocusNode(debugLabel: 'TopButton');
+    final gridNode = FocusTargetNode(debugLabel: 'Grid');
+    addTearDown(topButtonNode.dispose);
+    addTearDown(gridNode.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TvNavigationScope(
+            enabled: true,
+            child: Column(
+              children: [
+                ElevatedButton(
+                  focusNode: topButtonNode,
+                  onPressed: () {},
+                  child: const Text('Top'),
+                ),
+                Expanded(
+                  child: Focus(
+                    focusNode: gridNode,
+                    child: ListView(children: const [Text('Row')]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    topButtonNode.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pump();
+    expect(gridNode.hasFocus, isTrue);
+  });
 }

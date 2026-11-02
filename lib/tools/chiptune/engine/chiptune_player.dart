@@ -6,11 +6,10 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../../helpers/system_audio_player.dart';
 import '../../../helpers/mime_type_helper.dart';
-import '../../../services/database_service.dart';
+import '../../../services/settings_service.dart';
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/media_controls_service.dart';
 import '../../../services/power_wake_lock_service.dart';
-import '../../../services/tv_service.dart';
 import 'mixer.dart';
 import 'module.dart';
 import 'render_worker.dart';
@@ -991,12 +990,7 @@ class ChiptunePlayer {
     }
 
     if (!SoLoud.instance.isInitialized) {
-      final lowLatencyVal = await DatabaseService.instance.getSetting(
-        '_app',
-        'low_latency_audio',
-      );
-      final isTv = await TvService.isTelevision();
-      final lowLatency = !isTv && lowLatencyVal == 'true';
+      final lowLatency = await SettingsService.useLowLatencyAudio();
       try {
         await SoLoud.instance.init(device: savedDevice, lowLatency: lowLatency);
       } catch (e) {

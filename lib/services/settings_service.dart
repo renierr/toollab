@@ -104,6 +104,17 @@ class SettingsService {
     return value != 'false';
   }
 
+  /// For audio engines started outside the widget tree. Unset counts as on,
+  /// matching the toggle; TV audio paths stay on the default buffer.
+  static Future<bool> useLowLatencyAudio() async {
+    if (await TvService.isTelevision()) return false;
+    final value = await DatabaseService.instance.getSetting(
+      _toolId,
+      _keyLowLatencyAudio,
+    );
+    return value != 'false';
+  }
+
   Future<void> setLowLatencyAudio(bool value) async {
     final str = value.toString();
     _cache[_keyLowLatencyAudio] = str;

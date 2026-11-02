@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/widgets/tv_navigation_scope.dart';
 import '../hex_editor_state.dart';
 import 'byte_edit_dialog.dart';
 import 'hex_editor_row.dart';
@@ -16,7 +17,7 @@ class HexEditorDisplay extends StatefulWidget {
 }
 
 class _HexEditorDisplayState extends State<HexEditorDisplay> {
-  final FocusNode _focusNode = FocusNode();
+  final FocusNode _focusNode = FocusTargetNode(debugLabel: 'HexGrid');
   late final ScrollController _horizontalScrollController;
   int? _highNibble;
 

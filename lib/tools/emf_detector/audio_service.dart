@@ -3,8 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
-import '../../services/database_service.dart';
-import '../../services/tv_service.dart';
+import '../../services/settings_service.dart';
 
 class AudioService {
   AudioSource? _audioSource;
@@ -34,13 +33,9 @@ class AudioService {
     try {
       // 1. Initialize the SoLoud engine if it isn't already initialized
       if (!SoLoud.instance.isInitialized) {
-        final lowLatencyVal = await DatabaseService.instance.getSetting(
-          '_app',
-          'low_latency_audio',
+        await SoLoud.instance.init(
+          lowLatency: await SettingsService.useLowLatencyAudio(),
         );
-        final isTv = await TvService.isTelevision();
-        final lowLatency = !isTv && lowLatencyVal != 'false';
-        await SoLoud.instance.init(lowLatency: lowLatency);
       }
 
       // Wave file properties: 16-bit PCM at 48kHz with a 200ms duration.

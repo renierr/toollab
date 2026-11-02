@@ -532,6 +532,13 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
   ) {
     final result = <FocusNode>[];
     final visited = <FocusNode>{};
+    // Inside a dialog or sheet, app-wide overlays below the barrier are not
+    // reachable; only the modal's own controls are.
+    final primaryContext = primary.context;
+    final inPopup =
+        primaryContext != null &&
+        primaryContext.mounted &&
+        ModalRoute.of(primaryContext) is PopupRoute;
 
     void visitScope(FocusScopeNode scope) {
       for (final node in scope.traversalDescendants) {
@@ -549,6 +556,7 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
         if (ctx == null || !ctx.mounted) continue;
         final route = ModalRoute.of(ctx);
         if (route != null && !route.isCurrent) continue;
+        if (route == null && inPopup) continue;
         if (_isContainerOrRegionFocus(node, fallbackFocusNode)) continue;
         result.add(node);
       }
@@ -770,6 +778,7 @@ class _GlobalFocusRingPainter extends CustomPainter {
         targetSize.width <= 4 ||
         targetSize.height <= 4 ||
         (!isEditableText &&
+            primary is! FocusTargetNode &&
             (targetSize.height > 200 ||
                 (targetSize.width >= size.width * 0.5 &&
                     targetSize.height >= size.height * 0.35)))) {
@@ -848,7 +857,14 @@ class _GlobalFocusRingPainter extends CustomPainter {
       oldDelegate.paintKey != paintKey;
 }
 
+/// Focus node for a widget that wraps a scrollable but handles keys itself
+/// (hex grid, canvas): stays a directional target and gets the focus ring.
+class FocusTargetNode extends FocusNode {
+  FocusTargetNode({super.debugLabel});
+}
+
 bool _isContainerOrRegionFocus(FocusNode node, FocusNode fallbackFocusNode) {
+  if (node is FocusTargetNode) return !node.canRequestFocus;
   if (node is FocusScopeNode ||
       identical(node, fallbackFocusNode) ||
       node.skipTraversal) {

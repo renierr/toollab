@@ -4,8 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../../helpers/debug_log.dart';
-import '../../../services/database_service.dart';
-import '../../../services/tv_service.dart';
+import '../../../services/settings_service.dart';
 import 'clip_export_format.dart';
 import 'voice_effect.dart';
 import 'voice_recorder.dart';
@@ -34,13 +33,9 @@ class VoiceEffectEngine {
 
   Future<void> _ensureInit() async {
     if (!SoLoud.instance.isInitialized) {
-      final lowLatencyVal = await DatabaseService.instance.getSetting(
-        '_app',
-        'low_latency_audio',
+      await SoLoud.instance.init(
+        lowLatency: await SettingsService.useLowLatencyAudio(),
       );
-      final isTv = await TvService.isTelevision();
-      final lowLatency = !isTv && lowLatencyVal != 'false';
-      await SoLoud.instance.init(lowLatency: lowLatency);
     }
   }
 
