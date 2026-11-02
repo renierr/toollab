@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'depot_overlap.dart';
 import 'dividends/depot_dividend_calendar.dart';
 import 'models/depot_holding.dart';
 
@@ -8,6 +9,16 @@ class DepotColors {
   DepotColors._();
 
   static const Color etc = Color(0xFFB8860B);
+
+  // The two funds of an overlap pair, far apart in hue.
+  static const Color overlapFirst = AppTheme.accentBlue;
+  static const Color overlapSecond = AppTheme.accentPurple;
+
+  static Color overlap(DepotOverlapLevel level) => switch (level) {
+    DepotOverlapLevel.low => AppTheme.statusGreen,
+    DepotOverlapLevel.moderate => AppTheme.statusAmber,
+    DepotOverlapLevel.high => AppTheme.statusRed,
+  };
 
   static Color kind(DepotHoldingKind kind) => switch (kind) {
     DepotHoldingKind.stock => AppTheme.accentGreen,

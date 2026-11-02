@@ -20663,6 +20663,66 @@ abstract class AppLocalizations {
   /// **'Show less'**
   String get depotXRayShowLess;
 
+  /// No description provided for @depotOverlapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ETF overlap'**
+  String get depotOverlapTitle;
+
+  /// No description provided for @depotOverlapNote.
+  ///
+  /// In en, this message translates to:
+  /// **'How much your ETFs and funds hold the same companies. Tap a pair for the shared holdings.'**
+  String get depotOverlapNote;
+
+  /// No description provided for @depotOverlapShared.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No shared holdings} =1{1 shared holding} other{{count} shared holdings}}'**
+  String depotOverlapShared(int count);
+
+  /// No description provided for @depotOverlapLevelLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low overlap'**
+  String get depotOverlapLevelLow;
+
+  /// No description provided for @depotOverlapLevelModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate overlap'**
+  String get depotOverlapLevelModerate;
+
+  /// No description provided for @depotOverlapLevelHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High overlap'**
+  String get depotOverlapLevelHigh;
+
+  /// No description provided for @depotOverlapCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Top holdings cover {percent} of the fund'**
+  String depotOverlapCoverage(String percent);
+
+  /// No description provided for @depotOverlapLowerBound.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the published top holdings are compared, so the real overlap is usually higher.'**
+  String get depotOverlapLowerBound;
+
+  /// No description provided for @depotOverlapNone.
+  ///
+  /// In en, this message translates to:
+  /// **'These funds share none of their published top holdings.'**
+  String get depotOverlapNone;
+
+  /// No description provided for @depotOverlapHeldDirectly.
+  ///
+  /// In en, this message translates to:
+  /// **'Also held directly'**
+  String get depotOverlapHeldDirectly;
+
   /// No description provided for @depotAllocationDataTitle.
   ///
   /// In en, this message translates to:

@@ -11577,6 +11577,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotXRayShowLess => 'Show less';
 
   @override
+  String get depotOverlapTitle => 'ETF overlap';
+
+  @override
+  String get depotOverlapNote =>
+      'How much your ETFs and funds hold the same companies. Tap a pair for the shared holdings.';
+
+  @override
+  String depotOverlapShared(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count shared holdings',
+      one: '1 shared holding',
+      zero: 'No shared holdings',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotOverlapLevelLow => 'Low overlap';
+
+  @override
+  String get depotOverlapLevelModerate => 'Moderate overlap';
+
+  @override
+  String get depotOverlapLevelHigh => 'High overlap';
+
+  @override
+  String depotOverlapCoverage(String percent) {
+    return 'Top holdings cover $percent of the fund';
+  }
+
+  @override
+  String get depotOverlapLowerBound =>
+      'Only the published top holdings are compared, so the real overlap is usually higher.';
+
+  @override
+  String get depotOverlapNone =>
+      'These funds share none of their published top holdings.';
+
+  @override
+  String get depotOverlapHeldDirectly => 'Also held directly';
+
+  @override
   String get depotAllocationDataTitle => 'Allocation data';
 
   @override

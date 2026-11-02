@@ -5728,6 +5728,22 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "depotXRayShowLess": "Show less",
+  "depotOverlapTitle": "ETF overlap",
+  "depotOverlapNote": "How much your ETFs and funds hold the same companies. Tap a pair for the shared holdings.",
+  "depotOverlapShared": "{count, plural, =0{No shared holdings} =1{1 shared holding} other{{count} shared holdings}}",
+  "@depotOverlapShared": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "depotOverlapLevelLow": "Low overlap",
+  "depotOverlapLevelModerate": "Moderate overlap",
+  "depotOverlapLevelHigh": "High overlap",
+  "depotOverlapCoverage": "Top holdings cover {percent} of the fund",
+  "@depotOverlapCoverage": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "depotOverlapLowerBound": "Only the published top holdings are compared, so the real overlap is usually higher.",
+  "depotOverlapNone": "These funds share none of their published top holdings.",
+  "depotOverlapHeldDirectly": "Also held directly",
   "depotAllocationDataTitle": "Allocation data",
   "depotAllocationDataDescription": "Sector, region and ETF holdings are stored on this device. Refresh only fetches new or incomplete positions.",
   "depotAllocationDataReload": "Reload all allocation data",

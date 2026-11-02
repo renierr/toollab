@@ -11661,6 +11661,50 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotXRayShowLess => 'Weniger anzeigen';
 
   @override
+  String get depotOverlapTitle => 'ETF-Überschneidung';
+
+  @override
+  String get depotOverlapNote =>
+      'Wie stark deine ETFs und Fonds dieselben Unternehmen halten. Tippe auf ein Paar für die gemeinsamen Positionen.';
+
+  @override
+  String depotOverlapShared(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gemeinsame Positionen',
+      one: '1 gemeinsame Position',
+      zero: 'Keine gemeinsamen Positionen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotOverlapLevelLow => 'Geringe Überschneidung';
+
+  @override
+  String get depotOverlapLevelModerate => 'Mittlere Überschneidung';
+
+  @override
+  String get depotOverlapLevelHigh => 'Hohe Überschneidung';
+
+  @override
+  String depotOverlapCoverage(String percent) {
+    return 'Größte Positionen decken $percent des Fonds ab';
+  }
+
+  @override
+  String get depotOverlapLowerBound =>
+      'Verglichen werden nur die veröffentlichten größten Positionen, die tatsächliche Überschneidung ist meist höher.';
+
+  @override
+  String get depotOverlapNone =>
+      'Diese Fonds teilen keine ihrer veröffentlichten größten Positionen.';
+
+  @override
+  String get depotOverlapHeldDirectly => 'Auch direkt gehalten';
+
+  @override
   String get depotAllocationDataTitle => 'Allokationsdaten';
 
   @override

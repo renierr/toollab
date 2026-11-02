@@ -4525,6 +4525,22 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "depotXRayShowLess": "Weniger anzeigen",
+  "depotOverlapTitle": "ETF-Überschneidung",
+  "depotOverlapNote": "Wie stark deine ETFs und Fonds dieselben Unternehmen halten. Tippe auf ein Paar für die gemeinsamen Positionen.",
+  "depotOverlapShared": "{count, plural, =0{Keine gemeinsamen Positionen} =1{1 gemeinsame Position} other{{count} gemeinsame Positionen}}",
+  "@depotOverlapShared": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "depotOverlapLevelLow": "Geringe Überschneidung",
+  "depotOverlapLevelModerate": "Mittlere Überschneidung",
+  "depotOverlapLevelHigh": "Hohe Überschneidung",
+  "depotOverlapCoverage": "Größte Positionen decken {percent} des Fonds ab",
+  "@depotOverlapCoverage": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "depotOverlapLowerBound": "Verglichen werden nur die veröffentlichten größten Positionen, die tatsächliche Überschneidung ist meist höher.",
+  "depotOverlapNone": "Diese Fonds teilen keine ihrer veröffentlichten größten Positionen.",
+  "depotOverlapHeldDirectly": "Auch direkt gehalten",
   "depotAllocationDataTitle": "Allokationsdaten",
   "depotAllocationDataDescription": "Sektor, Region und ETF-Bestände werden auf diesem Gerät gespeichert. Aktualisieren lädt nur neue oder unvollständige Positionen.",
   "depotAllocationDataReload": "Alle Allokationsdaten neu laden",

@@ -350,6 +350,13 @@ the positions that hold it. Fund value outside the published top holdings is sho
 "Other fund holdings". In the position list ETFs and funds expand to their top holdings,
 and every row carries a kind badge.
 
+ETF overlap compares every pair of open ETFs and funds that have published top holdings.
+A pair's score is the sum, over the companies both hold, of the smaller of the two fund
+weights. Only the top holdings are known, so the score is a lower bound. Below 5 % it is
+low, from 15 % high. With three to eight funds a heatmap shows every pair; the list ranks
+the pairs, and each opens the shared holdings with their weight in both funds, marking
+companies also held directly.
+
 Profiles are stored in their own tables (see Local data) and loaded without network
 requests; only changed entries are written back. Opening the tab never fetches. The refresh button only fetches positions without
 a profile or with incomplete metadata, at most once per asset every 24 hours, and keeps

@@ -1,5 +1,6 @@
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import 'depot_overlap.dart';
 import 'depot_region.dart';
 import 'dividends/depot_dividend_calendar.dart';
 import 'models/depot_dividend.dart';
@@ -27,6 +28,13 @@ class DepotPortfolioLabels {
         DepotHoldingKind.p2p => l10n.depotAssetP2p,
         DepotHoldingKind.realEstate => l10n.depotAssetRealEstate,
         DepotHoldingKind.other => l10n.depotAssetCustom,
+      };
+
+  static String overlapLevel(AppLocalizations l10n, DepotOverlapLevel level) =>
+      switch (level) {
+        DepotOverlapLevel.low => l10n.depotOverlapLevelLow,
+        DepotOverlapLevel.moderate => l10n.depotOverlapLevelModerate,
+        DepotOverlapLevel.high => l10n.depotOverlapLevelHigh,
       };
 
   /// Singular, for the badge on one holding.

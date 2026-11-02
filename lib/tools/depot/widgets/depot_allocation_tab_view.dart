@@ -8,12 +8,14 @@ import '../depot_allocation_state.dart';
 import '../depot_allocation_sync.dart';
 import '../depot_colors.dart';
 import '../depot_format.dart';
+import '../depot_overlap.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../depot_region.dart';
 import '../depot_xray.dart';
 import '../models/depot_holding.dart';
 import 'depot_connect_card.dart';
+import 'depot_overlap_card.dart';
 import 'depot_share_breakdown.dart';
 import 'depot_weight_list.dart';
 import 'depot_xray_card.dart';
@@ -77,6 +79,11 @@ class DepotAllocationTabView extends StatelessWidget {
       profileOf: allocation.profileOf,
       kindOf: allocation.kindOf,
     );
+    final overlap = depotOverlap(
+      holdings: open,
+      profileOf: allocation.profileOf,
+      kindOf: allocation.kindOf,
+    );
 
     return RefreshIndicator(
       onRefresh: () => syncDepotAllocation(portfolio, allocation),
@@ -117,6 +124,10 @@ class DepotAllocationTabView extends StatelessWidget {
               const SizedBox(height: 24),
               if (xray.hasLookThrough) ...[
                 DepotXRayCard(xray: xray, format: format),
+                const SizedBox(height: 24),
+              ],
+              if (overlap.hasPairs) ...[
+                DepotOverlapCard(overlap: overlap, format: format),
                 const SizedBox(height: 24),
               ],
               DepotShareBreakdown(
