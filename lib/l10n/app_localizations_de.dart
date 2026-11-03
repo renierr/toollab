@@ -11872,15 +11872,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotMoversAmount => 'Beitrag';
 
   @override
-  String get depotMoversAmountNote =>
-      'Nettogewinn im Zeitraum je sichtbarer Position, einschließlich realisierter Gewinne und Dividenden. Positionsfilter gelten; keine vollständige Depotüberleitung.';
-
-  @override
   String get depotHoldingTotalGain => 'Gewinn und Erträge gesamt';
-
-  @override
-  String get depotHoldingTotalNote =>
-      'Netto-Gesamtwerte laut Parqet; Kosten werden nicht erneut abgezogen.';
 
   @override
   String get depotHoldingShowSales => 'Verkäufe anzeigen';
@@ -11912,15 +11904,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get depotSalesNote =>
-      'Nettobeträge laut Parqet. Größte Gewinne und Verluste sind einzelne Verkäufe, keine Steuerberechnung. Aktivitätsfilter beeinflussen die Übersicht nicht.';
-
-  @override
   String get depotDividendHistoryTitle => 'Gebuchte Dividenden nach Jahr';
-
-  @override
-  String get depotDividendHistoryNote =>
-      'Nettobuchungen nach Währung. Das laufende Jahr kann unvollständig sein; Käufe und Verkäufe beeinflussen Vergleiche. Keine Währungsumrechnung.';
 
   @override
   String depotDividendHistoryChange(String value) {
@@ -11960,10 +11944,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get depotYearCostsSeparate =>
       'Kostenübersicht · nicht erneut abziehen';
-
-  @override
-  String get depotYearCurrenciesNote =>
-      'Beträge sind nach Buchungswährung getrennt; es wird nicht umgerechnet.';
 
   @override
   String depotYearUnknownCurrency(int count) {
@@ -12064,10 +12044,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get depotDividendNone =>
       'Noch keine Dividenden. Buchungen kommen aus Parqet, künftige Termine von Yahoo Finance.';
-
-  @override
-  String get depotDividendDisclaimer =>
-      'Verbuchte Beträge stammen aus Parqet. Angekündigte, prognostizierte und fehlende Zahlungen sind aus Yahoo-Finance-Daten geschätzt: Betrag je Stück × gehaltene Stücke, zum heutigen Wechselkurs, netto nach deiner bisherigen Steuerquote, gezahlt mit dem üblichen Abstand deines Brokers zum Ex-Tag.';
 
   @override
   String get depotDividendReceived12m => 'Erhalten (12 Mon.)';
@@ -13569,15 +13545,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotRiskOtherAssets => 'Andere Anlagearten';
 
   @override
-  String get depotRiskCoverageNote =>
-      'Die Abdeckung bezieht sich auf alle offenen Positionen. Fehlende Aufteilungen enthalten nicht erfasste Fondsanteile; andere Anlagearten sind nicht in den Wertpapierdaten enthalten.';
-
-  @override
   String get depotRiskOtherContributors => 'Weitere beitragende Positionen';
-
-  @override
-  String get depotRiskExposureNote =>
-      'Jeder Beitrag ist sein Anteil am gesamten Depotwert. Fondsanteile stammen aus zwischengespeicherten Aufteilungen und können unvollständig sein.';
 
   @override
   String get depotRiskOpenAllocation => 'Aufteilung öffnen';
@@ -13605,10 +13573,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get depotRiskNoHistory =>
       'Für diesen Zeitraum sind nicht genügend Diagrammdaten vorhanden.';
-
-  @override
-  String get depotRiskValueNote =>
-      'Basierend auf dem Depotwert, nicht auf Anlagerenditen. Ein- und Auszahlungen beeinflussen diese Werte.';
 
   @override
   String get depotRiskTopThree => 'Drei größte Positionen';
@@ -13679,10 +13643,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String depotBenchmarkDifference(String value) {
     return 'Differenz: $value Prozentpunkte';
   }
-
-  @override
-  String get depotBenchmarkNote =>
-      'Auf 100 indexiert. Depot-Renditen schätzen Zahlungsflüsse aus Änderungen des Anlagekapitals. Benchmark mit unbereinigten Schlusskursen ohne Dividenden; kein risikobereinigtes Alpha.';
 
   @override
   String get depotBenchmarkUnavailable =>

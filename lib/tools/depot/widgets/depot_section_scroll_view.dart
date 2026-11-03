@@ -19,7 +19,6 @@ class DepotSection<T> extends DepotSectionLink<T> {
 class DepotSectionScrollView<T> extends StatefulWidget {
   final List<Widget> header;
   final List<DepotSection<T>> sections;
-  final List<Widget> footer;
   final RefreshCallback onRefresh;
   final EdgeInsetsGeometry padding;
   final double spacing;
@@ -28,7 +27,6 @@ class DepotSectionScrollView<T> extends StatefulWidget {
     super.key,
     this.header = const [],
     required this.sections,
-    this.footer = const [],
     required this.onRefresh,
     this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 24),
     this.spacing = 24,
@@ -109,7 +107,6 @@ class _DepotSectionScrollViewState<T> extends State<DepotSectionScrollView<T>> {
               SizedBox(height: widget.spacing),
             KeyedSubtree(key: _keyOf(section.id), child: section.child),
           ],
-          ...widget.footer,
         ],
       ),
     );

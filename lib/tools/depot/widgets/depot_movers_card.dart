@@ -144,11 +144,6 @@ class _DepotMoversCardState extends State<DepotMoversCard> {
                     ),
                   ],
                 ),
-              if (widget.byGain)
-                Text(
-                  l10n.depotMoversAmountNote,
-                  style: theme.textTheme.bodySmall,
-                ),
               const SizedBox(height: 8),
               for (final mover in movers)
                 _MoverRow(

@@ -117,10 +117,6 @@ class DepotHoldingDetails extends StatelessWidget {
                   ),
               ],
             ),
-            Text(
-              l10n.depotHoldingTotalNote,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
             if (hasSales)
               TextButton.icon(
                 onPressed: () {

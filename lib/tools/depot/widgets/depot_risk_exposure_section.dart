@@ -92,15 +92,6 @@ class DepotRiskExposureSection extends StatelessWidget {
             format: format,
             portfolioNames: portfolioNames,
           ),
-        if (breakdown.missingWeight >= 0.005 || breakdown.otherWeight >= 0.005)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(l10n.depotRiskCoverageNote, style: hint),
-          ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(l10n.depotRiskExposureNote, style: hint),
-        ),
       ],
     );
   }

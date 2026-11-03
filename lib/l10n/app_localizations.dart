@@ -21023,23 +21023,11 @@ abstract class AppLocalizations {
   /// **'Contribution'**
   String get depotMoversAmount;
 
-  /// No description provided for @depotMoversAmountNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Net period gain per visible position, including realized gains and dividends. Position filters apply; this is not a full portfolio reconciliation.'**
-  String get depotMoversAmountNote;
-
   /// No description provided for @depotHoldingTotalGain.
   ///
   /// In en, this message translates to:
   /// **'Total gain and income'**
   String get depotHoldingTotalGain;
-
-  /// No description provided for @depotHoldingTotalNote.
-  ///
-  /// In en, this message translates to:
-  /// **'All-time net figures as reported by Parqet; costs are not deducted again.'**
-  String get depotHoldingTotalNote;
 
   /// No description provided for @depotHoldingShowSales.
   ///
@@ -21083,23 +21071,11 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 sale has no reported gain.} other{{count} sales have no reported gain.}}'**
   String depotSalesMissingGain(int count);
 
-  /// No description provided for @depotSalesNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Net amounts as booked by Parqet. Largest gains and losses are individual sales, not a tax calculation. The summary ignores activity filters.'**
-  String get depotSalesNote;
-
   /// No description provided for @depotDividendHistoryTitle.
   ///
   /// In en, this message translates to:
   /// **'Booked dividends by year'**
   String get depotDividendHistoryTitle;
-
-  /// No description provided for @depotDividendHistoryNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Net bookings by currency. The current year may be incomplete; purchases and sales affect comparisons. No currency conversion.'**
-  String get depotDividendHistoryNote;
 
   /// No description provided for @depotDividendHistoryChange.
   ///
@@ -21148,12 +21124,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Costs overview · do not subtract again'**
   String get depotYearCostsSeparate;
-
-  /// No description provided for @depotYearCurrenciesNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Amounts are grouped by booking currency; no currency conversion is applied.'**
-  String get depotYearCurrenciesNote;
 
   /// No description provided for @depotYearUnknownCurrency.
   ///
@@ -21304,12 +21274,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No dividends yet. Bookings come from Parqet, upcoming dates from Yahoo Finance.'**
   String get depotDividendNone;
-
-  /// No description provided for @depotDividendDisclaimer.
-  ///
-  /// In en, this message translates to:
-  /// **'Booked amounts come from Parqet. Upcoming, projected and missing payments are estimated from Yahoo Finance data: per-share amount × shares held, converted at today\'s exchange rate, net after your past tax ratio, paid at your broker\'s usual delay after the ex-date.'**
-  String get depotDividendDisclaimer;
 
   /// No description provided for @depotDividendReceived12m.
   ///
@@ -23873,23 +23837,11 @@ abstract class AppLocalizations {
   /// **'Other asset types'**
   String get depotRiskOtherAssets;
 
-  /// No description provided for @depotRiskCoverageNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Coverage uses all open positions. Missing breakdowns include the uncovered portion of funds; other asset types are not included in the security data.'**
-  String get depotRiskCoverageNote;
-
   /// No description provided for @depotRiskOtherContributors.
   ///
   /// In en, this message translates to:
   /// **'Other contributing positions'**
   String get depotRiskOtherContributors;
-
-  /// No description provided for @depotRiskExposureNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Each contribution is its share of total portfolio value. Fund exposure uses cached breakdowns and can be incomplete.'**
-  String get depotRiskExposureNote;
 
   /// No description provided for @depotRiskOpenAllocation.
   ///
@@ -23932,12 +23884,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not enough chart data for this period.'**
   String get depotRiskNoHistory;
-
-  /// No description provided for @depotRiskValueNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Based on portfolio value, not investment returns. Deposits and withdrawals affect these figures.'**
-  String get depotRiskValueNote;
 
   /// No description provided for @depotRiskTopThree.
   ///
@@ -24064,12 +24010,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Difference: {value} percentage points'**
   String depotBenchmarkDifference(String value);
-
-  /// No description provided for @depotBenchmarkNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Indexed to 100. Portfolio returns approximate cash flows from changes in invested capital. Benchmark uses unadjusted closing prices, excluding dividends; not risk-adjusted alpha.'**
-  String get depotBenchmarkNote;
 
   /// No description provided for @depotBenchmarkUnavailable.
   ///

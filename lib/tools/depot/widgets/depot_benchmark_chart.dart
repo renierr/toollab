@@ -128,13 +128,6 @@ class DepotBenchmarkChart extends StatelessWidget {
                 number.format(points.last.portfolio - points.last.benchmark),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.depotBenchmarkNote,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
           ],
         ],
       ],

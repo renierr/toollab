@@ -165,18 +165,6 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
                   ),
                 ),
             ],
-      footer: [
-        if (!empty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
-            child: Text(
-              l10n.depotDividendDisclaimer,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

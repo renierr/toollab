@@ -42,10 +42,6 @@ class DepotDividendHistoryView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          l10n.depotDividendHistoryNote,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
         if (unknown > 0) Text(l10n.depotYearUnknownCurrency(unknown)),
         if (keys.isEmpty) Text(l10n.depotNoDataYet),
         for (final key in keys)

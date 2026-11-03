@@ -69,13 +69,6 @@ class DepotYearReportCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (showCurrency && report.currencies.isNotEmpty)
-              Text(
-                l10n.depotYearCurrenciesNote,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.hintColor,
-                ),
-              ),
             for (final currency in report.currencies)
               _CurrencyReport(report: currency, showCurrency: showCurrency),
             if (report.unknownCurrencyCount > 0)

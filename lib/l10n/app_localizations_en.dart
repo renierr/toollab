@@ -11788,15 +11788,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotMoversAmount => 'Contribution';
 
   @override
-  String get depotMoversAmountNote =>
-      'Net period gain per visible position, including realized gains and dividends. Position filters apply; this is not a full portfolio reconciliation.';
-
-  @override
   String get depotHoldingTotalGain => 'Total gain and income';
-
-  @override
-  String get depotHoldingTotalNote =>
-      'All-time net figures as reported by Parqet; costs are not deducted again.';
 
   @override
   String get depotHoldingShowSales => 'Show sales';
@@ -11828,15 +11820,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get depotSalesNote =>
-      'Net amounts as booked by Parqet. Largest gains and losses are individual sales, not a tax calculation. The summary ignores activity filters.';
-
-  @override
   String get depotDividendHistoryTitle => 'Booked dividends by year';
-
-  @override
-  String get depotDividendHistoryNote =>
-      'Net bookings by currency. The current year may be incomplete; purchases and sales affect comparisons. No currency conversion.';
 
   @override
   String depotDividendHistoryChange(String value) {
@@ -11875,10 +11859,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotYearCostsSeparate => 'Costs overview · do not subtract again';
-
-  @override
-  String get depotYearCurrenciesNote =>
-      'Amounts are grouped by booking currency; no currency conversion is applied.';
 
   @override
   String depotYearUnknownCurrency(int count) {
@@ -11977,10 +11957,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get depotDividendNone =>
       'No dividends yet. Bookings come from Parqet, upcoming dates from Yahoo Finance.';
-
-  @override
-  String get depotDividendDisclaimer =>
-      'Booked amounts come from Parqet. Upcoming, projected and missing payments are estimated from Yahoo Finance data: per-share amount × shares held, converted at today\'s exchange rate, net after your past tax ratio, paid at your broker\'s usual delay after the ex-date.';
 
   @override
   String get depotDividendReceived12m => 'Received (12 mo.)';
@@ -13466,15 +13442,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotRiskOtherAssets => 'Other asset types';
 
   @override
-  String get depotRiskCoverageNote =>
-      'Coverage uses all open positions. Missing breakdowns include the uncovered portion of funds; other asset types are not included in the security data.';
-
-  @override
   String get depotRiskOtherContributors => 'Other contributing positions';
-
-  @override
-  String get depotRiskExposureNote =>
-      'Each contribution is its share of total portfolio value. Fund exposure uses cached breakdowns and can be incomplete.';
 
   @override
   String get depotRiskOpenAllocation => 'Open allocation';
@@ -13501,10 +13469,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotRiskNoHistory => 'Not enough chart data for this period.';
-
-  @override
-  String get depotRiskValueNote =>
-      'Based on portfolio value, not investment returns. Deposits and withdrawals affect these figures.';
 
   @override
   String get depotRiskTopThree => 'Top three positions';
@@ -13574,10 +13538,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String depotBenchmarkDifference(String value) {
     return 'Difference: $value percentage points';
   }
-
-  @override
-  String get depotBenchmarkNote =>
-      'Indexed to 100. Portfolio returns approximate cash flows from changes in invested capital. Benchmark uses unadjusted closing prices, excluding dividends; not risk-adjusted alpha.';
 
   @override
   String get depotBenchmarkUnavailable =>

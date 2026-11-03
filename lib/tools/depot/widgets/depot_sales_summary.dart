@@ -42,15 +42,7 @@ class DepotSalesSummary extends StatelessWidget {
         for (final code in codes)
           _SalesCurrency(currency: code, sales: currencies[code]!),
         if (unknown > 0) Text(l10n.depotYearUnknownCurrency(unknown)),
-        Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 8),
-          child: Text(
-            l10n.depotSalesNote,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
+        const SizedBox(height: 8),
       ],
     );
   }

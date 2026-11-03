@@ -144,10 +144,6 @@ class DepotRiskCard extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(l10n.depotRiskNoHistory, style: hint),
                 ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(l10n.depotRiskValueNote, style: hint),
-              ),
             ],
           ),
         ],
