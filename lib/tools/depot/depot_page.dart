@@ -18,6 +18,7 @@ import 'depot_holding_trend_state.dart';
 import 'depot_logo_state.dart';
 import 'depot_portfolio_state.dart';
 import 'depot_state.dart';
+import 'depot_work_lease.dart';
 import 'depot_wishlist_state.dart';
 import 'depot_wishlist_sync_delegate.dart';
 import 'widgets/depot_activities_view.dart';
@@ -112,6 +113,15 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     context.read<DepotImportState>().addFiles([
       (path: file.path, name: file.name),
     ]);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context);
+    DepotWorkLease.title = DepotTool.config.localizedName(l10n);
+    DepotWorkLease.syncText = l10n.depotWorkSyncText;
+    DepotWorkLease.allocationText = l10n.depotWorkAllocationText;
   }
 
   @override

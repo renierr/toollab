@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'depot_parqet_sync.dart';
 import 'depot_activity_groups.dart';
 import 'depot_store.dart';
+import 'depot_work_lease.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_income_month.dart';
@@ -329,16 +330,25 @@ class DepotPortfolioState extends ChangeNotifier {
     if (!_isConnected) return;
     final last = _lastSyncAt;
     if (last == null || DateTime.now().difference(last) > staleAfter) {
-      await sync();
+      // Runs on every open; a lease would flash a notification each time.
+      await sync(keepAlive: false);
     } else {
       await _refreshSelectedPeriodIfStale();
     }
   }
 
   /// [full] re-reads every activity instead of only what is newer than the
-  /// stored watermark.
-  Future<void> sync({bool full = false}) async {
+  /// stored watermark. [keepAlive] holds a wake lock and foreground
+  /// notification so the sync survives the screen turning off.
+  Future<void> sync({bool full = false, bool keepAlive = true}) async {
     if (isSyncing || !_isConnected || _disposed) return;
+    if (keepAlive) {
+      return DepotWorkLease.hold(DepotWorkLease.syncText, () => _sync(full));
+    }
+    return _sync(full);
+  }
+
+  Future<void> _sync(bool full) async {
     _isSyncing = true;
     _error = null;
     _notify();

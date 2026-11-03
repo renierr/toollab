@@ -19949,6 +19949,18 @@ abstract class AppLocalizations {
   /// **'Sync now'**
   String get depotSyncNow;
 
+  /// No description provided for @depotWorkSyncText.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing with Parqet…'**
+  String get depotWorkSyncText;
+
+  /// No description provided for @depotWorkAllocationText.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading allocation data…'**
+  String get depotWorkAllocationText;
+
   /// No description provided for @depotSettingsTitle.
   ///
   /// In en, this message translates to:

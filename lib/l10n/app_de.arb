@@ -4385,6 +4385,8 @@
   },
   "depotNeverSynced": "Noch nie synchronisiert",
   "depotSyncNow": "Jetzt synchronisieren",
+  "depotWorkSyncText": "Synchronisiere mit Parqet…",
+  "depotWorkAllocationText": "Lade Aufteilungsdaten…",
   "depotSettingsTitle": "Parqet-Verbindung",
   "depotSettingsSectionParqet": "Parqet-Integration",
   "depotSettingsIntro": "Lege in der Parqet-Entwicklerkonsole eine private Integration mit Lese- und Schreibzugriff an (Schreiben dient zum Hochladen importierter PDFs), trage die Redirect-URL unten ein und füge hier ihre Client-ID ein.",

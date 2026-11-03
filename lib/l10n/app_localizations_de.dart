@@ -11253,6 +11253,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotSyncNow => 'Jetzt synchronisieren';
 
   @override
+  String get depotWorkSyncText => 'Synchronisiere mit Parqet…';
+
+  @override
+  String get depotWorkAllocationText => 'Lade Aufteilungsdaten…';
+
+  @override
   String get depotSettingsTitle => 'Parqet-Verbindung';
 
   @override

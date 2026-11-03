@@ -5,6 +5,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
 import 'depot_market_search.dart';
+import 'depot_work_lease.dart';
 import 'market_data/onvista_api.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_asset_profile.dart';
@@ -169,16 +170,18 @@ class DepotAllocationState extends ChangeNotifier {
   }
 
   /// Fetches missing metadata, respecting the per-asset retry interval.
-  Future<void> refresh(Iterable<DepotHolding> holdings) async {
-    await _fetchDone?.future;
-    await ensureProfiles(holdings);
-  }
+  Future<void> refresh(Iterable<DepotHolding> holdings) =>
+      DepotWorkLease.hold(DepotWorkLease.allocationText, () async {
+        await _fetchDone?.future;
+        await ensureProfiles(holdings);
+      });
 
   /// Fetches every position again; cached values stay until replaced.
-  Future<void> reloadAll(Iterable<DepotHolding> holdings) async {
-    await _fetchDone?.future;
-    await ensureProfiles(holdings, force: true);
-  }
+  Future<void> reloadAll(Iterable<DepotHolding> holdings) =>
+      DepotWorkLease.hold(DepotWorkLease.allocationText, () async {
+        await _fetchDone?.future;
+        await ensureProfiles(holdings, force: true);
+      });
 
   Future<void> ensureLoaded() => _cacheLoad ??= _loadCache();
 

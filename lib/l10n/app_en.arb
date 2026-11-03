@@ -5547,6 +5547,8 @@
   },
   "depotNeverSynced": "Never synced",
   "depotSyncNow": "Sync now",
+  "depotWorkSyncText": "Syncing with Parqet…",
+  "depotWorkAllocationText": "Loading allocation data…",
   "depotSettingsTitle": "Parqet connection",
   "depotSettingsSectionParqet": "Parqet integration",
   "depotSettingsIntro": "Create a private integration with read and write access in the Parqet developer console (write is used to upload imported PDFs), register the redirect URL below and paste its client ID here.",

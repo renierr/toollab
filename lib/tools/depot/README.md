@@ -81,6 +81,13 @@ background task (`DepotBackgroundSync`), so all of them write the same shape.
 **Sync all data again** (settings) re-reads every period and every activity. It is only
 needed when a booking is edited in Parqet without changing the holding's activity count.
 
+A sync the user starts (sync button, pull-to-refresh, retry, **Sync all data again**,
+after connecting or importing) and the allocation refresh hold a `BackgroundWorkLease`:
+a partial CPU wake lock plus a `dataSync` foreground notification, so they finish with
+the screen off or the app in the background. The automatic stale check on opening the
+tool takes none, so opening Depot does not flash a notification. The scheduled
+background task needs none either: WorkManager keeps the CPU awake while it runs.
+
 ### Periods and the "today" interval
 
 Periods map to Parqet's `relative` timeframes (`1m`, `ytd`, `max`, …), except **today**.

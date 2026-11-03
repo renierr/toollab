@@ -11170,6 +11170,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotSyncNow => 'Sync now';
 
   @override
+  String get depotWorkSyncText => 'Syncing with Parqet…';
+
+  @override
+  String get depotWorkAllocationText => 'Loading allocation data…';
+
+  @override
   String get depotSettingsTitle => 'Parqet connection';
 
   @override
