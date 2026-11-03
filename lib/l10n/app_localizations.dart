@@ -19739,12 +19739,6 @@ abstract class AppLocalizations {
   /// **'Follow stocks, ETFs and crypto without adding them to your portfolio.'**
   String get depotWishlistEmptyHint;
 
-  /// No description provided for @depotWishlistLocalOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Never synced to Parqet. Backend sync can share wishlist entries across devices.'**
-  String get depotWishlistLocalOnly;
-
   /// No description provided for @depotWishlistNoResults.
   ///
   /// In en, this message translates to:
@@ -20495,12 +20489,6 @@ abstract class AppLocalizations {
   /// **'There are no open positions to break down.'**
   String get depotAllocationEmpty;
 
-  /// No description provided for @depotAllocationSourceNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh fetches data only for new or incomplete positions. ETF and fund regions use onvista\'s country split; Yahoo Finance and Nasdaq fill gaps. Remaining or unavailable data is unclassified.'**
-  String get depotAllocationSourceNote;
-
   /// No description provided for @depotRegionNorthAmerica.
   ///
   /// In en, this message translates to:
@@ -21161,12 +21149,6 @@ abstract class AppLocalizations {
   /// **'Costs overview · do not subtract again'**
   String get depotYearCostsSeparate;
 
-  /// No description provided for @depotYearNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Net amounts as booked in Parqet. Taxes and fees are separate totals for all activities, not additional deductions from the net total. The total excludes invested capital and is not your available cash. Not a tax statement.'**
-  String get depotYearNote;
-
   /// No description provided for @depotYearCurrenciesNote.
   ///
   /// In en, this message translates to:
@@ -21268,12 +21250,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export filtered CSV'**
   String get depotActivitiesExport;
-
-  /// No description provided for @depotActivitiesExportNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Exports all matching activities, including collapsed months, in their original currencies. Not a tax filing.'**
-  String get depotActivitiesExportNote;
 
   /// No description provided for @depotActivitiesEmpty.
   ///
@@ -24064,12 +24040,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export failed'**
   String get depotTaxExportFailed;
-
-  /// No description provided for @depotTaxExportNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Exports activities matching the current filters and year. Amounts keep their booking currencies; not a tax filing.'**
-  String get depotTaxExportNote;
 
   /// No description provided for @depotBenchmarkTitle.
   ///

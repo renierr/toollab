@@ -95,11 +95,6 @@ class DepotAllocationTabView extends StatelessWidget {
             padding: EdgeInsets.only(bottom: 8),
             child: LinearProgressIndicator(minHeight: 2),
           ),
-        Text(
-          l10n.depotAllocationSourceNote,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-        ),
-        const SizedBox(height: 16),
         if (open.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),

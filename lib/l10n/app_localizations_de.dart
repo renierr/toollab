@@ -11136,10 +11136,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Aktien, ETFs und Krypto beobachten, ohne sie ins Portfolio aufzunehmen.';
 
   @override
-  String get depotWishlistLocalOnly =>
-      'Wird nie mit Parqet synchronisiert. Die Backend-Synchronisierung kann Einträge zwischen Geräten teilen.';
-
-  @override
   String get depotWishlistNoResults => 'Keine passenden Wertpapiere.';
 
   @override
@@ -11563,10 +11559,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Es gibt keine offenen Positionen für die Aufteilung.';
 
   @override
-  String get depotAllocationSourceNote =>
-      'Aktualisieren lädt nur Daten für neue oder unvollständige Positionen. ETF- und Fondsregionen nutzen die Länderaufteilung von onvista; Yahoo Finance und Nasdaq ergänzen Lücken. Der Rest und fehlende Daten bleiben unklassifiziert.';
-
-  @override
   String get depotRegionNorthAmerica => 'Nordamerika';
 
   @override
@@ -11970,10 +11962,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Kostenübersicht · nicht erneut abziehen';
 
   @override
-  String get depotYearNote =>
-      'Nettobeträge wie in Parqet gebucht. Steuern und Gebühren sind separate Summen aller Buchungen und werden nicht erneut von der Nettosumme abgezogen. Die Summe enthält nicht das eingesetzte Kapital und ist nicht dein verfügbares Guthaben. Keine Steuerbescheinigung.';
-
-  @override
   String get depotYearCurrenciesNote =>
       'Beträge sind nach Buchungswährung getrennt; es wird nicht umgerechnet.';
 
@@ -12036,10 +12024,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotActivitiesExport => 'Gefilterte CSV exportieren';
-
-  @override
-  String get depotActivitiesExportNote =>
-      'Exportiert alle gefilterten Buchungen einschließlich zugeklappter Monate in ihren ursprünglichen Währungen. Keine Steuererklärung.';
 
   @override
   String get depotActivitiesEmpty => 'Keine Aktivitäten passen zum Filter';
@@ -13681,10 +13665,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotTaxExportFailed => 'Export fehlgeschlagen';
-
-  @override
-  String get depotTaxExportNote =>
-      'Exportiert Aktivitäten des gewählten Jahres mit den aktiven Filtern. Beträge in Buchungswährung; keine Steuererklärung.';
 
   @override
   String get depotBenchmarkTitle => 'Benchmark-Vergleich';

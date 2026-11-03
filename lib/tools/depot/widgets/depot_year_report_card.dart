@@ -113,18 +113,6 @@ class DepotYearReportCard extends StatelessWidget {
                 label: Text(l10n.depotTaxExport),
               ),
             ),
-            Text(
-              l10n.depotTaxExportNote,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-            Text(
-              l10n.depotYearNote,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
           ],
         ),
       ),

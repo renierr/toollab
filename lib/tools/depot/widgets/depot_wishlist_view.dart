@@ -45,7 +45,7 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
         children: [
           const Padding(
             padding: EdgeInsets.fromLTRB(12, 8, 12, 8),
-            child: Column(children: [_LocalOnlyNote(), _CurrencySwitch()]),
+            child: _CurrencySwitch(),
           ),
           Expanded(
             child: RefreshIndicator(
@@ -150,38 +150,6 @@ class _CurrencySwitch extends StatelessWidget {
       subtitle: Text(l10n.depotWishlistEuroSwitchHint),
       value: state.showEuro,
       onChanged: state.setShowEuro,
-    );
-  }
-}
-
-class _LocalOnlyNote extends StatelessWidget {
-  const _LocalOnlyNote();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.lock_outline, size: 16, color: theme.hintColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              l10n.depotWishlistLocalOnly,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -11054,10 +11054,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Follow stocks, ETFs and crypto without adding them to your portfolio.';
 
   @override
-  String get depotWishlistLocalOnly =>
-      'Never synced to Parqet. Backend sync can share wishlist entries across devices.';
-
-  @override
   String get depotWishlistNoResults => 'No matching securities.';
 
   @override
@@ -11479,10 +11475,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'There are no open positions to break down.';
 
   @override
-  String get depotAllocationSourceNote =>
-      'Refresh fetches data only for new or incomplete positions. ETF and fund regions use onvista\'s country split; Yahoo Finance and Nasdaq fill gaps. Remaining or unavailable data is unclassified.';
-
-  @override
   String get depotRegionNorthAmerica => 'North America';
 
   @override
@@ -11885,10 +11877,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotYearCostsSeparate => 'Costs overview · do not subtract again';
 
   @override
-  String get depotYearNote =>
-      'Net amounts as booked in Parqet. Taxes and fees are separate totals for all activities, not additional deductions from the net total. The total excludes invested capital and is not your available cash. Not a tax statement.';
-
-  @override
   String get depotYearCurrenciesNote =>
       'Amounts are grouped by booking currency; no currency conversion is applied.';
 
@@ -11949,10 +11937,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotActivitiesExport => 'Export filtered CSV';
-
-  @override
-  String get depotActivitiesExportNote =>
-      'Exports all matching activities, including collapsed months, in their original currencies. Not a tax filing.';
 
   @override
   String get depotActivitiesEmpty => 'No activities match the filter';
@@ -13576,10 +13560,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotTaxExportFailed => 'Export failed';
-
-  @override
-  String get depotTaxExportNote =>
-      'Exports activities matching the current filters and year. Amounts keep their booking currencies; not a tax filing.';
 
   @override
   String get depotBenchmarkTitle => 'Benchmark comparison';
