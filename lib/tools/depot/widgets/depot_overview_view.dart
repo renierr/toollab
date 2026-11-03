@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../depot_format.dart';
 import '../depot_allocation_state.dart';
@@ -14,14 +13,18 @@ import '../models/depot_filters.dart';
 import '../models/depot_period.dart';
 import 'depot_connect_card.dart';
 import 'depot_benchmark_chart.dart';
+import 'depot_capital_flow_card.dart';
 import 'depot_holding_filter_bar.dart';
 import 'depot_holding_tile.dart';
 import 'depot_kpi_grid.dart';
 import 'depot_movers_card.dart';
 import 'depot_period_selector.dart';
 import 'depot_risk_card.dart';
+import 'depot_section_scroll_view.dart';
 import 'depot_sync_header.dart';
 import 'depot_value_card.dart';
+
+enum _Section { value, movers, growth, risk, holdings }
 
 class DepotOverviewView extends StatelessWidget {
   const DepotOverviewView({super.key});
@@ -47,38 +50,46 @@ class DepotOverviewView extends StatelessWidget {
     final format = DepotFormat.of(context, state.currency);
     final holdings = state.visibleHoldings;
     final openValue = state.openValue;
+    final periodLabel = DepotPortfolioLabels.period(l10n, state.period);
 
-    return RefreshIndicator(
+    return DepotSectionScrollView<_Section>(
       onRefresh: state.sync,
-      child: ReadableWidth(
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-              sliver: SliverList.list(
-                children: [
-                  const DepotSyncHeader(),
-                  if (!state.hasData)
-                    Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        l10n.depotNoDataYet,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    )
-                  else ...[
-                    const SizedBox(height: 4),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      spacing: 12,
+      header: [
+        const DepotSyncHeader(),
+        if (!state.hasData)
+          Padding(
+            padding: const EdgeInsets.all(32),
+            child: Text(
+              l10n.depotNoDataYet,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
+          )
+        else
+          const SizedBox(height: 4),
+      ],
+      sections: !state.hasData
+          ? const []
+          : [
+              DepotSection(
+                id: _Section.value,
+                label: l10n.depotKpiValue,
+                icon: Icons.show_chart,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     const DepotPeriodSelector(),
                     const SizedBox(height: 12),
-                    if (summary != null)
+                    if (summary != null) ...[
                       DepotKpiGrid(
                         summary: summary,
                         format: format,
                         valueTrend: [for (final p in state.chart) p.value],
                       ),
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 12),
+                    ],
                     DepotValueCard(
                       points: state.chart,
                       change: state.rangeChange,
@@ -87,111 +98,126 @@ class DepotOverviewView extends StatelessWidget {
                       showChart: state.period != DepotPeriod.today,
                       chart: DepotBenchmarkChart(format: format),
                     ),
-                    if (state.movers.isNotEmpty ||
-                        state.gainMovers.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      DepotMoversCard(
-                        movers: state.moversByGain
-                            ? state.gainMovers
-                            : state.movers,
-                        byGain: state.moversByGain,
-                        onModeChanged: state.setMoversByGain,
-                        periodLabel: DepotPortfolioLabels.period(
-                          l10n,
-                          state.period,
-                        ),
-                        format: format,
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    DepotRiskCard(
-                      risk: DepotRisk.calculate(
-                        state.holdings,
-                        state.chart,
-                        profileOf: allocation.profileOf,
-                      ),
-                      format: format,
-                      xray: depotXRay(
-                        holdings: state.holdings,
-                        profileOf: allocation.profileOf,
-                        kindOf: allocation.kindOf,
-                      ),
-                      periodLabel: DepotPortfolioLabels.period(
-                        l10n,
-                        state.period,
-                      ),
-                      portfolioNames: state.portfolios.length > 1
-                          ? {for (final p in state.portfolios) p.id: p.name}
-                          : const {},
-                      onOpenAllocation: () => context.read<DepotState>().setTab(
-                        DepotTab.allocation,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const DepotHoldingFilterBar(),
                   ],
-                ],
-              ),
-            ),
-            if (state.hasData && holdings.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    l10n.depotHoldingsEmpty,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium,
-                  ),
                 ),
               ),
-            if (state.hasData)
-              SliverPadding(
-                padding: const EdgeInsets.only(bottom: 24),
-                sliver: state.holdingFilter.sort == DepotHoldingSort.custom
-                    ? SliverReorderableList(
-                        itemCount: holdings.length,
-                        onReorderItem: state.reorderHolding,
-                        proxyDecorator: (child, index, animation) => Material(
-                          elevation: 4,
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          child: child,
-                        ),
-                        itemBuilder: (context, index) {
-                          final holding = holdings[index];
-                          return DepotHoldingTile(
-                            key: ValueKey(holding.key),
-                            holding: holding,
-                            performance: state.performanceOf(holding),
-                            period: state.period,
-                            format: format,
-                            weight: openValue <= 0
-                                ? 0
-                                : holding.currentValue / openValue * 100,
-                            reorderIndex: index,
-                          );
-                        },
-                      )
-                    : SliverList.builder(
-                        itemCount: holdings.length,
-                        itemBuilder: (context, index) {
-                          final holding = holdings[index];
-                          return DepotHoldingTile(
-                            key: ValueKey(holding.key),
-                            holding: holding,
-                            performance: state.performanceOf(holding),
-                            period: state.period,
-                            format: format,
-                            weight: openValue <= 0
-                                ? 0
-                                : holding.currentValue / openValue * 100,
-                          );
-                        },
-                      ),
+              if (state.movers.isNotEmpty || state.gainMovers.isNotEmpty)
+                DepotSection(
+                  id: _Section.movers,
+                  label: l10n.depotNavMovers,
+                  icon: Icons.swap_vert,
+                  child: DepotMoversCard(
+                    movers: state.moversByGain
+                        ? state.gainMovers
+                        : state.movers,
+                    byGain: state.moversByGain,
+                    onModeChanged: state.setMoversByGain,
+                    periodLabel: periodLabel,
+                    format: format,
+                  ),
+                ),
+              if (state.maxChart.length > 1)
+                DepotSection(
+                  id: _Section.growth,
+                  label: l10n.depotNavGrowth,
+                  icon: Icons.stacked_bar_chart,
+                  child: DepotCapitalFlowCard(
+                    points: state.maxChart,
+                    format: format,
+                  ),
+                ),
+              DepotSection(
+                id: _Section.risk,
+                label: l10n.depotNavRisk,
+                icon: Icons.shield_outlined,
+                child: DepotRiskCard(
+                  risk: DepotRisk.calculate(
+                    state.holdings,
+                    state.chart,
+                    profileOf: allocation.profileOf,
+                  ),
+                  format: format,
+                  xray: depotXRay(
+                    holdings: state.holdings,
+                    profileOf: allocation.profileOf,
+                    kindOf: allocation.kindOf,
+                  ),
+                  periodLabel: periodLabel,
+                  portfolioNames: state.portfolios.length > 1
+                      ? {for (final p in state.portfolios) p.id: p.name}
+                      : const {},
+                  onOpenAllocation: () =>
+                      context.read<DepotState>().setTab(DepotTab.allocation),
+                ),
               ),
-          ],
-        ),
-      ),
+              DepotSection(
+                id: _Section.holdings,
+                label: l10n.depotNavHoldings,
+                icon: Icons.list_alt,
+                child: const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: DepotHoldingFilterBar(),
+                ),
+              ),
+            ],
+      slivers: [
+        if (state.hasData && holdings.isEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                l10n.depotHoldingsEmpty,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+          ),
+        if (state.hasData)
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 24),
+            sliver: state.holdingFilter.sort == DepotHoldingSort.custom
+                ? SliverReorderableList(
+                    itemCount: holdings.length,
+                    onReorderItem: state.reorderHolding,
+                    proxyDecorator: (child, index, animation) => Material(
+                      elevation: 4,
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      child: child,
+                    ),
+                    itemBuilder: (context, index) {
+                      final holding = holdings[index];
+                      return DepotHoldingTile(
+                        key: ValueKey(holding.key),
+                        holding: holding,
+                        performance: state.performanceOf(holding),
+                        period: state.period,
+                        format: format,
+                        weight: openValue <= 0
+                            ? 0
+                            : holding.currentValue / openValue * 100,
+                        reorderIndex: index,
+                      );
+                    },
+                  )
+                : SliverList.builder(
+                    itemCount: holdings.length,
+                    itemBuilder: (context, index) {
+                      final holding = holdings[index];
+                      return DepotHoldingTile(
+                        key: ValueKey(holding.key),
+                        holding: holding,
+                        performance: state.performanceOf(holding),
+                        period: state.period,
+                        format: format,
+                        weight: openValue <= 0
+                            ? 0
+                            : holding.currentValue / openValue * 100,
+                      );
+                    },
+                  ),
+          ),
+      ],
     );
   }
 }

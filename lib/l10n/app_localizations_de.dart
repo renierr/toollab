@@ -12181,6 +12181,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDividendYearsTitle => 'Dividenden pro Jahr (netto)';
 
   @override
+  String get depotFlowTitle => 'Wachstum pro Jahr';
+
+  @override
+  String get depotFlowNewMoney => 'Neues Geld';
+
+  @override
+  String get depotFlowMarket => 'Marktgewinn';
+
+  @override
+  String get depotFlowValueChange => 'Wertänderung';
+
+  @override
+  String get depotNavMovers => 'Bewegungen';
+
+  @override
+  String get depotNavGrowth => 'Wachstum';
+
+  @override
+  String get depotNavRisk => 'Risiko';
+
+  @override
+  String get depotNavHoldings => 'Positionen';
+
+  @override
   String get depotDividendExpectedLegend => 'Erwartet';
 
   @override

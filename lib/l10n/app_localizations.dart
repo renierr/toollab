@@ -21479,6 +21479,54 @@ abstract class AppLocalizations {
   /// **'Dividends per year (net)'**
   String get depotDividendYearsTitle;
 
+  /// No description provided for @depotFlowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth per year'**
+  String get depotFlowTitle;
+
+  /// No description provided for @depotFlowNewMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'New money'**
+  String get depotFlowNewMoney;
+
+  /// No description provided for @depotFlowMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Market gain'**
+  String get depotFlowMarket;
+
+  /// No description provided for @depotFlowValueChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Value change'**
+  String get depotFlowValueChange;
+
+  /// No description provided for @depotNavMovers.
+  ///
+  /// In en, this message translates to:
+  /// **'Movers'**
+  String get depotNavMovers;
+
+  /// No description provided for @depotNavGrowth.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth'**
+  String get depotNavGrowth;
+
+  /// No description provided for @depotNavRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk'**
+  String get depotNavRisk;
+
+  /// No description provided for @depotNavHoldings.
+  ///
+  /// In en, this message translates to:
+  /// **'Holdings'**
+  String get depotNavHoldings;
+
   /// No description provided for @depotDividendExpectedLegend.
   ///
   /// In en, this message translates to:

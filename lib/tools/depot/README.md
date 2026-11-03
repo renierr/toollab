@@ -147,6 +147,14 @@ Differences are indicative, not risk-adjusted alpha, and can be affected by cost
 taxes, missing data and timing. A failed or unavailable comparison leaves the
 original value chart untouched. Prices may be delayed.
 
+The growth card splits each year's value change into new money and market gain, from
+the stored Max chart whatever period is selected. New money is the change of Parqet's
+invested capital (`capitalHistory`): buys add their amount, sales remove the cost of what
+was sold. Market gain is the rest of the value change, realized gains included; dividends
+paid out of the depot are not part of the value. The first year starts from zero. Tapping
+a year lists its months. Without a cash account, a sale followed by a buy shows as money
+out and money in.
+
 The Activities yearly card can export a CSV for the selected year and active
 activity filters. It contains individual bookings and their original currencies,
 not a tax calculation or filing. Check the broker's tax documents.

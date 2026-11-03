@@ -52,6 +52,7 @@ class DepotPortfolioState extends ChangeNotifier {
   DepotPeriod _period = DepotPeriod.today;
   DepotSummary? _summary;
   List<DepotChartPoint> _chart = const [];
+  List<DepotChartPoint> _maxChart = const [];
   DepotRangeChange? _rangeChange;
   List<DepotHolding> _holdings = const [];
   Map<String, int> _holdingOrder = const {};
@@ -99,6 +100,9 @@ class DepotPortfolioState extends ChangeNotifier {
   DepotPeriod get period => _period;
   DepotSummary? get summary => _summary;
   List<DepotChartPoint> get chart => _chart;
+
+  /// The whole history, whatever period is selected.
+  List<DepotChartPoint> get maxChart => _maxChart;
   DepotRangeChange? get rangeChange => _rangeChange;
   List<DepotHolding> get holdings => _holdings;
   List<DepotTransaction> get transactions => _transactions;
@@ -243,6 +247,9 @@ class DepotPortfolioState extends ChangeNotifier {
     final key = (scope: _scope, period: period);
     final summary = await _store.summary(key);
     final chart = await _store.chart(key);
+    final maxChart = period == DepotPeriod.max
+        ? chart
+        : await _store.chart((scope: key.scope, period: DepotPeriod.max));
     final performance = await _store.holdingPerformance(
       period,
       portfolioId: portfolioId,
@@ -250,6 +257,7 @@ class DepotPortfolioState extends ChangeNotifier {
     if (_disposed || load != _periodLoad || key.scope != _scope) return;
     _summary = summary;
     _chart = chart;
+    _maxChart = maxChart;
     _holdingPerformance = performance;
     _rangeChange = _changeOf(chart) ?? _changeOfSummary(summary);
     _refilterHoldings();

@@ -19,6 +19,9 @@ class DepotSection<T> extends DepotSectionLink<T> {
 class DepotSectionScrollView<T> extends StatefulWidget {
   final List<Widget> header;
   final List<DepotSection<T>> sections;
+
+  /// Lazy content after the last section, such as a long list.
+  final List<Widget> slivers;
   final RefreshCallback onRefresh;
   final EdgeInsetsGeometry padding;
   final double spacing;
@@ -27,6 +30,7 @@ class DepotSectionScrollView<T> extends StatefulWidget {
     super.key,
     this.header = const [],
     required this.sections,
+    this.slivers = const [],
     required this.onRefresh,
     this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 24),
     this.spacing = 24,
@@ -93,22 +97,29 @@ class _DepotSectionScrollViewState<T> extends State<DepotSectionScrollView<T>> {
         ? _active
         : sections.firstOrNull?.id;
 
-    // A Column, not a lazy ListView: a jump target below the fold must be
-    // built for ensureVisible to find it.
-    final content = SingleChildScrollView(
+    // A Column, not a lazy list: a jump target below the fold must be built
+    // for ensureVisible to find it.
+    final content = CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: widget.padding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ...widget.header,
-          for (final (index, section) in sections.indexed) ...[
-            if (index > 0 && widget.spacing > 0)
-              SizedBox(height: widget.spacing),
-            KeyedSubtree(key: _keyOf(section.id), child: section.child),
-          ],
-        ],
-      ),
+      slivers: [
+        SliverPadding(
+          padding: widget.padding,
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ...widget.header,
+                for (final (index, section) in sections.indexed) ...[
+                  if (index > 0 && widget.spacing > 0)
+                    SizedBox(height: widget.spacing),
+                  KeyedSubtree(key: _keyOf(section.id), child: section.child),
+                ],
+              ],
+            ),
+          ),
+        ),
+        ...widget.slivers,
+      ],
     );
 
     return ReadableWidth(
