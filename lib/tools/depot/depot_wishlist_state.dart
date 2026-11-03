@@ -65,6 +65,7 @@ class DepotWishlistState extends ChangeNotifier {
   Map<String, DepotWishlistQuote> _quotes = const {};
   Set<String> _failed = const {};
   final Set<String> _pending = {};
+  final Set<String> _pendingIsins = {};
   List<DepotWishlistSearchResult> _results = const [];
   final Map<String, double> _eurRates = {};
   final Map<String, Future<void>> _fxLoads = {};
@@ -534,6 +535,51 @@ class DepotWishlistState extends ChangeNotifier {
       return await _add(result);
     } finally {
       _pending.remove(result.symbol);
+      _notify();
+    }
+  }
+
+  bool containsIsin(String isin) {
+    final key = isin.trim().toUpperCase();
+    return _items.any((item) => item.isin?.toUpperCase() == key);
+  }
+
+  bool isAddingIsin(String isin) =>
+      _pendingIsins.contains(isin.trim().toUpperCase());
+
+  /// Adds a security by ISIN, preferring the listing Parqet confirms for it.
+  /// Returns false when no listing was found or adding failed.
+  Future<bool> addIsin(String isin, {String? name}) async {
+    final key = isin.trim().toUpperCase();
+    await ensureLoaded();
+    if (_disposed || _loadFailed) return false;
+    if (containsIsin(key)) return true;
+    if (!_pendingIsins.add(key)) return false;
+    _notify();
+    try {
+      final List<DepotWishlistSearchResult> results;
+      try {
+        results = await _searchLoader(key);
+      } catch (e) {
+        errorLog('[DepotWishlistState] ISIN lookup failed for $key: $e');
+        return false;
+      }
+      if (_disposed || results.isEmpty) return false;
+      final match = results.firstWhere(
+        (result) => result.isin != null,
+        orElse: () => results.first,
+      );
+      return await add(
+        DepotWishlistSearchResult(
+          symbol: match.symbol,
+          name: name == null || name.isEmpty ? match.name : name,
+          quoteType: match.quoteType,
+          exchange: match.exchange,
+          isin: key,
+        ),
+      );
+    } finally {
+      _pendingIsins.remove(key);
       _notify();
     }
   }

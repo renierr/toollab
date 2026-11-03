@@ -12,6 +12,7 @@ import '../models/depot_filters.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_period.dart';
 import '../models/depot_transaction.dart';
+import 'depot_wishlist_holding_button.dart';
 
 /// Every figure of one holding, shown when its row is expanded.
 class DepotHoldingDetails extends StatelessWidget {
@@ -42,6 +43,7 @@ class DepotHoldingDetails extends StatelessWidget {
     final exchange = h.quoteExchange;
     final startPrice = performance?.startPrice;
     final earliest = h.earliestActivity;
+    final isin = h.assetType == DepotAssetType.security ? h.isin : null;
     final hasSales = context.select<DepotPortfolioState?, bool>(
       (state) => state?.hasSalesFor(h) ?? false,
     );
@@ -117,22 +119,28 @@ class DepotHoldingDetails extends StatelessWidget {
                   ),
               ],
             ),
-            if (hasSales)
-              TextButton.icon(
-                onPressed: () {
-                  context.read<DepotPortfolioState>().setActivityFilter(
-                    DepotActivityFilter(
-                      portfolioId: h.portfolioId,
-                      holdingId: h.id,
-                      holdingName: h.name,
-                      types: const {DepotTransactionType.sell},
-                    ),
-                  );
-                  context.read<DepotState>().setTab(DepotTab.activities);
-                },
-                icon: const Icon(Icons.sell_outlined),
-                label: Text(l10n.depotHoldingShowSales),
-              ),
+            Wrap(
+              children: [
+                if (hasSales)
+                  TextButton.icon(
+                    onPressed: () {
+                      context.read<DepotPortfolioState>().setActivityFilter(
+                        DepotActivityFilter(
+                          portfolioId: h.portfolioId,
+                          holdingId: h.id,
+                          holdingName: h.name,
+                          types: const {DepotTransactionType.sell},
+                        ),
+                      );
+                      context.read<DepotState>().setTab(DepotTab.activities);
+                    },
+                    icon: const Icon(Icons.sell_outlined),
+                    label: Text(l10n.depotHoldingShowSales),
+                  ),
+                if (isin != null)
+                  DepotWishlistHoldingButton(isin: isin, name: h.name),
+              ],
+            ),
           ],
         );
       },

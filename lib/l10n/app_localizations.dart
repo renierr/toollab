@@ -21053,6 +21053,18 @@ abstract class AppLocalizations {
   /// **'Show sales'**
   String get depotHoldingShowSales;
 
+  /// No description provided for @depotHoldingAddToWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to wishlist'**
+  String get depotHoldingAddToWishlist;
+
+  /// No description provided for @depotHoldingInWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'On wishlist'**
+  String get depotHoldingInWishlist;
+
   /// No description provided for @depotSalesTitle.
   ///
   /// In en, this message translates to:

@@ -11887,6 +11887,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotHoldingShowSales => 'Verkäufe anzeigen';
 
   @override
+  String get depotHoldingAddToWishlist => 'Zur Wunschliste';
+
+  @override
+  String get depotHoldingInWishlist => 'Auf der Wunschliste';
+
+  @override
   String get depotSalesTitle => 'Verkäufe im Detail';
 
   @override

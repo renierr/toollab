@@ -4658,6 +4658,8 @@
   "depotMoversAmount": "Beitrag",
   "depotHoldingTotalGain": "Gewinn und Erträge gesamt",
   "depotHoldingShowSales": "Verkäufe anzeigen",
+  "depotHoldingAddToWishlist": "Zur Wunschliste",
+  "depotHoldingInWishlist": "Auf der Wunschliste",
   "depotSalesTitle": "Verkäufe im Detail",
   "depotSalesProceeds": "Netto-Verkaufserlös",
   "depotSalesKnownGain": "Bekannte realisierte Gewinne",

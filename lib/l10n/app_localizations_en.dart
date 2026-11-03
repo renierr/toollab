@@ -11803,6 +11803,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotHoldingShowSales => 'Show sales';
 
   @override
+  String get depotHoldingAddToWishlist => 'Add to wishlist';
+
+  @override
+  String get depotHoldingInWishlist => 'On wishlist';
+
+  @override
   String get depotSalesTitle => 'Sales details';
 
   @override

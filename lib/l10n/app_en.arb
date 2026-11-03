@@ -5861,6 +5861,8 @@
   "depotMoversAmount": "Contribution",
   "depotHoldingTotalGain": "Total gain and income",
   "depotHoldingShowSales": "Show sales",
+  "depotHoldingAddToWishlist": "Add to wishlist",
+  "depotHoldingInWishlist": "On wishlist",
   "depotSalesTitle": "Sales details",
   "depotSalesProceeds": "Net proceeds",
   "depotSalesKnownGain": "Known realized gains",

@@ -120,6 +120,9 @@ Both use the visible holdings filter; gains include realized gains and dividends
 are not a complete reconciliation of the portfolio. Expanded holding details add
 the all-time total of the three Parqet net components and, when sales exist,
 a link to that exact holding's sales. The link replaces the existing activity filters.
+Securities with an ISIN also get **Add to wishlist**: it looks the ISIN up like the
+wishlist search, takes the listing Parqet confirms for it (else the first match) and
+keeps the holding's name. Once listed, the button opens the wishlist instead.
 
 The dividend position list shows the trailing 12 months of net booked dividends
 divided by the current cost basis as yield on cost. This is not a historical cost
