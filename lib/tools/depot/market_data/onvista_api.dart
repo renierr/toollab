@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 
+import '../models/depot_asset_profile.dart';
 import '../models/depot_fund_constituent.dart';
 
 /// A fund's full country and sector split plus its largest holdings.
@@ -24,6 +25,15 @@ class OnvistaApi {
   static Future<OnvistaFundBreakdown?> fundBreakdown(String isin) async {
     final json = await _getJson('/api/v1/funds/ISIN:$isin/breakdowns', isin);
     return json == null ? null : parseFundBreakdown(json);
+  }
+
+  /// A fund's ongoing charges (TER) as a fraction.
+  static Future<double?> fundExpenseRatio(String isin) async {
+    final json = await _getJson('/api/v1/funds/ISIN:$isin/snapshot', isin);
+    final percent = (json?['fundsBaseData'] as Map?)?['ongoingCharges'];
+    if (percent is! num) return null;
+    final ratio = percent / 100;
+    return DepotAssetProfile.isExpenseRatio(ratio) ? ratio : null;
   }
 
   /// Country of domicile of a stock, in German.

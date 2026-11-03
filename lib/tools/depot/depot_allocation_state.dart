@@ -22,6 +22,7 @@ class DepotAllocationState extends ChangeNotifier {
     Future<List<String>> Function(DepotHolding holding)? confirmedSymbolsLoader,
     Future<OnvistaFundBreakdown?> Function(String isin)? fundLoader,
     Future<String?> Function(String isin)? stockCountryLoader,
+    Future<double?> Function(String isin)? expenseRatioLoader,
     DateTime Function()? clock,
   }) : _profileLoader = profileLoader ?? _loadProfile,
        _sessionLoader = sessionLoader ?? YahooFinanceApi.session,
@@ -29,9 +30,18 @@ class DepotAllocationState extends ChangeNotifier {
            confirmedSymbolsLoader ?? DepotMarketSearch.holdingSymbols,
        _fundLoader = fundLoader ?? OnvistaApi.fundBreakdown,
        _stockCountryLoader = stockCountryLoader ?? OnvistaApi.stockCountry,
+       _expenseRatioLoader = expenseRatioLoader ?? OnvistaApi.fundExpenseRatio,
        _clock = clock ?? DateTime.now;
 
   static const Duration retryAfter = Duration(days: 1);
+
+  /// A fund missing only its TER waits longer: no source is likely to add it
+  /// soon, and every retry reloads the whole fund.
+  static const Duration costRetryAfter = Duration(days: 7);
+
+  /// Complete funds are reloaded this often to pick up TER cuts and
+  /// rebalanced holdings.
+  static const Duration fundRefreshAfter = Duration(days: 90);
   static const int _parallelRequests = 3;
   static const int _maxConstituents = 10;
   static const int _maxAlternateListings = 3;
@@ -43,6 +53,7 @@ class DepotAllocationState extends ChangeNotifier {
   final Future<List<String>> Function(DepotHolding) _confirmedSymbolsLoader;
   final Future<OnvistaFundBreakdown?> Function(String) _fundLoader;
   final Future<String?> Function(String) _stockCountryLoader;
+  final Future<double?> Function(String) _expenseRatioLoader;
   final DateTime Function() _clock;
 
   Map<String, DepotAssetProfile> _profiles = const {};
@@ -115,8 +126,9 @@ class DepotAllocationState extends ChangeNotifier {
       final key = _keyOf(holding);
       if (key == null || _pending.contains(key)) continue;
       final cached = _profiles[key];
-      if (!force && (!_needsProfile(holding, cached) || !_isDue(key, cached))) {
-        continue;
+      if (!force) {
+        final after = _refetchAfter(holding, cached);
+        if (after == null || !_isDue(key, cached, after)) continue;
       }
       targets[key] = holding;
     }
@@ -205,30 +217,44 @@ class DepotAllocationState extends ChangeNotifier {
     await _store.saveAssetProfileAttempts(attempts);
   }
 
-  bool _isDue(String key, DepotAssetProfile? cached) {
+  bool _isDue(
+    String key,
+    DepotAssetProfile? cached, [
+    Duration after = retryAfter,
+  ]) {
     final last =
         _attempts[key] ??
         (cached != null &&
                 cached.cacheVersion >= DepotAssetProfile.currentVersion
             ? cached.fetchedAt
             : null);
-    return last == null || _clock().difference(last) >= retryAfter;
+    return last == null || _clock().difference(last) >= after;
   }
 
-  bool _needsProfile(DepotHolding holding, DepotAssetProfile? profile) {
+  /// How long after the last attempt [holding] is looked up again; null when
+  /// its profile needs nothing.
+  Duration? _refetchAfter(DepotHolding holding, DepotAssetProfile? profile) {
     // An ETC has no sector, country or holdings to look up.
-    if (holding.kind == DepotHoldingKind.etc) return false;
-    if (profile == null) return true;
+    if (holding.kind == DepotHoldingKind.etc) return null;
+    if (profile == null) return retryAfter;
     final kind = profile.kind ?? holding.kind;
     if (_isFund(kind)) {
-      return profile.cacheVersion < DepotAssetProfile.currentVersion ||
-          (profile.sectorShares.isEmpty && profile.countryShares.isEmpty);
+      if (profile.cacheVersion < DepotAssetProfile.currentVersion ||
+          (profile.sectorShares.isEmpty && profile.countryShares.isEmpty)) {
+        return retryAfter;
+      }
+      if (profile.expenseRatio == null) return costRetryAfter;
+      return _clock().difference(profile.fetchedAt) >= fundRefreshAfter
+          ? retryAfter
+          : null;
     }
     if (kind == DepotHoldingKind.stock) {
       return profile.sector == null ||
-          (profile.country == null && profile.region == null);
+              (profile.country == null && profile.region == null)
+          ? retryAfter
+          : null;
     }
-    return false;
+    return null;
   }
 
   Future<void> _loadCache() async {
@@ -290,6 +316,7 @@ class DepotAllocationState extends ChangeNotifier {
       } else if (_isFund(kind)) {
         profile = await _completeFund(
           profile ?? DepotAssetProfile(fetchedAt: _clock()),
+          isin,
           fund,
           topHoldings,
           session,
@@ -322,6 +349,8 @@ class DepotAllocationState extends ChangeNotifier {
           constituents: profile.constituents.isNotEmpty || !current
               ? profile.constituents
               : previous.constituents,
+          // A fresh TER wins even on a retry: it changes when a fund cuts it.
+          expenseRatio: profile.expenseRatio ?? previous.expenseRatio,
           fetchedAt: profile.fetchedAt,
         );
       }
@@ -369,11 +398,15 @@ class DepotAllocationState extends ChangeNotifier {
 
   Future<DepotAssetProfile> _completeFund(
     DepotAssetProfile profile,
+    String? isin,
     OnvistaFundBreakdown? fund,
     List<({String symbol, double weight})> topHoldings,
     YahooSession? session,
     int generation,
   ) async {
+    if (profile.expenseRatio == null && isin != null && isin.isNotEmpty) {
+      profile = profile.copyWith(expenseRatio: await _expenseRatioLoader(isin));
+    }
     if (fund != null) {
       profile = profile.copyWith(
         sectorShares: fund.sectorShares.isNotEmpty ? fund.sectorShares : null,
@@ -424,6 +457,7 @@ class DepotAllocationState extends ChangeNotifier {
             sectorShares: profile?.sectorShares ?? const {},
             countryShares: profile?.countryShares ?? const {},
             constituents: profile?.constituents ?? const [],
+            expenseRatio: profile?.expenseRatio,
             fetchedAt: profile?.fetchedAt ?? alternate.fetchedAt,
           );
           if ((profile.country != null || profile.region != null) &&

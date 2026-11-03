@@ -11578,6 +11578,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotXRayShowLess => 'Show less';
 
   @override
+  String get depotFundCostTitle => 'Running costs';
+
+  @override
+  String get depotFundCostNav => 'Costs';
+
+  @override
+  String get depotFundCostFundRatio => 'Avg. TER funds';
+
+  @override
+  String get depotFundCostDepotRatio => 'Avg. TER depot';
+
+  @override
+  String get depotFundCostYearly => 'Costs per year';
+
+  @override
+  String depotFundCostMissing(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count funds without a TER: $names',
+      one: '1 fund without a TER: $names',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotDetailExpenseRatio => 'TER';
+
+  @override
+  String depotDetailExpenseRatioValue(String ratio, String cost) {
+    return '$ratio · ≈ $cost per year';
+  }
+
+  @override
   String get depotOverlapTitle => 'ETF overlap';
 
   @override

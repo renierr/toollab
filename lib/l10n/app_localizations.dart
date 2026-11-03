@@ -20669,6 +20669,54 @@ abstract class AppLocalizations {
   /// **'Show less'**
   String get depotXRayShowLess;
 
+  /// No description provided for @depotFundCostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Running costs'**
+  String get depotFundCostTitle;
+
+  /// No description provided for @depotFundCostNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs'**
+  String get depotFundCostNav;
+
+  /// No description provided for @depotFundCostFundRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. TER funds'**
+  String get depotFundCostFundRatio;
+
+  /// No description provided for @depotFundCostDepotRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. TER depot'**
+  String get depotFundCostDepotRatio;
+
+  /// No description provided for @depotFundCostYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs per year'**
+  String get depotFundCostYearly;
+
+  /// No description provided for @depotFundCostMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 fund without a TER: {names}} other{{count} funds without a TER: {names}}}'**
+  String depotFundCostMissing(int count, String names);
+
+  /// No description provided for @depotDetailExpenseRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'TER'**
+  String get depotDetailExpenseRatio;
+
+  /// No description provided for @depotDetailExpenseRatioValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{ratio} · ≈ {cost} per year'**
+  String depotDetailExpenseRatioValue(String ratio, String cost);
+
   /// No description provided for @depotOverlapTitle.
   ///
   /// In en, this message translates to:

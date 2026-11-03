@@ -7,6 +7,7 @@ import '../depot_allocation_state.dart';
 import '../depot_allocation_sync.dart';
 import '../depot_colors.dart';
 import '../depot_format.dart';
+import '../depot_fund_costs.dart';
 import '../depot_overlap.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
@@ -14,13 +15,14 @@ import '../depot_region.dart';
 import '../depot_xray.dart';
 import '../models/depot_holding.dart';
 import 'depot_connect_card.dart';
+import 'depot_fund_cost_card.dart';
 import 'depot_overlap_card.dart';
 import 'depot_section_scroll_view.dart';
 import 'depot_share_breakdown.dart';
 import 'depot_weight_list.dart';
 import 'depot_xray_card.dart';
 
-enum _Section { positions, xray, overlap, region, sector, industry, kind }
+enum _Section { positions, xray, overlap, cost, region, sector, industry, kind }
 
 /// Region, sector and industry split of the open positions.
 class DepotAllocationTabView extends StatelessWidget {
@@ -88,6 +90,11 @@ class DepotAllocationTabView extends StatelessWidget {
       profileOf: allocation.profileOf,
       kindOf: allocation.kindOf,
     );
+    final costs = depotFundCosts(
+      holdings: open,
+      profileOf: allocation.profileOf,
+      kindOf: allocation.kindOf,
+    );
 
     return DepotSectionScrollView<_Section>(
       onRefresh: () => syncDepotAllocation(portfolio, allocation),
@@ -135,6 +142,13 @@ class DepotAllocationTabView extends StatelessWidget {
                   label: l10n.depotOverlapTitle,
                   icon: Icons.join_inner_outlined,
                   child: DepotOverlapCard(overlap: overlap, format: format),
+                ),
+              if (costs.hasCosts)
+                DepotSection(
+                  id: _Section.cost,
+                  label: l10n.depotFundCostNav,
+                  icon: Icons.savings_outlined,
+                  child: DepotFundCostCard(costs: costs, format: format),
                 ),
               DepotSection(
                 id: _Section.region,

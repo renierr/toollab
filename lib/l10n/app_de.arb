@@ -4526,6 +4526,20 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "depotXRayShowLess": "Weniger anzeigen",
+  "depotFundCostTitle": "Laufende Kosten",
+  "depotFundCostNav": "Kosten",
+  "depotFundCostFundRatio": "Ø TER Fonds",
+  "depotFundCostDepotRatio": "Ø TER Depot",
+  "depotFundCostYearly": "Kosten pro Jahr",
+  "depotFundCostMissing": "{count, plural, =1{1 Fonds ohne TER-Angabe: {names}} other{{count} Fonds ohne TER-Angabe: {names}}}",
+  "@depotFundCostMissing": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "depotDetailExpenseRatio": "TER",
+  "depotDetailExpenseRatioValue": "{ratio} · ≈ {cost} pro Jahr",
+  "@depotDetailExpenseRatioValue": {
+    "placeholders": { "ratio": { "type": "String" }, "cost": { "type": "String" } }
+  },
   "depotOverlapTitle": "ETF-Überschneidung",
   "depotOverlapNote": "Wie stark deine ETFs und Fonds dieselben Unternehmen halten. Tippe auf ein Paar für die gemeinsamen Positionen.",
   "depotOverlapShared": "{count, plural, =0{Keine gemeinsamen Positionen} =1{1 gemeinsame Position} other{{count} gemeinsame Positionen}}",

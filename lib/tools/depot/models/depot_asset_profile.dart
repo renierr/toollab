@@ -26,6 +26,9 @@ class DepotAssetProfile {
   /// A fund's largest holdings, largest first.
   final List<DepotFundConstituent> constituents;
 
+  /// A fund's yearly running cost (TER) as a fraction, 0.002 for 0.2 %.
+  final double? expenseRatio;
+
   final DateTime fetchedAt;
 
   const DepotAssetProfile({
@@ -38,6 +41,7 @@ class DepotAssetProfile {
     this.sectorShares = const {},
     this.countryShares = const {},
     this.constituents = const [],
+    this.expenseRatio,
     required this.fetchedAt,
   });
 
@@ -48,7 +52,12 @@ class DepotAssetProfile {
       region == null &&
       sectorShares.isEmpty &&
       countryShares.isEmpty &&
-      constituents.isEmpty;
+      constituents.isEmpty &&
+      expenseRatio == null;
+
+  /// Whether [ratio] is a plausible TER fraction; a source's 0 means unknown.
+  static bool isExpenseRatio(double? ratio) =>
+      ratio != null && ratio.isFinite && ratio > 0 && ratio < 0.1;
 
   DepotAssetProfile copyWith({
     String? country,
@@ -56,6 +65,7 @@ class DepotAssetProfile {
     Map<String, double>? sectorShares,
     Map<String, double>? countryShares,
     List<DepotFundConstituent>? constituents,
+    double? expenseRatio,
   }) => DepotAssetProfile(
     sector: sector,
     industry: industry,
@@ -66,6 +76,7 @@ class DepotAssetProfile {
     sectorShares: sectorShares ?? this.sectorShares,
     countryShares: countryShares ?? this.countryShares,
     constituents: constituents ?? this.constituents,
+    expenseRatio: expenseRatio ?? this.expenseRatio,
     fetchedAt: fetchedAt,
   );
 
@@ -86,6 +97,7 @@ class DepotAssetProfile {
     sectorShares: sectorShares,
     countryShares: countryShares,
     constituents: constituents,
+    expenseRatio: (row['expense_ratio'] as num?)?.toDouble(),
     fetchedAt: DateTime.fromMillisecondsSinceEpoch(row['fetched_at'] as int),
   );
 
@@ -97,6 +109,7 @@ class DepotAssetProfile {
     'country': country,
     'region': region,
     'cache_version': cacheVersion,
+    'expense_ratio': expenseRatio,
     'fetched_at': fetchedAt.millisecondsSinceEpoch,
   };
 

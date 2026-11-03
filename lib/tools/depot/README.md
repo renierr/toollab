@@ -18,7 +18,7 @@ Only imported statements and the local wishlist are edited here.
 | Tab | Shows | Source |
 |---|---|---|
 | Overview | KPIs, value chart, allocation, biggest movers, holdings for the selected period and portfolio | `POST /performance` |
-| Allocation | Position-weight donut and list, X-Ray through ETF holdings, plus region, sector, industry and asset-type split | Parqet values, onvista, Yahoo Finance and Nasdaq metadata |
+| Allocation | Position-weight donut and list, X-Ray through ETF holdings, ETF overlap, fund running costs, plus region, sector, industry and asset-type split | Parqet values, onvista, Yahoo Finance and Nasdaq metadata |
 | Dividends | Calendar, missing and upcoming payments, per year and per position | Parqet bookings plus Yahoo Finance for ex-dates and amounts |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
 | Wishlist | Stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database, optional backend sync and Yahoo Finance |
@@ -314,9 +314,10 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 | `GET /v1/finance/search?q=…` | Security search by name, ticker or ISIN; filtered to stocks, ETFs, funds and crypto. Also the sector and industry of a holding |
 | `GET /v8/finance/chart/{symbol}?period1=…&period2=…&interval=5m` | Latest quote and the last 24 hours for wishlist entries and visible holdings |
 | `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | One year of daily closes, loaded on opening wishlist details |
-| `GET /v10/finance/quoteSummary/{symbol}?modules=assetProfile,topHoldings` | Country of a stock, and a fund's sector weights and top holdings |
+| `GET /v10/finance/quoteSummary/{symbol}?modules=assetProfile,topHoldings,fundProfile` | Country of a stock, and a fund's sector weights, top holdings and TER |
 | `GET https://api.nasdaq.com/api/company/{symbol}/company-profile` | Region fallback for US-listed stocks when Yahoo country is unavailable |
 | `GET https://api.onvista.de/api/v1/funds/ISIN:{isin}/breakdowns` | A fund's full country and sector split and its ten largest holdings (with ISIN) |
+| `GET https://api.onvista.de/api/v1/funds/ISIN:{isin}/snapshot` | A fund's ongoing charges (TER) when Yahoo has none |
 | `GET https://api.onvista.de/api/v1/stocks/ISIN:{isin}/snapshot` | Country fallback for a stock when Yahoo has none |
 
 Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
@@ -393,10 +394,20 @@ low, from 15 % high. With three to eight funds a heatmap shows every pair; the l
 the pairs, and each opens the shared holdings with their weight in both funds, marking
 companies also held directly.
 
+Running costs show each open ETF and fund's TER and its cost per year (value × TER),
+merged per ISIN across portfolios. The TER comes from Yahoo's `fundProfile` when the
+quote summary is fetched anyway, otherwise from onvista's fund snapshot (`ongoingCharges`).
+A fund without one is retried at most weekly and listed by name instead of being counted
+as free. "Avg. TER funds" weights by fund value; "Avg. TER depot" spreads the
+same cost over all open positions except funds without a TER. TERs above 0.5 % are amber,
+above 1 % red. The expanded holding on the Overview shows the same TER and cost.
+
 Profiles are stored in their own tables (see Local data) and loaded without network
 requests; only changed entries are written back. Opening the tab never fetches. The refresh button only fetches positions without
-a profile or with incomplete metadata, at most once per asset every 24 hours, and keeps
-known values. A complete profile is never fetched again on its own; bumping
+a profile or with incomplete metadata, at most once per asset every 24 hours (a fund that
+lacks only its TER every 7 days), and keeps known values, except that a newly fetched TER
+replaces the stored one. A complete fund profile is fetched again once it is 90 days old,
+to pick up TER cuts and rebalanced holdings; a complete stock profile never is. Bumping
 `DepotAssetProfile.currentVersion` re-fetches fund profiles once. **Reload all allocation
 data** in the settings re-fetches every open security and lets new values replace cached
 ones; cached values stay until replaced. Portfolio sync remains independent.
@@ -415,7 +426,7 @@ listings:
 
 | Table | Content |
 |---|---|
-| `asset_profiles` | Kind, sector, industry, country, region, cache version, `fetched_at` and the last lookup `attempted_at`. A row without `fetched_at` only records a failed lookup |
+| `asset_profiles` | Kind, sector, industry, country, region, a fund's `expense_ratio` (TER as a fraction), cache version, `fetched_at` and the last lookup `attempted_at`. A row without `fetched_at` only records a failed lookup |
 | `asset_shares` | A fund's sector and country weights, one row per `dimension` (`sector` / `country`) and name |
 | `fund_constituents` | A fund's top holdings by `rank`, with name, ISIN or symbol and weight |
 

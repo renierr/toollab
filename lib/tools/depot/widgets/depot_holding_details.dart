@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/data_row.dart';
 
+import '../depot_allocation_state.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
@@ -47,10 +48,21 @@ class DepotHoldingDetails extends StatelessWidget {
     final hasSales = context.select<DepotPortfolioState?, bool>(
       (state) => state?.hasSalesFor(h) ?? false,
     );
+    final expenseRatio = context.select<DepotAllocationState?, double?>(
+      (state) => state?.profileOf(h)?.expenseRatio,
+    );
 
     final rows = <(String, String)>[
       (l10n.depotDetailType, DepotPortfolioLabels.kind(l10n, h.kind)),
       if (h.isin != null) (l10n.depotDetailIsin, h.isin!),
+      if (expenseRatio != null)
+        (
+          l10n.depotDetailExpenseRatio,
+          l10n.depotDetailExpenseRatioValue(
+            format.percent(expenseRatio * 100, signed: false),
+            format.money(h.currentValue * expenseRatio),
+          ),
+        ),
       if (h.isin == null && h.symbol != null)
         (l10n.depotDetailSymbol, h.symbol!),
       if (h.shares != 0) (l10n.depotDetailShares, format.shares(h.shares)),

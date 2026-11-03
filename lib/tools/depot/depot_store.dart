@@ -108,7 +108,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 12,
+        currentVersion: 13,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -379,6 +379,12 @@ class DepotStore {
                 PRIMARY KEY (portfolio_id, holding_id)
               )
             ''');
+          }
+          if (oldVersion < 13) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(_assetProfiles)} '
+              'ADD COLUMN expense_ratio REAL',
+            );
           }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {

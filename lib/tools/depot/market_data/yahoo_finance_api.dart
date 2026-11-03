@@ -328,6 +328,7 @@ class YahooFinanceApi {
     var sectorShares = const <String, double>{};
     var topHoldings = const <({String symbol, double weight})>[];
     var constituents = const <DepotFundConstituent>[];
+    double? expenseRatio;
 
     try {
       final json = await _getJson('/v1/finance/search', {
@@ -348,7 +349,10 @@ class YahooFinanceApi {
       try {
         final json = await _getJson(
           '/v10/finance/quoteSummary/${Uri.encodeComponent(symbol ?? query)}',
-          {'modules': 'assetProfile,topHoldings', 'crumb': session.crumb},
+          {
+            'modules': 'assetProfile,topHoldings,fundProfile',
+            'crumb': session.crumb,
+          },
           cookie: session.cookie,
         );
         final results = (json['quoteSummary'] as Map?)?['result'] as List?;
@@ -363,6 +367,13 @@ class YahooFinanceApi {
         sectorShares = _sectorShares(top?['sectorWeightings']);
         topHoldings = _topHoldings(top?['holdings']);
         constituents = _constituents(top?['holdings']);
+        final fees =
+            (result?['fundProfile'] as Map?)?['feesExpensesInvestment'] as Map?;
+        final ratio = (fees?['annualReportExpenseRatio'] as Map?)?['raw'];
+        if (ratio is num &&
+            DepotAssetProfile.isExpenseRatio(ratio.toDouble())) {
+          expenseRatio = ratio.toDouble();
+        }
       } catch (e) {
         debugLog('[YahooFinanceApi] Summary profile failed for $query: $e');
       }
@@ -392,6 +403,7 @@ class YahooFinanceApi {
       },
       sectorShares: sectorShares,
       constituents: constituents,
+      expenseRatio: expenseRatio,
       fetchedAt: DateTime.now(),
     );
     if (profile.isEmpty && topHoldings.isEmpty) return null;
