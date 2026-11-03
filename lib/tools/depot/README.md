@@ -348,7 +348,9 @@ and reduces retained intraday lines to at most 48 points per asset. Saved wishli
 database-cached logos, and in-memory cache timestamps remain intact. Returning within 15
 minutes reuses the reduced holding lines; the manual Parqet refresh does not bypass this throttle.
 Prices and history are not sent to Parqet.
-The selected Yahoo listing determines the exchange and trading currency. The wishlist's
+The wishlist also places its sparkline below the row on narrow screens and beside the
+name on wider screens. The selected Yahoo listing determines the exchange and trading
+currency. The wishlist's
 entries are ordered by today's percentage change, highest first; entries without a daily
 change appear last. The order updates when quotes refresh. The wishlist's
 saved currency switch selects native prices or an approximate EUR price, marked `≈`, using

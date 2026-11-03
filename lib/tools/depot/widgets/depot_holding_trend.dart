@@ -8,6 +8,7 @@ import '../depot_holding_trend_state.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_holding_trend.dart';
 import 'depot_market_sparkline.dart';
+import 'depot_market_sparkline_strip.dart';
 
 class DepotHoldingTrendView extends StatefulWidget {
   final DepotHolding holding;
@@ -103,19 +104,18 @@ class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView> {
     final trend = context.select<DepotHoldingTrendState, DepotHoldingTrend?>(
       (state) => state.trendFor(widget.holding),
     );
+    if (widget.strip) {
+      return DepotMarketSparklineStrip(
+        symbol: trend?.symbol ?? '',
+        currency: trend?.currency ?? '',
+        points: trend?.points,
+      );
+    }
     return SizedBox(
-      width: widget.strip ? 160 : 76,
-      height: widget.strip ? 24 : 18,
+      width: 76,
+      height: 18,
       child: trend == null
           ? null
-          : widget.strip
-          ? DepotMarketSparkline(
-              symbol: trend.symbol,
-              currency: trend.currency,
-              points: trend.points,
-              width: 148,
-              prominent: true,
-            )
           : OverflowBox(
               maxHeight: 30,
               child: Transform.translate(

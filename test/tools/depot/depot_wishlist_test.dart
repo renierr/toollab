@@ -20,10 +20,13 @@ import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_wishlist.dart';
 import 'package:tool_lab/tools/depot/models/market_quote.dart';
 import 'package:tool_lab/tools/depot/parqet/parqet_asset_lookup.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_holding_avatar.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_market_sparkline_strip.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_add_dialog.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_chart.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_row.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_view.dart';
+import 'package:tool_lab/widgets/sparkline.dart';
 
 import 'offline_test_support.dart';
 
@@ -839,6 +842,176 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  for (final (width, scale, strip, dark) in [
+    (240.0, 1.0, true, false),
+    (320.0, 1.0, true, false),
+    (320.0, 1.0, true, true),
+    (320.0, 2.0, true, false),
+    (390.0, 1.0, true, false),
+    (800.0, 1.0, false, false),
+  ]) {
+    testWidgets('wishlist sparkline layout $width / $scale / dark $dark', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final logos = DepotLogoState();
+      await tester.runAsync(logos.ensureLoaded);
+      addTearDown(logos.dispose);
+      var taps = 0;
+      final currentQuote = DepotWishlistQuote(
+        price: 120,
+        previousClose: 118,
+        currency: 'EUR',
+        exchange: 'XETRA',
+        points: [
+          DepotWishlistPoint(
+            date: DateTime.now().subtract(const Duration(hours: 2)),
+            close: 118,
+          ),
+          DepotWishlistPoint(
+            date: DateTime.now().subtract(const Duration(hours: 1)),
+            close: 120,
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        ChangeNotifierProvider.value(
+          value: logos,
+          child: MaterialApp(
+            theme: dark ? ThemeData.dark() : ThemeData.light(),
+            locale: const Locale('de'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: MediaQuery(
+                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                child: DepotWishlistRow(
+                  item: _item(),
+                  quote: currentQuote,
+                  failed: false,
+                  onTap: () => taps++,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(Sparkline), findsOneWidget);
+      expect(
+        find.byType(DepotMarketSparklineStrip),
+        strip ? findsOneWidget : findsNothing,
+      );
+      expect(
+        tester.widget<DepotHoldingAvatar>(find.byType(DepotHoldingAvatar)).size,
+        strip ? 30 : 36,
+      );
+      final chart = tester.getRect(find.byType(Sparkline));
+      final title = tester.getRect(find.text('Apple Inc.'));
+      final subtitle = tester.getRect(find.textContaining('AAPL ·'));
+      final price = tester.getRect(
+        find.text(DepotFormat('de', 'EUR').money(120)),
+      );
+      if (strip) {
+        expect(chart.width, 148);
+        expect(chart.top, greaterThanOrEqualTo(subtitle.bottom));
+        expect(chart.top, greaterThanOrEqualTo(price.bottom));
+        expect(tester.widget<Sparkline>(find.byType(Sparkline)).opacity, 0.8);
+      } else {
+        expect(chart.width, 64);
+        expect(chart.left, greaterThanOrEqualTo(title.right));
+        expect(chart.right, lessThanOrEqualTo(price.left));
+      }
+      await tester.tap(find.text('Apple Inc.'));
+      await tester.pump();
+      expect(taps, 1);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  testWidgets('wishlist strip handles unavailable quotes and resizing', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final logos = DepotLogoState();
+    await tester.runAsync(logos.ensureLoaded);
+    addTearDown(logos.dispose);
+    var taps = 0;
+    Future<void> show(DepotWishlistQuote? quote, {bool failed = false}) =>
+        tester.pumpWidget(
+          app(
+            ChangeNotifierProvider.value(
+              value: logos,
+              child: DepotWishlistRow(
+                item: _item(),
+                quote: quote,
+                failed: failed,
+                onTap: () => taps++,
+              ),
+            ),
+          ),
+        );
+
+    await show(null, failed: true);
+    expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
+    expect(find.byType(Sparkline), findsNothing);
+    expect(tester.getSize(find.byType(DepotMarketSparklineStrip)).height, 24);
+    await tester.tapAt(
+      tester.getCenter(find.byType(DepotMarketSparklineStrip)),
+    );
+    await tester.pump();
+    expect(taps, 1);
+
+    await show(
+      const DepotWishlistQuote(
+        price: 120,
+        previousClose: 118,
+        currency: 'EUR',
+        exchange: 'XETRA',
+        points: [],
+      ),
+    );
+    expect(find.byType(Sparkline), findsNothing);
+    expect(tester.getSize(find.byType(DepotMarketSparklineStrip)).height, 24);
+
+    await show(
+      DepotWishlistQuote(
+        price: 120,
+        previousClose: 118,
+        currency: 'EUR',
+        exchange: 'XETRA',
+        points: [
+          DepotWishlistPoint(
+            date: DateTime.now().subtract(const Duration(hours: 2)),
+            close: 118,
+          ),
+          DepotWishlistPoint(
+            date: DateTime.now().subtract(const Duration(hours: 1)),
+            close: 120,
+          ),
+        ],
+      ),
+    );
+    expect(find.byType(Sparkline), findsOneWidget);
+    tester.view.physicalSize = const Size(800, 800);
+    await tester.pumpAndSettle();
+    expect(find.byType(DepotMarketSparklineStrip), findsNothing);
+    expect(find.byType(Sparkline), findsOneWidget);
+    tester.view.physicalSize = const Size(320, 800);
+    await tester.pumpAndSettle();
+    expect(find.byType(DepotMarketSparklineStrip), findsOneWidget);
+    expect(find.byType(Sparkline), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('row shows converted euros or the original currency', (
     tester,
