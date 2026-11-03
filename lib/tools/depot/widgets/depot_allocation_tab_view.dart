@@ -67,6 +67,8 @@ class DepotAllocationTabView extends StatelessWidget {
       holdings: holdings,
       profileOf: allocation.profileOf,
       dimension: DepotAllocationDimension.industry,
+      kindOf: allocation.kindOf,
+      constituentProfileOf: allocation.constituentProfileOf,
     );
     final kinds = <DepotHoldingKind, double>{};
     for (final holding in open) {
@@ -174,9 +176,11 @@ class DepotAllocationTabView extends StatelessWidget {
                   entries: _entries(
                     context,
                     _trimIndustries(industries),
-                    (key) => key == _otherIndustries
-                        ? l10n.depotAllocationOtherIndustries
-                        : key,
+                    (key) => switch (key) {
+                      _otherIndustries => l10n.depotAllocationOtherIndustries,
+                      depotAllocationFundRest => l10n.depotAllocationFundRest,
+                      _ => key,
+                    },
                   ),
                   format: format,
                 ),
@@ -218,21 +222,30 @@ class DepotAllocationTabView extends StatelessWidget {
                 ? l10n.depotAllocationUnclassified
                 : labelOf(entry.key!),
             value: entry.value,
-            color: entry.key == null
-                ? theme.hintColor.withValues(alpha: 0.6)
-                : DepotColors.holding(entry.key!),
+            color: switch (entry.key) {
+              null => theme.hintColor.withValues(alpha: 0.6),
+              depotAllocationFundRest => theme.colorScheme.outlineVariant,
+              final key => DepotColors.holding(key),
+            },
           ),
     ];
   }
 
+  /// Folds the smallest industries together; unknown and fund-rest values
+  /// keep their own entries, listed last.
   Map<String?, double> _trimIndustries(Map<String?, double> industries) {
-    if (industries.length <= _maxIndustryEntries) return industries;
-    final entries = industries.entries.toList();
-    final kept = entries.take(_maxIndustryEntries - 1);
-    final rest = entries.skip(_maxIndustryEntries - 1);
+    bool named(String? key) => key != null && key != depotAllocationFundRest;
+    final entries = industries.entries.where((e) => named(e.key)).toList();
+    final folds = entries.length > _maxIndustryEntries;
+    final kept = folds ? entries.take(_maxIndustryEntries - 1) : entries;
     return {
       for (final entry in kept) entry.key: entry.value,
-      _otherIndustries: rest.fold<double>(0, (sum, entry) => sum + entry.value),
+      if (folds)
+        _otherIndustries: entries
+            .skip(_maxIndustryEntries - 1)
+            .fold<double>(0, (sum, entry) => sum + entry.value),
+      for (final entry in industries.entries)
+        if (!named(entry.key)) entry.key: entry.value,
     };
   }
 }

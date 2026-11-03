@@ -4486,6 +4486,7 @@
   "depotAllocationPositions": "Gewichtung nach Position",
   "depotAllocationUnclassified": "Nicht klassifiziert",
   "depotAllocationOtherIndustries": "Übrige Branchen",
+  "depotAllocationFundRest": "ETFs & Fonds (übrige Bestände)",
   "depotAllocationEmpty": "Es gibt keine offenen Positionen für die Aufteilung.",
   "depotRegionNorthAmerica": "Nordamerika",
   "depotRegionSouthAmerica": "Südamerika",

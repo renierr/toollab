@@ -11555,6 +11555,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotAllocationOtherIndustries => 'Übrige Branchen';
 
   @override
+  String get depotAllocationFundRest => 'ETFs & Fonds (übrige Bestände)';
+
+  @override
   String get depotAllocationEmpty =>
       'Es gibt keine offenen Positionen für die Aufteilung.';
 

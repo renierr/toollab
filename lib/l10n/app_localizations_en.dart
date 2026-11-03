@@ -11471,6 +11471,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotAllocationOtherIndustries => 'Other industries';
 
   @override
+  String get depotAllocationFundRest => 'ETFs & funds (other holdings)';
+
+  @override
   String get depotAllocationEmpty =>
       'There are no open positions to break down.';
 

@@ -348,6 +348,13 @@ Stocks use Yahoo for sector, industry and country, then onvista's stock snapshot
 missing country, then Nasdaq region data and up to three US-format listings confirmed by
 Parqet for the same ISIN.
 
+Funds have no industry of their own, so the industry split looks through each ETF and
+fund to its top ten holdings: each holding's industry gets the fund's value times its
+weight. The refresh looks up those holdings on Yahoo by ISIN or symbol, deduplicated
+across funds and skipping companies held directly, which already have a profile. Fund
+value outside the top holdings shows as "ETFs & funds (other holdings)"; only holdings
+whose lookup found no industry stay "Unclassified".
+
 The X-Ray merges direct stocks with every fund's top holdings, scaled by the fund's value
 and keyed by ISIN (Yahoo fallbacks by symbol), and lists the 20 largest; each expands to
 the positions that hold it. Fund value outside the published top holdings is shown as

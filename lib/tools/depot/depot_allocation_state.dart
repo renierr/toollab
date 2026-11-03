@@ -8,6 +8,7 @@ import 'depot_market_search.dart';
 import 'market_data/onvista_api.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_asset_profile.dart';
+import 'models/depot_fund_constituent.dart';
 import 'models/depot_holding.dart';
 
 /// Sector, industry, region and fund holdings per position, fetched once from
@@ -60,6 +61,9 @@ class DepotAllocationState extends ChangeNotifier {
 
   DepotAssetProfile? profileOf(DepotHolding holding) =>
       _profiles[_keyOf(holding)];
+
+  DepotAssetProfile? constituentProfileOf(DepotFundConstituent constituent) =>
+      _profiles[constituent.key];
 
   /// The reported instrument type wins over the name heuristic, which files
   /// every security without "ETF" or "Fonds" in its name as a stock. An ETC
@@ -115,7 +119,7 @@ class DepotAllocationState extends ChangeNotifier {
       }
       targets[key] = holding;
     }
-    if (targets.isEmpty) return;
+    if (targets.isEmpty && _constituentTargets(holdings).isEmpty) return;
 
     _isFetching = true;
     final done = _fetchDone = Completer<void>();
@@ -144,6 +148,7 @@ class DepotAllocationState extends ChangeNotifier {
         changed = results.any((fetched) => fetched) || changed;
         if (changed) _notify();
       }
+      await _fetchConstituents(holdings, session, generation);
     } catch (e) {
       errorLog('[DepotAllocationState] Fetching profiles failed: $e');
     } finally {
@@ -479,22 +484,83 @@ class DepotAllocationState extends ChangeNotifier {
     String symbol,
     YahooSession? session,
   ) async {
-    final cached = _profiles[symbol];
-    if (cached?.country != null || cached?.region != null) {
-      return cached?.country ?? cached?.region;
+    final profile = await _constituentProfile(
+      symbol,
+      session,
+      (profile) => profile.country != null || profile.region != null,
+    );
+    return profile?.country ?? profile?.region;
+  }
+
+  /// Keys of the top holdings of open funds whose industry is still unknown.
+  /// Directly held securities are left to their own lookup.
+  Set<String> _constituentTargets(Iterable<DepotHolding> holdings) {
+    final open = [
+      for (final holding in holdings)
+        if (!holding.isSold &&
+            holding.currentValue > 0 &&
+            holding.assetType == DepotAssetType.security)
+          holding,
+    ];
+    final held = {for (final holding in open) ?_keyOf(holding)};
+    final targets = <String>{};
+    for (final holding in open) {
+      if (!_isFund(kindOf(holding))) continue;
+      final constituents = profileOf(holding)?.constituents ?? const [];
+      for (final constituent in constituents.take(_maxConstituents)) {
+        final key = constituent.isin ?? constituent.symbol;
+        if (key == null || held.contains(key) || _pending.contains(key)) {
+          continue;
+        }
+        final cached = _profiles[key];
+        if (cached?.industry == null && _isDue(key, cached)) targets.add(key);
+      }
     }
-    if (!_isDue(symbol, cached) || !_pending.add(symbol)) return null;
-    _markAttempt(symbol);
+    return targets;
+  }
+
+  Future<void> _fetchConstituents(
+    Iterable<DepotHolding> holdings,
+    YahooSession? session,
+    int generation,
+  ) async {
+    final keys = _constituentTargets(holdings).toList();
+    for (var start = 0; start < keys.length; start += _parallelRequests) {
+      if (_disposed || generation != _generation) return;
+      await Future.wait([
+        for (final key in keys.skip(start).take(_parallelRequests))
+          _constituentProfile(
+            key,
+            session,
+            (profile) => profile.industry != null,
+          ),
+      ]);
+      await _persist();
+      _notify();
+    }
+  }
+
+  /// A fund constituent's own profile by ISIN or symbol, looked up only while
+  /// [isComplete] fails and at most once per [retryAfter].
+  Future<DepotAssetProfile?> _constituentProfile(
+    String key,
+    YahooSession? session,
+    bool Function(DepotAssetProfile profile) isComplete,
+  ) async {
+    final cached = _profiles[key];
+    if (cached != null && isComplete(cached)) return cached;
+    if (!_isDue(key, cached) || !_pending.add(key)) return cached;
+    _markAttempt(key);
     try {
-      final result = await _profileLoader(symbol, session);
-      if (result == null || _disposed) return null;
-      _setProfile(symbol, result.profile);
-      return result.profile.country ?? result.profile.region;
+      final result = await _profileLoader(key, session);
+      if (result == null || _disposed) return cached;
+      _setProfile(key, result.profile);
+      return result.profile;
     } catch (e) {
-      debugLog('[DepotAllocationState] Constituent failed for $symbol: $e');
-      return null;
+      debugLog('[DepotAllocationState] Constituent failed for $key: $e');
+      return cached;
     } finally {
-      _pending.remove(symbol);
+      _pending.remove(key);
     }
   }
 

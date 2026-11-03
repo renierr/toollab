@@ -1,15 +1,24 @@
 import 'depot_region.dart';
 import 'models/depot_asset_profile.dart';
+import 'models/depot_fund_constituent.dart';
 import 'models/depot_holding.dart';
 
 enum DepotAllocationDimension { sector, industry, region }
 
+/// Industry key for fund value outside the published top holdings.
+const String depotAllocationFundRest = '\u0000fund-rest';
+
 /// Current value per category across open positions, largest first. A `null`
-/// key collects positions that have no metadata (yet).
+/// key collects positions that have no metadata (yet). With [kindOf] and
+/// [constituentProfileOf], industry looks through ETFs and funds to their top
+/// holdings and files the remainder under [depotAllocationFundRest].
 Map<String?, double> depotAllocationBreakdown({
   required Iterable<DepotHolding> holdings,
   required DepotAssetProfile? Function(DepotHolding holding) profileOf,
   required DepotAllocationDimension dimension,
+  DepotHoldingKind Function(DepotHolding holding)? kindOf,
+  DepotAssetProfile? Function(DepotFundConstituent constituent)?
+  constituentProfileOf,
 }) {
   final buckets = <String?, double>{};
   void add(String? key, double value) {
@@ -25,7 +34,18 @@ Map<String?, double> depotAllocationBreakdown({
       case DepotAllocationDimension.sector:
         _addShares(add, profile?.sectorShares, profile?.sector, value);
       case DepotAllocationDimension.industry:
-        add(profile?.industry, value);
+        final kind = kindOf?.call(holding);
+        if (constituentProfileOf != null &&
+            (kind == DepotHoldingKind.etf || kind == DepotHoldingKind.fund)) {
+          _addFundIndustries(
+            add,
+            profile?.constituents ?? const [],
+            constituentProfileOf,
+            value,
+          );
+        } else {
+          add(profile?.industry, value);
+        }
       case DepotAllocationDimension.region:
         _addRegions(add, profile, value);
     }
@@ -54,6 +74,21 @@ void _addShares(
     }
   }
   add(single, value);
+}
+
+void _addFundIndustries(
+  void Function(String? key, double value) add,
+  List<DepotFundConstituent> constituents,
+  DepotAssetProfile? Function(DepotFundConstituent constituent) profileOf,
+  double value,
+) {
+  var covered = 0.0;
+  for (final constituent in constituents) {
+    if (covered + constituent.weight > 1.001) break;
+    covered += constituent.weight;
+    add(profileOf(constituent)?.industry, value * constituent.weight);
+  }
+  add(depotAllocationFundRest, value * (1 - covered.clamp(0, 1)));
 }
 
 void _addRegions(

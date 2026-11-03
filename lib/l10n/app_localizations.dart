@@ -20483,6 +20483,12 @@ abstract class AppLocalizations {
   /// **'Other industries'**
   String get depotAllocationOtherIndustries;
 
+  /// No description provided for @depotAllocationFundRest.
+  ///
+  /// In en, this message translates to:
+  /// **'ETFs & funds (other holdings)'**
+  String get depotAllocationFundRest;
+
   /// No description provided for @depotAllocationEmpty.
   ///
   /// In en, this message translates to:

@@ -5689,6 +5689,7 @@
   "depotAllocationPositions": "Weight by position",
   "depotAllocationUnclassified": "Unclassified",
   "depotAllocationOtherIndustries": "Other industries",
+  "depotAllocationFundRest": "ETFs & funds (other holdings)",
   "depotAllocationEmpty": "There are no open positions to break down.",
   "depotRegionNorthAmerica": "North America",
   "depotRegionSouthAmerica": "South America",
