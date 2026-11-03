@@ -12,6 +12,7 @@ import 'package:tool_lab/tools/depot/depot_format.dart';
 import 'package:tool_lab/tools/depot/depot_holding_trend_state.dart';
 import 'package:tool_lab/tools/depot/depot_logo_state.dart';
 import 'package:tool_lab/tools/depot/depot_market_search.dart';
+import 'package:tool_lab/tools/depot/depot_wishlist_state.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_period.dart';
 import 'package:tool_lab/tools/depot/models/depot_wishlist.dart';
@@ -28,6 +29,8 @@ DepotHolding holding(
   String? isin,
   String? exchange,
   String? name,
+  double currentPrice = 2,
+  double currentValue = 2,
 }) => DepotHolding(
   id: '$index',
   portfolioId: 'p',
@@ -38,8 +41,8 @@ DepotHolding holding(
   shares: 1,
   purchasePrice: 1,
   purchaseValue: 1,
-  currentPrice: 2,
-  currentValue: 2,
+  currentPrice: currentPrice,
+  currentValue: currentValue,
   isSold: false,
   unrealizedGain: 1,
   unrealizedReturn: 100,
@@ -282,6 +285,151 @@ void main() {
     },
   );
 
+  test('prefers a live venue over the US OTC line', () async {
+    final client = MockClient((request) async {
+      expect(request.url.path, '/v1/assets/DE0007030009');
+      return http.Response('''
+      {"asset":{"security":{"isin":"DE0007030009","symbols":[
+        {"exchange":"pnk","symbol":"RNMBF"},
+        {"exchange":"xetra","symbol":"RHM.DE"},
+        {"exchange":"frankfurt","symbol":"RHM.F"}
+      ]}}}
+    ''', 200);
+    });
+    addTearDown(client.close);
+    final symbols = await DepotMarketSearch.holdingSymbols(
+      holding(0, isin: 'DE0007030009'),
+      assets: ParqetAssetLookup(client: client),
+    );
+    expect(symbols, ['RHM.DE', 'RHM.F', 'RNMBF']);
+  });
+
+  test('a failed Parqet lookup leaves the Yahoo fallback to resolve', () async {
+    final client = MockClient(
+      (_) async => throw StateError('asset service unavailable'),
+    );
+    addTearDown(client.close);
+    final symbols = await DepotMarketSearch.holdingSymbols(
+      holding(0, isin: 'US84615Q1031'),
+      assets: ParqetAssetLookup(client: client),
+    );
+    expect(symbols, isEmpty);
+  });
+
+  test(
+    'search fallback uses the ISIN and ignores non-quote listings',
+    () async {
+      final queries = <String>[];
+      final symbols = await DepotMarketSearch.fallbackSymbols(
+        holding(0, isin: 'US84615Q1031'),
+        searchListings: (query) async {
+          queries.add(query);
+          return const [
+            MarketSearchResult(
+              symbol: 'SPCX',
+              name: 'SpaceX',
+              quoteType: 'EQUITY',
+              exchange: 'NASDAQ',
+            ),
+            MarketSearchResult(
+              symbol: 'SSPCX=F',
+              name: 'Space X Futures',
+              quoteType: 'FUTURE',
+              exchange: 'CME',
+            ),
+          ];
+        },
+      );
+      expect(queries, ['US84615Q1031']);
+      expect(symbols, ['SPCX']);
+    },
+  );
+
+  test('SpaceX loads through Yahoo when Parqet has no symbols', () async {
+    final client = MockClient(
+      (_) async => http.Response('''
+      {"asset":{"security":{"isin":"US84615Q1031"}}}
+    ''', 200),
+    );
+    addTearDown(client.close);
+    final requested = <String>[];
+    final state = DepotHoldingTrendState(
+      resolve: (holding) => DepotMarketSearch.holdingSymbols(
+        holding,
+        assets: ParqetAssetLookup(client: client),
+      ),
+      fallback: (holding) => DepotMarketSearch.fallbackSymbols(
+        holding,
+        searchListings: (query) async {
+          expect(query, 'US84615Q1031');
+          return const [
+            MarketSearchResult(
+              symbol: 'SPCX',
+              name: 'SpaceX',
+              quoteType: 'EQUITY',
+              exchange: 'NASDAQ',
+            ),
+          ];
+        },
+      ),
+      quote: (symbol) async {
+        requested.add(symbol);
+        return quote();
+      },
+    );
+    addTearDown(state.dispose);
+    final spacex = holding(0, isin: 'US84615Q1031');
+    state.ensure(spacex, visible: () => true);
+    await Future<void>.delayed(Duration.zero);
+    expect(requested, ['SPCX']);
+    expect(state.trendFor(spacex)?.symbol, 'SPCX');
+  });
+
+  test('Yahoo fallback is skipped after the row becomes invisible', () async {
+    final gate = Completer<List<String>>();
+    var visible = true;
+    var fallbackCalls = 0;
+    final state = DepotHoldingTrendState(
+      resolve: (_) => gate.future,
+      fallback: (_) async {
+        fallbackCalls++;
+        return ['SPCX'];
+      },
+      quote: (_) async => quote(),
+    );
+    addTearDown(state.dispose);
+    state.ensure(holding(0, isin: 'US84615Q1031'), visible: () => visible);
+    visible = false;
+    gate.complete([]);
+    await Future<void>.delayed(Duration.zero);
+    expect(fallbackCalls, 0);
+  });
+
+  test('failed lookups retry after five minutes', () async {
+    var now = DateTime.now();
+    var requests = 0;
+    final state = DepotHoldingTrendState(
+      now: () => now,
+      resolve: (_) async {
+        requests++;
+        return [];
+      },
+      fallback: (_) async => [],
+      quote: (_) async => quote(),
+    );
+    addTearDown(state.dispose);
+    final item = holding(0, isin: 'US84615Q1031');
+    state.ensure(item, visible: () => true);
+    await Future<void>.delayed(Duration.zero);
+    now = now.add(const Duration(minutes: 4));
+    state.ensure(item, visible: () => true);
+    expect(requests, 1);
+    now = now.add(const Duration(minutes: 1));
+    state.ensure(item, visible: () => true);
+    await Future<void>.delayed(Duration.zero);
+    expect(requests, 2);
+  });
+
   test('ISIN search falls back to the confirmed Alphabet ticker', () async {
     final client = MockClient(
       (_) async => http.Response('''
@@ -367,10 +515,35 @@ void main() {
     },
   );
 
+  test(
+    'falls back to Yahoo search when the confirmed listings have no chart',
+    () async {
+      final requested = <String>[];
+      final state = DepotHoldingTrendState(
+        resolve: (_) async => ['RNMBF', 'RHM.SW', 'RHM.DU'],
+        fallback: (_) async => ['RHM.DE', 'RNMBF'],
+        quote: (symbol) async {
+          requested.add(symbol);
+          if (symbol != 'RHM.DE') throw const FormatException('unavailable');
+          return quote();
+        },
+      );
+      addTearDown(state.dispose);
+      state.ensure(holding(0, isin: 'DE0007030009'), visible: () => true);
+      await Future<void>.delayed(Duration.zero);
+      expect(requested, ['RNMBF', 'RHM.SW', 'RHM.DU', 'RHM.DE']);
+      expect(
+        state.trendFor(holding(0, isin: 'DE0007030009'))?.symbol,
+        'RHM.DE',
+      );
+    },
+  );
+
   test('stops after three listings without enough prices', () async {
     final requested = <String>[];
     final state = DepotHoldingTrendState(
       resolve: (_) async => ['ONE', 'TWO', 'THREE', 'FOUR'],
+      fallback: (_) async => [],
       quote: (symbol) async {
         requested.add(symbol);
         return const DepotWishlistQuote(
@@ -496,14 +669,16 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  for (final name in [
-    'Holding',
-    'A longer holding name that can wrap onto two lines',
+  for (final (width, name) in [
+    (320.0, 'Holding'),
+    (320.0, 'A longer holding name that can wrap onto two lines'),
+    (600.0, 'Holding'),
+    (600.0, 'A longer holding name that can wrap onto two lines'),
   ]) {
-    testWidgets('holding row stays the same size when the trend loads: $name', (
+    testWidgets('holding row stays the same size at $width: $name', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(600, 800);
+      tester.view.physicalSize = Size(width, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -567,11 +742,14 @@ void main() {
     });
   }
 
-  for (final (width, scale) in [
-    (320.0, 1.0),
-    (320.0, 2.0),
-    (800.0, 1.0),
-    (800.0, 2.0),
+  for (final (width, scale, background) in [
+    (240.0, 1.0, true),
+    (320.0, 1.0, true),
+    (320.0, 2.0, true),
+    (360.0, 1.0, true),
+    (390.0, 1.0, true),
+    (800.0, 1.0, false),
+    (800.0, 2.0, false),
   ]) {
     testWidgets('holding row fits at $width with text scale $scale', (
       tester,
@@ -608,7 +786,12 @@ void main() {
               body: MediaQuery(
                 data: MediaQueryData(textScaler: TextScaler.linear(scale)),
                 child: DepotHoldingTile(
-                  holding: holding(0),
+                  holding: holding(
+                    0,
+                    name: 'Rheinmetall AG',
+                    currentPrice: 1004.8,
+                    currentValue: 100480,
+                  ),
                   performance: null,
                   period: DepotPeriod.today,
                   format: DepotFormat('de', 'EUR'),
@@ -620,21 +803,114 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(requests, width == 320 ? 0 : 1);
-      expect(
-        find.byType(Sparkline),
-        width == 320 ? findsNothing : findsOneWidget,
-      );
+      expect(requests, 1);
+      expect(find.byType(Sparkline), findsOneWidget);
       final tile = tester.getRect(find.byType(DepotHoldingTile));
-      final values = find.text(DepotFormat('de', 'EUR').money(2));
-      for (var index = 0; index < 2; index++) {
-        final value = tester.getRect(values.at(index));
-        expect(value.top, greaterThanOrEqualTo(tile.top));
-        expect(value.bottom, lessThanOrEqualTo(tile.bottom));
+      final value = tester.getRect(
+        find.text(DepotFormat('de', 'EUR').money(100480)),
+      );
+      final sparkline = tester.getRect(find.byType(Sparkline));
+      final name = tester.getRect(find.text('Rheinmetall AG'));
+      expect(name.right, lessThanOrEqualTo(sparkline.left));
+      expect(
+        tester
+            .widget<DepotHoldingTrendView>(find.byType(DepotHoldingTrendView))
+            .background,
+        background,
+      );
+      if (background) {
+        expect(sparkline.width, greaterThanOrEqualTo(64));
+        expect(sparkline.overlaps(value), isTrue);
+        expect(
+          find.ancestor(
+            of: find.byType(Sparkline),
+            matching: find.byWidgetPredicate(
+              (widget) => widget is Opacity && widget.opacity == 0.2,
+            ),
+          ),
+          findsOneWidget,
+        );
+      } else {
+        expect(sparkline.width, 64);
+        expect(sparkline.right, lessThanOrEqualTo(value.left));
       }
+      expect(value.top, greaterThanOrEqualTo(tile.top));
+      expect(value.bottom, lessThanOrEqualTo(tile.bottom));
       expect(tester.takeException(), isNull);
       trends.clear();
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
+
+  testWidgets('background trend keeps the row tappable and adapts on resize', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var requests = 0;
+    final trends = DepotHoldingTrendState(
+      resolve: (_) async => ['RHM.DE'],
+      quote: (_) async {
+        requests++;
+        return quote();
+      },
+    );
+    final wishlist = DepotWishlistState();
+    late DepotLogoState logos;
+    await tester.runAsync(() async {
+      logos = DepotLogoState();
+      await logos.ensureLoaded();
+    });
+    addTearDown(trends.dispose);
+    addTearDown(wishlist.dispose);
+    addTearDown(logos.dispose);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: trends),
+          ChangeNotifierProvider.value(value: wishlist),
+          ChangeNotifierProvider.value(value: logos),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: DepotHoldingTile(
+              holding: holding(0, isin: 'DE0007030009', name: 'Rheinmetall'),
+              performance: null,
+              period: DepotPeriod.today,
+              format: DepotFormat('de', 'EUR'),
+              weight: 100,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<DepotHoldingTrendView>(find.byType(DepotHoldingTrendView))
+          .background,
+      isTrue,
+    );
+    await tester.tap(find.text(DepotFormat('de', 'EUR').money(2)).first);
+    await tester.pumpAndSettle();
+    expect(find.text('DE0007030009'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(800, 800);
+    await tester.pumpAndSettle();
+    expect(find.byType(Sparkline), findsOneWidget);
+    expect(
+      tester
+          .widget<DepotHoldingTrendView>(find.byType(DepotHoldingTrendView))
+          .background,
+      isFalse,
+    );
+    expect(requests, 1);
+    expect(tester.takeException(), isNull);
+    trends.clear();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

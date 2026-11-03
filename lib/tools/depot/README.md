@@ -311,7 +311,7 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 
 | Endpoint | Used for |
 |---|---|
-| `GET /v1/finance/search?q=…` | Security search by name, ticker or ISIN; filtered to stocks, ETFs, funds and crypto. Also the sector and industry of a holding |
+| `GET /v1/finance/search?q=…` | Security search by name, ticker or ISIN; filtered to stocks, ETFs, funds and crypto. Also the sector and industry of a holding, and a holding sparkline's fallback listing |
 | `GET /v8/finance/chart/{symbol}?period1=…&period2=…&interval=5m` | Latest quote and the last 24 hours for wishlist entries and visible holdings |
 | `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | One year of daily closes, loaded on opening wishlist details |
 | `GET /v10/finance/quoteSummary/{symbol}?modules=assetProfile,topHoldings,fundProfile` | Country of a stock, and a fund's sector weights, top holdings and TER |
@@ -324,15 +324,21 @@ Yahoo's unofficial endpoints may change or be unavailable, and quotes may be del
 The latest quote is Yahoo's `fulldayPrice`, which includes pre- and post-market trades,
 so US listings keep moving while Wall Street is closed; without it the regular-session
 price is used.
-Holding sparklines load only for visible rows with room to show them. For securities,
+Holding sparklines load only for visible rows. On narrow rows a faded chart sits behind
+the value; wider rows show it beside the name. For securities,
 the ISIN is sent to Parqet's public asset endpoint to resolve confirmed listing symbols;
-crypto symbols are searched on Yahoo. Yahoo receives the selected listing symbol, not
-portfolio amounts. Up to four holding lookups run concurrently, deduplicated by asset,
-with intraday results cached in memory for 15 minutes. The cache holds at most 128 trends
+crypto symbols are searched on Yahoo. After the matching quote exchange, OTC listings are
+tried last because they often have no intraday chart. When Parqet lists no symbol or none of
+its symbols has a chart, the first supported result of Yahoo's ISIN search is the fallback.
+Yahoo does not return the ISIN in search results, so this fallback is not independently
+confirmed. Yahoo receives the selected listing symbol, not portfolio amounts. Up to four holding lookups run
+concurrently, deduplicated by asset, with intraday results cached in memory for 15
+minutes and failed lookups retried after 5 minutes. The cache holds at most 128 trends
 and 128 failed lookups, and removes expired entries even while the tool is closed. Up to
-three confirmed listings are tried if a listing has fewer than two prices or cannot be
-loaded. Each line contains only prices
-within the last 24 hours, including available pre- and post-market data; it disappears
+three Parqet listings and one Yahoo search result are tried if a listing has fewer than
+two prices or cannot be loaded. Yahoo requests fail over between its two query hosts on
+connection errors, throttling or invalid responses. Each line contains only prices within
+the last 24 hours, including available pre- and post-market data; it disappears
 when fewer than two points remain. The line uses the listing currency, not the holding's
 selected performance period or necessarily the same exchange as Parqet. Unsupported
 or unmatched assets have no line.

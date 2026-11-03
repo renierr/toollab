@@ -11,12 +11,14 @@ class DepotMarketSparkline extends StatefulWidget {
   final String symbol;
   final String currency;
   final List<MarketPricePoint> points;
+  final double width;
 
   const DepotMarketSparkline({
     super.key,
     required this.symbol,
     required this.currency,
     required this.points,
+    this.width = 64,
   });
 
   @override
@@ -57,7 +59,7 @@ class _DepotMarketSparklineState extends State<DepotMarketSparkline> {
           context,
         ).depotHoldingDayTrend(widget.symbol, widget.currency),
         child: SizedBox(
-          width: 64,
+          width: widget.width,
           height: 30,
           child: Sparkline(
             values: [for (final point in points) point.close],

@@ -36,7 +36,10 @@ typedef YahooAssetProfile = ({
 class YahooFinanceApi {
   YahooFinanceApi._();
 
-  static final Uri _base = Uri.parse('https://query2.finance.yahoo.com');
+  static final List<Uri> _bases = [
+    Uri.parse('https://query2.finance.yahoo.com'),
+    Uri.parse('https://query1.finance.yahoo.com'),
+  ];
   static const _timeout = Duration(seconds: 20);
 
   // Yahoo rejects requests without a browser-like user agent.
@@ -275,7 +278,7 @@ class YahooFinanceApi {
       if (cookie == null) return null;
       final crumbRes = await client
           .get(
-            _base.replace(path: '/v1/test/getcrumb'),
+            _bases.first.replace(path: '/v1/test/getcrumb'),
             headers: {..._headers, 'Cookie': cookie},
           )
           .timeout(_timeout);
@@ -543,25 +546,38 @@ class YahooFinanceApi {
     String? cookie,
   }) async {
     final client = await AppHttpClient.client;
-    final http.Response res;
-    try {
-      res = await client
-          .get(
-            _base.replace(path: path, queryParameters: query),
-            headers: {..._headers, 'Cookie': ?cookie},
-          )
-          .timeout(_timeout);
-    } catch (e) {
-      throw YahooFinanceException('$path: $e');
+    String failure = path;
+    // The two query hosts fail independently, so a refused or throttled
+    // request still has a chance on the other one.
+    for (final base in _bases) {
+      final http.Response res;
+      try {
+        res = await client
+            .get(
+              base.replace(path: path, queryParameters: query),
+              headers: {..._headers, 'Cookie': ?cookie},
+            )
+            .timeout(_timeout);
+      } catch (e) {
+        failure = '$path: $e';
+        continue;
+      }
+      if (res.statusCode != 200) {
+        failure = '$path: HTTP ${res.statusCode}';
+        if (res.statusCode != 403 &&
+            res.statusCode != 429 &&
+            res.statusCode < 500) {
+          break;
+        }
+        continue;
+      }
+      try {
+        return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      } catch (e) {
+        failure = '$path: $e';
+      }
     }
-    if (res.statusCode != 200) {
-      throw YahooFinanceException('$path: HTTP ${res.statusCode}');
-    }
-    try {
-      return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
-    } catch (e) {
-      throw YahooFinanceException('$path: $e');
-    }
+    throw YahooFinanceException(failure);
   }
 }
 

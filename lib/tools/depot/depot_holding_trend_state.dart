@@ -12,17 +12,21 @@ import 'models/market_quote.dart';
 class DepotHoldingTrendState extends ChangeNotifier {
   DepotHoldingTrendState({
     Future<List<String>> Function(DepotHolding)? resolve,
+    Future<List<String>> Function(DepotHolding)? fallback,
     Future<MarketQuote> Function(String)? quote,
     DateTime Function()? now,
   }) : _resolve = resolve ?? DepotMarketSearch.holdingSymbols,
+       _fallback = fallback ?? DepotMarketSearch.fallbackSymbols,
        _quote = quote ?? YahooFinanceApi.intradayQuote,
        _now = now ?? DateTime.now;
 
   static const _maxConcurrent = 4;
   static const _maxCacheEntries = 128;
   static const _freshFor = Duration(minutes: 15);
-  static const _retryAfter = Duration(minutes: 15);
+  static const _retryAfter = Duration(minutes: 5);
+  static const _maxSymbols = 3;
   final Future<List<String>> Function(DepotHolding) _resolve;
+  final Future<List<String>> Function(DepotHolding) _fallback;
   final Future<MarketQuote> Function(String) _quote;
   final DateTime Function() _now;
   final Map<String, DepotHoldingTrend> _trends = {};
@@ -93,32 +97,38 @@ class DepotHoldingTrendState extends ChangeNotifier {
 
   Future<void> _load(String key, DepotHolding holding, int revision) async {
     try {
-      final symbols = await _resolve(holding);
-      if (_disposed || revision != _revision || !_isVisible(key)) return;
-      for (final symbol in symbols.take(3)) {
+      final tried = <String>{};
+      for (final resolve in [_resolve, _fallback]) {
         if (_disposed || revision != _revision || !_isVisible(key)) return;
-        try {
-          final quote = await _quote(symbol);
-          if (_disposed || revision != _revision) return;
-          final points = marketPointsInLast24Hours(quote.points, _now());
-          if (points.length < 2) continue;
-          _trends.remove(key);
-          _trends[key] = DepotHoldingTrend(
-            symbol: symbol,
-            currency: quote.currency,
-            points: List.unmodifiable(points),
-            fetchedAt: _now(),
-          );
-          _failed.remove(key);
-          _trimCache();
-          _scheduleExpiry();
-          notifyListeners();
-          return;
-        } catch (e) {
-          debugLog('[DepotHoldingTrendState] No chart for $symbol: $e');
+        final symbols = await _symbols(resolve, holding);
+        var attempts = 0;
+        for (final symbol in symbols) {
+          if (!tried.add(symbol.toUpperCase())) continue;
+          if (attempts++ >= _maxSymbols) break;
+          if (_disposed || revision != _revision || !_isVisible(key)) return;
+          try {
+            final quote = await _quote(symbol);
+            if (_disposed || revision != _revision) return;
+            final points = marketPointsInLast24Hours(quote.points, _now());
+            if (points.length < 2) continue;
+            _trends.remove(key);
+            _trends[key] = DepotHoldingTrend(
+              symbol: symbol,
+              currency: quote.currency,
+              points: List.unmodifiable(points),
+              fetchedAt: _now(),
+            );
+            _failed.remove(key);
+            _trimCache();
+            _scheduleExpiry();
+            notifyListeners();
+            return;
+          } catch (e) {
+            debugLog('[DepotHoldingTrendState] No chart for $symbol: $e');
+          }
         }
       }
-      throw const FormatException('No confirmed chart');
+      throw const FormatException('No usable chart');
     } catch (e) {
       if (!_disposed && revision == _revision) {
         _failed.remove(key);
@@ -131,6 +141,18 @@ class DepotHoldingTrendState extends ChangeNotifier {
       if (_active[key] == revision) _active.remove(key);
       if (!_queue.containsKey(key)) _observers.remove(key);
       _drain();
+    }
+  }
+
+  static Future<List<String>> _symbols(
+    Future<List<String>> Function(DepotHolding) resolve,
+    DepotHolding holding,
+  ) async {
+    try {
+      return await resolve(holding);
+    } catch (e) {
+      debugLog('[DepotHoldingTrendState] Symbol lookup failed: $e');
+      return const [];
     }
   }
 
