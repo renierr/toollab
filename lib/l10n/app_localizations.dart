@@ -20459,6 +20459,12 @@ abstract class AppLocalizations {
   /// **'By region'**
   String get depotAllocationByRegion;
 
+  /// No description provided for @depotAllocationUsdExposure.
+  ///
+  /// In en, this message translates to:
+  /// **'≈ {share} in USD · a 10 % weaker dollar ≈ {loss}'**
+  String depotAllocationUsdExposure(String share, String loss);
+
   /// No description provided for @depotAllocationBySector.
   ///
   /// In en, this message translates to:

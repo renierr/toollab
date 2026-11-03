@@ -19,12 +19,14 @@ class DepotShareBreakdown extends StatelessWidget {
   final String title;
   final List<DepotShareEntry> entries;
   final DepotFormat format;
+  final String? footnote;
 
   const DepotShareBreakdown({
     super.key,
     required this.title,
     required this.entries,
     required this.format,
+    this.footnote,
   });
 
   @override
@@ -81,6 +83,16 @@ class DepotShareBreakdown extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(format.money(entry.value)),
               ],
+            ),
+          ),
+        if (footnote case final footnote?)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              footnote,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
             ),
           ),
       ],

@@ -30,6 +30,10 @@ class DepotAllocationTabView extends StatelessWidget {
 
   static const int _maxIndustryEntries = 8;
   static const String _otherIndustries = '\u0000other';
+  static const String _usd = 'USD';
+
+  /// The dollar move the footnote prices in.
+  static const double _usdDrop = 0.1;
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +99,17 @@ class DepotAllocationTabView extends StatelessWidget {
       profileOf: allocation.profileOf,
       kindOf: allocation.kindOf,
     );
+    final usd = depotUsdExposure(
+      holdings: open,
+      profileOf: allocation.profileOf,
+      kindOf: allocation.kindOf,
+    );
+    final usdNote = portfolio.currency != _usd && usd.usd > 0
+        ? l10n.depotAllocationUsdExposure(
+            format.percent(usd.usd / usd.known * 100, signed: false),
+            format.axisMoney(-usd.usd * _usdDrop),
+          )
+        : null;
 
     return DepotSectionScrollView<_Section>(
       onRefresh: () => syncDepotAllocation(portfolio, allocation),
@@ -165,6 +180,7 @@ class DepotAllocationTabView extends StatelessWidget {
                     ),
                   ),
                   format: format,
+                  footnote: usdNote,
                 ),
               ),
               DepotSection(

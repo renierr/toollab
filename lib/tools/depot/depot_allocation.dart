@@ -56,6 +56,52 @@ Map<String?, double> depotAllocationBreakdown({
   return {for (final entry in entries) entry.key: entry.value};
 }
 
+/// Value in US assets, looking through funds, and the security value whose
+/// country is known, the base of the USD share.
+({double usd, double known}) depotUsdExposure({
+  required Iterable<DepotHolding> holdings,
+  required DepotAssetProfile? Function(DepotHolding holding) profileOf,
+  required DepotHoldingKind Function(DepotHolding holding) kindOf,
+}) {
+  var usd = 0.0;
+  var known = 0.0;
+  bool isUs(String country) => DepotCountry.canonical(country) == _unitedStates;
+
+  for (final holding in holdings) {
+    if (holding.isSold || holding.currentValue <= 0) continue;
+    if (holding.assetType != DepotAssetType.security) continue;
+    final value = holding.currentValue;
+    final profile = profileOf(holding);
+    final shares = profile?.countryShares ?? const {};
+    final total = shares.values.fold<double>(0, (a, b) => a + b);
+    if (total > 0 && total <= 1.001) {
+      final divisor = total > 1 ? total : 1.0;
+      for (final entry in shares.entries) {
+        if (isUs(entry.key)) usd += value * entry.value / divisor;
+      }
+      known += value * total / divisor;
+      continue;
+    }
+    final country = profile?.country;
+    if (country != null) {
+      if (isUs(country)) usd += value;
+      known += value;
+      continue;
+    }
+    // Stocks often lack a country; the ISIN prefix is their home market.
+    final isin = holding.isin;
+    if (kindOf(holding) == DepotHoldingKind.stock &&
+        isin != null &&
+        isin.length == 12) {
+      if (isin.startsWith('US')) usd += value;
+      known += value;
+    }
+  }
+  return (usd: usd, known: known);
+}
+
+const String _unitedStates = 'United States';
+
 void _addShares(
   void Function(String? key, double value) add,
   Map<String, double>? shares,

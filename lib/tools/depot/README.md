@@ -381,6 +381,11 @@ across funds and skipping companies held directly, which already have a profile.
 value outside the top holdings shows as "ETFs & funds (other holdings)"; only holdings
 whose lookup found no industry stay "Unclassified".
 
+Below the region split a line estimates the USD exposure: the US share of the securities
+whose country is known, looking through fund country weights, with stocks lacking a
+country placed by their ISIN prefix. It also prices a 10 % weaker dollar. It is hidden for
+a USD portfolio.
+
 The X-Ray merges direct stocks with every fund's top holdings, scaled by the fund's value
 and keyed by ISIN (Yahoo fallbacks by symbol), and lists the 20 largest; each expands to
 the positions that hold it. Fund value outside the published top holdings is shown as

@@ -11543,6 +11543,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotAllocationByRegion => 'Nach Region';
 
   @override
+  String depotAllocationUsdExposure(String share, String loss) {
+    return '≈ $share in USD · 10 % schwächerer Dollar ≈ $loss';
+  }
+
+  @override
   String get depotAllocationBySector => 'Nach Sektor';
 
   @override

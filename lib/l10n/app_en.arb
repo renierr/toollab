@@ -5685,6 +5685,10 @@
   "depotAllocationTitle": "Allocation",
   "depotAllocationRefresh": "Update missing allocation data",
   "depotAllocationByRegion": "By region",
+  "depotAllocationUsdExposure": "≈ {share} in USD · a 10 % weaker dollar ≈ {loss}",
+  "@depotAllocationUsdExposure": {
+    "placeholders": { "share": { "type": "String" }, "loss": { "type": "String" } }
+  },
   "depotAllocationBySector": "By sector",
   "depotAllocationByIndustry": "By industry",
   "depotAllocationByKind": "By asset type",
