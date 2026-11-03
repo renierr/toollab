@@ -324,8 +324,8 @@ Yahoo's unofficial endpoints may change or be unavailable, and quotes may be del
 The latest quote is Yahoo's `fulldayPrice`, which includes pre- and post-market trades,
 so US listings keep moving while Wall Street is closed; without it the regular-session
 price is used.
-Holding sparklines load only for visible rows. On narrow rows a faded chart sits behind
-the value; wider rows show it beside the name. For securities,
+Holding sparklines load only for visible rows. On narrow rows a chart sits below the
+holding details; wider rows show it beside the name. For securities,
 the ISIN is sent to Parqet's public asset endpoint to resolve confirmed listing symbols;
 crypto symbols are searched on Yahoo. After the matching quote exchange, OTC listings are
 tried last because they often have no intraday chart. When Parqet lists no symbol or none of

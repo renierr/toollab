@@ -3,6 +3,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../depot_colors.dart';
 import '../depot_format.dart';
+import '../depot_holding_trend_state.dart';
 import '../depot_portfolio_labels.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_period.dart';
@@ -47,14 +48,6 @@ class DepotHoldingTile extends StatelessWidget {
     final kindColor = sold ? theme.hintColor : DepotColors.kind(kind);
     final mainColor = sold ? theme.hintColor : null;
 
-    final avatar = Opacity(
-      opacity: sold ? 0.4 : 1,
-      child: DepotHoldingAvatar(
-        name: name,
-        colorSeed: holding.identifier ?? holding.id,
-      ),
-    );
-
     return ExpansionTile(
       // Sold positions only show when the filter asks for them; tint them so
       // they never read as part of the open portfolio.
@@ -74,139 +67,137 @@ class DepotHoldingTile extends StatelessWidget {
         builder: (context, constraints) {
           final cramped =
               constraints.maxWidth < (reorderIndex == null ? 480 : 520);
-          return DepotInfoRow(
-            leading: reorderIndex == null
-                ? avatar
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ReorderableDragStartListener(
-                        index: reorderIndex!,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: Icon(
-                            Icons.drag_handle,
-                            size: 20,
-                            color: theme.hintColor,
-                          ),
-                        ),
-                      ),
-                      avatar,
-                    ],
-                  ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: mainColor,
-                    ),
-                  ),
-                ),
-                if (!cramped && !sold) DepotHoldingTrendView(holding: holding),
-              ],
+          final avatar = Opacity(
+            opacity: sold ? 0.4 : 1,
+            child: DepotHoldingAvatar(
+              name: name,
+              colorSeed: holding.identifier ?? holding.id,
+              size: cramped ? 30 : 36,
             ),
-            subtitle: Text.rich(
-              TextSpan(
-                children: [
-                  if (sold)
-                    WidgetSpan(
-                      alignment: PlaceholderAlignment.middle,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: Icon(
-                          Icons.sell_outlined,
-                          size: 14,
-                          color: theme.hintColor,
-                        ),
-                      ),
-                    ),
-                  TextSpan(
-                    text: sold
-                        ? l10n.depotHoldingSold
-                        : DepotPortfolioLabels.kind(l10n, kind),
-                    style: TextStyle(
-                      color: kindColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (gain != null)
-                    TextSpan(
-                      text: '  ${format.money(gain, signed: true)}',
-                      style: TextStyle(color: DepotFormat.gainColor(gain)),
-                    ),
-                ],
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall,
-            ),
-            trailing: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: cramped && !sold ? 100 : 0),
-              child: Stack(
-                alignment: Alignment.centerRight,
-                children: [
-                  if (cramped && !sold)
-                    Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Opacity(
-                          opacity: 0.2,
-                          child: DepotHoldingTrendView(
-                            holding: holding,
-                            background: true,
+          );
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DepotInfoRow(
+                leading: reorderIndex == null
+                    ? avatar
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ReorderableDragStartListener(
+                            index: reorderIndex!,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: Icon(
+                                Icons.drag_handle,
+                                size: 20,
+                                color: theme.hintColor,
+                              ),
+                            ),
                           ),
-                        ),
+                          avatar,
+                        ],
                       ),
-                    ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        format.money(holding.currentValue),
-                        textAlign: TextAlign.end,
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: mainColor,
                         ),
                       ),
-                      if (returnPercent != null || holding.currentPrice != 0)
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              if (returnPercent != null)
-                                TextSpan(
-                                  text: format.percent(returnPercent),
-                                  style: TextStyle(
-                                    color: DepotFormat.gainColor(returnPercent),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              if (holding.currentPrice != 0)
-                                TextSpan(
-                                  text:
-                                      '${returnPercent == null ? '' : '  '}'
-                                      '${format.money(holding.currentPrice)}',
-                                  style: TextStyle(color: theme.hintColor),
-                                ),
-                            ],
+                    ),
+                    if (!cramped && !sold)
+                      DepotHoldingTrendView(holding: holding),
+                  ],
+                ),
+                subtitle: Text.rich(
+                  TextSpan(
+                    children: [
+                      if (sold)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.sell_outlined,
+                              size: 14,
+                              color: theme.hintColor,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                          style: theme.textTheme.bodySmall,
+                        ),
+                      TextSpan(
+                        text: sold
+                            ? l10n.depotHoldingSold
+                            : DepotPortfolioLabels.kind(l10n, kind),
+                        style: TextStyle(
+                          color: kindColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (gain != null)
+                        TextSpan(
+                          text: '  ${format.money(gain, signed: true)}',
+                          style: TextStyle(color: DepotFormat.gainColor(gain)),
                         ),
                     ],
                   ),
-                ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall,
+                ),
+                trailing: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      format.money(holding.currentValue),
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: mainColor,
+                      ),
+                    ),
+                    if (returnPercent != null || holding.currentPrice != 0)
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            if (returnPercent != null)
+                              TextSpan(
+                                text: format.percent(returnPercent),
+                                style: TextStyle(
+                                  color: DepotFormat.gainColor(returnPercent),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            if (holding.currentPrice != 0)
+                              TextSpan(
+                                text:
+                                    '${returnPercent == null ? '' : '  '}'
+                                    '${format.money(holding.currentPrice)}',
+                                style: TextStyle(color: theme.hintColor),
+                              ),
+                          ],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                  ],
+                ),
               ),
-            ),
+              if (cramped && DepotHoldingTrendState.keyOf(holding) != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: DepotHoldingTrendView(holding: holding, strip: true),
+                ),
+            ],
           );
         },
       ),

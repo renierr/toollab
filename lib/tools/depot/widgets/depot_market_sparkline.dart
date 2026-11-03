@@ -12,6 +12,7 @@ class DepotMarketSparkline extends StatefulWidget {
   final String currency;
   final List<MarketPricePoint> points;
   final double width;
+  final bool prominent;
 
   const DepotMarketSparkline({
     super.key,
@@ -19,6 +20,7 @@ class DepotMarketSparkline extends StatefulWidget {
     required this.currency,
     required this.points,
     this.width = 64,
+    this.prominent = false,
   });
 
   @override
@@ -64,7 +66,8 @@ class _DepotMarketSparklineState extends State<DepotMarketSparkline> {
           child: Sparkline(
             values: [for (final point in points) point.close],
             color: color,
-            strokeWidth: 1.5,
+            strokeWidth: widget.prominent ? 2 : 1.5,
+            opacity: widget.prominent ? 0.8 : 0.55,
           ),
         ),
       ),

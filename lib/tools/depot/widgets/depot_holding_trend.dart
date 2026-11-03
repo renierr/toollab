@@ -11,12 +11,12 @@ import 'depot_market_sparkline.dart';
 
 class DepotHoldingTrendView extends StatefulWidget {
   final DepotHolding holding;
-  final bool background;
+  final bool strip;
 
   const DepotHoldingTrendView({
     super.key,
     required this.holding,
-    this.background = false,
+    this.strip = false,
   });
 
   @override
@@ -104,16 +104,17 @@ class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView> {
       (state) => state.trendFor(widget.holding),
     );
     return SizedBox(
-      width: widget.background ? 100 : 76,
-      height: widget.background ? 30 : 18,
+      width: widget.strip ? 160 : 76,
+      height: widget.strip ? 24 : 18,
       child: trend == null
           ? null
-          : widget.background
+          : widget.strip
           ? DepotMarketSparkline(
               symbol: trend.symbol,
               currency: trend.currency,
               points: trend.points,
-              width: 88,
+              width: 148,
+              prominent: true,
             )
           : OverflowBox(
               maxHeight: 30,

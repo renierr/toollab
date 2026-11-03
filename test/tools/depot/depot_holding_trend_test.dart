@@ -18,8 +18,10 @@ import 'package:tool_lab/tools/depot/models/depot_period.dart';
 import 'package:tool_lab/tools/depot/models/depot_wishlist.dart';
 import 'package:tool_lab/tools/depot/models/market_quote.dart';
 import 'package:tool_lab/tools/depot/parqet/parqet_asset_lookup.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_holding_avatar.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_holding_tile.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_holding_trend.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_info_row.dart';
 import 'package:tool_lab/widgets/sparkline.dart';
 
 import 'offline_test_support.dart';
@@ -742,107 +744,127 @@ void main() {
     });
   }
 
-  for (final (width, scale, background) in [
-    (240.0, 1.0, true),
-    (320.0, 1.0, true),
-    (320.0, 2.0, true),
-    (360.0, 1.0, true),
-    (390.0, 1.0, true),
-    (800.0, 1.0, false),
-    (800.0, 2.0, false),
+  for (final (width, scale, strip, dark) in [
+    (240.0, 1.0, true, false),
+    (320.0, 1.0, true, false),
+    (320.0, 1.0, true, true),
+    (320.0, 2.0, true, false),
+    (360.0, 1.0, true, false),
+    (390.0, 1.0, true, false),
+    (800.0, 1.0, false, false),
+    (800.0, 2.0, false, false),
   ]) {
-    testWidgets('holding row fits at $width with text scale $scale', (
-      tester,
-    ) async {
-      tester.view.physicalSize = Size(width, 800);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      var requests = 0;
-      final trends = DepotHoldingTrendState(
-        resolve: (holding) async {
-          requests++;
-          return [holding.isin!];
-        },
-        quote: (_) async => quote(),
-      );
-      late DepotLogoState logos;
-      await tester.runAsync(() async {
-        logos = DepotLogoState();
-        await logos.ensureLoaded();
-      });
-      addTearDown(logos.dispose);
-      addTearDown(trends.dispose);
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: trends),
-            ChangeNotifierProvider.value(value: logos),
-          ],
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: MediaQuery(
-                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-                child: DepotHoldingTile(
-                  holding: holding(
-                    0,
-                    name: 'Rheinmetall AG',
-                    currentPrice: 1004.8,
-                    currentValue: 100480,
+    testWidgets(
+      'holding row fits at $width with text scale $scale, dark $dark',
+      (tester) async {
+        tester.view.physicalSize = Size(width, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        var requests = 0;
+        final trends = DepotHoldingTrendState(
+          resolve: (holding) async {
+            requests++;
+            return [holding.isin!];
+          },
+          quote: (_) async => quote(),
+        );
+        late DepotLogoState logos;
+        await tester.runAsync(() async {
+          logos = DepotLogoState();
+          await logos.ensureLoaded();
+        });
+        addTearDown(logos.dispose);
+        addTearDown(trends.dispose);
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              ChangeNotifierProvider.value(value: trends),
+              ChangeNotifierProvider.value(value: logos),
+            ],
+            child: MaterialApp(
+              theme: dark ? ThemeData.dark() : ThemeData.light(),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: MediaQuery(
+                  data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                  child: DepotHoldingTile(
+                    holding: holding(
+                      0,
+                      name: 'Rheinmetall AG',
+                      currentPrice: 1004.8,
+                      currentValue: 100480,
+                    ),
+                    performance: null,
+                    period: DepotPeriod.today,
+                    format: DepotFormat('de', 'EUR'),
+                    weight: 100,
                   ),
-                  performance: null,
-                  period: DepotPeriod.today,
-                  format: DepotFormat('de', 'EUR'),
-                  weight: 100,
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(requests, 1);
-      expect(find.byType(Sparkline), findsOneWidget);
-      final tile = tester.getRect(find.byType(DepotHoldingTile));
-      final value = tester.getRect(
-        find.text(DepotFormat('de', 'EUR').money(100480)),
-      );
-      final sparkline = tester.getRect(find.byType(Sparkline));
-      final name = tester.getRect(find.text('Rheinmetall AG'));
-      expect(name.right, lessThanOrEqualTo(sparkline.left));
-      expect(
-        tester
-            .widget<DepotHoldingTrendView>(find.byType(DepotHoldingTrendView))
-            .background,
-        background,
-      );
-      if (background) {
-        expect(sparkline.width, greaterThanOrEqualTo(64));
-        expect(sparkline.overlaps(value), isTrue);
-        expect(
-          find.ancestor(
-            of: find.byType(Sparkline),
-            matching: find.byWidgetPredicate(
-              (widget) => widget is Opacity && widget.opacity == 0.2,
-            ),
-          ),
-          findsOneWidget,
         );
-      } else {
-        expect(sparkline.width, 64);
-        expect(sparkline.right, lessThanOrEqualTo(value.left));
-      }
-      expect(value.top, greaterThanOrEqualTo(tile.top));
-      expect(value.bottom, lessThanOrEqualTo(tile.bottom));
-      expect(tester.takeException(), isNull);
-      trends.clear();
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
+        await tester.pumpAndSettle();
+        expect(requests, 1);
+        expect(find.byType(Sparkline), findsOneWidget);
+        expect(
+          tester
+              .widget<DepotHoldingAvatar>(find.byType(DepotHoldingAvatar))
+              .size,
+          strip ? 30 : 36,
+        );
+        final tile = tester.getRect(find.byType(DepotHoldingTile));
+        final value = tester.getRect(
+          find.text(DepotFormat('de', 'EUR').money(100480)),
+        );
+        final sparkline = tester.getRect(find.byType(Sparkline));
+        final name = tester.getRect(find.text('Rheinmetall AG'));
+        expect(
+          tester
+              .widget<DepotHoldingTrendView>(find.byType(DepotHoldingTrendView))
+              .strip,
+          strip,
+        );
+        if (strip) {
+          expect(sparkline.width, 148);
+          expect(
+            sparkline.top,
+            greaterThanOrEqualTo(
+              tester.getRect(find.byType(DepotInfoRow)).bottom,
+            ),
+          );
+          expect(sparkline.overlaps(value), isFalse);
+          expect(sparkline.overlaps(name), isFalse);
+          final chart = tester.widget<Sparkline>(find.byType(Sparkline));
+          expect(chart.opacity, 0.8);
+          expect(chart.strokeWidth, 2);
+          expect(chart.filled, isTrue);
+          expect(
+            find.ancestor(
+              of: find.byType(Sparkline),
+              matching: find.byWidgetPredicate(
+                (widget) => widget is Opacity && widget.opacity < 1,
+              ),
+            ),
+            findsNothing,
+          );
+        } else {
+          expect(name.right, lessThanOrEqualTo(sparkline.left));
+          expect(sparkline.width, 64);
+          expect(sparkline.right, lessThanOrEqualTo(value.left));
+        }
+        expect(value.top, greaterThanOrEqualTo(tile.top));
+        expect(value.bottom, lessThanOrEqualTo(tile.bottom));
+        expect(tester.takeException(), isNull);
+        trends.clear();
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   }
 
-  testWidgets('background trend keeps the row tappable and adapts on resize', (
+  testWidgets('trend strip keeps the row tappable and adapts on resize', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 800);
@@ -892,7 +914,7 @@ void main() {
     expect(
       tester
           .widget<DepotHoldingTrendView>(find.byType(DepotHoldingTrendView))
-          .background,
+          .strip,
       isTrue,
     );
     await tester.tap(find.text(DepotFormat('de', 'EUR').money(2)).first);
@@ -905,7 +927,7 @@ void main() {
     expect(
       tester
           .widget<DepotHoldingTrendView>(find.byType(DepotHoldingTrendView))
-          .background,
+          .strip,
       isFalse,
     );
     expect(requests, 1);
