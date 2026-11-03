@@ -161,6 +161,13 @@ The expandable sales section shows net proceeds and known realized gains per boo
 currency, plus the largest individual gains and losses. It counts sales without a
 reported gain and does not infer a returned cost basis or apply the activity filters.
 The yearly net totals also mark missing sale gains; their known totals can be incomplete.
+The expandable fee section breaks the year's fees down per booking currency: total, number
+of trades (and how many were free), average fee per trade and the fee rate of the traded
+volume (shares × price, or the booked amount when that is zero). Fees are split into buys,
+sells and other bookings (custody, dividend fees), by broker when more than one is booked,
+and the three trades with the highest fee rate are listed, marked above 1 %. The previous
+year's fee total is shown for comparison. Like the sales section it ignores the activity
+filters, and it is hidden when the year has no fees.
 
 The activity list groups bookings by month, newest first. The two newest matching
 months start expanded; older months start collapsed, and each can be toggled.

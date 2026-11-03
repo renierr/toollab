@@ -21089,6 +21089,84 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 sale has no reported gain.} other{{count} sales have no reported gain.}}'**
   String depotSalesMissingGain(int count);
 
+  /// No description provided for @depotFeesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee details'**
+  String get depotFeesTitle;
+
+  /// No description provided for @depotFeesTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total fees'**
+  String get depotFeesTotal;
+
+  /// No description provided for @depotFeesTrades.
+  ///
+  /// In en, this message translates to:
+  /// **'Trades'**
+  String get depotFeesTrades;
+
+  /// No description provided for @depotFeesFree.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} free'**
+  String depotFeesFree(int count);
+
+  /// No description provided for @depotFeesAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. per trade'**
+  String get depotFeesAverage;
+
+  /// No description provided for @depotFeesRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee rate of trade volume'**
+  String get depotFeesRate;
+
+  /// No description provided for @depotFeesBuys.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 buy} other{{count} buys}}'**
+  String depotFeesBuys(int count);
+
+  /// No description provided for @depotFeesSells.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 sale} other{{count} sales}}'**
+  String depotFeesSells(int count);
+
+  /// No description provided for @depotFeesOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 other booking} other{{count} other bookings}}'**
+  String depotFeesOther(int count);
+
+  /// No description provided for @depotFeesByBroker.
+  ///
+  /// In en, this message translates to:
+  /// **'By broker'**
+  String get depotFeesByBroker;
+
+  /// No description provided for @depotFeesUnknownBroker.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown broker'**
+  String get depotFeesUnknownBroker;
+
+  /// No description provided for @depotFeesPriciest.
+  ///
+  /// In en, this message translates to:
+  /// **'Most expensive trades · fee in % of volume'**
+  String get depotFeesPriciest;
+
+  /// No description provided for @depotFeesPreviousYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous year: {total} ({change})'**
+  String depotFeesPreviousYear(String total, String change);
+
   /// No description provided for @depotDividendHistoryTitle.
   ///
   /// In en, this message translates to:

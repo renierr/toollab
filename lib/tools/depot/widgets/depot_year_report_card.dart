@@ -7,6 +7,7 @@ import '../depot_format.dart';
 import '../depot_portfolio_state.dart';
 import '../depot_tax_export.dart';
 import '../models/depot_year_report.dart';
+import 'depot_fee_summary.dart';
 import 'depot_info_row.dart';
 import 'depot_sales_summary.dart';
 
@@ -82,6 +83,10 @@ class DepotYearReportCard extends StatelessWidget {
                 ),
               ),
             DepotSalesSummary(
+              transactions: state.transactions,
+              year: report.year,
+            ),
+            DepotFeeSummary(
               transactions: state.transactions,
               year: report.year,
             ),

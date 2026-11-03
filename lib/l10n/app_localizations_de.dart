@@ -11913,6 +11913,73 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get depotFeesTitle => 'Gebühren im Detail';
+
+  @override
+  String get depotFeesTotal => 'Gebühren gesamt';
+
+  @override
+  String get depotFeesTrades => 'Trades';
+
+  @override
+  String depotFeesFree(int count) {
+    return '$count frei';
+  }
+
+  @override
+  String get depotFeesAverage => 'Ø je Trade';
+
+  @override
+  String get depotFeesRate => 'Gebührenquote am Volumen';
+
+  @override
+  String depotFeesBuys(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Käufe',
+      one: '1 Kauf',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String depotFeesSells(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Verkäufe',
+      one: '1 Verkauf',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String depotFeesOther(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sonstige Buchungen',
+      one: '1 sonstige Buchung',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotFeesByBroker => 'Nach Broker';
+
+  @override
+  String get depotFeesUnknownBroker => 'Broker unbekannt';
+
+  @override
+  String get depotFeesPriciest => 'Teuerste Trades · Gebühr in % des Volumens';
+
+  @override
+  String depotFeesPreviousYear(String total, String change) {
+    return 'Vorjahr: $total ($change)';
+  }
+
+  @override
   String get depotDividendHistoryTitle => 'Gebuchte Dividenden nach Jahr';
 
   @override
