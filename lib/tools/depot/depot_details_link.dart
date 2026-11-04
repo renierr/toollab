@@ -5,7 +5,7 @@ enum DepotDetailsLinkKind {
   etf('https://www.finanzfluss.de/informer/etf/{isin}/'),
   etc('https://www.finanzfluss.de/informer/etf/{isin}/'),
   fund('https://www.finanzfluss.de/informer/fonds/{isin}/'),
-  stock('https://www.onvista.de/aktien/{isin}');
+  stock('https://app.parqet.com/aktie/{isin}');
 
   final String defaultTemplate;
 
