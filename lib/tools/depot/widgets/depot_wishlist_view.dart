@@ -44,7 +44,7 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
       child: Column(
         children: [
           const Padding(
-            padding: EdgeInsets.fromLTRB(12, 8, 12, 8),
+            padding: EdgeInsets.fromLTRB(12, 4, 12, 4),
             child: _CurrencySwitch(),
           ),
           Expanded(
@@ -144,12 +144,55 @@ class _CurrencySwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<DepotWishlistState>();
-    return SwitchListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-      title: Text(l10n.depotWishlistShowEuro),
-      subtitle: Text(l10n.depotWishlistEuroSwitchHint),
-      value: state.showEuro,
-      onChanged: state.setShowEuro,
+    final theme = Theme.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => state.setShowEuro(!state.showEuro),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Row(
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      l10n.depotWishlistShowEuro,
+                      style: theme.textTheme.bodyMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Tooltip(
+                    message: l10n.depotWishlistEuroSwitchHint,
+                    triggerMode: TooltipTriggerMode.tap,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // FittedBox shrinks the layout size too, unlike Transform.scale.
+            SizedBox(
+              width: 40,
+              height: 28,
+              child: FittedBox(
+                child: Switch(
+                  value: state.showEuro,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: state.setShowEuro,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
