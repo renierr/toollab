@@ -21149,6 +21149,12 @@ abstract class AppLocalizations {
   /// **'ETF URL'**
   String get depotDetailsLinkEtf;
 
+  /// No description provided for @depotDetailsLinkEtc.
+  ///
+  /// In en, this message translates to:
+  /// **'ETC URL'**
+  String get depotDetailsLinkEtc;
+
   /// No description provided for @depotDetailsLinkFund.
   ///
   /// In en, this message translates to:

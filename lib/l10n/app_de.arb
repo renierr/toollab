@@ -4680,6 +4680,7 @@
   "depotDetailsLinkTitle": "Links zu Details",
   "depotDetailsLinkDescription": "Webseite, die bei einer aufgeklappten Position in der Übersicht geöffnet wird. Leer lassen, um die Schaltfläche auszublenden. Platzhalter: {placeholders}",
   "depotDetailsLinkEtf": "ETF-URL",
+  "depotDetailsLinkEtc": "ETC-URL",
   "depotDetailsLinkFund": "Fonds-URL",
   "depotDetailsLinkStock": "Aktien-URL",
   "depotSalesTitle": "Verkäufe im Detail",

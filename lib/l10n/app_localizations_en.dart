@@ -11865,6 +11865,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotDetailsLinkEtf => 'ETF URL';
 
   @override
+  String get depotDetailsLinkEtc => 'ETC URL';
+
+  @override
   String get depotDetailsLinkFund => 'Fund URL';
 
   @override

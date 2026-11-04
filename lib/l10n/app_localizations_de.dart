@@ -11950,6 +11950,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDetailsLinkEtf => 'ETF-URL';
 
   @override
+  String get depotDetailsLinkEtc => 'ETC-URL';
+
+  @override
   String get depotDetailsLinkFund => 'Fonds-URL';
 
   @override

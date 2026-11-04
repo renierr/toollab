@@ -5889,6 +5889,7 @@
     "placeholders": { "placeholders": { "type": "String" } }
   },
   "depotDetailsLinkEtf": "ETF URL",
+  "depotDetailsLinkEtc": "ETC URL",
   "depotDetailsLinkFund": "Fund URL",
   "depotDetailsLinkStock": "Stock URL",
   "depotSalesTitle": "Sales details",

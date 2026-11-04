@@ -82,6 +82,7 @@ class _TemplateFieldState extends State<_TemplateField> with DisposeCleanup {
       decoration: InputDecoration(
         labelText: switch (_kind) {
           DepotDetailsLinkKind.etf => l10n.depotDetailsLinkEtf,
+          DepotDetailsLinkKind.etc => l10n.depotDetailsLinkEtc,
           DepotDetailsLinkKind.fund => l10n.depotDetailsLinkFund,
           DepotDetailsLinkKind.stock => l10n.depotDetailsLinkStock,
         },

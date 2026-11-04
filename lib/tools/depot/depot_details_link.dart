@@ -3,6 +3,7 @@ import 'models/depot_holding.dart';
 /// Holding kinds with their own configurable details page.
 enum DepotDetailsLinkKind {
   etf('https://www.finanzfluss.de/informer/etf/{isin}/'),
+  etc('https://www.finanzfluss.de/informer/etf/{isin}/'),
   fund('https://www.finanzfluss.de/informer/fonds/{isin}/'),
   stock('https://www.onvista.de/aktien/{isin}');
 
@@ -12,6 +13,7 @@ enum DepotDetailsLinkKind {
 
   static DepotDetailsLinkKind? of(DepotHoldingKind kind) => switch (kind) {
     DepotHoldingKind.etf => etf,
+    DepotHoldingKind.etc => etc,
     DepotHoldingKind.fund => fund,
     DepotHoldingKind.stock => stock,
     _ => null,
