@@ -21119,6 +21119,48 @@ abstract class AppLocalizations {
   /// **'On wishlist'**
   String get depotHoldingInWishlist;
 
+  /// No description provided for @depotHoldingOpenDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get depotHoldingOpenDetails;
+
+  /// No description provided for @depotHoldingDetailsOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the browser'**
+  String get depotHoldingDetailsOpenFailed;
+
+  /// No description provided for @depotDetailsLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Details links'**
+  String get depotDetailsLinkTitle;
+
+  /// No description provided for @depotDetailsLinkDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Web page opened from an expanded holding in the overview. Leave empty to hide the button. Placeholders: {placeholders}'**
+  String depotDetailsLinkDescription(String placeholders);
+
+  /// No description provided for @depotDetailsLinkEtf.
+  ///
+  /// In en, this message translates to:
+  /// **'ETF URL'**
+  String get depotDetailsLinkEtf;
+
+  /// No description provided for @depotDetailsLinkFund.
+  ///
+  /// In en, this message translates to:
+  /// **'Fund URL'**
+  String get depotDetailsLinkFund;
+
+  /// No description provided for @depotDetailsLinkStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock URL'**
+  String get depotDetailsLinkStock;
+
   /// No description provided for @depotSalesTitle.
   ///
   /// In en, this message translates to:

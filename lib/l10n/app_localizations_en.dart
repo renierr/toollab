@@ -11848,6 +11848,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotHoldingInWishlist => 'On wishlist';
 
   @override
+  String get depotHoldingOpenDetails => 'Details';
+
+  @override
+  String get depotHoldingDetailsOpenFailed => 'Could not open the browser';
+
+  @override
+  String get depotDetailsLinkTitle => 'Details links';
+
+  @override
+  String depotDetailsLinkDescription(String placeholders) {
+    return 'Web page opened from an expanded holding in the overview. Leave empty to hide the button. Placeholders: $placeholders';
+  }
+
+  @override
+  String get depotDetailsLinkEtf => 'ETF URL';
+
+  @override
+  String get depotDetailsLinkFund => 'Fund URL';
+
+  @override
+  String get depotDetailsLinkStock => 'Stock URL';
+
+  @override
   String get depotSalesTitle => 'Sales details';
 
   @override

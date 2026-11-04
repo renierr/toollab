@@ -5881,6 +5881,16 @@
   "depotHoldingShowSales": "Show sales",
   "depotHoldingAddToWishlist": "Add to wishlist",
   "depotHoldingInWishlist": "On wishlist",
+  "depotHoldingOpenDetails": "Details",
+  "depotHoldingDetailsOpenFailed": "Could not open the browser",
+  "depotDetailsLinkTitle": "Details links",
+  "depotDetailsLinkDescription": "Web page opened from an expanded holding in the overview. Leave empty to hide the button. Placeholders: {placeholders}",
+  "@depotDetailsLinkDescription": {
+    "placeholders": { "placeholders": { "type": "String" } }
+  },
+  "depotDetailsLinkEtf": "ETF URL",
+  "depotDetailsLinkFund": "Fund URL",
+  "depotDetailsLinkStock": "Stock URL",
   "depotSalesTitle": "Sales details",
   "depotSalesProceeds": "Net proceeds",
   "depotSalesKnownGain": "Known realized gains",

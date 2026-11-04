@@ -20,6 +20,7 @@ import '../parqet/parqet_auth.dart';
 import 'depot_allocation_settings.dart';
 import 'depot_clear_data_tile.dart';
 import 'depot_data_export_tile.dart';
+import 'depot_details_link_settings.dart';
 import 'depot_logo_settings.dart';
 import 'depot_sync_error_card.dart';
 
@@ -223,6 +224,7 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
               ),
             ),
             const DepotLogoSettings(),
+            const DepotDetailsLinkSettings(),
             const DepotAllocationSettings(),
             const DepotDataExportTile(),
             const DepotClearDataTile(),

@@ -11932,6 +11932,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotHoldingInWishlist => 'Auf der Wunschliste';
 
   @override
+  String get depotHoldingOpenDetails => 'Details';
+
+  @override
+  String get depotHoldingDetailsOpenFailed =>
+      'Browser konnte nicht geöffnet werden';
+
+  @override
+  String get depotDetailsLinkTitle => 'Links zu Details';
+
+  @override
+  String depotDetailsLinkDescription(String placeholders) {
+    return 'Webseite, die bei einer aufgeklappten Position in der Übersicht geöffnet wird. Leer lassen, um die Schaltfläche auszublenden. Platzhalter: $placeholders';
+  }
+
+  @override
+  String get depotDetailsLinkEtf => 'ETF-URL';
+
+  @override
+  String get depotDetailsLinkFund => 'Fonds-URL';
+
+  @override
+  String get depotDetailsLinkStock => 'Aktien-URL';
+
+  @override
   String get depotSalesTitle => 'Verkäufe im Detail';
 
   @override

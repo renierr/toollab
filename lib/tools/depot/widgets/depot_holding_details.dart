@@ -5,6 +5,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/data_row.dart';
 
 import '../depot_allocation_state.dart';
+import '../depot_details_link.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
@@ -13,6 +14,7 @@ import '../models/depot_filters.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_period.dart';
 import '../models/depot_transaction.dart';
+import 'depot_details_link_button.dart';
 import 'depot_wishlist_holding_button.dart';
 
 /// Every figure of one holding, shown when its row is expanded.
@@ -45,6 +47,7 @@ class DepotHoldingDetails extends StatelessWidget {
     final startPrice = performance?.startPrice;
     final earliest = h.earliestActivity;
     final isin = h.assetType == DepotAssetType.security ? h.isin : null;
+    final linkKind = DepotDetailsLinkKind.of(h.kind);
     final hasSales = context.select<DepotPortfolioState?, bool>(
       (state) => state?.hasSalesFor(h) ?? false,
     );
@@ -151,6 +154,8 @@ class DepotHoldingDetails extends StatelessWidget {
                   ),
                 if (isin != null)
                   DepotWishlistHoldingButton(isin: isin, name: h.name),
+                if (linkKind != null)
+                  DepotDetailsLinkButton(holding: h, kind: linkKind),
               ],
             ),
           ],

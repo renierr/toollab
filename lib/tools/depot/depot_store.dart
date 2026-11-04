@@ -6,6 +6,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
+import 'depot_details_link.dart';
 import 'models/depot_asset_profile.dart';
 import 'models/depot_dividend.dart';
 import 'models/depot_filters.dart';
@@ -91,6 +92,7 @@ class DepotStore {
   static const _clearMarkerKey = 'local_data_cleared_at';
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
+  static const _detailsUrlKey = 'details_url_';
   // Legacy keys of the profile cache, read once by the version 11 migration.
   static const _assetProfilesKey = 'asset_profiles';
   static const _assetProfileAttemptsKey = 'asset_profile_attempts';
@@ -498,6 +500,21 @@ class DepotStore {
 
   Future<void> setWishlistEuroDisplay(bool value) => DatabaseService.instance
       .setSetting(_toolId, _wishlistEuroKey, value.toString());
+
+  Future<String?> detailsUrlTemplate(DepotDetailsLinkKind kind) =>
+      DatabaseService.instance.getSetting(
+        _toolId,
+        '$_detailsUrlKey${kind.name}',
+      );
+
+  Future<void> setDetailsUrlTemplate(
+    DepotDetailsLinkKind kind,
+    String template,
+  ) => DatabaseService.instance.setSetting(
+    _toolId,
+    '$_detailsUrlKey${kind.name}',
+    template,
+  );
 
   /// Sector/industry/region metadata cached per ISIN or symbol.
   Future<Map<String, DepotAssetProfile>> assetProfiles() async {
