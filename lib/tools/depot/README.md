@@ -225,9 +225,20 @@ realized gain plus the sale's tax. Stock sales are kept apart because a stock lo
 offsets stock gains; every other result offsets all income. Only bookings in the
 portfolio currency count. For the running year it lists the open holdings (stocks, ETFs,
 ETCs, funds) with an unrealized loss and how much of those losses would lower the
-taxable income above the allowance. A rough guide only: partial exemptions of funds, the
-bank's actual loss pots, losses carried from earlier years and allowances split across
-banks are not known.
+taxable income above the allowance. Equity funds (ETFs and funds whose name does not
+read as a bond or money market fund) get the 30 % partial exemption on distributions,
+sale gains and open losses; bond funds none. For the running year the card also estimates
+next January's advance lump sum (Vorabpauschale) per fund: the price on 1 January (worked
+out from the year-to-date gain, today's value and the year's bookings) × 70 % × the BMF
+base rate, one twelfth less per full month before a purchase, capped by the year's price
+rise plus distributions, minus distributions, then the partial exemption. Today's price
+stands in for the year-end price. The running year's base rate is a depot setting,
+stored per year and prefilled from the known rates in `models/depot_advance_lump.dart`;
+the BMF publishes it in January only as a letter, with no machine-readable source, so it
+is entered by hand. Add each new rate to that constant too. Without a rate the card shows
+no estimate. The lump sum is income of the next year, so it
+uses that year's allowance first. A rough guide only: the bank's actual loss pots, losses
+carried from earlier years and allowances split across banks are not known.
 The yearly summary groups gains, income, taxes and fees by the activity's
 currency, without conversion or a combined total. The usual single-currency
 view stays compact. Activities without a currency are counted separately and

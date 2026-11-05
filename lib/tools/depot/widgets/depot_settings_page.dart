@@ -24,6 +24,7 @@ import 'depot_details_link_settings.dart';
 import 'depot_dividend_settings.dart';
 import 'depot_logo_settings.dart';
 import 'depot_sync_error_card.dart';
+import 'depot_tax_settings.dart';
 
 /// Pushed with a `MaterialPageRoute`, so a plain `Scaffold` instead of
 /// `ToolLayout`, whose back button needs a GoRouter state.
@@ -228,6 +229,7 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
             const DepotDetailsLinkSettings(),
             const DepotAllocationSettings(),
             const DepotDividendSettings(),
+            const DepotTaxSettings(),
             const DepotDataExportTile(),
             const DepotClearDataTile(),
             if (state.isConnected) ...[

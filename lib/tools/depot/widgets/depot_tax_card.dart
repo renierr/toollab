@@ -53,6 +53,13 @@ class DepotTaxCard extends StatelessWidget {
                 l10n.depotTaxOffsettable(format.money(offsettable)),
                 style: hint,
               ),
+            if (tax.advanceLumpTotal > 0)
+              Text(
+                l10n.depotTaxAdvanceLumpSummary(
+                  format.money(tax.advanceLumpTotal),
+                ),
+                style: hint,
+              ),
           ],
         ),
         shape: const Border(),
@@ -81,6 +88,7 @@ class DepotTaxCard extends StatelessWidget {
             (l10n.depotTaxIncome, tax.income),
             (l10n.depotTaxStockGains, tax.stockGains),
             (l10n.depotTaxOtherGains, tax.otherGains),
+            (l10n.depotTaxExempt, -tax.exempt),
             (l10n.depotTaxPaid, tax.taxes),
           ])
             if (value != 0)
@@ -110,6 +118,25 @@ class DepotTaxCard extends StatelessWidget {
                   format.money(holding.unrealizedGain),
                   style: body?.copyWith(color: AppTheme.statusRed),
                 ),
+              ),
+          ],
+          if (tax.advanceLumps.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              l10n.depotTaxAdvanceLumpTitle('${year + 1}'),
+              style: theme.textTheme.labelLarge,
+            ),
+            const SizedBox(height: 4),
+            for (final lump in tax.advanceLumps)
+              DepotInfoRow(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                title: Text(
+                  lump.holding.name,
+                  style: body,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Text(format.money(lump.taxable), style: body),
               ),
           ],
         ],

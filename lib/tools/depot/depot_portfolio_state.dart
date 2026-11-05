@@ -10,6 +10,7 @@ import 'depot_return_index.dart';
 import 'depot_savings_plans.dart';
 import 'depot_store.dart';
 import 'depot_work_lease.dart';
+import 'models/depot_advance_lump.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_income_month.dart';
@@ -64,6 +65,7 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotHolding> _holdings = const [];
   Map<String, int> _holdingOrder = const {};
   Map<String, DepotHoldingPerformance> _holdingPerformance = const {};
+  Map<String, DepotHoldingPerformance> _ytdPerformance = const {};
   List<DepotTransaction> _transactions = const [];
   List<DepotYearReport> _yearReports = const [];
   int? _reportYear;
@@ -87,6 +89,7 @@ class DepotPortfolioState extends ChangeNotifier {
   DepotSavingsPlans _savingsPlans = DepotSavingsPlans.empty;
   bool _flowInPercent = false;
   double _taxAllowance = 1000;
+  double? _baseRate;
   List<DepotChartPoint>? _returnsChart;
   List<DepotTransaction>? _returnsTransactions;
   DepotDrawdowns _drawdowns = DepotDrawdowns.empty;
@@ -203,7 +206,22 @@ class DepotPortfolioState extends ChangeNotifier {
     transactions: _transactions,
     holdings: _holdings,
     currency: currency,
+    ytd: _ytdPerformance,
+    baseRate: baseRate,
   );
+
+  /// The running year's base rate for the advance lump sum, a fraction; the
+  /// known default unless one was entered.
+  double? get baseRate =>
+      _baseRate ?? DepotAdvanceLump.baseRates[DateTime.now().year];
+
+  bool get hasCustomBaseRate => _baseRate != null;
+
+  void setBaseRate(double? value) {
+    _baseRate = value;
+    _store.setBaseRate(DateTime.now().year, value);
+    _notify();
+  }
 
   bool get flowInPercent => _flowInPercent;
 
@@ -291,6 +309,7 @@ class DepotPortfolioState extends ChangeNotifier {
         sort: await _store.holdingSort(),
       );
       _taxAllowance = await _store.taxAllowance();
+      _baseRate = await _store.baseRate(DateTime.now().year);
       await _reload();
     } catch (e) {
       errorLog('[DepotPortfolioState] Loading failed: $e');
@@ -314,7 +333,12 @@ class DepotPortfolioState extends ChangeNotifier {
     final holdings = await _store.holdings(portfolioId: portfolioId);
     final holdingOrder = await _store.holdingOrder();
     final transactions = await _store.transactions(portfolioId: portfolioId);
+    final ytd = await _store.holdingPerformance(
+      DepotPeriod.ytd,
+      portfolioId: portfolioId,
+    );
     if (_disposed || load != _scopeLoad || scope != _scope) return;
+    _ytdPerformance = ytd;
     _holdings = holdings;
     _holdingOrder = holdingOrder;
     _transactions = transactions;

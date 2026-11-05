@@ -21689,6 +21689,42 @@ abstract class AppLocalizations {
   /// **'Tax paid'**
   String get depotTaxPaid;
 
+  /// No description provided for @depotTaxExempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial exemption of funds'**
+  String get depotTaxExempt;
+
+  /// No description provided for @depotTaxSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance lump sum'**
+  String get depotTaxSettingsTitle;
+
+  /// No description provided for @depotTaxSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For the estimate in the allowance card. The BMF publishes the base rate each January.'**
+  String get depotTaxSettingsDescription;
+
+  /// No description provided for @depotTaxBaseRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Base rate {year}'**
+  String depotTaxBaseRate(String year);
+
+  /// No description provided for @depotTaxAdvanceLumpSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'≈ {amount} advance lump sum in January'**
+  String depotTaxAdvanceLumpSummary(String amount);
+
+  /// No description provided for @depotTaxAdvanceLumpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance lump sum January {year}'**
+  String depotTaxAdvanceLumpTitle(String year);
+
   /// No description provided for @depotTaxLosers.
   ///
   /// In en, this message translates to:

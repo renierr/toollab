@@ -12220,6 +12220,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotTaxPaid => 'Tax paid';
 
   @override
+  String get depotTaxExempt => 'Partial exemption of funds';
+
+  @override
+  String get depotTaxSettingsTitle => 'Advance lump sum';
+
+  @override
+  String get depotTaxSettingsDescription =>
+      'For the estimate in the allowance card. The BMF publishes the base rate each January.';
+
+  @override
+  String depotTaxBaseRate(String year) {
+    return 'Base rate $year';
+  }
+
+  @override
+  String depotTaxAdvanceLumpSummary(String amount) {
+    return '≈ $amount advance lump sum in January';
+  }
+
+  @override
+  String depotTaxAdvanceLumpTitle(String year) {
+    return 'Advance lump sum January $year';
+  }
+
+  @override
   String get depotTaxLosers => 'In the red';
 
   @override

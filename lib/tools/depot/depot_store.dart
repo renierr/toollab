@@ -102,6 +102,7 @@ class DepotStore {
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
   static const _taxAllowanceKey = 'tax_allowance';
+  static const _baseRateKey = 'base_rate_';
   static const _detailsUrlKey = 'details_url_';
   // Legacy keys of the profile cache, read once by the version 11 migration.
   static const _assetProfilesKey = 'asset_profiles';
@@ -580,6 +581,16 @@ class DepotStore {
 
   Future<void> setTaxAllowance(double value) => DatabaseService.instance
       .setSetting(_toolId, _taxAllowanceKey, value.toString());
+
+  /// Entered base rate of [year], a fraction; null when none was entered.
+  Future<double?> baseRate(int year) async => double.tryParse(
+    await DatabaseService.instance.getSetting(_toolId, '$_baseRateKey$year') ??
+        '',
+  );
+
+  /// Null clears the entry, so the built-in default applies again.
+  Future<void> setBaseRate(int year, double? value) => DatabaseService.instance
+      .setSetting(_toolId, '$_baseRateKey$year', value?.toString() ?? '');
 
   Future<String?> detailsUrlTemplate(DepotDetailsLinkKind kind) =>
       DatabaseService.instance.getSetting(
