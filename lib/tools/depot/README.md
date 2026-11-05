@@ -161,13 +161,16 @@ taxes, missing data and timing. A failed or unavailable comparison leaves the
 original value chart untouched. Prices may be delayed.
 
 The growth card splits each year's value change into new money and market gain, from
-the stored Max chart whatever period is selected. New money is the change of Parqet's
-invested capital (`capitalHistory`): buys add their amount, sales remove the cost of what
-was sold. Market gain is the rest of the value change, realized gains included; dividends
-paid out of the depot are not part of the value. The first year starts from zero. Tapping
-a year lists its months. Without a cash account, a sale followed by a buy shows as money
-out and money in. The card starts collapsed with the latest year's split and the total:
-the newest invested capital and its difference to the value.
+the stored Max chart whatever period is selected, and adds the year's net dividends as a
+third bar. New money is what went in or out: the change of Parqet's invested capital
+(`capitalHistory`) minus the realized gains of that year's sales. Parqet's capital only
+drops by the cost of what was sold, but the whole proceeds leave the depot, so without
+the correction a realized gain would show as a market loss. Market gain is the rest of the
+value change, realized gains included. Dividends are paid out of the depot, so they are
+not part of the value and are summed from the dividend transactions. The first year
+starts from zero. Tapping a year lists its months. Without a cash account, a sale
+followed by a buy shows as money out and money in. The card starts collapsed with the
+latest year's split and the totals over all years.
 
 The savings plan card is detected from the selected scope's buys; Parqet bookings carry no
 plan flag. A plan is one buy per consecutive calendar month in the same holding and booking

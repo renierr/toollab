@@ -12269,13 +12269,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotFlowValueChange => 'Wertänderung';
 
   @override
-  String depotFlowYearSummary(String year, String newMoney, String market) {
-    return '$year: $newMoney neues Geld · $market Marktgewinn';
+  String get depotFlowDividends => 'Dividenden';
+
+  @override
+  String depotFlowYearSummary(
+    String year,
+    String newMoney,
+    String market,
+    String dividends,
+  ) {
+    return '$year: $newMoney neues Geld · $market Marktgewinn · $dividends Dividenden';
   }
 
   @override
-  String depotFlowTotalSummary(String capital, String market) {
-    return 'Gesamt: $capital investiert · $market Marktgewinn';
+  String depotFlowTotalSummary(
+    String capital,
+    String market,
+    String dividends,
+  ) {
+    return 'Gesamt: $capital investiert · $market Marktgewinn · $dividends Dividenden';
   }
 
   @override

@@ -8,21 +8,25 @@ import 'package:tool_lab/theme/theme.dart';
 import '../depot_format.dart';
 import '../models/depot_capital_flow.dart';
 import '../models/depot_summary.dart';
+import '../models/depot_transaction.dart';
 import 'depot_legend_dot.dart';
 
-/// Value change per year, split into new money and market gain; a year
-/// expands into its months.
+/// Value change per year, split into new money and market gain, with the
+/// dividends paid out; a year expands into its months.
 class DepotCapitalFlowCard extends StatefulWidget {
   final List<DepotChartPoint> points;
+  final List<DepotTransaction> transactions;
   final DepotFormat format;
 
   const DepotCapitalFlowCard({
     super.key,
     required this.points,
+    required this.transactions,
     required this.format,
   });
 
   static const Color newMoneyColor = AppTheme.accentBlue;
+  static const Color dividendColor = AppTheme.accentAmber;
 
   @override
   State<DepotCapitalFlowCard> createState() => _DepotCapitalFlowCardState();
@@ -36,11 +40,11 @@ class _DepotCapitalFlowCardState extends State<DepotCapitalFlowCard> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     if (widget.points.length < 2) return const SizedBox.shrink();
-    final years = DepotCapitalFlow.years(widget.points);
+    final years = DepotCapitalFlow.years(widget.points, widget.transactions);
     final expanded = _expandedYear;
     final months = expanded == null
         ? const <DepotCapitalFlow>[]
-        : DepotCapitalFlow.months(widget.points, expanded);
+        : DepotCapitalFlow.months(widget.points, widget.transactions, expanded);
     final yearScale = _Scale.of(years);
     final monthScale = _Scale.of(months);
     final monthName = DateFormat.MMM(
@@ -49,7 +53,12 @@ class _DepotCapitalFlowCardState extends State<DepotCapitalFlowCard> {
 
     final hint = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
     final latest = years.first;
-    final last = widget.points.last;
+    var invested = 0.0, market = 0.0, dividends = 0.0;
+    for (final year in years) {
+      invested += year.newMoney;
+      market += year.marketGain;
+      dividends += year.dividends;
+    }
     final format = widget.format;
 
     return Card(
@@ -64,13 +73,15 @@ class _DepotCapitalFlowCardState extends State<DepotCapitalFlowCard> {
                 '${latest.year}',
                 format.compactMoney(latest.newMoney),
                 format.compactMoney(latest.marketGain),
+                format.compactMoney(latest.dividends),
               ),
               style: hint,
             ),
             Text(
               l10n.depotFlowTotalSummary(
-                format.compactMoney(last.capital),
-                format.compactMoney(last.value - last.capital),
+                format.compactMoney(invested),
+                format.compactMoney(market),
+                format.compactMoney(dividends),
               ),
               style: hint,
             ),
@@ -93,6 +104,10 @@ class _DepotCapitalFlowCardState extends State<DepotCapitalFlowCard> {
                 DepotLegendDot(
                   color: AppTheme.statusGreen,
                   label: l10n.depotFlowMarket,
+                ),
+                DepotLegendDot(
+                  color: DepotCapitalFlowCard.dividendColor,
+                  label: l10n.depotFlowDividends,
                 ),
               ],
             ),
@@ -137,7 +152,7 @@ class _Scale {
   factory _Scale.of(List<DepotCapitalFlow> flows) {
     var negative = 0.0, positive = 0.0;
     for (final flow in flows) {
-      for (final v in [flow.newMoney, flow.marketGain]) {
+      for (final v in [flow.newMoney, flow.marketGain, flow.dividends]) {
         negative = math.max(negative, -v);
         positive = math.max(positive, v);
       }
@@ -204,6 +219,12 @@ class _FlowRow extends StatelessWidget {
                   scale: scale,
                   color: marketColor,
                 ),
+                const SizedBox(height: 3),
+                _DivergingBar(
+                  value: flow.dividends,
+                  scale: scale,
+                  color: DepotCapitalFlowCard.dividendColor,
+                ),
               ],
             ),
           ),
@@ -217,6 +238,12 @@ class _FlowRow extends StatelessWidget {
                 Text(
                   _signed(flow.marketGain),
                   style: small?.copyWith(color: marketColor),
+                ),
+                Text(
+                  _signed(flow.dividends),
+                  style: small?.copyWith(
+                    color: DepotCapitalFlowCard.dividendColor,
+                  ),
                 ),
               ],
             ),
@@ -240,6 +267,8 @@ class _FlowRow extends StatelessWidget {
         '${l10n.depotFlowNewMoney}: ${format.money(flow.newMoney, signed: true)}',
         '${l10n.depotFlowMarket}: '
             '${format.money(flow.marketGain, signed: true)}',
+        '${l10n.depotFlowDividends}: '
+            '${format.money(flow.dividends, signed: true)}',
         '${l10n.depotFlowValueChange}: '
             '${format.money(flow.valueChange, signed: true)}',
       ].join('\n'),

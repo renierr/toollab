@@ -127,6 +127,7 @@ class DepotOverviewView extends StatelessWidget {
                   icon: Icons.stacked_bar_chart,
                   child: DepotCapitalFlowCard(
                     points: state.maxChart,
+                    transactions: state.transactions,
                     format: format,
                   ),
                 ),
