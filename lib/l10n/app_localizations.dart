@@ -22102,6 +22102,12 @@ abstract class AppLocalizations {
   /// **'Overview'**
   String get depotReportOverview;
 
+  /// No description provided for @depotYearReviewPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Year in review (PDF)'**
+  String get depotYearReviewPdf;
+
   /// No description provided for @depotYearReviewTitle.
   ///
   /// In en, this message translates to:

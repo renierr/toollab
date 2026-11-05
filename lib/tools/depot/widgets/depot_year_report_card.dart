@@ -10,6 +10,7 @@ import '../models/depot_year_report.dart';
 import 'depot_fee_summary.dart';
 import 'depot_info_row.dart';
 import 'depot_sales_summary.dart';
+import 'depot_year_review_button.dart';
 
 /// Realized gains, income, taxes and fees of one calendar year.
 class DepotYearReportCard extends StatelessWidget {
@@ -91,25 +92,28 @@ class DepotYearReportCard extends StatelessWidget {
               year: report.year,
             ),
             const SizedBox(height: 6),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => FileSaveHelper.saveFile(
-                  context: context,
-                  suggestedName: 'depot-tax-${report.year}.csv',
-                  bytes: DepotTaxExport.csv(
-                    state.visibleTransactions,
-                    report.year,
+            Wrap(
+              spacing: 8,
+              children: [
+                TextButton.icon(
+                  onPressed: () => FileSaveHelper.saveFile(
+                    context: context,
+                    suggestedName: 'depot-tax-${report.year}.csv',
+                    bytes: DepotTaxExport.csv(
+                      state.visibleTransactions,
+                      report.year,
+                    ),
+                    successMessageAndroid: l10n.depotExportDone,
+                    successMessageGeneralBuilder: (path) =>
+                        '${l10n.depotExportDone}\n$path',
+                    errorMessageBuilder: (error) =>
+                        '${l10n.depotTaxExportFailed}: $error',
                   ),
-                  successMessageAndroid: l10n.depotExportDone,
-                  successMessageGeneralBuilder: (path) =>
-                      '${l10n.depotExportDone}\n$path',
-                  errorMessageBuilder: (error) =>
-                      '${l10n.depotTaxExportFailed}: $error',
+                  icon: const Icon(Icons.download_outlined),
+                  label: Text(l10n.depotTaxExport),
                 ),
-                icon: const Icon(Icons.download_outlined),
-                label: Text(l10n.depotTaxExport),
-              ),
+                DepotYearReviewButton(year: report.year),
+              ],
             ),
           ],
         ),

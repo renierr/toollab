@@ -4880,6 +4880,7 @@
   "depotDividendNavPositions": "Je Position",
   "depotDividendNavChanges": "Änderungen",
   "depotReportOverview": "Übersicht",
+  "depotYearReviewPdf": "Jahresrückblick (PDF)",
   "depotYearReviewTitle": "Jahresrückblick {year}",
   "depotYearReviewUntil": "Stand {date}",
   "depotYearReviewStart": "Wert Jahresanfang",

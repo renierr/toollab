@@ -6132,6 +6132,7 @@
   "depotDividendNavPositions": "Per position",
   "depotDividendNavChanges": "Changes",
   "depotReportOverview": "Overview",
+  "depotYearReviewPdf": "Year in review (PDF)",
   "depotYearReviewTitle": "Year in review {year}",
   "@depotYearReviewTitle": {"placeholders": {"year": {"type": "String"}}},
   "depotYearReviewUntil": "as of {date}",

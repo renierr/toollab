@@ -12523,6 +12523,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotReportOverview => 'Overview';
 
   @override
+  String get depotYearReviewPdf => 'Year in review (PDF)';
+
+  @override
   String depotYearReviewTitle(String year) {
     return 'Year in review $year';
   }

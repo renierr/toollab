@@ -1,18 +1,17 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-import '../depot_dividend_state.dart';
 import '../depot_logo_state.dart';
 import '../depot_portfolio_state.dart';
 import '../depot_report_pdf.dart';
 import '../depot_year_review_pdf.dart';
+import 'depot_year_review_button.dart';
 
-/// Saves the overview's current selection, or a year in review, as a PDF.
+/// Saves the overview's current selection, or the running year in review,
+/// as a PDF; older years are in the Activities yearly report.
 class DepotReportButton extends StatefulWidget {
   const DepotReportButton({super.key});
 
@@ -20,57 +19,46 @@ class DepotReportButton extends StatefulWidget {
   State<DepotReportButton> createState() => _DepotReportButtonState();
 }
 
-/// What the menu creates; a null year is the overview report.
-typedef _Choice = ({int? year});
+enum _Choice { overview, yearReview }
 
 class _DepotReportButtonState extends State<DepotReportButton> {
   bool _busy = false;
 
   Future<void> _create(_Choice choice) async {
+    setState(() => _busy = true);
+    switch (choice) {
+      case _Choice.overview:
+        await _overview();
+      case _Choice.yearReview:
+        await DepotYearReviewButton.save(context, DateTime.now().year);
+    }
+    if (mounted) setState(() => _busy = false);
+  }
+
+  Future<void> _overview() async {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
     final messenger = ScaffoldMessenger.of(context);
-    final state = context.read<DepotPortfolioState>();
     final logos = context.read<DepotLogoState>();
-    final dividends = context.read<DepotDividendState>();
-    final year = choice.year;
-    setState(() => _busy = true);
     try {
-      final Uint8List bytes;
-      final String name;
-      if (year == null) {
-        bytes = await DepotReportPdf.build(
-          state: state,
-          logoOf: logos.bytesFor,
-          l10n: l10n,
-          locale: locale,
-        );
-        final now = DateTime.now();
-        name =
-            'depot-report-${now.year}-${'${now.month}'.padLeft(2, '0')}-'
-            '${'${now.day}'.padLeft(2, '0')}.pdf';
-      } else {
-        await dividends.ensureLoaded();
-        bytes = await DepotYearReviewPdf.build(
-          state: state,
-          dividendAssets: dividends.assets,
-          year: year,
-          l10n: l10n,
-          locale: locale,
-        );
-        name = 'depot-year-$year.pdf';
-      }
+      final bytes = await DepotReportPdf.build(
+        state: context.read<DepotPortfolioState>(),
+        logoOf: logos.bytesFor,
+        l10n: l10n,
+        locale: locale,
+      );
       if (!mounted) return;
+      final now = DateTime.now();
       await FileSaveHelper.saveFile(
         context: context,
-        suggestedName: name,
+        suggestedName:
+            'depot-report-${now.year}-${'${now.month}'.padLeft(2, '0')}-'
+            '${'${now.day}'.padLeft(2, '0')}.pdf',
         bytes: bytes,
       );
     } catch (e) {
       errorLog('[DepotReportButton] PDF report failed: $e');
       messenger.showSnackBar(SnackBar(content: Text(l10n.depotReportFailed)));
-    } finally {
-      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -87,6 +75,7 @@ class _DepotReportButtonState extends State<DepotReportButton> {
         ),
       );
     }
+    final year = DateTime.now().year;
     return PopupMenuButton<_Choice>(
       icon: const Icon(Icons.picture_as_pdf_outlined),
       tooltip: l10n.depotReportPdf,
@@ -94,12 +83,12 @@ class _DepotReportButtonState extends State<DepotReportButton> {
       onSelected: _create,
       itemBuilder: (context) => [
         PopupMenuItem(
-          value: (year: null),
+          value: _Choice.overview,
           child: Text(l10n.depotReportOverview),
         ),
-        for (final year in DepotYearReviewPdf.yearsOf(state))
+        if (DepotYearReviewPdf.yearsOf(state).contains(year))
           PopupMenuItem(
-            value: (year: year),
+            value: _Choice.yearReview,
             child: Text(l10n.depotYearReviewTitle('$year')),
           ),
       ],

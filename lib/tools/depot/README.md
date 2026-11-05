@@ -354,8 +354,9 @@ left and show no Max percentage. Portfolio-level KPIs still show TTWROR and IRR.
 
 ## PDF report
 
-The PDF icon on the Overview tab opens a menu: Overview, then a Year in review for every
-year the stored Max chart covers. Overview saves the current selection as an A4 report:
+The PDF icon on the Overview tab opens a menu: Overview and the running year's Year in
+review. Any year's review is saved from the Activities yearly report, next to the CSV
+export, for the year selected there. Overview saves the current selection as an A4 report:
 the selected portfolio and period, and the holdings exactly as the filter and sort show
 them.
 
