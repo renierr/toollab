@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_parqet_sync.dart';
 import 'depot_activity_groups.dart';
+import 'depot_drawdowns.dart';
 import 'depot_savings_plans.dart';
 import 'depot_store.dart';
 import 'depot_work_lease.dart';
@@ -79,6 +80,8 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotTransaction>? _plansSource;
   DateTime? _plansDay;
   DepotSavingsPlans _savingsPlans = DepotSavingsPlans.empty;
+  List<DepotChartPoint>? _drawdownsSource;
+  DepotDrawdowns _drawdowns = DepotDrawdowns.empty;
   List<DepotTransaction> _visibleTransactions = const [];
   final Map<(String, int, int), bool> _activityMonthExpansion = {};
   List<DepotTransaction>? _groupedActivitiesSource;
@@ -108,6 +111,15 @@ class DepotPortfolioState extends ChangeNotifier {
 
   /// The whole history, whatever period is selected.
   List<DepotChartPoint> get maxChart => _maxChart;
+
+  DepotDrawdowns get drawdowns {
+    if (!identical(_maxChart, _drawdownsSource)) {
+      _drawdownsSource = _maxChart;
+      _drawdowns = DepotDrawdowns.of(_maxChart);
+    }
+    return _drawdowns;
+  }
+
   DepotRangeChange? get rangeChange => _rangeChange;
   List<DepotHolding> get holdings => _holdings;
   List<DepotTransaction> get transactions => _transactions;

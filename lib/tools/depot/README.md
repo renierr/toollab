@@ -175,6 +175,14 @@ ended ones included; one-off buys are all other buys. Amounts are per booking cu
 not converted. Tapping a plan opens its buys in Activities, and an expanded holding with
 a running plan shows its rate and day. The card is hidden when no plan is running.
 
+The drawdowns card reads Parqet's `drawdown` figure of the stored Max chart, whatever
+period is selected, so deposits and withdrawals do not count as falls. This differs from
+the risk card's value drawdown. A fall starts at the last point at zero (the high) and
+ends at the next point back at zero; its depth is the lowest point in between. Falls of
+5 % or more are listed deepest first, an ongoing one included; the collapsed line always
+shows the current distance from the high. Recovery time runs from the high to the point
+back at it. Older Max points are weekly, so dates can be a few days off.
+
 The Activities yearly card can export a CSV for the selected year and active
 activity filters. It contains individual bookings and their original currencies,
 not a tax calculation or filing. Check the broker's tax documents.

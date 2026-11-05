@@ -21707,6 +21707,96 @@ abstract class AppLocalizations {
   /// **'{amount} per month, around day {day}'**
   String depotHoldingSavingsPlanValue(String amount, int day);
 
+  /// No description provided for @depotNavDrawdowns.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawdowns'**
+  String get depotNavDrawdowns;
+
+  /// No description provided for @depotDrawdownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawdowns'**
+  String get depotDrawdownTitle;
+
+  /// No description provided for @depotDrawdownAtHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'At an all-time high'**
+  String get depotDrawdownAtHigh;
+
+  /// No description provided for @depotDrawdownBelowHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} below the high of {date} · {duration}'**
+  String depotDrawdownBelowHigh(String percent, String date, String duration);
+
+  /// No description provided for @depotDrawdownDeepest.
+  ///
+  /// In en, this message translates to:
+  /// **'Deepest: {percent} in {year}, back after {duration}'**
+  String depotDrawdownDeepest(String percent, String year, String duration);
+
+  /// No description provided for @depotDrawdownDeepestOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Deepest: {percent} since {date}, not back yet'**
+  String depotDrawdownDeepestOpen(String percent, String date);
+
+  /// No description provided for @depotDrawdownCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get depotDrawdownCurrent;
+
+  /// No description provided for @depotDrawdownCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Drops of {percent} or more'**
+  String depotDrawdownCount(String percent);
+
+  /// No description provided for @depotDrawdownAverageRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Average time to recover'**
+  String get depotDrawdownAverageRecovery;
+
+  /// No description provided for @depotDrawdownLow.
+  ///
+  /// In en, this message translates to:
+  /// **'low {date}'**
+  String depotDrawdownLow(String date);
+
+  /// No description provided for @depotDrawdownBack.
+  ///
+  /// In en, this message translates to:
+  /// **'back {date}'**
+  String depotDrawdownBack(String date);
+
+  /// No description provided for @depotDrawdownStillBelow.
+  ///
+  /// In en, this message translates to:
+  /// **'still below'**
+  String get depotDrawdownStillBelow;
+
+  /// No description provided for @depotDrawdownDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String depotDrawdownDays(int count);
+
+  /// No description provided for @depotDrawdownMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 month} other{{count} months}}'**
+  String depotDrawdownMonths(int count);
+
+  /// No description provided for @depotDrawdownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Parqet\'s drawdown over the whole history, with deposits and withdrawals left out. Drops of {percent} or more are listed, deepest first. Older chart points are weekly, so dates can be a few days off.'**
+  String depotDrawdownHint(String percent);
+
   /// No description provided for @depotNavRisk.
   ///
   /// In en, this message translates to:

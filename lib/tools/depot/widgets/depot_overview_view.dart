@@ -12,6 +12,7 @@ import '../depot_xray.dart';
 import '../models/depot_filters.dart';
 import '../models/depot_period.dart';
 import 'depot_connect_card.dart';
+import 'depot_drawdown_card.dart';
 import 'depot_benchmark_chart.dart';
 import 'depot_capital_flow_card.dart';
 import 'depot_holding_filter_bar.dart';
@@ -25,7 +26,7 @@ import 'depot_section_scroll_view.dart';
 import 'depot_sync_header.dart';
 import 'depot_value_card.dart';
 
-enum _Section { value, movers, growth, plans, risk, holdings }
+enum _Section { value, movers, growth, plans, drawdowns, risk, holdings }
 
 class DepotOverviewView extends StatelessWidget {
   const DepotOverviewView({super.key});
@@ -53,6 +54,7 @@ class DepotOverviewView extends StatelessWidget {
     final openValue = state.openValue;
     final periodLabel = DepotPortfolioLabels.period(l10n, state.period);
     final plans = state.savingsPlans;
+    final drawdowns = state.drawdowns;
 
     return DepotSectionScrollView<_Section>(
       onRefresh: state.sync,
@@ -136,6 +138,16 @@ class DepotOverviewView extends StatelessWidget {
                   child: DepotSavingsPlanCard(
                     plans: plans,
                     holdings: state.holdings,
+                  ),
+                ),
+              if (!drawdowns.isEmpty)
+                DepotSection(
+                  id: _Section.drawdowns,
+                  label: l10n.depotNavDrawdowns,
+                  icon: Icons.trending_down,
+                  child: DepotDrawdownCard(
+                    drawdowns: drawdowns,
+                    format: format,
                   ),
                 ),
               DepotSection(

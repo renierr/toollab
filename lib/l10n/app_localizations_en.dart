@@ -12257,6 +12257,81 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get depotNavDrawdowns => 'Drawdowns';
+
+  @override
+  String get depotDrawdownTitle => 'Drawdowns';
+
+  @override
+  String get depotDrawdownAtHigh => 'At an all-time high';
+
+  @override
+  String depotDrawdownBelowHigh(String percent, String date, String duration) {
+    return '$percent below the high of $date · $duration';
+  }
+
+  @override
+  String depotDrawdownDeepest(String percent, String year, String duration) {
+    return 'Deepest: $percent in $year, back after $duration';
+  }
+
+  @override
+  String depotDrawdownDeepestOpen(String percent, String date) {
+    return 'Deepest: $percent since $date, not back yet';
+  }
+
+  @override
+  String get depotDrawdownCurrent => 'Current';
+
+  @override
+  String depotDrawdownCount(String percent) {
+    return 'Drops of $percent or more';
+  }
+
+  @override
+  String get depotDrawdownAverageRecovery => 'Average time to recover';
+
+  @override
+  String depotDrawdownLow(String date) {
+    return 'low $date';
+  }
+
+  @override
+  String depotDrawdownBack(String date) {
+    return 'back $date';
+  }
+
+  @override
+  String get depotDrawdownStillBelow => 'still below';
+
+  @override
+  String depotDrawdownDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String depotDrawdownMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months',
+      one: '1 month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String depotDrawdownHint(String percent) {
+    return 'Parqet\'s drawdown over the whole history, with deposits and withdrawals left out. Drops of $percent or more are listed, deepest first. Older chart points are weekly, so dates can be a few days off.';
+  }
+
+  @override
   String get depotNavRisk => 'Risk';
 
   @override

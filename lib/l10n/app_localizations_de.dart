@@ -12345,6 +12345,81 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get depotNavDrawdowns => 'Rückgänge';
+
+  @override
+  String get depotDrawdownTitle => 'Wertrückgänge';
+
+  @override
+  String get depotDrawdownAtHigh => 'Auf Allzeithoch';
+
+  @override
+  String depotDrawdownBelowHigh(String percent, String date, String duration) {
+    return '$percent unter dem Hoch vom $date · $duration';
+  }
+
+  @override
+  String depotDrawdownDeepest(String percent, String year, String duration) {
+    return 'Tiefster: $percent im Jahr $year, erholt nach $duration';
+  }
+
+  @override
+  String depotDrawdownDeepestOpen(String percent, String date) {
+    return 'Tiefster: $percent seit $date, noch nicht erholt';
+  }
+
+  @override
+  String get depotDrawdownCurrent => 'Aktuell';
+
+  @override
+  String depotDrawdownCount(String percent) {
+    return 'Rückgänge ab $percent';
+  }
+
+  @override
+  String get depotDrawdownAverageRecovery => 'Durchschnittliche Erholungszeit';
+
+  @override
+  String depotDrawdownLow(String date) {
+    return 'Tief $date';
+  }
+
+  @override
+  String depotDrawdownBack(String date) {
+    return 'erholt $date';
+  }
+
+  @override
+  String get depotDrawdownStillBelow => 'noch darunter';
+
+  @override
+  String depotDrawdownDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String depotDrawdownMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Monate',
+      one: '1 Monat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String depotDrawdownHint(String percent) {
+    return 'Parqets Drawdown über die ganze Historie, ohne Ein- und Auszahlungen. Gelistet sind Rückgänge ab $percent, die tiefsten zuerst. Ältere Chartpunkte sind wöchentlich, Daten können daher einige Tage abweichen.';
+  }
+
+  @override
   String get depotNavRisk => 'Risiko';
 
   @override
