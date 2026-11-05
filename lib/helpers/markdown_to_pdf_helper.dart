@@ -29,6 +29,9 @@ class MarkdownToPdfConverter {
     return pw.TtfFont(data);
   }
 
+  /// Emoji first, then the mono face for symbols Noto Sans lacks (→, ∞, ≥).
+  static List<pw.Font> get _fallbackFonts => [_emojiFont!, _monoFont!];
+
   static Future<Uint8List> convert({
     required String markdown,
     String? title,
@@ -62,7 +65,7 @@ class MarkdownToPdfConverter {
                 font: _bodyFont,
                 fontSize: 9,
                 color: PdfColors.grey600,
-                fontFallback: [_emojiFont!],
+                fontFallback: _fallbackFonts,
               ),
             ),
           );
@@ -76,7 +79,7 @@ class MarkdownToPdfConverter {
               font: _bodyFont,
               fontSize: 9,
               color: PdfColors.grey600,
-              fontFallback: [_emojiFont!],
+              fontFallback: _fallbackFonts,
             ),
           ),
         ),
@@ -94,29 +97,29 @@ class MarkdownToPdfConverter {
   }
 
   static pw.TextStyle _baseStyle() =>
-      pw.TextStyle(font: _bodyFont, fontSize: 11, fontFallback: [_emojiFont!]);
+      pw.TextStyle(font: _bodyFont, fontSize: 11, fontFallback: _fallbackFonts);
 
   static pw.TextStyle _boldStyle({double? size}) => pw.TextStyle(
     font: _boldFont,
     fontSize: size ?? 11,
-    fontFallback: [_emojiFont!],
+    fontFallback: _fallbackFonts,
   );
 
   static pw.TextStyle _italicStyle({double? size}) => pw.TextStyle(
     font: _italicFont,
     fontSize: size ?? 11,
-    fontFallback: [_emojiFont!],
+    fontFallback: _fallbackFonts,
   );
 
   static pw.TextStyle _monoStyle() => pw.TextStyle(
     font: _monoFont,
     fontSize: 9,
     color: PdfColors.grey800,
-    fontFallback: [_emojiFont!],
+    fontFallback: _fallbackFonts,
   );
 
   static pw.TextStyle _fallbackStyle() =>
-      pw.TextStyle(fontFallback: [_emojiFont!]);
+      pw.TextStyle(fontFallback: _fallbackFonts);
 
   static String _clean(String text) =>
       text.replaceAll(RegExp(r'[\u200c\u200d\ufe0e\ufe0f]'), '');
@@ -485,7 +488,7 @@ class MarkdownToPdfConverter {
             font: _bodyFont,
             color: PdfColors.blue700,
             decoration: pw.TextDecoration.underline,
-            fontFallback: [_emojiFont!],
+            fontFallback: _fallbackFonts,
           ),
           children: [
             ..._buildInlineSpans(node.children ?? []),
@@ -496,7 +499,7 @@ class MarkdownToPdfConverter {
                   font: _bodyFont,
                   fontSize: 9,
                   color: PdfColors.grey500,
-                  fontFallback: [_emojiFont!],
+                  fontFallback: _fallbackFonts,
                 ),
               ),
           ],
@@ -562,7 +565,7 @@ class MarkdownToPdfConverter {
           style: pw.TextStyle(
             font: _italicFont,
             color: PdfColors.grey500,
-            fontFallback: [_emojiFont!],
+            fontFallback: _fallbackFonts,
           ),
         );
       case 'br':
@@ -572,7 +575,7 @@ class MarkdownToPdfConverter {
           style: pw.TextStyle(
             font: _bodyFont,
             decoration: pw.TextDecoration.lineThrough,
-            fontFallback: [_emojiFont!],
+            fontFallback: _fallbackFonts,
           ),
           children: _buildInlineSpans(node.children ?? []),
         );

@@ -52,10 +52,19 @@ Future<Uint8List> buildRenphoReportPdf({
   final bold = pw.Font.ttf(
     await rootBundle.load('assets/google_fonts/NotoSans-Bold.ttf'),
   );
+  // Noto Sans has no ∞ or ≥; the mono face already in the bundle does.
+  final symbols = pw.Font.ttf(
+    await rootBundle.load('assets/google_fonts/NotoSansMono-Regular.ttf'),
+  );
   final document = pw.Document(
-    theme: pw.ThemeData.withFont(base: base, bold: bold).copyWith(
-      defaultTextStyle: pw.TextStyle(font: base, fontSize: 9, color: _ink),
-    ),
+    theme:
+        pw.ThemeData.withFont(
+          base: base,
+          bold: bold,
+          fontFallback: [symbols],
+        ).copyWith(
+          defaultTextStyle: pw.TextStyle(font: base, fontSize: 9, color: _ink),
+        ),
   );
   final dayLabels = [
     for (var index = 6; index >= 0; index--)

@@ -438,7 +438,7 @@ pw.Widget _right(_Review r) {
         ),
         for (final c in r.changes.take(8))
           _row(
-            '${c.holding.name}  ${number.format(c.before)} → '
+            '${c.holding.name}  ${number.format(c.before)} – '
             '${number.format(c.now)} ${c.currency}',
             f.percent(c.percent),
             color: _S.signColor(c.percent),

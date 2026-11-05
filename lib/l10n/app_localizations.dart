@@ -22147,7 +22147,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotYearReviewDeepest.
   ///
   /// In en, this message translates to:
-  /// **'Deepest fall: {depth} ({peak} → {low})'**
+  /// **'Deepest fall: {depth} ({peak} – {low})'**
   String depotYearReviewDeepest(String depth, String peak, String low);
 
   /// No description provided for @depotYearReviewBest.

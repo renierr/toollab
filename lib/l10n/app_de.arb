@@ -4887,7 +4887,7 @@
   "depotYearReviewEnd": "Wert Jahresende",
   "depotYearReviewReturn": "Rendite (zeitgewichtet)",
   "depotYearReviewMonths": "Monatsrenditen",
-  "depotYearReviewDeepest": "Tiefster Rückgang: {depth} ({peak} → {low})",
+  "depotYearReviewDeepest": "Tiefster Rückgang: {depth} ({peak} – {low})",
   "depotYearReviewBest": "Beste Positionen",
   "depotYearReviewWorst": "Schwächste Positionen",
   "depotYearReviewActivity": "Käufe & Verkäufe",

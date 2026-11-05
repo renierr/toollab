@@ -12637,7 +12637,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String depotYearReviewDeepest(String depth, String peak, String low) {
-    return 'Tiefster Rückgang: $depth ($peak → $low)';
+    return 'Tiefster Rückgang: $depth ($peak – $low)';
   }
 
   @override

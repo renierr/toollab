@@ -6141,7 +6141,7 @@
   "depotYearReviewEnd": "Value at end",
   "depotYearReviewReturn": "Return (time-weighted)",
   "depotYearReviewMonths": "Monthly returns",
-  "depotYearReviewDeepest": "Deepest fall: {depth} ({peak} → {low})",
+  "depotYearReviewDeepest": "Deepest fall: {depth} ({peak} – {low})",
   "@depotYearReviewDeepest": {"placeholders": {"depth": {"type": "String"}, "peak": {"type": "String"}, "low": {"type": "String"}}},
   "depotYearReviewBest": "Best holdings",
   "depotYearReviewWorst": "Weakest holdings",
