@@ -79,34 +79,17 @@ class DepotSyncHeader extends StatelessWidget {
                   state.portfolios.first.name,
                   style: theme.textTheme.titleSmall,
                 ),
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text(
-                    lastSync == null
-                        ? l10n.depotNeverSynced
-                        : '${l10n.depotLastSync(FormatHelper.dateTime(lastSync))}'
-                              '${now.difference(lastSync) > const Duration(hours: 24) ? ' · ${l10n.depotSyncStale}' : ''}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                    ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  lastSync == null
+                      ? l10n.depotNeverSynced
+                      : '${l10n.depotLastSync(FormatHelper.dateTime(lastSync))}'
+                            '${now.difference(lastSync) > const Duration(hours: 24) ? ' · ${l10n.depotSyncStale}' : ''}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
                   ),
-                  const SizedBox(width: 4),
-                  state.isSyncing
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.sync_outlined),
-                          tooltip: l10n.depotSyncNow,
-                          onPressed: state.sync,
-                        ),
-                ],
+                ),
               ),
             ],
           ),
