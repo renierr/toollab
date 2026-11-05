@@ -137,6 +137,15 @@ while it is shown, fetches only positions that are new, in another currency or o
 a day; pull-to-refresh syncs Parqet and then does the same. The tab has no reload button:
 **Reload dividend data** in settings fetches every position again.
 
+The dividend changes card lists held stocks whose dividend per share in the running year
+differs by 0.5 % or more from a comparable earlier payment, from the cached Yahoo
+history, in the listing currency. Quarterly payers compare their latest payment with
+the last one before the year; monthly payers the median of the last three payments on
+each side, which steps over supplementals; semiannual, annual and irregular payers the
+payment about a year earlier (within six weeks), since interim and final payments often
+differ. A jump of more than half that the next payment falls back from is taken as a
+special dividend and skipped. ETFs and funds are left out, their payouts vary anyway.
+
 The dividend position list shows the trailing 12 months of net booked dividends
 divided by the current cost basis as yield on cost. This is not a historical cost
 basis and may include payments from shares since sold. Estimated monthly income is
@@ -162,8 +171,14 @@ closing prices on demand; EUR portfolios only. Both lines start at 100 on their
 first overlapping date. It starts off and resets when leaving Depot. The static
 comparison replaces the value plot inside its card; its selector is hidden when
 there is no chart, including Today. Portfolio returns approximate cash flows from
-changes in invested capital between chart points; the ETF line uses unadjusted
-closing prices.
+changes in invested capital between chart points, with the dividends and interest paid
+out in between added back as return; the ETF line uses unadjusted closing prices.
+Chips switch between that index view and "with your money": a shadow depot that puts the
+portfolio's value at the period start into the ETF, then buys or sells ETF units on each
+change of net invested capital and sells units for every dividend paid out, since the
+accumulating ETF would have kept it. Both lines are then in money, so the difference is
+what the real deposits, with their timing, would have made in the ETF. Older Max points
+are weekly, so cash flows land within a few days.
 Differences are indicative, not risk-adjusted alpha, and can be affected by costs,
 taxes, missing data and timing. A failed or unavailable comparison leaves the
 original value chart untouched. Prices may be delayed.

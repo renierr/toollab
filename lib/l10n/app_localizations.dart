@@ -22090,6 +22090,24 @@ abstract class AppLocalizations {
   /// **'Per position'**
   String get depotDividendNavPositions;
 
+  /// No description provided for @depotDividendNavChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes'**
+  String get depotDividendNavChanges;
+
+  /// No description provided for @depotDividendChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend changes {year}'**
+  String depotDividendChangesTitle(String year);
+
+  /// No description provided for @depotDividendChangesSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{raised} raised · {cut} cut'**
+  String depotDividendChangesSummary(int raised, int cut);
+
   /// No description provided for @depotDividendNext.
   ///
   /// In en, this message translates to:
@@ -24705,6 +24723,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not load benchmark. Tap to retry.'**
   String get depotBenchmarkFailed;
+
+  /// No description provided for @depotBenchmarkModeIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Index %'**
+  String get depotBenchmarkModeIndex;
+
+  /// No description provided for @depotBenchmarkModeMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'With your money'**
+  String get depotBenchmarkModeMoney;
+
+  /// No description provided for @depotBenchmarkDepot.
+  ///
+  /// In en, this message translates to:
+  /// **'Depot'**
+  String get depotBenchmarkDepot;
+
+  /// No description provided for @depotBenchmarkMoneyDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference: {value}'**
+  String depotBenchmarkMoneyDifference(String value);
+
+  /// No description provided for @depotBenchmarkMoneyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Same deposits and withdrawals on the same days, all in the ETF. Your dividends count as withdrawals.'**
+  String get depotBenchmarkMoneyHint;
 
   /// No description provided for @depotBenchmarkCurrency.
   ///

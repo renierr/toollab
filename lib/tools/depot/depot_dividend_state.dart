@@ -44,6 +44,9 @@ class DepotDividendState extends ChangeNotifier {
   int get year => _year;
   int get month => _month;
 
+  /// Market data per holding identifier.
+  Map<String, DepotDividendAsset> get assets => _assets;
+
   DateTime? get fetchedAt {
     DateTime? latest;
     for (final a in _assets.values) {

@@ -3,6 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_summary.dart';
+import 'models/depot_transaction.dart';
 import 'models/market_quote.dart';
 
 enum DepotBenchmark {
@@ -15,26 +16,43 @@ enum DepotBenchmark {
   const DepotBenchmark(this.symbol, this.label);
 }
 
+/// [portfolio] and [benchmark] are indexed to 100; [value] is the depot's
+/// money and [shadow] what the same deposits and withdrawals, made on the
+/// same days, would be worth in the benchmark.
 typedef DepotBenchmarkPoint = ({
   DateTime date,
   double portfolio,
   double benchmark,
+  double value,
+  double shadow,
 });
 
+/// [income] are dividends and interest paid out of the depot; they count as
+/// return of the depot and as money taken out of the shadow benchmark, which
+/// would have kept them.
 List<DepotBenchmarkPoint> compareDepotBenchmark(
   List<DepotChartPoint> chart,
-  List<MarketPricePoint> prices,
-) {
+  List<MarketPricePoint> prices, {
+  List<(DateTime, double)> income = const [],
+}) {
   final sorted = [...prices.where((p) => p.close.isFinite && p.close > 0)]
     ..sort((a, b) => a.date.compareTo(b.date));
   if (chart.length < 2 || sorted.length < 2) return const [];
+  final payouts = [...income]..sort((a, b) => a.$1.compareTo(b.$1));
+  var payout = 0;
   final result = <DepotBenchmarkPoint>[];
   DepotChartPoint? previous;
   double? base;
   var index = 100.0;
+  var units = 0.0;
   var quoteIndex = -1;
   for (final point in chart) {
     final day = DateTime(point.date.year, point.date.month, point.date.day);
+    var paid = 0.0;
+    while (payout < payouts.length && !payouts[payout].$1.isAfter(day)) {
+      if (previous != null) paid += payouts[payout].$2;
+      payout++;
+    }
     while (quoteIndex + 1 < sorted.length) {
       final next = sorted[quoteIndex + 1].date;
       final nextDay = DateTime(next.year, next.month, next.day);
@@ -57,18 +75,24 @@ List<DepotBenchmarkPoint> compareDepotBenchmark(
       if (result.isNotEmpty) return const [];
       continue;
     }
+    final close = sorted[quoteIndex].close;
     if (previous != null) {
-      final factor =
-          (point.value - (point.capital - previous.capital)) / previous.value;
+      final newMoney = point.capital - previous.capital;
+      final factor = (point.value - newMoney + paid) / previous.value;
       if (!factor.isFinite || factor <= 0) return const [];
       index *= factor;
       if (!index.isFinite) return const [];
+      units += (newMoney - paid) / close;
+    } else {
+      units = point.value / close;
     }
-    base ??= sorted[quoteIndex].close;
+    base ??= close;
     result.add((
       date: point.date,
       portfolio: index,
-      benchmark: sorted[quoteIndex].close / base * 100,
+      benchmark: close / base * 100,
+      value: point.value,
+      shadow: units * close,
     ));
     previous = point;
   }
@@ -82,6 +106,9 @@ class DepotBenchmarkState extends ChangeNotifier {
 
   final Future<MarketQuote> Function(String, DateTime, DateTime) _loader;
   DepotBenchmark selection = DepotBenchmark.off;
+
+  /// Money with the same deposits instead of both indexed to 100.
+  bool inMoney = false;
   List<DepotBenchmarkPoint> points = const [];
   bool loading = false;
   bool failed = false;
@@ -106,6 +133,12 @@ class DepotBenchmarkState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setInMoney(bool value) {
+    if (inMoney == value) return;
+    inMoney = value;
+    notifyListeners();
+  }
+
   bool needsLoad(List<DepotChartPoint> chart, String currency) =>
       selection != DepotBenchmark.off &&
       (!identical(_chart, chart) || _currency != currency);
@@ -121,10 +154,21 @@ class DepotBenchmarkState extends ChangeNotifier {
     currencyMismatch = false;
   }
 
+  /// Dividends and interest of [transactions], for [compareDepotBenchmark].
+  static List<(DateTime, double)> incomeOf(
+    List<DepotTransaction> transactions,
+  ) => [
+    for (final t in transactions)
+      if (t.type == DepotTransactionType.dividend ||
+          t.type == DepotTransactionType.interest)
+        (t.datetime, t.amountNet),
+  ];
+
   Future<void> load(
     List<DepotChartPoint> chart,
     String currency, {
     bool force = false,
+    List<(DateTime, double)> income = const [],
   }) async {
     if (_disposed ||
         selection == DepotBenchmark.off ||
@@ -153,7 +197,7 @@ class DepotBenchmarkState extends ChangeNotifier {
       if (_disposed || revision != _revision) return;
       currencyMismatch = quote.currency != currency;
       if (!currencyMismatch) {
-        points = compareDepotBenchmark(chart, quote.points);
+        points = compareDepotBenchmark(chart, quote.points, income: income);
       }
     } catch (e) {
       if (_disposed || revision != _revision) return;

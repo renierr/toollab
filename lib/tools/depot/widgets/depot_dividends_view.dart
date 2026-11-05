@@ -6,9 +6,11 @@ import '../depot_dividend_state.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_state.dart';
 import '../models/depot_holding.dart';
+import '../dividends/depot_dividend_changes.dart';
 import '../models/depot_dividend_history.dart';
 import 'depot_connect_card.dart';
 import 'depot_dividend_calendar_card.dart';
+import 'depot_dividend_changes_card.dart';
 import 'depot_dividend_kpis.dart';
 import 'depot_dividend_missing_card.dart';
 import 'depot_dividend_positions_card.dart';
@@ -18,7 +20,7 @@ import 'depot_income_chart.dart';
 import 'depot_section_scroll_view.dart';
 import 'depot_sync_header.dart';
 
-enum _Section { missing, calendar, years, income, positions }
+enum _Section { missing, calendar, years, changes, income, positions }
 
 class DepotDividendsView extends StatefulWidget {
   const DepotDividendsView({super.key});
@@ -83,6 +85,12 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
       portfolio.currency,
     );
     final history = DepotDividendHistory(portfolio.transactions);
+    final year = DateTime.now().year;
+    final changes = DepotDividendChanges.of(
+      year: year,
+      holdings: portfolio.holdings,
+      assets: dividends.assets,
+    );
 
     final empty = calendar.entries.isEmpty && calendar.positions.isEmpty;
 
@@ -142,6 +150,17 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
                     calendar: calendar,
                     format: format,
                     history: history,
+                  ),
+                ),
+              if (changes.isNotEmpty)
+                DepotSection(
+                  id: _Section.changes,
+                  label: l10n.depotDividendNavChanges,
+                  icon: Icons.trending_up,
+                  child: DepotDividendChangesCard(
+                    year: year,
+                    changes: changes,
+                    format: format,
                   ),
                 ),
               DepotSection(

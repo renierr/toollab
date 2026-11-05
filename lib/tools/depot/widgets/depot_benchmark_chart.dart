@@ -11,6 +11,7 @@ import '../depot_benchmark_state.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_state.dart';
 import 'depot_legend_dot.dart';
+import 'depot_mode_chips.dart';
 import 'depot_value_chart.dart';
 
 class DepotBenchmarkChart extends StatelessWidget {
@@ -34,7 +35,11 @@ class DepotBenchmarkChart extends StatelessWidget {
         if (context.mounted) {
           final current = context.read<DepotPortfolioState>();
           if (current.chart.length >= 2) {
-            state.load(current.chart, current.currency);
+            state.load(
+              current.chart,
+              current.currency,
+              income: DepotBenchmarkState.incomeOf(current.transactions),
+            );
           }
         }
       });
@@ -69,6 +74,18 @@ class DepotBenchmarkChart extends StatelessWidget {
               ),
           ],
         ),
+        if (state.selection != DepotBenchmark.off)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: DepotModeChips(
+              selected: state.inMoney,
+              options: [
+                (false, l10n.depotBenchmarkModeIndex),
+                (true, l10n.depotBenchmarkModeMoney),
+              ],
+              onSelected: state.setInMoney,
+            ),
+          ),
         if (!comparing)
           DepotValueChart(
             points: portfolio.chart,
@@ -82,8 +99,12 @@ class DepotBenchmarkChart extends StatelessWidget {
             Text(l10n.depotBenchmarkCurrency)
           else if (state.failed)
             TextButton(
-              onPressed: () =>
-                  state.load(portfolio.chart, portfolio.currency, force: true),
+              onPressed: () => state.load(
+                portfolio.chart,
+                portfolio.currency,
+                force: true,
+                income: DepotBenchmarkState.incomeOf(portfolio.transactions),
+              ),
               child: Text(l10n.depotBenchmarkFailed),
             )
           else if (points.length < 2)
@@ -95,6 +116,7 @@ class DepotBenchmarkChart extends StatelessWidget {
               child: CustomPaint(
                 painter: _BenchmarkPainter(
                   points,
+                  state.inMoney,
                   AppTheme.accentGreen,
                   theme.colorScheme.primary,
                   theme.dividerColor,
@@ -112,22 +134,40 @@ class DepotBenchmarkChart extends StatelessWidget {
               children: [
                 DepotLegendDot(
                   color: AppTheme.accentGreen,
-                  label:
-                      '${l10n.depotBenchmarkPortfolio}: ${number.format(points.last.portfolio)}',
+                  label: state.inMoney
+                      ? '${l10n.depotBenchmarkDepot}: ${format.money(points.last.value)}'
+                      : '${l10n.depotBenchmarkPortfolio}: ${number.format(points.last.portfolio)}',
                 ),
                 DepotLegendDot(
                   color: theme.colorScheme.primary,
-                  label:
-                      '${state.selection.label}: ${number.format(points.last.benchmark)}',
+                  label: state.inMoney
+                      ? '${state.selection.label}: ${format.money(points.last.shadow)}'
+                      : '${state.selection.label}: ${number.format(points.last.benchmark)}',
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Text(
-              l10n.depotBenchmarkDifference(
-                number.format(points.last.portfolio - points.last.benchmark),
-              ),
+              state.inMoney
+                  ? l10n.depotBenchmarkMoneyDifference(
+                      format.money(
+                        points.last.value - points.last.shadow,
+                        signed: true,
+                      ),
+                    )
+                  : l10n.depotBenchmarkDifference(
+                      number.format(
+                        points.last.portfolio - points.last.benchmark,
+                      ),
+                    ),
             ),
+            if (state.inMoney)
+              Text(
+                l10n.depotBenchmarkMoneyHint,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
           ],
         ],
       ],
@@ -137,18 +177,28 @@ class DepotBenchmarkChart extends StatelessWidget {
 
 class _BenchmarkPainter extends CustomPainter {
   final List<DepotBenchmarkPoint> points;
+  final bool inMoney;
   final Color portfolio;
   final Color benchmark;
   final Color grid;
-  _BenchmarkPainter(this.points, this.portfolio, this.benchmark, this.grid);
+  _BenchmarkPainter(
+    this.points,
+    this.inMoney,
+    this.portfolio,
+    this.benchmark,
+    this.grid,
+  );
+
+  double _first(DepotBenchmarkPoint p) => inMoney ? p.value : p.portfolio;
+  double _second(DepotBenchmarkPoint p) => inMoney ? p.shadow : p.benchmark;
 
   @override
   void paint(Canvas canvas, Size size) {
     var low = double.infinity;
     var high = -double.infinity;
     for (final p in points) {
-      low = math.min(low, math.min(p.portfolio, p.benchmark));
-      high = math.max(high, math.max(p.portfolio, p.benchmark));
+      low = math.min(low, math.min(_first(p), _second(p)));
+      high = math.max(high, math.max(_first(p), _second(p)));
     }
     if (high - low < 1) high = low + 1;
     final pad = (high - low) * 0.1;
@@ -187,13 +237,14 @@ class _BenchmarkPainter extends CustomPainter {
       );
     }
 
-    line((p) => p.portfolio, portfolio);
-    line((p) => p.benchmark, benchmark);
+    line(_first, portfolio);
+    line(_second, benchmark);
   }
 
   @override
   bool shouldRepaint(covariant _BenchmarkPainter old) =>
       old.points != points ||
+      old.inMoney != inMoney ||
       old.portfolio != portfolio ||
       old.benchmark != benchmark ||
       old.grid != grid;

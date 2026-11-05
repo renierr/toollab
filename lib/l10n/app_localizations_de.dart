@@ -12605,6 +12605,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDividendNavPositions => 'Je Position';
 
   @override
+  String get depotDividendNavChanges => 'Änderungen';
+
+  @override
+  String depotDividendChangesTitle(String year) {
+    return 'Dividendenänderungen $year';
+  }
+
+  @override
+  String depotDividendChangesSummary(int raised, int cut) {
+    return '$raised erhöht · $cut gekürzt';
+  }
+
+  @override
   String depotDividendNext(String date) {
     return 'nächste $date';
   }
@@ -14140,6 +14153,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get depotBenchmarkFailed =>
       'Benchmark konnte nicht geladen werden. Zum Wiederholen tippen.';
+
+  @override
+  String get depotBenchmarkModeIndex => 'Index %';
+
+  @override
+  String get depotBenchmarkModeMoney => 'Mit deinem Geld';
+
+  @override
+  String get depotBenchmarkDepot => 'Depot';
+
+  @override
+  String depotBenchmarkMoneyDifference(String value) {
+    return 'Differenz: $value';
+  }
+
+  @override
+  String get depotBenchmarkMoneyHint =>
+      'Gleiche Ein- und Auszahlungen an denselben Tagen, alles im ETF. Deine Dividenden zählen als Auszahlung.';
 
   @override
   String get depotBenchmarkCurrency =>

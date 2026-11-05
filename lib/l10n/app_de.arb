@@ -4878,6 +4878,9 @@
   "depotDividendNavYears": "Pro Jahr",
   "depotDividendNavIncome": "Erträge",
   "depotDividendNavPositions": "Je Position",
+  "depotDividendNavChanges": "Änderungen",
+  "depotDividendChangesTitle": "Dividendenänderungen {year}",
+  "depotDividendChangesSummary": "{raised} erhöht · {cut} gekürzt",
   "depotDividendNext": "nächste {date}",
   "@depotDividendNext": {
     "placeholders": {
@@ -5486,5 +5489,10 @@
   "depotBenchmarkDifference": "Differenz: {value} Prozentpunkte",
   "depotBenchmarkUnavailable": "Vergleich für diesen Zeitraum oder diese Währung nicht verfügbar.",
   "depotBenchmarkFailed": "Benchmark konnte nicht geladen werden. Zum Wiederholen tippen.",
+  "depotBenchmarkModeIndex": "Index %",
+  "depotBenchmarkModeMoney": "Mit deinem Geld",
+  "depotBenchmarkDepot": "Depot",
+  "depotBenchmarkMoneyDifference": "Differenz: {value}",
+  "depotBenchmarkMoneyHint": "Gleiche Ein- und Auszahlungen an denselben Tagen, alles im ETF. Deine Dividenden zählen als Auszahlung.",
   "depotBenchmarkCurrency": "Benchmark- und Depotwährung müssen übereinstimmen."
 }
