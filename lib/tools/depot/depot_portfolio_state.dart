@@ -201,6 +201,9 @@ class DepotPortfolioState extends ChangeNotifier {
     _notify();
   }
 
+  /// Year-to-date performance per holding key, whatever period is selected.
+  Map<String, DepotHoldingPerformance> get ytdPerformance => _ytdPerformance;
+
   DepotTaxYear taxYear(int year) => DepotTaxYear.of(
     year: year,
     transactions: _transactions,

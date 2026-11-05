@@ -12608,6 +12608,73 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDividendNavChanges => 'Änderungen';
 
   @override
+  String get depotReportOverview => 'Übersicht';
+
+  @override
+  String depotYearReviewTitle(String year) {
+    return 'Jahresrückblick $year';
+  }
+
+  @override
+  String depotYearReviewUntil(String date) {
+    return 'Stand $date';
+  }
+
+  @override
+  String get depotYearReviewStart => 'Wert Jahresanfang';
+
+  @override
+  String get depotYearReviewEnd => 'Wert Jahresende';
+
+  @override
+  String get depotYearReviewReturn => 'Rendite (zeitgewichtet)';
+
+  @override
+  String get depotYearReviewMonths => 'Monatsrenditen';
+
+  @override
+  String depotYearReviewDeepest(String depth, String peak, String low) {
+    return 'Tiefster Rückgang: $depth ($peak → $low)';
+  }
+
+  @override
+  String get depotYearReviewBest => 'Beste Positionen';
+
+  @override
+  String get depotYearReviewWorst => 'Schwächste Positionen';
+
+  @override
+  String get depotYearReviewActivity => 'Käufe & Verkäufe';
+
+  @override
+  String depotYearReviewBuys(int count) {
+    return '$count Käufe';
+  }
+
+  @override
+  String depotYearReviewSells(int count) {
+    return '$count Verkäufe';
+  }
+
+  @override
+  String depotYearReviewPayments(int count) {
+    return '$count Zahlungen, netto';
+  }
+
+  @override
+  String get depotYearReviewTaxes => 'Steuern & Gebühren';
+
+  @override
+  String get depotYearReviewFees => 'Gebühren';
+
+  @override
+  String get depotYearReviewUsedUp => 'ausgeschöpft';
+
+  @override
+  String get depotYearReviewDisclaimer =>
+      'Werte von Parqet zum Stand der letzten Synchronisierung, in Depotwährung. Die Rendite ist zeitgewichtet aus dem gespeicherten Chart, ausgezahlte Dividenden zählen als Ertrag. Rendite je Position, Freibetrag und Dividendenänderungen nur für das laufende Jahr. Keine Anlage- oder Steuerberatung.';
+
+  @override
   String depotDividendChangesTitle(String year) {
     return 'Dividendenänderungen $year';
   }

@@ -354,8 +354,10 @@ left and show no Max percentage. Portfolio-level KPIs still show TTWROR and IRR.
 
 ## PDF report
 
-The PDF icon on the Overview tab saves the current selection as an A4 report: the
-selected portfolio and period, and the holdings exactly as the filter and sort show them.
+The PDF icon on the Overview tab opens a menu: Overview, then a Year in review for every
+year the stored Max chart covers. Overview saves the current selection as an A4 report:
+the selected portfolio and period, and the holdings exactly as the filter and sort show
+them.
 
 1. Header: portfolio, period, active filter and sort, creation and sync time.
 2. KPI box: the same figures as the overview tiles.
@@ -371,6 +373,16 @@ selected portfolio and period, and the holdings exactly as the filter and sort s
 
 Logos appear when they were downloaded from the settings and are PNG or JPEG; otherwise
 the initials badge from the app is drawn.
+
+The year in review is one page on one calendar year of the selected portfolio, whatever
+period is selected: value at the start (last Max point before the year) and end, the
+time-weighted return, net dividends, new money and market gain as in the growth card,
+realized gains and costs from the yearly report, the month returns as tinted cells, the
+deepest fall of the return index within the year, buys and sales, dividend payments and
+taxes. Best and weakest holdings come from Parqet's year-to-date performance, and the
+allowance, advance lump sum and dividend changes are worked out for today, so these
+appear for the running year only. Shared colors, fonts, KPI box and footer of both PDFs
+are in `depot_pdf_style.dart`.
 
 ## Importing statements
 

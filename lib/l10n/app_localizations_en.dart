@@ -12520,6 +12520,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotDividendNavChanges => 'Changes';
 
   @override
+  String get depotReportOverview => 'Overview';
+
+  @override
+  String depotYearReviewTitle(String year) {
+    return 'Year in review $year';
+  }
+
+  @override
+  String depotYearReviewUntil(String date) {
+    return 'as of $date';
+  }
+
+  @override
+  String get depotYearReviewStart => 'Value at start';
+
+  @override
+  String get depotYearReviewEnd => 'Value at end';
+
+  @override
+  String get depotYearReviewReturn => 'Return (time-weighted)';
+
+  @override
+  String get depotYearReviewMonths => 'Monthly returns';
+
+  @override
+  String depotYearReviewDeepest(String depth, String peak, String low) {
+    return 'Deepest fall: $depth ($peak → $low)';
+  }
+
+  @override
+  String get depotYearReviewBest => 'Best holdings';
+
+  @override
+  String get depotYearReviewWorst => 'Weakest holdings';
+
+  @override
+  String get depotYearReviewActivity => 'Buys & sales';
+
+  @override
+  String depotYearReviewBuys(int count) {
+    return '$count buys';
+  }
+
+  @override
+  String depotYearReviewSells(int count) {
+    return '$count sales';
+  }
+
+  @override
+  String depotYearReviewPayments(int count) {
+    return '$count payments, net';
+  }
+
+  @override
+  String get depotYearReviewTaxes => 'Taxes & fees';
+
+  @override
+  String get depotYearReviewFees => 'Fees';
+
+  @override
+  String get depotYearReviewUsedUp => 'used up';
+
+  @override
+  String get depotYearReviewDisclaimer =>
+      'Values from Parqet as of the last sync, in portfolio currency. The return is time-weighted from the stored chart, with dividends paid out counted as return. Holding returns, allowance and dividend changes are only shown for the running year. No investment or tax advice.';
+
+  @override
   String depotDividendChangesTitle(String year) {
     return 'Dividend changes $year';
   }

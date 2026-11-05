@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' show Color;
 
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -11,6 +10,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import 'depot_colors.dart';
 import 'depot_format.dart';
+import 'depot_pdf_style.dart';
 import 'depot_portfolio_labels.dart';
 import 'depot_portfolio_state.dart';
 import 'models/depot_filters.dart';
@@ -19,15 +19,14 @@ import 'models/depot_period.dart';
 import 'models/depot_summary.dart';
 import 'widgets/depot_holding_avatar.dart';
 
-const _ink = PdfColor.fromInt(0xFF23272E);
-const _muted = PdfColor.fromInt(0xFF6B7280);
-const _hairline = PdfColor.fromInt(0xFFD5D9E0);
-const _paper = PdfColor.fromInt(0xFFF6F8FA);
-const _grid = PdfColor.fromInt(0xFFE6E9EE);
-const _accent = PdfColor.fromInt(0xFF1F5F8B);
-// Darker than the app's status colors, which are tuned for dark screens.
-const _gainColor = PdfColor.fromInt(0xFF2E7D32);
-const _lossColor = PdfColor.fromInt(0xFFC0392B);
+const _ink = DepotPdfStyle.ink;
+const _muted = DepotPdfStyle.muted;
+const _hairline = DepotPdfStyle.hairline;
+const _paper = DepotPdfStyle.paper;
+const _grid = DepotPdfStyle.grid;
+const _accent = DepotPdfStyle.accent;
+const _gainColor = DepotPdfStyle.gain;
+const _lossColor = DepotPdfStyle.loss;
 
 /// Portrait report of what the overview shows: the selected portfolio and
 /// period, its KPIs and charts, then the filtered holdings in their order.
@@ -43,23 +42,8 @@ class DepotReportPdf {
     required String locale,
   }) async {
     final report = _Report.of(state, logoOf, l10n, locale);
-    final base = pw.Font.ttf(
-      await rootBundle.load('assets/google_fonts/NotoSans-Regular.ttf'),
-    );
-    final bold = pw.Font.ttf(
-      await rootBundle.load('assets/google_fonts/NotoSans-Bold.ttf'),
-    );
-    final document = pw.Document(
-      theme: pw.ThemeData.withFont(base: base, bold: bold).copyWith(
-        defaultTextStyle: pw.TextStyle(font: base, fontSize: 8, color: _ink),
-      ),
-    );
-    final format = PdfPageFormat.a4.copyWith(
-      marginLeft: 28,
-      marginRight: 28,
-      marginTop: 26,
-      marginBottom: 24,
-    );
+    final document = await DepotPdfStyle.document();
+    final format = DepotPdfStyle.pageFormat;
     final width = format.availableWidth;
     const gap = 16.0;
     final leftWidth = (width - gap) * 0.58;
@@ -214,45 +198,10 @@ class _Report {
 
 PdfColor _pdf(Color c) => PdfColor.fromInt(c.toARGB32());
 
-/// [c] at [alpha] over white, so tints print the same on every viewer.
-PdfColor _tint(PdfColor c, double alpha) => PdfColor(
-  1 - (1 - c.red) * alpha,
-  1 - (1 - c.green) * alpha,
-  1 - (1 - c.blue) * alpha,
-);
-
-PdfColor _signColor(double? value) => value == null || value == 0
-    ? _ink
-    : value > 0
-    ? _gainColor
-    : _lossColor;
-
-pw.Widget _sectionTitle(String text) => pw.Text(
-  text.toUpperCase(),
-  style: pw.TextStyle(
-    fontSize: 8,
-    fontWeight: pw.FontWeight.bold,
-    color: _muted,
-    letterSpacing: .6,
-  ),
-);
-
-pw.Widget _text(
-  String s, {
-  bool right = false,
-  PdfColor? color,
-  bool bold = false,
-  double size = 7.5,
-}) => pw.Text(
-  s,
-  maxLines: 1,
-  textAlign: right ? pw.TextAlign.right : pw.TextAlign.left,
-  style: pw.TextStyle(
-    fontSize: size,
-    color: color,
-    fontWeight: bold ? pw.FontWeight.bold : null,
-  ),
-);
+const _tint = DepotPdfStyle.tint;
+const _signColor = DepotPdfStyle.signColor;
+const _sectionTitle = DepotPdfStyle.sectionTitle;
+const _text = DepotPdfStyle.text;
 
 pw.Widget _dot(PdfColor color) => pw.Container(
   width: 6,
@@ -357,52 +306,7 @@ pw.Widget _kpis(DepotSummary s, _Report r) {
     (l10n.depotKpiDividends, f.money(s.dividends), _ink),
     (l10n.depotKpiCosts, f.money(s.fees + s.taxes), _ink),
   ];
-  const perRow = 4;
-  pw.Widget field((String, String, PdfColor)? entry) => pw.Expanded(
-    child: entry == null
-        ? pw.SizedBox()
-        : pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                entry.$1,
-                maxLines: 1,
-                style: const pw.TextStyle(fontSize: 6.5, color: _muted),
-              ),
-              pw.SizedBox(height: 1),
-              pw.Text(
-                entry.$2,
-                maxLines: 1,
-                style: pw.TextStyle(
-                  fontSize: 11,
-                  fontWeight: pw.FontWeight.bold,
-                  color: entry.$3,
-                ),
-              ),
-            ],
-          ),
-  );
-  return pw.Container(
-    padding: const pw.EdgeInsets.fromLTRB(10, 7, 10, 7),
-    decoration: pw.BoxDecoration(
-      color: _paper,
-      border: pw.Border.all(color: _hairline),
-      borderRadius: pw.BorderRadius.circular(5),
-    ),
-    child: pw.Column(
-      children: [
-        for (var i = 0; i < fields.length; i += perRow) ...[
-          if (i > 0) pw.SizedBox(height: 6),
-          pw.Row(
-            children: [
-              for (var j = i; j < i + perRow; j++)
-                field(j < fields.length ? fields[j] : null),
-            ],
-          ),
-        ],
-      ],
-    ),
-  );
+  return DepotPdfStyle.kpiBox(fields);
 }
 
 pw.Widget _chartSection(_Report r, double width) {
@@ -995,25 +899,5 @@ pw.Widget _detailsTable(_Report r) {
   );
 }
 
-pw.Widget _footer(pw.Context context, AppLocalizations l10n) => pw.Column(
-  children: [
-    pw.Container(height: .8, color: _hairline),
-    pw.SizedBox(height: 4),
-    pw.Row(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Expanded(
-          child: pw.Text(
-            l10n.depotReportDisclaimer,
-            style: const pw.TextStyle(fontSize: 6.5, color: _muted),
-          ),
-        ),
-        pw.SizedBox(width: 10),
-        pw.Text(
-          l10n.depotReportPage(context.pageNumber, context.pagesCount),
-          style: const pw.TextStyle(fontSize: 7, color: _muted),
-        ),
-      ],
-    ),
-  ],
-);
+pw.Widget _footer(pw.Context context, AppLocalizations l10n) =>
+    DepotPdfStyle.footer(context, l10n, l10n.depotReportDisclaimer);

@@ -22096,6 +22096,114 @@ abstract class AppLocalizations {
   /// **'Changes'**
   String get depotDividendNavChanges;
 
+  /// No description provided for @depotReportOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get depotReportOverview;
+
+  /// No description provided for @depotYearReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Year in review {year}'**
+  String depotYearReviewTitle(String year);
+
+  /// No description provided for @depotYearReviewUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'as of {date}'**
+  String depotYearReviewUntil(String date);
+
+  /// No description provided for @depotYearReviewStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Value at start'**
+  String get depotYearReviewStart;
+
+  /// No description provided for @depotYearReviewEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Value at end'**
+  String get depotYearReviewEnd;
+
+  /// No description provided for @depotYearReviewReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return (time-weighted)'**
+  String get depotYearReviewReturn;
+
+  /// No description provided for @depotYearReviewMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly returns'**
+  String get depotYearReviewMonths;
+
+  /// No description provided for @depotYearReviewDeepest.
+  ///
+  /// In en, this message translates to:
+  /// **'Deepest fall: {depth} ({peak} → {low})'**
+  String depotYearReviewDeepest(String depth, String peak, String low);
+
+  /// No description provided for @depotYearReviewBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best holdings'**
+  String get depotYearReviewBest;
+
+  /// No description provided for @depotYearReviewWorst.
+  ///
+  /// In en, this message translates to:
+  /// **'Weakest holdings'**
+  String get depotYearReviewWorst;
+
+  /// No description provided for @depotYearReviewActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Buys & sales'**
+  String get depotYearReviewActivity;
+
+  /// No description provided for @depotYearReviewBuys.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} buys'**
+  String depotYearReviewBuys(int count);
+
+  /// No description provided for @depotYearReviewSells.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sales'**
+  String depotYearReviewSells(int count);
+
+  /// No description provided for @depotYearReviewPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} payments, net'**
+  String depotYearReviewPayments(int count);
+
+  /// No description provided for @depotYearReviewTaxes.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxes & fees'**
+  String get depotYearReviewTaxes;
+
+  /// No description provided for @depotYearReviewFees.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees'**
+  String get depotYearReviewFees;
+
+  /// No description provided for @depotYearReviewUsedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'used up'**
+  String get depotYearReviewUsedUp;
+
+  /// No description provided for @depotYearReviewDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Values from Parqet as of the last sync, in portfolio currency. The return is time-weighted from the stored chart, with dividends paid out counted as return. Holding returns, allowance and dividend changes are only shown for the running year. No investment or tax advice.'**
+  String get depotYearReviewDisclaimer;
+
   /// No description provided for @depotDividendChangesTitle.
   ///
   /// In en, this message translates to:
