@@ -5,6 +5,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'depot_parqet_sync.dart';
 import 'depot_activity_groups.dart';
 import 'depot_drawdowns.dart';
+import 'depot_net_capital.dart';
 import 'depot_return_index.dart';
 import 'depot_savings_plans.dart';
 import 'depot_store.dart';
@@ -135,7 +136,7 @@ class DepotPortfolioState extends ChangeNotifier {
     }
     _returnsChart = _maxChart;
     _returnsTransactions = _transactions;
-    final index = depotReturnIndex(_maxChart, _transactions);
+    final index = depotReturnIndex(_maxChart);
     _drawdowns = DepotDrawdowns.of(_maxChart, index);
     _monthlyReturns = DepotMonthlyReturns.of(_maxChart, index);
   }
@@ -308,15 +309,19 @@ class DepotPortfolioState extends ChangeNotifier {
     final portfolioId = _portfolioId;
     final key = (scope: _scope, period: period);
     final summary = await _store.summary(key);
-    final chart = await _store.chart(key);
-    final maxChart = period == DepotPeriod.max
-        ? chart
+    final stored = await _store.chart(key);
+    final storedMax = period == DepotPeriod.max
+        ? stored
         : await _store.chart((scope: key.scope, period: DepotPeriod.max));
     final performance = await _store.holdingPerformance(
       period,
       portfolioId: portfolioId,
     );
     if (_disposed || load != _periodLoad || key.scope != _scope) return;
+    final chart = depotNetCapital(stored, _transactions);
+    final maxChart = identical(storedMax, stored)
+        ? chart
+        : depotNetCapital(storedMax, _transactions);
     _summary = summary;
     _chart = chart;
     _maxChart = maxChart;

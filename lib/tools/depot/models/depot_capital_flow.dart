@@ -56,26 +56,17 @@ class DepotCapitalFlow {
     for (final point in points) {
       last[bucketOf(point.date)] = point;
     }
-    // Parqet's capital drops by the cost basis on a sale, so the realized
-    // gain left the depot as well and counts as money taken out.
-    final realized = <(int, int?), double>{};
     final dividends = <(int, int?), double>{};
     for (final t in transactions) {
+      if (t.type != DepotTransactionType.dividend) continue;
       final bucket = bucketOf(t.datetime);
-      switch (t.type) {
-        case DepotTransactionType.sell:
-          realized[bucket] = (realized[bucket] ?? 0) + (t.realizedGain ?? 0);
-        case DepotTransactionType.dividend:
-          dividends[bucket] = (dividends[bucket] ?? 0) + t.amountNet;
-        default:
-          break;
-      }
+      dividends[bucket] = (dividends[bucket] ?? 0) + t.amountNet;
     }
     final flows = <DepotCapitalFlow>[];
     var value = 0.0;
     var capital = 0.0;
     for (final MapEntry(key: bucket, value: point) in last.entries) {
-      final newMoney = point.capital - capital - (realized[bucket] ?? 0);
+      final newMoney = point.capital - capital;
       flows.add(
         DepotCapitalFlow(
           year: bucket.$1,

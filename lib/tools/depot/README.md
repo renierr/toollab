@@ -148,6 +148,14 @@ by booking currency, with per-position totals and their share of that currency's
 booked dividends. Unknown currencies are excluded and counted. Purchases, sales and
 an incomplete current year affect comparisons; forecast amounts are excluded.
 
+Invested capital in the app is net money: Parqet's `capitalHistory` minus the realized
+gains of all sales up to each chart point's day, applied once when the charts load. Parqet's
+capital only drops by the cost of what was sold, but without a cash account the whole
+proceeds leave the depot, so a realized gain would otherwise read as a market loss on the
+sale day. The value chart, range gain, benchmark, PDF report, growth card and return index
+all use this net capital, so the value chart's invested line is lower than in Parqet by the
+realized gains so far, and value minus invested includes them.
+
 The optional benchmark compares the portfolio with EUR-listed accumulating ETF
 proxies for MSCI World (EUNL.DE) or the S&P 500 (SXR8.DE). It fetches Yahoo daily
 closing prices on demand; EUR portfolios only. Both lines start at 100 on their
@@ -162,11 +170,8 @@ original value chart untouched. Prices may be delayed.
 
 The growth card splits each year's value change into new money and market gain, from
 the stored Max chart whatever period is selected, and adds the year's net dividends as a
-third bar. New money is what went in or out: the change of Parqet's invested capital
-(`capitalHistory`) minus the realized gains of that year's sales. Parqet's capital only
-drops by the cost of what was sold, but the whole proceeds leave the depot, so without
-the correction a realized gain would show as a market loss. Market gain is the rest of the
-value change, realized gains included. Dividends are paid out of the depot, so they are
+third bar. New money is the change of the net invested capital (see above), so what went
+in or out. Market gain is the rest of the value change, realized gains included. Dividends are paid out of the depot, so they are
 not part of the value and are summed from the dividend transactions. The first year
 starts from zero. Tapping a year lists its months. Without a cash account, a sale
 followed by a buy shows as money out and money in. The card starts collapsed with the
@@ -199,10 +204,9 @@ The card is titled Highs and lows and switches between drops and rises. A rise r
 the low of a listed drop (or the first point) to the high where the next listed drop
 starts, or to the newest point while still climbing. Parqet's drawdown says nothing about
 climbs, so the rise's return is a time-weighted index worked out from the Max chart, with
-each step's new money taken out: the change of invested capital minus the realized gains
-of sales up to that day, for the same reason as in the growth card. The amount is the
-value change minus the change of invested capital. Rises of 5 % or more are listed strongest first, plus
-the ongoing one at any size.
+each step's change of net invested capital taken out. The amount is the value change
+minus that change of capital. Rises of 5 % or more are listed strongest first, plus the
+ongoing one at any size.
 
 The Activities yearly card can export a CSV for the selected year and active
 activity filters. It contains individual bookings and their original currencies,
