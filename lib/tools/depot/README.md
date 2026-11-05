@@ -232,11 +232,14 @@ next January's advance lump sum (Vorabpauschale) per fund: the price on 1 Januar
 out from the year-to-date gain, today's value and the year's bookings) × 70 % × the BMF
 base rate, one twelfth less per full month before a purchase, capped by the year's price
 rise plus distributions, minus distributions, then the partial exemption. Today's price
-stands in for the year-end price. The running year's base rate is a depot setting,
-stored per year and prefilled from the known rates in `models/depot_advance_lump.dart`;
-the BMF publishes it in January only as a letter, with no machine-readable source, so it
-is entered by hand. Add each new rate to that constant too. Without a rate the card shows
-no estimate. The lump sum is income of the next year, so it
+stands in for the year-end price. The base rate is fixed for a whole year; the running
+year's rate is a depot setting, stored per year and prefilled from the known rates in
+`models/depot_advance_lump.dart`. The BMF announces it in January only as a letter, but
+it is the par yield of a 15-year federal bond with annual coupons on the year's first
+trading day, from the Bundesbank's yield curve. "Load from Bundesbank" in the settings
+fetches that curve (series `BBSIS.D.I.ZST.ZI…`, zero rates for 1 to 15 years), works out
+the par yield rounded to two decimals, which matches the BMF figures, and offers it to
+apply; it runs only on that tap. Without a rate the card shows no estimate. The lump sum is income of the next year, so it
 uses that year's allowance first. A rough guide only: the bank's actual loss pots, losses
 carried from earlier years and allowances split across banks are not known.
 The yearly summary groups gains, income, taxes and fees by the activity's

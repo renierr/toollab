@@ -12235,6 +12235,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get depotTaxBaseRateFetch => 'Load from Bundesbank';
+
+  @override
+  String depotTaxBaseRateFetched(String date, String rate) {
+    return '$date: $rate';
+  }
+
+  @override
+  String get depotTaxBaseRateApply => 'Apply';
+
+  @override
+  String get depotTaxBaseRateFetchFailed => 'Bundesbank not reachable';
+
+  @override
+  String depotTaxBaseRateNone(String year) {
+    return 'No data for $year yet';
+  }
+
+  @override
   String depotTaxAdvanceLumpSummary(String amount) {
     return '≈ $amount advance lump sum in January';
   }

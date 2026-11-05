@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
 
 import '../depot_portfolio_state.dart';
+import '../market_data/bundesbank_base_rate_api.dart';
 import '../models/depot_advance_lump.dart';
 
 /// The running year's base rate for the advance lump sum estimate.
@@ -22,6 +24,10 @@ class _DepotTaxSettingsState extends State<DepotTaxSettings>
   late NumberFormat _percent;
   final int _year = DateTime.now().year;
   bool _filled = false;
+  bool _fetching = false;
+  bool _fetchFailed = false;
+  bool _fetchedNone = false;
+  BundesbankBaseRate? _fetched;
 
   @override
   void initState() {
@@ -56,9 +62,43 @@ class _DepotTaxSettingsState extends State<DepotTaxSettings>
     _controller.text = rate == null ? '' : _percent.format(rate * 100);
   }
 
+  Future<void> _fetch() async {
+    setState(() {
+      _fetching = true;
+      _fetchFailed = false;
+      _fetched = null;
+    });
+    BundesbankBaseRate? fetched;
+    var failed = false;
+    try {
+      fetched = await BundesbankBaseRateApi.fetch(_year);
+    } catch (e) {
+      errorLog('[DepotTaxSettings] Base rate fetch failed: $e');
+      failed = true;
+    }
+    if (!mounted) return;
+    setState(() {
+      _fetching = false;
+      _fetchFailed = failed;
+      _fetched = fetched;
+      _fetchedNone = !failed && fetched == null;
+    });
+  }
+
+  void _apply(double rate) {
+    context.read<DepotPortfolioState>().setBaseRate(rate);
+    _controller.text = _percent.format(rate * 100);
+    setState(() => _fetched = null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final hint = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
+    final error = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.error,
+    );
     final custom = context.select<DepotPortfolioState, bool>(
       (s) => s.hasCustomBaseRate,
     );
@@ -87,6 +127,43 @@ class _DepotTaxSettingsState extends State<DepotTaxSettings>
                     )
                   : null,
             ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 16, 8),
+          child: Wrap(
+            spacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: _fetching ? null : _fetch,
+                icon: _fetching
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cloud_download_outlined),
+                label: Text(l10n.depotTaxBaseRateFetch),
+              ),
+              if (_fetched case final fetched?) ...[
+                Text(
+                  l10n.depotTaxBaseRateFetched(
+                    DateFormat.yMd(
+                      Localizations.localeOf(context).toString(),
+                    ).format(fetched.date),
+                    '${_percent.format(fetched.rate * 100)} %',
+                  ),
+                  style: hint,
+                ),
+                FilledButton.tonal(
+                  onPressed: () => _apply(fetched.rate),
+                  child: Text(l10n.depotTaxBaseRateApply),
+                ),
+              ] else if (_fetchFailed)
+                Text(l10n.depotTaxBaseRateFetchFailed, style: error)
+              else if (_fetchedNone)
+                Text(l10n.depotTaxBaseRateNone('$_year'), style: hint),
+            ],
           ),
         ),
       ],

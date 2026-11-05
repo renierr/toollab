@@ -12323,6 +12323,25 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get depotTaxBaseRateFetch => 'Von der Bundesbank laden';
+
+  @override
+  String depotTaxBaseRateFetched(String date, String rate) {
+    return '$date: $rate';
+  }
+
+  @override
+  String get depotTaxBaseRateApply => 'Übernehmen';
+
+  @override
+  String get depotTaxBaseRateFetchFailed => 'Bundesbank nicht erreichbar';
+
+  @override
+  String depotTaxBaseRateNone(String year) {
+    return 'Noch keine Daten für $year';
+  }
+
+  @override
   String depotTaxAdvanceLumpSummary(String amount) {
     return '≈ $amount Vorabpauschale im Januar';
   }

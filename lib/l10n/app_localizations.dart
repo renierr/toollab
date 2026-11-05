@@ -21713,6 +21713,36 @@ abstract class AppLocalizations {
   /// **'Base rate {year}'**
   String depotTaxBaseRate(String year);
 
+  /// No description provided for @depotTaxBaseRateFetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Load from Bundesbank'**
+  String get depotTaxBaseRateFetch;
+
+  /// No description provided for @depotTaxBaseRateFetched.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {rate}'**
+  String depotTaxBaseRateFetched(String date, String rate);
+
+  /// No description provided for @depotTaxBaseRateApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get depotTaxBaseRateApply;
+
+  /// No description provided for @depotTaxBaseRateFetchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundesbank not reachable'**
+  String get depotTaxBaseRateFetchFailed;
+
+  /// No description provided for @depotTaxBaseRateNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No data for {year} yet'**
+  String depotTaxBaseRateNone(String year);
+
   /// No description provided for @depotTaxAdvanceLumpSummary.
   ///
   /// In en, this message translates to:
