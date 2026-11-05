@@ -97,7 +97,7 @@ class DepotOverviewView extends StatelessWidget {
                     DepotValueCard(
                       points: state.chart,
                       change: state.rangeChange,
-                      allocation: state.allocation,
+                      allocation: state.allocationWith(allocation.kindOf),
                       format: format,
                       showChart: state.period != DepotPeriod.today,
                       chart: DepotBenchmarkChart(format: format),

@@ -696,13 +696,19 @@ class DepotPortfolioState extends ChangeNotifier {
       .where((h) => !h.isSold)
       .fold<double>(0, (sum, h) => sum + h.currentValue);
 
-  /// Current value per holding kind, open positions only.
-  Map<DepotHoldingKind, double> get allocation {
+  /// Current value per detailed holding kind, open positions only.
+  Map<DepotHoldingKind, double> get allocation => allocationWith(null);
+
+  Map<DepotHoldingKind, double> allocationWith(
+    DepotHoldingKind Function(DepotHolding holding)? kindOf,
+  ) {
     final result = <DepotHoldingKind, double>{};
     for (final h in _holdings) {
       if (h.isSold || h.currentValue <= 0) continue;
+      final base = kindOf != null ? kindOf(h) : h.kind;
+      final kind = base.detailed(name: h.name, dividends: h.dividends);
       result.update(
-        h.kind,
+        kind,
         (v) => v + h.currentValue,
         ifAbsent: () => h.currentValue,
       );

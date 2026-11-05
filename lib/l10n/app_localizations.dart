@@ -20477,12 +20477,6 @@ abstract class AppLocalizations {
   /// **'By industry'**
   String get depotAllocationByIndustry;
 
-  /// No description provided for @depotAllocationByKind.
-  ///
-  /// In en, this message translates to:
-  /// **'By asset type'**
-  String get depotAllocationByKind;
-
   /// No description provided for @depotAllocationPositions.
   ///
   /// In en, this message translates to:
@@ -20921,6 +20915,18 @@ abstract class AppLocalizations {
   /// **'Stocks'**
   String get depotKindStocks;
 
+  /// No description provided for @depotKindStockDividend.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend stocks'**
+  String get depotKindStockDividend;
+
+  /// No description provided for @depotKindStockGrowth.
+  ///
+  /// In en, this message translates to:
+  /// **'Stocks (no dividend)'**
+  String get depotKindStockGrowth;
+
   /// No description provided for @depotKindEtf.
   ///
   /// In en, this message translates to:
@@ -20932,6 +20938,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ETFs'**
   String get depotKindEtfs;
+
+  /// No description provided for @depotKindEtfDistributing.
+  ///
+  /// In en, this message translates to:
+  /// **'ETFs (distributing)'**
+  String get depotKindEtfDistributing;
+
+  /// No description provided for @depotKindEtfAccumulating.
+  ///
+  /// In en, this message translates to:
+  /// **'ETFs (accumulating)'**
+  String get depotKindEtfAccumulating;
+
+  /// No description provided for @depotKindFundDistributing.
+  ///
+  /// In en, this message translates to:
+  /// **'Funds (distributing)'**
+  String get depotKindFundDistributing;
+
+  /// No description provided for @depotKindFundAccumulating.
+  ///
+  /// In en, this message translates to:
+  /// **'Funds (accumulating)'**
+  String get depotKindFundAccumulating;
 
   /// No description provided for @depotKindEtc.
   ///

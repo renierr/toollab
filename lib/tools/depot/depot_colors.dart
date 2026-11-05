@@ -21,10 +21,16 @@ class DepotColors {
   };
 
   static Color kind(DepotHoldingKind kind) => switch (kind) {
-    DepotHoldingKind.stock => AppTheme.accentGreen,
-    DepotHoldingKind.etf => AppTheme.accentBlue,
+    DepotHoldingKind.stock ||
+    DepotHoldingKind.stockDividend => AppTheme.accentGreen,
+    DepotHoldingKind.stockGrowth => AppTheme.accentPurple,
+    DepotHoldingKind.etf ||
+    DepotHoldingKind.etfDistributing => AppTheme.accentBlue,
+    DepotHoldingKind.etfAccumulating => AppTheme.accentTeal,
     DepotHoldingKind.etc => etc,
-    DepotHoldingKind.fund => AppTheme.accentTeal,
+    DepotHoldingKind.fund ||
+    DepotHoldingKind.fundDistributing ||
+    DepotHoldingKind.fundAccumulating => AppTheme.accentTeal,
     DepotHoldingKind.crypto => AppTheme.accentAmber,
     DepotHoldingKind.commodity => AppTheme.accentAmberLight,
     DepotHoldingKind.cash => AppTheme.statusOrange,

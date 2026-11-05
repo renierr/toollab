@@ -71,4 +71,68 @@ void main() {
       },
     );
   }
+
+  testWidgets('splits stocks and ETFs into 4 detailed allocation rows', (
+    tester,
+  ) async {
+    final format = DepotFormat('de', 'EUR');
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('de'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: DepotValueCard(
+            points: const [],
+            change: null,
+            allocation: const {
+              DepotHoldingKind.etfDistributing: 260,
+              DepotHoldingKind.stockDividend: 250,
+              DepotHoldingKind.stockGrowth: 140,
+              DepotHoldingKind.etfAccumulating: 70,
+            },
+            format: format,
+            showChart: false,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('ETFs (Ausschüttend)'), findsOneWidget);
+    expect(find.text('Dividenden-Aktien'), findsOneWidget);
+    expect(find.text('Aktien (ohne Dividende)'), findsOneWidget);
+    expect(find.text('ETFs (Thesaurierend)'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('detailed kind classifies distributing/accumulating and dividends', () {
+    expect(
+      DepotHoldingKind.etf.detailed(
+        name: 'Vanguard FTSE All-World UCITS ETF - USD DIS',
+        dividends: 0,
+      ),
+      DepotHoldingKind.etfDistributing,
+    );
+    expect(
+      DepotHoldingKind.etf.detailed(
+        name: 'VanEck Dividend Leaders UCITS ETF',
+        dividends: 120,
+      ),
+      DepotHoldingKind.etfDistributing,
+    );
+    expect(
+      DepotHoldingKind.etf.detailed(
+        name: 'iShares Core MSCI EM IMI UCITS ETF - USD ACC',
+        dividends: 0,
+      ),
+      DepotHoldingKind.etfAccumulating,
+    );
+    expect(
+      DepotHoldingKind.stock.detailed(name: 'Microsoft', dividends: 480),
+      DepotHoldingKind.stockDividend,
+    );
+    expect(
+      DepotHoldingKind.stock.detailed(name: 'Tesla', dividends: 0),
+      DepotHoldingKind.stockGrowth,
+    );
+  });
 }

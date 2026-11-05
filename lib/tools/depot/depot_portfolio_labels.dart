@@ -18,9 +18,15 @@ class DepotPortfolioLabels {
   static String kinds(AppLocalizations l10n, DepotHoldingKind kind) =>
       switch (kind) {
         DepotHoldingKind.stock => l10n.depotKindStocks,
+        DepotHoldingKind.stockDividend => l10n.depotKindStockDividend,
+        DepotHoldingKind.stockGrowth => l10n.depotKindStockGrowth,
         DepotHoldingKind.etf => l10n.depotKindEtfs,
+        DepotHoldingKind.etfDistributing => l10n.depotKindEtfDistributing,
+        DepotHoldingKind.etfAccumulating => l10n.depotKindEtfAccumulating,
         DepotHoldingKind.etc => l10n.depotKindEtcs,
         DepotHoldingKind.fund => l10n.depotKindFunds,
+        DepotHoldingKind.fundDistributing => l10n.depotKindFundDistributing,
+        DepotHoldingKind.fundAccumulating => l10n.depotKindFundAccumulating,
         DepotHoldingKind.crypto => l10n.depotAssetCrypto,
         DepotHoldingKind.commodity => l10n.depotAssetCommodity,
         DepotHoldingKind.cash => l10n.depotAssetCash,

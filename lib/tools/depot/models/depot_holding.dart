@@ -25,12 +25,18 @@ enum DepotAssetType {
 /// "security", so stock, ETF, ETC and fund are told apart by the name.
 enum DepotHoldingKind {
   stock,
+  stockDividend,
+  stockGrowth,
   etf,
+  etfDistributing,
+  etfAccumulating,
 
   /// Exchange-traded commodity or note: a debt security tracking gold, a
   /// commodity or crypto, not a fund.
   etc,
   fund,
+  fundDistributing,
+  fundAccumulating,
   crypto,
   commodity,
   cash,
@@ -50,6 +56,34 @@ enum DepotHoldingKind {
     r'\b(Fonds|Funds?|SICAV|UCITS|Investmentfonds)\b',
     caseSensitive: false,
   );
+  static final _distributing = RegExp(
+    r'\b(DIS|DIST|DISTRIBUTING|AUSSCH[ÜU]TTEND)\b|\(D\)|\b\d+D\b',
+    caseSensitive: false,
+  );
+  static final _accumulating = RegExp(
+    r'\b(ACC|ACCUMULATING|THESAURIEREND)\b|\(C\)|\b\d+C\b',
+    caseSensitive: false,
+  );
+
+  static bool _isDistributingFund(String name, double dividends) =>
+      _distributing.hasMatch(name) ||
+      (!_accumulating.hasMatch(name) && dividends > 0);
+
+  /// Splits [stock], [etf] and [fund] into distributing/dividend and
+  /// accumulating/growth variants for the overview allocation.
+  DepotHoldingKind detailed({required String name, required double dividends}) =>
+      switch (this) {
+        stock => dividends > 0 ? stockDividend : stockGrowth,
+        etf =>
+          _isDistributingFund(name, dividends)
+              ? etfDistributing
+              : etfAccumulating,
+        fund =>
+          _isDistributingFund(name, dividends)
+              ? fundDistributing
+              : fundAccumulating,
+        final other => other,
+      };
 
   static DepotHoldingKind of(DepotAssetType type, String name) =>
       switch (type) {

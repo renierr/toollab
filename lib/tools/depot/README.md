@@ -17,8 +17,8 @@ Only imported statements and the local wishlist are edited here.
 
 | Tab | Shows | Source |
 |---|---|---|
-| Overview | KPIs, value chart, allocation, biggest movers, holdings for the selected period and portfolio | `POST /performance` |
-| Allocation | Position-weight donut and list, X-Ray through ETF holdings, ETF overlap, fund running costs, plus region, sector, industry and asset-type split | Parqet values, onvista, Yahoo Finance and Nasdaq metadata |
+| Overview | KPIs, value chart, allocation (splitting stocks into dividend and growth, and ETFs/funds into distributing and accumulating), biggest movers, holdings for the selected period and portfolio | `POST /performance` |
+| Allocation | Position-weight donut and list, X-Ray through ETF holdings, ETF overlap, fund running costs, plus region, sector and industry split | Parqet values, onvista, Yahoo Finance and Nasdaq metadata |
 | Dividends | Calendar, missing and upcoming payments, per year and per position | Parqet bookings plus Yahoo Finance for ex-dates and amounts |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
 | Wishlist | Stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database, optional backend sync and Yahoo Finance |

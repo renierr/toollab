@@ -11554,9 +11554,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotAllocationByIndustry => 'Nach Branche';
 
   @override
-  String get depotAllocationByKind => 'Nach Anlageklasse';
-
-  @override
   String get depotAllocationPositions => 'Gewichtung nach Position';
 
   @override
@@ -11827,10 +11824,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotKindStocks => 'Aktien';
 
   @override
+  String get depotKindStockDividend => 'Dividenden-Aktien';
+
+  @override
+  String get depotKindStockGrowth => 'Aktien (ohne Dividende)';
+
+  @override
   String get depotKindEtf => 'ETF';
 
   @override
   String get depotKindEtfs => 'ETFs';
+
+  @override
+  String get depotKindEtfDistributing => 'ETFs (Ausschüttend)';
+
+  @override
+  String get depotKindEtfAccumulating => 'ETFs (Thesaurierend)';
+
+  @override
+  String get depotKindFundDistributing => 'Fonds (Ausschüttend)';
+
+  @override
+  String get depotKindFundAccumulating => 'Fonds (Thesaurierend)';
 
   @override
   String get depotKindEtc => 'ETC';

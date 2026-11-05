@@ -11470,9 +11470,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotAllocationByIndustry => 'By industry';
 
   @override
-  String get depotAllocationByKind => 'By asset type';
-
-  @override
   String get depotAllocationPositions => 'Weight by position';
 
   @override
@@ -11743,10 +11740,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotKindStocks => 'Stocks';
 
   @override
+  String get depotKindStockDividend => 'Dividend stocks';
+
+  @override
+  String get depotKindStockGrowth => 'Stocks (no dividend)';
+
+  @override
   String get depotKindEtf => 'ETF';
 
   @override
   String get depotKindEtfs => 'ETFs';
+
+  @override
+  String get depotKindEtfDistributing => 'ETFs (distributing)';
+
+  @override
+  String get depotKindEtfAccumulating => 'ETFs (accumulating)';
+
+  @override
+  String get depotKindFundDistributing => 'Funds (distributing)';
+
+  @override
+  String get depotKindFundAccumulating => 'Funds (accumulating)';
 
   @override
   String get depotKindEtc => 'ETC';

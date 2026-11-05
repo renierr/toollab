@@ -22,7 +22,7 @@ import 'depot_share_breakdown.dart';
 import 'depot_weight_list.dart';
 import 'depot_xray_card.dart';
 
-enum _Section { positions, xray, overlap, cost, region, sector, industry, kind }
+enum _Section { positions, xray, overlap, cost, region, sector, industry }
 
 /// Region, sector and industry split of the open positions.
 class DepotAllocationTabView extends StatelessWidget {
@@ -76,14 +76,6 @@ class DepotAllocationTabView extends StatelessWidget {
       kindOf: allocation.kindOf,
       constituentProfileOf: allocation.constituentProfileOf,
     );
-    final kinds = <DepotHoldingKind, double>{};
-    for (final holding in open) {
-      kinds.update(
-        allocation.kindOf(holding),
-        (value) => value + holding.currentValue,
-        ifAbsent: () => holding.currentValue,
-      );
-    }
     final xray = depotXRay(
       holdings: open,
       profileOf: allocation.profileOf,
@@ -212,24 +204,6 @@ class DepotAllocationTabView extends StatelessWidget {
                       _ => key,
                     },
                   ),
-                  format: format,
-                ),
-              ),
-              DepotSection(
-                id: _Section.kind,
-                label: l10n.depotAllocationByKind,
-                icon: Icons.category_outlined,
-                child: DepotShareBreakdown(
-                  title: l10n.depotAllocationByKind,
-                  entries: [
-                    for (final entry in kinds.entries)
-                      if (entry.value > 0)
-                        DepotShareEntry(
-                          label: DepotPortfolioLabels.kinds(l10n, entry.key),
-                          value: entry.value,
-                          color: DepotColors.kind(entry.key),
-                        ),
-                  ]..sort((a, b) => b.value.compareTo(a.value)),
                   format: format,
                 ),
               ),
