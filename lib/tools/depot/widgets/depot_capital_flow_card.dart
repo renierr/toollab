@@ -7,22 +7,31 @@ import 'package:tool_lab/theme/theme.dart';
 
 import '../depot_format.dart';
 import '../models/depot_capital_flow.dart';
+import '../models/depot_monthly_returns.dart';
 import '../models/depot_summary.dart';
 import '../models/depot_transaction.dart';
 import 'depot_legend_dot.dart';
+import 'depot_mode_chips.dart';
+import 'depot_return_heatmap.dart';
 
 /// Value change per year, split into new money and market gain, with the
 /// dividends paid out; a year expands into its months.
 class DepotCapitalFlowCard extends StatefulWidget {
   final List<DepotChartPoint> points;
   final List<DepotTransaction> transactions;
+  final DepotMonthlyReturns returns;
   final DepotFormat format;
+  final bool inPercent;
+  final ValueChanged<bool> onModeChanged;
 
   const DepotCapitalFlowCard({
     super.key,
     required this.points,
     required this.transactions,
+    required this.returns,
     required this.format,
+    required this.inPercent,
+    required this.onModeChanged,
   });
 
   static const Color newMoneyColor = AppTheme.accentBlue;
@@ -93,48 +102,67 @@ class _DepotCapitalFlowCardState extends State<DepotCapitalFlowCard> {
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: Wrap(
-              spacing: 12,
-              runSpacing: 4,
-              children: [
-                DepotLegendDot(
-                  color: DepotCapitalFlowCard.newMoneyColor,
-                  label: l10n.depotFlowNewMoney,
-                ),
-                DepotLegendDot(
-                  color: AppTheme.statusGreen,
-                  label: l10n.depotFlowMarket,
-                ),
-                DepotLegendDot(
-                  color: DepotCapitalFlowCard.dividendColor,
-                  label: l10n.depotFlowDividends,
-                ),
+            child: DepotModeChips(
+              selected: widget.inPercent,
+              options: [
+                (false, l10n.depotFlowModeAmount),
+                (true, l10n.depotFlowModeReturn),
               ],
+              onSelected: widget.onModeChanged,
             ),
           ),
           const SizedBox(height: 8),
-          for (final year in years) ...[
-            _FlowRow(
-              label: '${year.year}',
-              flow: year,
-              scale: yearScale,
-              format: widget.format,
-              expanded: expanded == year.year,
-              onTap: () => setState(
-                () => _expandedYear = expanded == year.year ? null : year.year,
+          if (widget.inPercent)
+            DepotReturnHeatmap(returns: widget.returns, format: format)
+          else ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  DepotLegendDot(
+                    color: DepotCapitalFlowCard.newMoneyColor,
+                    label: l10n.depotFlowNewMoney,
+                  ),
+                  DepotLegendDot(
+                    color: AppTheme.statusGreen,
+                    label: l10n.depotFlowMarket,
+                  ),
+                  DepotLegendDot(
+                    color: DepotCapitalFlowCard.dividendColor,
+                    label: l10n.depotFlowDividends,
+                  ),
+                ],
               ),
             ),
-            if (expanded == year.year)
-              for (final month in months)
-                Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: _FlowRow(
-                    label: monthName.format(DateTime(month.year, month.month!)),
-                    flow: month,
-                    scale: monthScale,
-                    format: widget.format,
-                  ),
+            const SizedBox(height: 8),
+            for (final year in years) ...[
+              _FlowRow(
+                label: '${year.year}',
+                flow: year,
+                scale: yearScale,
+                format: widget.format,
+                expanded: expanded == year.year,
+                onTap: () => setState(
+                  () =>
+                      _expandedYear = expanded == year.year ? null : year.year,
                 ),
+              ),
+              if (expanded == year.year)
+                for (final month in months)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16),
+                    child: _FlowRow(
+                      label: monthName.format(
+                        DateTime(month.year, month.month!),
+                      ),
+                      flow: month,
+                      scale: monthScale,
+                      format: widget.format,
+                    ),
+                  ),
+            ],
           ],
         ],
       ),

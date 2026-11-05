@@ -21629,6 +21629,18 @@ abstract class AppLocalizations {
   /// **'Dividends'**
   String get depotFlowDividends;
 
+  /// No description provided for @depotFlowModeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get depotFlowModeAmount;
+
+  /// No description provided for @depotFlowModeReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return %'**
+  String get depotFlowModeReturn;
+
   /// No description provided for @depotFlowYearSummary.
   ///
   /// In en, this message translates to:

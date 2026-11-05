@@ -12272,6 +12272,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotFlowDividends => 'Dividenden';
 
   @override
+  String get depotFlowModeAmount => 'Betrag';
+
+  @override
+  String get depotFlowModeReturn => 'Rendite %';
+
+  @override
   String depotFlowYearSummary(
     String year,
     String newMoney,

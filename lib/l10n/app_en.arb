@@ -6022,6 +6022,8 @@
   "depotFlowMarket": "Market gain",
   "depotFlowValueChange": "Value change",
   "depotFlowDividends": "Dividends",
+  "depotFlowModeAmount": "Amount",
+  "depotFlowModeReturn": "Return %",
   "depotFlowYearSummary": "{year}: {newMoney} new money · {market} market gain · {dividends} dividends",
   "@depotFlowYearSummary": {"placeholders": {"year": {"type": "String"}, "newMoney": {"type": "String"}, "market": {"type": "String"}, "dividends": {"type": "String"}}},
   "depotFlowTotalSummary": "In total: {capital} invested · {market} market gain · {dividends} dividends",

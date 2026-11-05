@@ -6,6 +6,7 @@ import 'package:tool_lab/theme/theme.dart';
 import '../depot_drawdowns.dart';
 import '../depot_format.dart';
 import 'depot_info_row.dart';
+import 'depot_mode_chips.dart';
 
 /// Falls below the all-time high and the rises between them.
 class DepotDrawdownCard extends StatelessWidget {
@@ -61,9 +62,13 @@ class DepotDrawdownCard extends StatelessWidget {
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: _ModeChips(
-              showRises: showRises,
-              onModeChanged: onModeChanged,
+            child: DepotModeChips(
+              selected: showRises,
+              options: [
+                (false, l10n.depotDrawdownModeDrops),
+                (true, l10n.depotDrawdownModeRises),
+              ],
+              onSelected: onModeChanged,
             ),
           ),
           const SizedBox(height: 8),
@@ -120,39 +125,6 @@ class _Dates {
   _Dates(String locale)
     : day = DateFormat.yMMMd(locale),
       month = DateFormat.yMMM(locale);
-}
-
-class _ModeChips extends StatelessWidget {
-  final bool showRises;
-  final ValueChanged<bool> onModeChanged;
-
-  const _ModeChips({required this.showRises, required this.onModeChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final style = Theme.of(context).textTheme.labelSmall;
-    return Wrap(
-      spacing: 8,
-      children: [
-        for (final (rises, label) in [
-          (false, l10n.depotDrawdownModeDrops),
-          (true, l10n.depotDrawdownModeRises),
-        ])
-          ChoiceChip(
-            label: Text(label),
-            labelStyle: style,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-            padding: EdgeInsets.zero,
-            showCheckmark: false,
-            selected: showRises == rises,
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            onSelected: (_) => onModeChanged(rises),
-          ),
-      ],
-    );
-  }
 }
 
 class _DropList extends StatelessWidget {

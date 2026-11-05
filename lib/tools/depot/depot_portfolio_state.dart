@@ -5,12 +5,14 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'depot_parqet_sync.dart';
 import 'depot_activity_groups.dart';
 import 'depot_drawdowns.dart';
+import 'depot_return_index.dart';
 import 'depot_savings_plans.dart';
 import 'depot_store.dart';
 import 'depot_work_lease.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_income_month.dart';
+import 'models/depot_monthly_returns.dart';
 import 'models/depot_period.dart';
 import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
@@ -81,8 +83,11 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotTransaction>? _plansSource;
   DateTime? _plansDay;
   DepotSavingsPlans _savingsPlans = DepotSavingsPlans.empty;
-  List<DepotChartPoint>? _drawdownsSource;
+  bool _flowInPercent = false;
+  List<DepotChartPoint>? _returnsChart;
+  List<DepotTransaction>? _returnsTransactions;
   DepotDrawdowns _drawdowns = DepotDrawdowns.empty;
+  DepotMonthlyReturns _monthlyReturns = DepotMonthlyReturns.empty;
   List<DepotTransaction> _visibleTransactions = const [];
   final Map<(String, int, int), bool> _activityMonthExpansion = {};
   List<DepotTransaction>? _groupedActivitiesSource;
@@ -114,11 +119,25 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotChartPoint> get maxChart => _maxChart;
 
   DepotDrawdowns get drawdowns {
-    if (!identical(_maxChart, _drawdownsSource)) {
-      _drawdownsSource = _maxChart;
-      _drawdowns = DepotDrawdowns.of(_maxChart);
-    }
+    _updateReturns();
     return _drawdowns;
+  }
+
+  DepotMonthlyReturns get monthlyReturns {
+    _updateReturns();
+    return _monthlyReturns;
+  }
+
+  void _updateReturns() {
+    if (identical(_maxChart, _returnsChart) &&
+        identical(_transactions, _returnsTransactions)) {
+      return;
+    }
+    _returnsChart = _maxChart;
+    _returnsTransactions = _transactions;
+    final index = depotReturnIndex(_maxChart, _transactions);
+    _drawdowns = DepotDrawdowns.of(_maxChart, index);
+    _monthlyReturns = DepotMonthlyReturns.of(_maxChart, index);
   }
 
   DepotRangeChange? get rangeChange => _rangeChange;
@@ -163,6 +182,13 @@ class DepotPortfolioState extends ChangeNotifier {
 
   void setShowRises(bool value) {
     _showRises = value;
+    _notify();
+  }
+
+  bool get flowInPercent => _flowInPercent;
+
+  void setFlowInPercent(bool value) {
+    _flowInPercent = value;
     _notify();
   }
 

@@ -1,3 +1,4 @@
+import 'depot_return_index.dart';
 import 'models/depot_summary.dart';
 
 /// One fall below an all-time high, from Parqet's drawdown figure.
@@ -105,8 +106,9 @@ class DepotDrawdowns {
     return total ~/ durations.length;
   }
 
-  factory DepotDrawdowns.of(List<DepotChartPoint> points) {
-    if (points.length < 2) return empty;
+  /// [index] is the [depotReturnIndex] of [points].
+  factory DepotDrawdowns.of(List<DepotChartPoint> points, List<double> index) {
+    if (points.length < 2 || index.length != points.length) return empty;
     final falls = <_Fall>[];
     var peak = 0;
     _Fall? open;
@@ -140,7 +142,6 @@ class DepotDrawdowns {
       },
     );
 
-    final index = _index(points);
     final last = points.length - 1;
     final starts = [0, for (final fall in listed) fall.low];
     final ends = [for (final fall in listed) fall.peak, last];
@@ -170,22 +171,6 @@ class DepotDrawdowns {
       currentDepth: points.last.drawdown,
       rises: rises..sort((a, b) => b.percent.compareTo(a.percent)),
     );
-  }
-
-  /// Growth of 1 with new money taken out of each step's value change.
-  static List<double> _index(List<DepotChartPoint> points) {
-    final index = [1.0];
-    for (var i = 1; i < points.length; i++) {
-      final before = points[i - 1];
-      final point = points[i];
-      final newMoney = point.capital - before.capital;
-      index.add(
-        before.value > 0
-            ? index.last * (point.value - newMoney) / before.value
-            : index.last,
-      );
-    }
-    return index;
   }
 }
 

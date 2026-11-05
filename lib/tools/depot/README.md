@@ -170,7 +170,11 @@ value change, realized gains included. Dividends are paid out of the depot, so t
 not part of the value and are summed from the dividend transactions. The first year
 starts from zero. Tapping a year lists its months. Without a cash account, a sale
 followed by a buy shows as money out and money in. The card starts collapsed with the
-latest year's split and the totals over all years.
+latest year's split and the totals over all years. Chips switch between these amounts and
+a return heatmap: years as rows, months as columns, each cell the month's time-weighted
+return from the same index as the rises (see below), colored by size up to 8 %, plus the
+year's return at the end. Numbers show in the cells only when they are wide enough;
+tapping a cell shows its month and return. The current month is still running.
 
 The savings plan card is detected from the selected scope's buys; Parqet bookings carry no
 plan flag. A plan is one buy per consecutive calendar month in the same holding and booking
@@ -195,8 +199,9 @@ The card is titled Highs and lows and switches between drops and rises. A rise r
 the low of a listed drop (or the first point) to the high where the next listed drop
 starts, or to the newest point while still climbing. Parqet's drawdown says nothing about
 climbs, so the rise's return is a time-weighted index worked out from the Max chart, with
-each step's change of invested capital taken out like the benchmark line; the amount is
-the value change minus new money. Rises of 5 % or more are listed strongest first, plus
+each step's new money taken out: the change of invested capital minus the realized gains
+of sales up to that day, for the same reason as in the growth card. The amount is the
+value change minus the change of invested capital. Rises of 5 % or more are listed strongest first, plus
 the ongoing one at any size.
 
 The Activities yearly card can export a CSV for the selected year and active

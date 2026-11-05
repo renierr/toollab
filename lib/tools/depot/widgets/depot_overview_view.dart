@@ -128,7 +128,10 @@ class DepotOverviewView extends StatelessWidget {
                   child: DepotCapitalFlowCard(
                     points: state.maxChart,
                     transactions: state.transactions,
+                    returns: state.monthlyReturns,
                     format: format,
+                    inPercent: state.flowInPercent,
+                    onModeChanged: state.setFlowInPercent,
                   ),
                 ),
               if (!plans.isEmpty)

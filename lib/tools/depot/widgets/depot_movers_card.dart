@@ -10,6 +10,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_state.dart';
 import 'depot_holding_avatar.dart';
+import 'depot_mode_chips.dart';
 
 /// The period's largest gains and losses as bars around a centre line.
 class DepotMoversCard extends StatefulWidget {
@@ -117,32 +118,13 @@ class _DepotMoversCardState extends State<DepotMoversCard> {
                 ],
               ),
               if (widget.onModeChanged != null)
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: Text(l10n.depotMoversPercent),
-                      labelStyle: theme.textTheme.labelSmall,
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                      padding: EdgeInsets.zero,
-                      showCheckmark: false,
-                      selected: !widget.byGain,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onSelected: (_) => widget.onModeChanged!(false),
-                    ),
-                    ChoiceChip(
-                      label: Text(l10n.depotMoversAmount),
-                      labelStyle: theme.textTheme.labelSmall,
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                      padding: EdgeInsets.zero,
-                      showCheckmark: false,
-                      selected: widget.byGain,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onSelected: (_) => widget.onModeChanged!(true),
-                    ),
+                DepotModeChips(
+                  selected: widget.byGain,
+                  options: [
+                    (false, l10n.depotMoversPercent),
+                    (true, l10n.depotMoversAmount),
                   ],
+                  onSelected: widget.onModeChanged!,
                 ),
               const SizedBox(height: 8),
               for (final mover in movers)
