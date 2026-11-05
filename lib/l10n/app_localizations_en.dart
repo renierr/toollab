@@ -12177,6 +12177,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotNavGrowth => 'Growth';
 
   @override
+  String get depotNavPlans => 'Plans';
+
+  @override
+  String get depotPlansTitle => 'Savings plans';
+
+  @override
+  String depotPlansSummary(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans',
+      one: '1 plan',
+    );
+    return '$_temp0 · $amount per month';
+  }
+
+  @override
+  String depotPlansNext(String date, int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans',
+      one: '1 plan',
+    );
+    return 'Next run around $date · $_temp0, $amount';
+  }
+
+  @override
+  String depotPlansOverdue(String names) {
+    return 'Run missing: $names';
+  }
+
+  @override
+  String depotPlansMissedMonth(String month) {
+    return 'No run in $month';
+  }
+
+  @override
+  String get depotPlansInvested => 'Invested through plans';
+
+  @override
+  String get depotPlansOneOff => 'One-off buys';
+
+  @override
+  String get depotPlansPerYear => 'Plans per year';
+
+  @override
+  String depotPlansAroundDay(int day) {
+    return 'Around day $day';
+  }
+
+  @override
+  String depotPlansRun(String amount, String since, int runs) {
+    String _temp0 = intl.Intl.pluralLogic(
+      runs,
+      locale: localeName,
+      other: '$runs runs',
+      one: '1 run',
+    );
+    return '$amount · since $since · $_temp0';
+  }
+
+  @override
+  String depotPlansFirstPlan(String date) {
+    return 'first plan $date';
+  }
+
+  @override
+  String get depotPlansHint =>
+      'Detected from equal buys in consecutive months, not confirmed by the broker. Invested amounts include ended plans. Tap a plan for its buys.';
+
+  @override
+  String get depotHoldingSavingsPlan => 'Savings plan';
+
+  @override
+  String depotHoldingSavingsPlanValue(String amount, int day) {
+    return '$amount per month, around day $day';
+  }
+
+  @override
   String get depotNavRisk => 'Risk';
 
   @override

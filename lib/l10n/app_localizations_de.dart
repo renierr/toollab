@@ -12265,6 +12265,86 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotNavGrowth => 'Wachstum';
 
   @override
+  String get depotNavPlans => 'Sparpläne';
+
+  @override
+  String get depotPlansTitle => 'Sparpläne';
+
+  @override
+  String depotPlansSummary(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sparpläne',
+      one: '1 Sparplan',
+    );
+    return '$_temp0 · $amount pro Monat';
+  }
+
+  @override
+  String depotPlansNext(String date, int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sparpläne',
+      one: '1 Sparplan',
+    );
+    return 'Nächste Ausführung um den $date · $_temp0, $amount';
+  }
+
+  @override
+  String depotPlansOverdue(String names) {
+    return 'Ausführung fehlt: $names';
+  }
+
+  @override
+  String depotPlansMissedMonth(String month) {
+    return 'Keine Ausführung im $month';
+  }
+
+  @override
+  String get depotPlansInvested => 'Über Sparpläne investiert';
+
+  @override
+  String get depotPlansOneOff => 'Einmalkäufe';
+
+  @override
+  String get depotPlansPerYear => 'Sparpläne pro Jahr';
+
+  @override
+  String depotPlansAroundDay(int day) {
+    return 'Um den $day.';
+  }
+
+  @override
+  String depotPlansRun(String amount, String since, int runs) {
+    String _temp0 = intl.Intl.pluralLogic(
+      runs,
+      locale: localeName,
+      other: '$runs Ausführungen',
+      one: '1 Ausführung',
+    );
+    return '$amount · seit $since · $_temp0';
+  }
+
+  @override
+  String depotPlansFirstPlan(String date) {
+    return 'erster Sparplan $date';
+  }
+
+  @override
+  String get depotPlansHint =>
+      'Erkannt an gleich hohen Käufen in aufeinanderfolgenden Monaten, nicht vom Broker bestätigt. Investierte Beträge enthalten beendete Sparpläne. Tippe auf einen Sparplan für seine Käufe.';
+
+  @override
+  String get depotHoldingSavingsPlan => 'Sparplan';
+
+  @override
+  String depotHoldingSavingsPlanValue(String amount, int day) {
+    return '$amount pro Monat, um den $day.';
+  }
+
+  @override
   String get depotNavRisk => 'Risiko';
 
   @override

@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_parqet_sync.dart';
 import 'depot_activity_groups.dart';
+import 'depot_savings_plans.dart';
 import 'depot_store.dart';
 import 'depot_work_lease.dart';
 import 'models/depot_filters.dart';
@@ -75,6 +76,9 @@ class DepotPortfolioState extends ChangeNotifier {
   bool _moversByGain = false;
   List<DepotTransaction>? _salesSource;
   Set<(String, String)> _salesHoldings = const {};
+  List<DepotTransaction>? _plansSource;
+  DateTime? _plansDay;
+  DepotSavingsPlans _savingsPlans = DepotSavingsPlans.empty;
   List<DepotTransaction> _visibleTransactions = const [];
   final Map<(String, int, int), bool> _activityMonthExpansion = {};
   List<DepotTransaction>? _groupedActivitiesSource;
@@ -153,6 +157,19 @@ class DepotPortfolioState extends ChangeNotifier {
       };
     }
     return _salesHoldings.contains((holding.portfolioId, holding.id));
+  }
+
+  /// Detected from the selected scope's buys; recomputed daily since being
+  /// overdue depends on the date.
+  DepotSavingsPlans get savingsPlans {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    if (!identical(_transactions, _plansSource) || _plansDay != today) {
+      _plansSource = _transactions;
+      _plansDay = today;
+      _savingsPlans = DepotSavingsPlans.detect(_transactions, now);
+    }
+    return _savingsPlans;
   }
 
   List<DepotTransaction> get visibleTransactions => _visibleTransactions;

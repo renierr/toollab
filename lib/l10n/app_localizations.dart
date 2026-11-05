@@ -21617,6 +21617,96 @@ abstract class AppLocalizations {
   /// **'Growth'**
   String get depotNavGrowth;
 
+  /// No description provided for @depotNavPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'Plans'**
+  String get depotNavPlans;
+
+  /// No description provided for @depotPlansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings plans'**
+  String get depotPlansTitle;
+
+  /// No description provided for @depotPlansSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 plan} other{{count} plans}} · {amount} per month'**
+  String depotPlansSummary(int count, String amount);
+
+  /// No description provided for @depotPlansNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next run around {date} · {count, plural, =1{1 plan} other{{count} plans}}, {amount}'**
+  String depotPlansNext(String date, int count, String amount);
+
+  /// No description provided for @depotPlansOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Run missing: {names}'**
+  String depotPlansOverdue(String names);
+
+  /// No description provided for @depotPlansMissedMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'No run in {month}'**
+  String depotPlansMissedMonth(String month);
+
+  /// No description provided for @depotPlansInvested.
+  ///
+  /// In en, this message translates to:
+  /// **'Invested through plans'**
+  String get depotPlansInvested;
+
+  /// No description provided for @depotPlansOneOff.
+  ///
+  /// In en, this message translates to:
+  /// **'One-off buys'**
+  String get depotPlansOneOff;
+
+  /// No description provided for @depotPlansPerYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Plans per year'**
+  String get depotPlansPerYear;
+
+  /// No description provided for @depotPlansAroundDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Around day {day}'**
+  String depotPlansAroundDay(int day);
+
+  /// No description provided for @depotPlansRun.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} · since {since} · {runs, plural, =1{1 run} other{{runs} runs}}'**
+  String depotPlansRun(String amount, String since, int runs);
+
+  /// No description provided for @depotPlansFirstPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'first plan {date}'**
+  String depotPlansFirstPlan(String date);
+
+  /// No description provided for @depotPlansHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected from equal buys in consecutive months, not confirmed by the broker. Invested amounts include ended plans. Tap a plan for its buys.'**
+  String get depotPlansHint;
+
+  /// No description provided for @depotHoldingSavingsPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings plan'**
+  String get depotHoldingSavingsPlan;
+
+  /// No description provided for @depotHoldingSavingsPlanValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} per month, around day {day}'**
+  String depotHoldingSavingsPlanValue(String amount, int day);
+
   /// No description provided for @depotNavRisk.
   ///
   /// In en, this message translates to:

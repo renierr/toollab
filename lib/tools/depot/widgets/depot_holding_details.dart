@@ -9,6 +9,7 @@ import '../depot_details_link.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
+import '../depot_savings_plans.dart';
 import '../depot_state.dart';
 import '../models/depot_filters.dart';
 import '../models/depot_holding.dart';
@@ -54,6 +55,9 @@ class DepotHoldingDetails extends StatelessWidget {
     final expenseRatio = context.select<DepotAllocationState?, double?>(
       (state) => state?.profileOf(h)?.expenseRatio,
     );
+    final plan = context.select<DepotPortfolioState?, DepotSavingsPlan?>(
+      (state) => state?.savingsPlans.of(h),
+    );
 
     final rows = <(String, String)>[
       (l10n.depotDetailType, DepotPortfolioLabels.kind(l10n, h.kind)),
@@ -68,6 +72,14 @@ class DepotHoldingDetails extends StatelessWidget {
         ),
       if (h.isin == null && h.symbol != null)
         (l10n.depotDetailSymbol, h.symbol!),
+      if (plan != null)
+        (
+          l10n.depotHoldingSavingsPlan,
+          l10n.depotHoldingSavingsPlanValue(
+            DepotFormat.of(context, plan.currency).money(plan.rate),
+            plan.day,
+          ),
+        ),
       if (h.shares != 0) (l10n.depotDetailShares, format.shares(h.shares)),
       if (h.purchasePrice != 0)
         (l10n.depotDetailPurchasePrice, format.money(h.purchasePrice)),

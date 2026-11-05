@@ -163,6 +163,18 @@ paid out of the depot are not part of the value. The first year starts from zero
 a year lists its months. Without a cash account, a sale followed by a buy shows as money
 out and money in.
 
+The savings plan card is detected from the selected scope's buys; Parqet bookings carry no
+plan flag. A plan is one buy per consecutive calendar month in the same holding and booking
+currency at the same amount (within 1 %, at least 5 cents, as broker amounts drift by
+fractions of a cent), for at least three months. A different amount or a skipped month
+ends a run, so a rate change starts a new plan; the row then names the first plan's start.
+The plan's day is the median day of its last twelve runs. A run counts as missing once
+that day plus a grace of the runs' day spread (5 to 10 days) has passed; two missed months
+mark the plan as ended and hide it. Invested through plans sums every run of every plan,
+ended ones included; one-off buys are all other buys. Amounts are per booking currency,
+not converted. Tapping a plan opens its buys in Activities, and an expanded holding with
+a running plan shows its rate and day. The card is hidden when no plan is running.
+
 The Activities yearly card can export a CSV for the selected year and active
 activity filters. It contains individual bookings and their original currencies,
 not a tax calculation or filing. Check the broker's tax documents.
