@@ -7,7 +7,6 @@ import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import 'depot_info_row.dart';
-import 'depot_mode_chips.dart';
 
 /// Saver's allowance used in [year] and, for the running year, the open
 /// losses that could still offset this year's gains.
@@ -15,8 +14,6 @@ class DepotTaxCard extends StatelessWidget {
   final int year;
 
   const DepotTaxCard({super.key, required this.year});
-
-  static const List<double> _allowances = [1000, 2000];
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +54,7 @@ class DepotTaxCard extends StatelessWidget {
               Text(
                 l10n.depotTaxAdvanceLumpSummary(
                   format.money(tax.advanceLumpTotal),
+                  format.money(tax.advanceLumpTax),
                 ),
                 style: hint,
               ),
@@ -66,15 +64,6 @@ class DepotTaxCard extends StatelessWidget {
         collapsedShape: const Border(),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: DepotModeChips(
-              selected: allowance,
-              options: [for (final a in _allowances) (a, format.money(a))],
-              onSelected: state.setTaxAllowance,
-            ),
-          ),
-          const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(3),
             child: LinearProgressIndicator(

@@ -47,6 +47,12 @@ class DepotTaxYear {
   double get advanceLumpTotal =>
       advanceLumps.fold(0, (sum, lump) => sum + lump.taxable);
 
+  /// Flat tax plus solidarity surcharge, without church tax.
+  static const double taxRate = 0.26375;
+
+  /// Tax on [advanceLumpTotal] before any allowance, so an upper bound.
+  double get advanceLumpTax => advanceLumpTotal * taxRate;
+
   double used(double allowance) => math.min(taxable, allowance);
 
   double free(double allowance) => math.max(0, allowance - taxable);

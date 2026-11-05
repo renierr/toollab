@@ -12223,11 +12223,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotTaxExempt => 'Partial exemption of funds';
 
   @override
-  String get depotTaxSettingsTitle => 'Advance lump sum';
+  String get depotTaxSettingsTitle => 'Taxes';
 
   @override
   String get depotTaxSettingsDescription =>
-      'For the estimate in the allowance card. The BMF publishes the base rate each January.';
+      'For the allowance card in Activities. The BMF publishes the base rate of the advance lump sum each January.';
+
+  @override
+  String get depotTaxAllowance => 'Saver\'s allowance';
 
   @override
   String depotTaxBaseRate(String year) {
@@ -12254,8 +12257,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String depotTaxAdvanceLumpSummary(String amount) {
-    return '≈ $amount advance lump sum in January';
+  String depotTaxAdvanceLumpSummary(String amount, String tax) {
+    return '≈ $amount advance lump sum in January · ≈ $tax tax';
   }
 
   @override

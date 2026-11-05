@@ -12311,11 +12311,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotTaxExempt => 'Teilfreistellung Fonds';
 
   @override
-  String get depotTaxSettingsTitle => 'Vorabpauschale';
+  String get depotTaxSettingsTitle => 'Steuern';
 
   @override
   String get depotTaxSettingsDescription =>
-      'Für die Schätzung in der Freibetrag-Karte. Das BMF veröffentlicht den Basiszins jedes Jahr im Januar.';
+      'Für die Freibetrag-Karte in Aktivitäten. Den Basiszins der Vorabpauschale veröffentlicht das BMF jedes Jahr im Januar.';
+
+  @override
+  String get depotTaxAllowance => 'Sparerpauschbetrag';
 
   @override
   String depotTaxBaseRate(String year) {
@@ -12342,8 +12345,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String depotTaxAdvanceLumpSummary(String amount) {
-    return '≈ $amount Vorabpauschale im Januar';
+  String depotTaxAdvanceLumpSummary(String amount, String tax) {
+    return '≈ $amount Vorabpauschale im Januar · ≈ $tax Steuer';
   }
 
   @override

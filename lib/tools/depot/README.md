@@ -219,7 +219,7 @@ The net total is profit and income, not sale proceeds or available cash; it
 excludes the invested capital returned when selling.
 
 Below it, the allowance card compares the selected year's taxable income with the saver's
-allowance (1,000 or 2,000, picked by chips and stored in the tool settings). Income is
+allowance (a depot setting under Taxes, whole euros, 1,000 until changed). Income is
 gross: dividends and interest are net amount plus tax, sale gains are Parqet's net
 realized gain plus the sale's tax. Stock sales are kept apart because a stock loss only
 offsets stock gains; every other result offsets all income. Only bookings in the
@@ -240,7 +240,8 @@ trading day, from the Bundesbank's yield curve. "Load from Bundesbank" in the se
 fetches that curve (series `BBSIS.D.I.ZST.ZI…`, zero rates for 1 to 15 years), works out
 the par yield rounded to two decimals, which matches the BMF figures, and offers it to
 apply; it runs only on that tap. Without a rate the card shows no estimate. The lump sum is income of the next year, so it
-uses that year's allowance first. A rough guide only: the bank's actual loss pots, losses
+uses that year's allowance first. The collapsed line also shows its tax at 26.375 % (flat
+tax and solidarity surcharge, no church tax) before any allowance, an upper bound. A rough guide only: the bank's actual loss pots, losses
 carried from earlier years and allowances split across banks are not known.
 The yearly summary groups gains, income, taxes and fees by the activity's
 currency, without conversion or a combined total. The usual single-currency

@@ -191,7 +191,7 @@ class DepotPortfolioState extends ChangeNotifier {
     _notify();
   }
 
-  /// Saver's allowance, 1000 single or 2000 joint.
+  /// Saver's allowance in whole currency units, 1000 until changed.
   double get taxAllowance => _taxAllowance;
 
   void setTaxAllowance(double value) {

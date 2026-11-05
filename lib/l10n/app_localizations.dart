@@ -21698,14 +21698,20 @@ abstract class AppLocalizations {
   /// No description provided for @depotTaxSettingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Advance lump sum'**
+  /// **'Taxes'**
   String get depotTaxSettingsTitle;
 
   /// No description provided for @depotTaxSettingsDescription.
   ///
   /// In en, this message translates to:
-  /// **'For the estimate in the allowance card. The BMF publishes the base rate each January.'**
+  /// **'For the allowance card in Activities. The BMF publishes the base rate of the advance lump sum each January.'**
   String get depotTaxSettingsDescription;
+
+  /// No description provided for @depotTaxAllowance.
+  ///
+  /// In en, this message translates to:
+  /// **'Saver\'s allowance'**
+  String get depotTaxAllowance;
 
   /// No description provided for @depotTaxBaseRate.
   ///
@@ -21746,8 +21752,8 @@ abstract class AppLocalizations {
   /// No description provided for @depotTaxAdvanceLumpSummary.
   ///
   /// In en, this message translates to:
-  /// **'≈ {amount} advance lump sum in January'**
-  String depotTaxAdvanceLumpSummary(String amount);
+  /// **'≈ {amount} advance lump sum in January · ≈ {tax} tax'**
+  String depotTaxAdvanceLumpSummary(String amount, String tax);
 
   /// No description provided for @depotTaxAdvanceLumpTitle.
   ///

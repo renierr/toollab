@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -10,7 +11,7 @@ import '../depot_portfolio_state.dart';
 import '../market_data/bundesbank_base_rate_api.dart';
 import '../models/depot_advance_lump.dart';
 
-/// The running year's base rate for the advance lump sum estimate.
+/// Saver's allowance and the running year's base rate for the allowance card.
 class DepotTaxSettings extends StatefulWidget {
   const DepotTaxSettings({super.key});
 
@@ -21,7 +22,9 @@ class DepotTaxSettings extends StatefulWidget {
 class _DepotTaxSettingsState extends State<DepotTaxSettings>
     with DisposeCleanup {
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController _allowance = TextEditingController();
   late NumberFormat _percent;
+
   final int _year = DateTime.now().year;
   bool _filled = false;
   bool _fetching = false;
@@ -33,6 +36,7 @@ class _DepotTaxSettingsState extends State<DepotTaxSettings>
   void initState() {
     super.initState();
     onDispose(_controller.dispose);
+    onDispose(_allowance.dispose);
   }
 
   @override
@@ -41,8 +45,17 @@ class _DepotTaxSettingsState extends State<DepotTaxSettings>
     _percent = NumberFormat('0.00', Localizations.localeOf(context).toString());
     if (_filled) return;
     _filled = true;
-    final rate = context.read<DepotPortfolioState>().baseRate;
+    final state = context.read<DepotPortfolioState>();
+    final rate = state.baseRate;
     _controller.text = rate == null ? '' : _percent.format(rate * 100);
+    _allowance.text = state.taxAllowance.round().toString();
+  }
+
+  void _onAllowanceChanged(String text) {
+    final value = int.tryParse(text);
+    if (value != null) {
+      context.read<DepotPortfolioState>().setTaxAllowance(value.toDouble());
+    }
   }
 
   void _onChanged(String text) {
@@ -102,12 +115,30 @@ class _DepotTaxSettingsState extends State<DepotTaxSettings>
     final custom = context.select<DepotPortfolioState, bool>(
       (s) => s.hasCustomBaseRate,
     );
+    final currency = context.select<DepotPortfolioState, String>(
+      (s) => s.currency,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SettingsSectionLabel(
           title: l10n.depotTaxSettingsTitle,
           description: l10n.depotTaxSettingsDescription,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: TextField(
+            controller: _allowance,
+            keyboardType: TextInputType.number,
+            // Whole euros, so a typed "1.000" cannot read as one.
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: _onAllowanceChanged,
+            decoration: InputDecoration(
+              labelText: l10n.depotTaxAllowance,
+              suffixText: currency,
+              border: const OutlineInputBorder(),
+            ),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
