@@ -12541,6 +12541,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotErrorInvalidResponse => 'Unerwartete Antwort von Parqet';
 
   @override
+  String get depotErrorLocalStorage =>
+      'Auf die lokale Datenbank konnte nicht zugegriffen werden';
+
+  @override
   String get depotErrorDetails => 'Details';
 
   @override

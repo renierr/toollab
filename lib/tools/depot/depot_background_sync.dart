@@ -3,6 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'config.dart';
 import 'depot_parqet_sync.dart';
+import 'depot_store.dart';
 import 'parqet/parqet_exception.dart';
 
 class DepotBackgroundSync {
@@ -21,6 +22,8 @@ class DepotBackgroundSync {
     }
     try {
       return BackgroundTaskResult.done(await DepotParqetSync.run());
+    } on DepotSyncRunning {
+      return const BackgroundTaskResult.skipped('Another sync is running');
     } on ParqetException catch (e, stack) {
       errorLog('[DepotBackgroundSync] Sync failed: $e\n$stack');
       // A platform retry cannot log in again; wait for the user instead.

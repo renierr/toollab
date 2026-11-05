@@ -23,6 +23,14 @@ class DepotLocalDataCleared implements Exception {
   const DepotLocalDataCleared();
 }
 
+/// Another sync, possibly in another process, holds the sync lease.
+class DepotSyncRunning implements Exception {
+  const DepotSyncRunning();
+
+  @override
+  String toString() => 'DepotSyncRunning';
+}
+
 /// One table's content for the data export.
 class DepotTableDump {
   final String name;
@@ -90,6 +98,7 @@ class DepotStore {
   static const _lastSyncKey = 'parqet_last_sync_at';
   static const _activityFullSyncKey = 'parqet_activity_full_sync_at';
   static const _clearMarkerKey = 'local_data_cleared_at';
+  static const _syncLeaseKey = 'parqet_sync_lease';
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
   static const _detailsUrlKey = 'details_url_';
@@ -415,6 +424,66 @@ class DepotStore {
 
   Future<void> setClientId(String clientId) =>
       DatabaseService.instance.setSetting(_toolId, _clientIdKey, clientId);
+
+  /// Claims or renews the sync lease for [owner]; false while another
+  /// owner's lease is still live. The write transaction makes the check and
+  /// the claim atomic across processes.
+  Future<bool> claimSyncLease(String owner, Duration ttl) async {
+    final db = await _getDb();
+    return db.transaction((txn) async {
+      final holder = await _readSyncLease(txn);
+      final now = DateTime.now();
+      if (holder != null &&
+          holder.owner != owner &&
+          holder.expiresAt.isAfter(now)) {
+        return false;
+      }
+      await txn.executor.insert('tool_settings', {
+        'tool_id': _toolId,
+        'key': _syncLeaseKey,
+        'value': '$owner ${now.add(ttl).millisecondsSinceEpoch}',
+        'updated_at': now.millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return true;
+    });
+  }
+
+  Future<void> releaseSyncLease(String owner) async {
+    final db = await _getDb();
+    await db.transaction((txn) async {
+      if ((await _readSyncLease(txn))?.owner != owner) return;
+      await txn.executor.delete(
+        'tool_settings',
+        where: 'tool_id = ? AND key = ?',
+        whereArgs: [_toolId, _syncLeaseKey],
+      );
+    });
+  }
+
+  Future<bool> isSyncLeaseHeld() async {
+    final db = await _getDb();
+    final holder = await _readSyncLease(db);
+    return holder != null && holder.expiresAt.isAfter(DateTime.now());
+  }
+
+  Future<({String owner, DateTime expiresAt})?> _readSyncLease(
+    ToolDatabaseExecutor db,
+  ) async {
+    final rows = await db.executor.query(
+      'tool_settings',
+      columns: ['value'],
+      where: 'tool_id = ? AND key = ?',
+      whereArgs: [_toolId, _syncLeaseKey],
+    );
+    if (rows.isEmpty) return null;
+    final parts = (rows.first['value'] as String).split(' ');
+    final ms = parts.length == 2 ? int.tryParse(parts[1]) : null;
+    if (ms == null) return null;
+    return (
+      owner: parts[0],
+      expiresAt: DateTime.fromMillisecondsSinceEpoch(ms),
+    );
+  }
 
   Future<DateTime?> lastSyncAt() async {
     final stored = await DatabaseService.instance.getSetting(

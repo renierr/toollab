@@ -22049,6 +22049,12 @@ abstract class AppLocalizations {
   /// **'Unexpected answer from Parqet'**
   String get depotErrorInvalidResponse;
 
+  /// No description provided for @depotErrorLocalStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'The local database could not be accessed'**
+  String get depotErrorLocalStorage;
+
   /// No description provided for @depotErrorDetails.
   ///
   /// In en, this message translates to:

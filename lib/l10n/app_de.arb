@@ -4989,6 +4989,7 @@
   "depotErrorRateLimited": "Zu viele Anfragen, bitte später erneut versuchen",
   "depotErrorServer": "Parqet hat einen Fehler gemeldet",
   "depotErrorInvalidResponse": "Unerwartete Antwort von Parqet",
+  "depotErrorLocalStorage": "Auf die lokale Datenbank konnte nicht zugegriffen werden",
   "depotErrorDetails": "Details",
   "depotErrorDetailsTitle": "Fehlerdetails",
   "depotErrorDetailsEmpty": "Keine weiteren Details",

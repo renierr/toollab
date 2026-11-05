@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqflite.dart' show DatabaseException;
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_parqet_sync.dart';
@@ -209,9 +210,7 @@ class DepotPortfolioState extends ChangeNotifier {
       await _reload();
     } catch (e) {
       errorLog('[DepotPortfolioState] Loading failed: $e');
-      _error = e is ParqetException
-          ? e
-          : ParqetException(ParqetErrorKind.invalidResponse, '$e');
+      _error = _asError(e);
     }
     _isLoaded = true;
     _notify();
@@ -298,13 +297,15 @@ class DepotPortfolioState extends ChangeNotifier {
       }
     } catch (e) {
       errorLog('[DepotPortfolioState] Period refresh failed: $e');
-      if (_period == period) {
-        _error = e is ParqetException
-            ? e
-            : ParqetException(ParqetErrorKind.invalidResponse, '$e');
-      }
+      if (_period == period) _error = _asError(e);
     }
   }
+
+  static ParqetException _asError(Object e) => switch (e) {
+    ParqetException() => e,
+    DatabaseException() => ParqetException(ParqetErrorKind.localStorage, '$e'),
+    _ => ParqetException(ParqetErrorKind.invalidResponse, '$e'),
+  };
 
   static DepotRangeChange? _changeOf(List<DepotChartPoint> points) {
     if (points.length < 2) return null;
@@ -362,6 +363,24 @@ class DepotPortfolioState extends ChangeNotifier {
     _notify();
     var completed = false;
     try {
+      await _runOrJoin(full);
+      _lastSyncAt = await _store.lastSyncAt();
+      await _reload();
+      completed = true;
+    } catch (e) {
+      errorLog('[DepotPortfolioState] Sync failed: $e');
+      _error = _asError(e);
+    } finally {
+      _isSyncing = false;
+      _notify();
+    }
+    if (completed) await _refreshSelectedPeriodIfStale();
+  }
+
+  /// Waits for a sync already running elsewhere instead of duplicating it;
+  /// a [full] one still runs afterwards.
+  Future<void> _runOrJoin(bool full) async {
+    try {
       await DepotParqetSync.run(
         full: full,
         period: _period,
@@ -372,20 +391,11 @@ class DepotPortfolioState extends ChangeNotifier {
           _notify();
         },
       );
-      _lastSyncAt = await _store.lastSyncAt();
-      await _reload();
-      completed = true;
-    } on ParqetException catch (e) {
-      errorLog('[DepotPortfolioState] Sync failed: $e');
-      _error = e;
-    } catch (e) {
-      errorLog('[DepotPortfolioState] Sync failed: $e');
-      _error = ParqetException(ParqetErrorKind.invalidResponse, '$e');
-    } finally {
-      _isSyncing = false;
-      _notify();
+    } on DepotSyncRunning {
+      debugLog('[DepotPortfolioState] Another sync is running; awaiting it');
+      await DepotParqetSync.waitForRunningSync(cancelled: () => _disposed);
+      if (full && !_disposed) await _runOrJoin(full);
     }
-    if (completed) await _refreshSelectedPeriodIfStale();
   }
 
   /// Runs the browser login; [responseHtml] is shown in the tab it returns to.

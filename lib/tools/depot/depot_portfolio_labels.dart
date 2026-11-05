@@ -146,5 +146,6 @@ class DepotPortfolioLabels {
         ParqetErrorKind.rateLimited => l10n.depotErrorRateLimited,
         ParqetErrorKind.server => l10n.depotErrorServer,
         ParqetErrorKind.invalidResponse => l10n.depotErrorInvalidResponse,
+        ParqetErrorKind.localStorage => l10n.depotErrorLocalStorage,
       };
 }

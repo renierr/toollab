@@ -6209,6 +6209,7 @@
   "depotErrorRateLimited": "Too many requests, try again later",
   "depotErrorServer": "Parqet reported an error",
   "depotErrorInvalidResponse": "Unexpected answer from Parqet",
+  "depotErrorLocalStorage": "The local database could not be accessed",
   "depotErrorDetails": "Details",
   "depotErrorDetailsTitle": "Error details",
   "depotErrorDetailsEmpty": "No further details",

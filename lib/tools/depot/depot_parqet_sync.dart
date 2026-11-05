@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -29,6 +30,10 @@ class DepotParqetSync {
   /// Beyond this many changed holdings one portfolio-wide read is cheaper.
   static const _maxHoldingReads = 10;
 
+  static const _leaseTtl = Duration(minutes: 2);
+  static const _leaseRenewal = Duration(seconds: 30);
+  static const _leasePoll = Duration(seconds: 2);
+
   static Future<bool> isConnected() async {
     final clientId = await DepotStore.instance.clientId();
     if (clientId == null || clientId.isEmpty) return false;
@@ -45,11 +50,61 @@ class DepotParqetSync {
 
   /// Publishes the visible period before loading holdings and activities.
   /// Only an explicit [full] run rereads all periods and activity history.
+  /// Throws [DepotSyncRunning] while another sync holds the lease.
   static Future<String> run({
     bool full = false,
     DepotPeriod period = DepotPeriod.today,
     Future<void> Function()? onPeriodReady,
     ParqetApi? api,
+  }) async {
+    final store = DepotStore.instance;
+    final owner =
+        '${DateTime.now().microsecondsSinceEpoch}-'
+        '${Random.secure().nextInt(1 << 32)}';
+    if (!await store.claimSyncLease(owner, _leaseTtl)) {
+      throw const DepotSyncRunning();
+    }
+    // Renewed while alive, so a process killed mid-sync frees it within the TTL.
+    final renewal = Timer.periodic(_leaseRenewal, (_) async {
+      try {
+        if (!await store.claimSyncLease(owner, _leaseTtl)) {
+          errorLog('[DepotParqetSync] Sync lease taken over by another sync');
+        }
+      } catch (e) {
+        errorLog('[DepotParqetSync] Renewing the sync lease failed: $e');
+      }
+    });
+    try {
+      return await _run(
+        full: full,
+        period: period,
+        onPeriodReady: onPeriodReady,
+        api: api,
+      );
+    } finally {
+      renewal.cancel();
+      try {
+        await store.releaseSyncLease(owner);
+      } catch (e) {
+        errorLog('[DepotParqetSync] Releasing the sync lease failed: $e');
+      }
+    }
+  }
+
+  /// Resolves once no sync holds the lease, or when [cancelled] turns true.
+  static Future<void> waitForRunningSync({
+    required bool Function() cancelled,
+  }) async {
+    while (!cancelled() && await DepotStore.instance.isSyncLeaseHeld()) {
+      await Future<void>.delayed(_leasePoll);
+    }
+  }
+
+  static Future<String> _run({
+    required bool full,
+    required DepotPeriod period,
+    required Future<void> Function()? onPeriodReady,
+    required ParqetApi? api,
   }) async {
     final store = DepotStore.instance;
     final client = api ?? await _api();

@@ -28,7 +28,7 @@ class _Portfolio extends DepotPortfolioState {
   List<DepotHolding> get holdings => current;
 
   @override
-  Future<void> sync({bool full = false}) async {
+  Future<void> sync({bool full = false, bool keepAlive = true}) async {
     calls++;
   }
 }

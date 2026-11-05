@@ -11,6 +11,9 @@ enum ParqetErrorKind {
   rateLimited,
   server,
   invalidResponse,
+
+  /// The device's own database failed, not Parqet.
+  localStorage,
 }
 
 class ParqetException implements Exception {

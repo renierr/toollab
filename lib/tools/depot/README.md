@@ -61,6 +61,14 @@ error: finish or cancel the other login and retry.
 `DepotParqetSync.run` is shared by the open tool, pull-to-refresh and the hourly
 background task (`DepotBackgroundSync`), so all of them write the same shape.
 
+Only one sync runs at a time. The tool lives in its own `:depot` process while the
+background task runs in the main process, so the guard is a lease row in
+`tool_settings` (`parqet_sync_lease`: owner and expiry), claimed inside a write
+transaction and renewed while the sync runs; a process killed mid-sync frees it once it
+expires. A background run that finds the lease taken is skipped. A sync started in the
+tool waits for the running one and then reloads what it stored; **Sync all data again**
+still runs its own full sync afterwards.
+
 1. **Selected period first.** The period on screen is fetched and stored before anything
    else, so the view updates quickly.
 2. **Max period.** Holdings (shares, prices, all-time figures) and each holding's

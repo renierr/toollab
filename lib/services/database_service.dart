@@ -30,6 +30,10 @@ class DatabaseService {
 
   static bool isToolSyncEnabled(String? stored) => stored != 'false';
 
+  // Tool processes and the background worker each hold a connection; a write
+  // waits this long for another process's transaction instead of SQLITE_BUSY.
+  static const Duration _busyTimeout = Duration(seconds: 15);
+
   DatabaseService._privateConstructor();
   static final DatabaseService instance = DatabaseService._privateConstructor();
 
@@ -82,8 +86,14 @@ class DatabaseService {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+    // rawQuery: both pragmas return a row, which Android's execSQL can reject.
     try {
-      await db.execute('PRAGMA journal_mode=WAL;');
+      await db.rawQuery('PRAGMA busy_timeout = ${_busyTimeout.inMilliseconds}');
+    } catch (e) {
+      errorLog('DatabaseService: failed to set busy timeout: $e');
+    }
+    try {
+      await db.rawQuery('PRAGMA journal_mode=WAL');
     } catch (e) {
       errorLog('DatabaseService: failed to enable WAL mode: $e');
     }
