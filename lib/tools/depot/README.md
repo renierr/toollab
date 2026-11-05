@@ -217,6 +217,17 @@ from the net total. The yearly summary covers the whole year and is not changed
 by the activity filters.
 The net total is profit and income, not sale proceeds or available cash; it
 excludes the invested capital returned when selling.
+
+Below it, the allowance card compares the selected year's taxable income with the saver's
+allowance (1,000 or 2,000, picked by chips and stored in the tool settings). Income is
+gross: dividends and interest are net amount plus tax, sale gains are Parqet's net
+realized gain plus the sale's tax. Stock sales are kept apart because a stock loss only
+offsets stock gains; every other result offsets all income. Only bookings in the
+portfolio currency count. For the running year it lists the open holdings (stocks, ETFs,
+ETCs, funds) with an unrealized loss and how much of those losses would lower the
+taxable income above the allowance. A rough guide only: partial exemptions of funds, the
+bank's actual loss pots, losses carried from earlier years and allowances split across
+banks are not known.
 The yearly summary groups gains, income, taxes and fees by the activity's
 currency, without conversion or a combined total. The usual single-currency
 view stays compact. Activities without a currency are counted separately and

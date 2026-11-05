@@ -12,6 +12,7 @@ import 'depot_activity_filter_bar.dart';
 import 'depot_connect_card.dart';
 import 'depot_section_nav.dart';
 import 'depot_sync_header.dart';
+import 'depot_tax_card.dart';
 import 'depot_transaction_tile.dart';
 import 'depot_year_report_card.dart';
 
@@ -190,6 +191,8 @@ class _DepotActivitiesViewState extends State<DepotActivitiesView>
                               reports: state.yearReports,
                               report: report,
                             ),
+                            const SizedBox(height: 8),
+                            DepotTaxCard(year: report.year),
                           ],
                           const SizedBox(height: 8),
                           const DepotActivityFilterBar(),

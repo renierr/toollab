@@ -101,6 +101,7 @@ class DepotStore {
   static const _syncLeaseKey = 'parqet_sync_lease';
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
+  static const _taxAllowanceKey = 'tax_allowance';
   static const _detailsUrlKey = 'details_url_';
   // Legacy keys of the profile cache, read once by the version 11 migration.
   static const _assetProfilesKey = 'asset_profiles';
@@ -569,6 +570,16 @@ class DepotStore {
 
   Future<void> setWishlistEuroDisplay(bool value) => DatabaseService.instance
       .setSetting(_toolId, _wishlistEuroKey, value.toString());
+
+  Future<double> taxAllowance() async =>
+      double.tryParse(
+        await DatabaseService.instance.getSetting(_toolId, _taxAllowanceKey) ??
+            '',
+      ) ??
+      1000;
+
+  Future<void> setTaxAllowance(double value) => DatabaseService.instance
+      .setSetting(_toolId, _taxAllowanceKey, value.toString());
 
   Future<String?> detailsUrlTemplate(DepotDetailsLinkKind kind) =>
       DatabaseService.instance.getSetting(

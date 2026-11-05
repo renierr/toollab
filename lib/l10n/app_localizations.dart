@@ -21641,6 +21641,60 @@ abstract class AppLocalizations {
   /// **'Return %'**
   String get depotFlowModeReturn;
 
+  /// No description provided for @depotTaxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowance & losses'**
+  String get depotTaxTitle;
+
+  /// No description provided for @depotTaxFree.
+  ///
+  /// In en, this message translates to:
+  /// **'{free} of {allowance} still free'**
+  String depotTaxFree(String free, String allowance);
+
+  /// No description provided for @depotTaxUsedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowance used up · {taxes} tax'**
+  String depotTaxUsedUp(String taxes);
+
+  /// No description provided for @depotTaxOffsettable.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} open losses could offset gains'**
+  String depotTaxOffsettable(String amount);
+
+  /// No description provided for @depotTaxIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends & interest'**
+  String get depotTaxIncome;
+
+  /// No description provided for @depotTaxStockGains.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains on stocks'**
+  String get depotTaxStockGains;
+
+  /// No description provided for @depotTaxOtherGains.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains on other'**
+  String get depotTaxOtherGains;
+
+  /// No description provided for @depotTaxPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax paid'**
+  String get depotTaxPaid;
+
+  /// No description provided for @depotTaxLosers.
+  ///
+  /// In en, this message translates to:
+  /// **'In the red'**
+  String get depotTaxLosers;
+
   /// No description provided for @depotFlowYearSummary.
   ///
   /// In en, this message translates to:

@@ -12190,6 +12190,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotFlowModeReturn => 'Return %';
 
   @override
+  String get depotTaxTitle => 'Allowance & losses';
+
+  @override
+  String depotTaxFree(String free, String allowance) {
+    return '$free of $allowance still free';
+  }
+
+  @override
+  String depotTaxUsedUp(String taxes) {
+    return 'Allowance used up · $taxes tax';
+  }
+
+  @override
+  String depotTaxOffsettable(String amount) {
+    return '$amount open losses could offset gains';
+  }
+
+  @override
+  String get depotTaxIncome => 'Dividends & interest';
+
+  @override
+  String get depotTaxStockGains => 'Gains on stocks';
+
+  @override
+  String get depotTaxOtherGains => 'Gains on other';
+
+  @override
+  String get depotTaxPaid => 'Tax paid';
+
+  @override
+  String get depotTaxLosers => 'In the red';
+
+  @override
   String depotFlowYearSummary(
     String year,
     String newMoney,

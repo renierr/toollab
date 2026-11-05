@@ -17,6 +17,7 @@ import 'models/depot_monthly_returns.dart';
 import 'models/depot_period.dart';
 import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
+import 'models/depot_tax_year.dart';
 import 'models/depot_transaction.dart';
 import 'models/depot_year_report.dart';
 import 'parqet/parqet_auth.dart';
@@ -85,6 +86,7 @@ class DepotPortfolioState extends ChangeNotifier {
   DateTime? _plansDay;
   DepotSavingsPlans _savingsPlans = DepotSavingsPlans.empty;
   bool _flowInPercent = false;
+  double _taxAllowance = 1000;
   List<DepotChartPoint>? _returnsChart;
   List<DepotTransaction>? _returnsTransactions;
   DepotDrawdowns _drawdowns = DepotDrawdowns.empty;
@@ -186,6 +188,23 @@ class DepotPortfolioState extends ChangeNotifier {
     _notify();
   }
 
+  /// Saver's allowance, 1000 single or 2000 joint.
+  double get taxAllowance => _taxAllowance;
+
+  void setTaxAllowance(double value) {
+    if (value == _taxAllowance) return;
+    _taxAllowance = value;
+    _store.setTaxAllowance(value);
+    _notify();
+  }
+
+  DepotTaxYear taxYear(int year) => DepotTaxYear.of(
+    year: year,
+    transactions: _transactions,
+    holdings: _holdings,
+    currency: currency,
+  );
+
   bool get flowInPercent => _flowInPercent;
 
   void setFlowInPercent(bool value) {
@@ -271,6 +290,7 @@ class DepotPortfolioState extends ChangeNotifier {
       _holdingFilter = _holdingFilter.copyWith(
         sort: await _store.holdingSort(),
       );
+      _taxAllowance = await _store.taxAllowance();
       await _reload();
     } catch (e) {
       errorLog('[DepotPortfolioState] Loading failed: $e');
