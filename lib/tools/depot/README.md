@@ -132,6 +132,11 @@ Securities with an ISIN also get **Add to wishlist**: it looks the ISIN up like 
 wishlist search, takes the listing Parqet confirms for it (else the first match) and
 keeps the holding's name. Once listed, the button opens the wishlist instead.
 
+Yahoo dividend data is cached per position. Opening the Dividends tab, and every sync
+while it is shown, fetches only positions that are new, in another currency or older than
+a day; pull-to-refresh syncs Parqet and then does the same. The tab has no reload button:
+**Reload dividend data** in settings fetches every position again.
+
 The dividend position list shows the trailing 12 months of net booked dividends
 divided by the current cost basis as yield on cost. This is not a historical cost
 basis and may include payments from shares since sold. Estimated monthly income is

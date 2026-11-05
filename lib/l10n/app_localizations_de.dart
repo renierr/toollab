@@ -12176,6 +12176,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDividendRefresh => 'Dividendendaten neu laden';
 
   @override
+  String get depotDividendDataTitle => 'Dividendendaten';
+
+  @override
+  String get depotDividendDataDescription =>
+      'Dividendenhistorie und kommende Termine von Yahoo Finance werden auf diesem Gerät gespeichert. Eine Position wird von selbst neu geholt, sobald ihre Daten einen Tag alt sind; Neu laden holt alle Positionen.';
+
+  @override
+  String get depotDividendDataFetching => 'Dividendendaten werden geladen…';
+
+  @override
   String depotDividendFailed(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

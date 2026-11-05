@@ -21467,6 +21467,24 @@ abstract class AppLocalizations {
   /// **'Reload dividend data'**
   String get depotDividendRefresh;
 
+  /// No description provided for @depotDividendDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend data'**
+  String get depotDividendDataTitle;
+
+  /// No description provided for @depotDividendDataDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend history and upcoming dates from Yahoo Finance are stored on this device. A position is fetched again on its own once its data is a day old; reloading fetches every position.'**
+  String get depotDividendDataDescription;
+
+  /// No description provided for @depotDividendDataFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching dividend data…'**
+  String get depotDividendDataFetching;
+
   /// No description provided for @depotDividendFailed.
   ///
   /// In en, this message translates to:

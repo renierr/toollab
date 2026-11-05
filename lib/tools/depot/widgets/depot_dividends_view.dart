@@ -39,7 +39,8 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
     dividends.ensureLoaded();
   }
 
-  Future<void> _refresh({bool force = false}) async {
+  /// Only positions whose dividend data is missing or stale.
+  Future<void> _refresh() async {
     final portfolio = context.read<DepotPortfolioState>();
     final dividends = context.read<DepotDividendState>();
     await portfolio.ensureLoaded();
@@ -47,13 +48,12 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
     await dividends.refresh(
       holdings: portfolio.holdings,
       currency: portfolio.currency,
-      force: force,
     );
   }
 
   Future<void> _pullToRefresh() async {
     await context.read<DepotPortfolioState>().sync();
-    if (mounted) await _refresh(force: true);
+    if (mounted) await _refresh();
   }
 
   @override
@@ -93,7 +93,7 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
       spacing: 0,
       header: [
         const DepotSyncHeader(),
-        DepotDividendSourceBar(onRefresh: () => _refresh(force: true)),
+        const DepotDividendSourceBar(),
         if (empty)
           Padding(
             padding: const EdgeInsets.all(32),

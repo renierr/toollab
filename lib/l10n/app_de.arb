@@ -4754,6 +4754,9 @@
   },
   "depotDividendSourceNever": "Dividendendaten noch nicht geladen",
   "depotDividendRefresh": "Dividendendaten neu laden",
+  "depotDividendDataTitle": "Dividendendaten",
+  "depotDividendDataDescription": "Dividendenhistorie und kommende Termine von Yahoo Finance werden auf diesem Gerät gespeichert. Eine Position wird von selbst neu geholt, sobald ihre Daten einen Tag alt sind; Neu laden holt alle Positionen.",
+  "depotDividendDataFetching": "Dividendendaten werden geladen…",
   "depotDividendFailed": "{count, plural, =1{1 Position konnte nicht geladen werden} other{{count} Positionen konnten nicht geladen werden}}",
   "@depotDividendFailed": {
     "placeholders": {

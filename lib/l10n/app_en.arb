@@ -5974,6 +5974,9 @@
   },
   "depotDividendSourceNever": "Dividend data not loaded yet",
   "depotDividendRefresh": "Reload dividend data",
+  "depotDividendDataTitle": "Dividend data",
+  "depotDividendDataDescription": "Dividend history and upcoming dates from Yahoo Finance are stored on this device. A position is fetched again on its own once its data is a day old; reloading fetches every position.",
+  "depotDividendDataFetching": "Fetching dividend data…",
   "depotDividendFailed": "{count, plural, =1{1 position could not be loaded} other{{count} positions could not be loaded}}",
   "@depotDividendFailed": {
     "placeholders": {

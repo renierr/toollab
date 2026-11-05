@@ -12088,6 +12088,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotDividendRefresh => 'Reload dividend data';
 
   @override
+  String get depotDividendDataTitle => 'Dividend data';
+
+  @override
+  String get depotDividendDataDescription =>
+      'Dividend history and upcoming dates from Yahoo Finance are stored on this device. A position is fetched again on its own once its data is a day old; reloading fetches every position.';
+
+  @override
+  String get depotDividendDataFetching => 'Fetching dividend data…';
+
+  @override
   String depotDividendFailed(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
