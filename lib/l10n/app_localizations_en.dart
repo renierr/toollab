@@ -12171,6 +12171,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotFlowValueChange => 'Value change';
 
   @override
+  String depotFlowYearSummary(String year, String newMoney, String market) {
+    return '$year: $newMoney new money · $market market gain';
+  }
+
+  @override
+  String depotFlowTotalSummary(String capital, String market) {
+    return 'In total: $capital invested · $market market gain';
+  }
+
+  @override
   String get depotNavMovers => 'Movers';
 
   @override

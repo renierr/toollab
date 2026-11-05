@@ -21605,6 +21605,18 @@ abstract class AppLocalizations {
   /// **'Value change'**
   String get depotFlowValueChange;
 
+  /// No description provided for @depotFlowYearSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{year}: {newMoney} new money · {market} market gain'**
+  String depotFlowYearSummary(String year, String newMoney, String market);
+
+  /// No description provided for @depotFlowTotalSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'In total: {capital} invested · {market} market gain'**
+  String depotFlowTotalSummary(String capital, String market);
+
   /// No description provided for @depotNavMovers.
   ///
   /// In en, this message translates to:

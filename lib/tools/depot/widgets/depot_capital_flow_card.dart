@@ -47,15 +47,42 @@ class _DepotCapitalFlowCardState extends State<DepotCapitalFlowCard> {
       Localizations.localeOf(context).toString(),
     );
 
+    final hint = theme.textTheme.bodySmall?.copyWith(color: theme.hintColor);
+    final latest = years.first;
+    final last = widget.points.last;
+    final format = widget.format;
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: ExpansionTile(
+        key: const PageStorageKey('depot-growth'),
+        title: Text(l10n.depotFlowTitle, style: theme.textTheme.titleSmall),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.depotFlowTitle, style: theme.textTheme.titleSmall),
-            const SizedBox(height: 4),
-            Wrap(
+            Text(
+              l10n.depotFlowYearSummary(
+                '${latest.year}',
+                format.compactMoney(latest.newMoney),
+                format.compactMoney(latest.marketGain),
+              ),
+              style: hint,
+            ),
+            Text(
+              l10n.depotFlowTotalSummary(
+                format.compactMoney(last.capital),
+                format.compactMoney(last.value - last.capital),
+              ),
+              style: hint,
+            ),
+          ],
+        ),
+        shape: const Border(),
+        collapsedShape: const Border(),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
               spacing: 12,
               runSpacing: 4,
               children: [
@@ -69,35 +96,32 @@ class _DepotCapitalFlowCardState extends State<DepotCapitalFlowCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            for (final year in years) ...[
-              _FlowRow(
-                label: '${year.year}',
-                flow: year,
-                scale: yearScale,
-                format: widget.format,
-                expanded: expanded == year.year,
-                onTap: () => setState(
-                  () =>
-                      _expandedYear = expanded == year.year ? null : year.year,
-                ),
+          ),
+          const SizedBox(height: 8),
+          for (final year in years) ...[
+            _FlowRow(
+              label: '${year.year}',
+              flow: year,
+              scale: yearScale,
+              format: widget.format,
+              expanded: expanded == year.year,
+              onTap: () => setState(
+                () => _expandedYear = expanded == year.year ? null : year.year,
               ),
-              if (expanded == year.year)
-                for (final month in months)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16),
-                    child: _FlowRow(
-                      label: monthName.format(
-                        DateTime(month.year, month.month!),
-                      ),
-                      flow: month,
-                      scale: monthScale,
-                      format: widget.format,
-                    ),
+            ),
+            if (expanded == year.year)
+              for (final month in months)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: _FlowRow(
+                    label: monthName.format(DateTime(month.year, month.month!)),
+                    flow: month,
+                    scale: monthScale,
+                    format: widget.format,
                   ),
-            ],
+                ),
           ],
-        ),
+        ],
       ),
     );
   }
