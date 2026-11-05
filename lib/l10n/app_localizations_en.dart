@@ -12257,10 +12257,50 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get depotNavDrawdowns => 'Drawdowns';
+  String get depotNavHighsLows => 'Highs & lows';
 
   @override
-  String get depotDrawdownTitle => 'Drawdowns';
+  String get depotHighsLowsTitle => 'Highs and lows';
+
+  @override
+  String get depotDrawdownModeDrops => 'Drops';
+
+  @override
+  String get depotDrawdownModeRises => 'Rises';
+
+  @override
+  String depotRiseStrongest(String percent, String date, String duration) {
+    return 'Strongest rise: $percent from $date, $duration';
+  }
+
+  @override
+  String get depotRiseCurrent => 'Current rise';
+
+  @override
+  String depotRiseCurrentValue(String percent, String date) {
+    return '$percent since $date';
+  }
+
+  @override
+  String depotRiseCount(String percent) {
+    return 'Rises of $percent or more';
+  }
+
+  @override
+  String get depotRiseAverage => 'Average duration';
+
+  @override
+  String depotRiseUntil(String date) {
+    return 'until $date';
+  }
+
+  @override
+  String get depotRiseOngoing => 'ongoing';
+
+  @override
+  String depotRiseHint(String percent) {
+    return 'From the low of a listed drop to the high where the next one starts. The return is worked out from the Max chart with deposits and withdrawals left out; the amount is the value change minus new money. Rises of $percent or more are listed, strongest first.';
+  }
 
   @override
   String get depotDrawdownAtHigh => 'At an all-time high';

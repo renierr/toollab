@@ -143,11 +143,13 @@ class DepotOverviewView extends StatelessWidget {
               if (!drawdowns.isEmpty)
                 DepotSection(
                   id: _Section.drawdowns,
-                  label: l10n.depotNavDrawdowns,
-                  icon: Icons.trending_down,
+                  label: l10n.depotNavHighsLows,
+                  icon: Icons.ssid_chart,
                   child: DepotDrawdownCard(
                     drawdowns: drawdowns,
                     format: format,
+                    showRises: state.showRises,
+                    onModeChanged: state.setShowRises,
                   ),
                 ),
               DepotSection(

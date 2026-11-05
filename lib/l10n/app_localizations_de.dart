@@ -12345,10 +12345,50 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get depotNavDrawdowns => 'Rückgänge';
+  String get depotNavHighsLows => 'Hochs & Tiefs';
 
   @override
-  String get depotDrawdownTitle => 'Wertrückgänge';
+  String get depotHighsLowsTitle => 'Hochs und Tiefs';
+
+  @override
+  String get depotDrawdownModeDrops => 'Rückgänge';
+
+  @override
+  String get depotDrawdownModeRises => 'Anstiege';
+
+  @override
+  String depotRiseStrongest(String percent, String date, String duration) {
+    return 'Stärkster Anstieg: $percent ab $date, $duration';
+  }
+
+  @override
+  String get depotRiseCurrent => 'Aktueller Anstieg';
+
+  @override
+  String depotRiseCurrentValue(String percent, String date) {
+    return '$percent seit $date';
+  }
+
+  @override
+  String depotRiseCount(String percent) {
+    return 'Anstiege ab $percent';
+  }
+
+  @override
+  String get depotRiseAverage => 'Durchschnittliche Dauer';
+
+  @override
+  String depotRiseUntil(String date) {
+    return 'bis $date';
+  }
+
+  @override
+  String get depotRiseOngoing => 'läuft';
+
+  @override
+  String depotRiseHint(String percent) {
+    return 'Vom Tief eines gelisteten Rückgangs bis zum Hoch, an dem der nächste beginnt. Die Rendite ist aus dem Max-Chart ohne Ein- und Auszahlungen berechnet; der Betrag ist die Wertänderung abzüglich neuen Geldes. Gelistet sind Anstiege ab $percent, die stärksten zuerst.';
+  }
 
   @override
   String get depotDrawdownAtHigh => 'Auf Allzeithoch';

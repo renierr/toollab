@@ -21707,17 +21707,77 @@ abstract class AppLocalizations {
   /// **'{amount} per month, around day {day}'**
   String depotHoldingSavingsPlanValue(String amount, int day);
 
-  /// No description provided for @depotNavDrawdowns.
+  /// No description provided for @depotNavHighsLows.
   ///
   /// In en, this message translates to:
-  /// **'Drawdowns'**
-  String get depotNavDrawdowns;
+  /// **'Highs & lows'**
+  String get depotNavHighsLows;
 
-  /// No description provided for @depotDrawdownTitle.
+  /// No description provided for @depotHighsLowsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Drawdowns'**
-  String get depotDrawdownTitle;
+  /// **'Highs and lows'**
+  String get depotHighsLowsTitle;
+
+  /// No description provided for @depotDrawdownModeDrops.
+  ///
+  /// In en, this message translates to:
+  /// **'Drops'**
+  String get depotDrawdownModeDrops;
+
+  /// No description provided for @depotDrawdownModeRises.
+  ///
+  /// In en, this message translates to:
+  /// **'Rises'**
+  String get depotDrawdownModeRises;
+
+  /// No description provided for @depotRiseStrongest.
+  ///
+  /// In en, this message translates to:
+  /// **'Strongest rise: {percent} from {date}, {duration}'**
+  String depotRiseStrongest(String percent, String date, String duration);
+
+  /// No description provided for @depotRiseCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current rise'**
+  String get depotRiseCurrent;
+
+  /// No description provided for @depotRiseCurrentValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} since {date}'**
+  String depotRiseCurrentValue(String percent, String date);
+
+  /// No description provided for @depotRiseCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Rises of {percent} or more'**
+  String depotRiseCount(String percent);
+
+  /// No description provided for @depotRiseAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average duration'**
+  String get depotRiseAverage;
+
+  /// No description provided for @depotRiseUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'until {date}'**
+  String depotRiseUntil(String date);
+
+  /// No description provided for @depotRiseOngoing.
+  ///
+  /// In en, this message translates to:
+  /// **'ongoing'**
+  String get depotRiseOngoing;
+
+  /// No description provided for @depotRiseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'From the low of a listed drop to the high where the next one starts. The return is worked out from the Max chart with deposits and withdrawals left out; the amount is the value change minus new money. Rises of {percent} or more are listed, strongest first.'**
+  String depotRiseHint(String percent);
 
   /// No description provided for @depotDrawdownAtHigh.
   ///

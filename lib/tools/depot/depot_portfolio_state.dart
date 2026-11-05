@@ -75,6 +75,7 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotMover> _movers = const [];
   List<DepotMover> _gainMovers = const [];
   bool _moversByGain = false;
+  bool _showRises = false;
   List<DepotTransaction>? _salesSource;
   Set<(String, String)> _salesHoldings = const {};
   List<DepotTransaction>? _plansSource;
@@ -155,6 +156,13 @@ class DepotPortfolioState extends ChangeNotifier {
 
   void setMoversByGain(bool value) {
     _moversByGain = value;
+    _notify();
+  }
+
+  bool get showRises => _showRises;
+
+  void setShowRises(bool value) {
+    _showRises = value;
     _notify();
   }
 

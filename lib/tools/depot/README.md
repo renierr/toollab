@@ -182,6 +182,13 @@ ends at the next point back at zero; its depth is the lowest point in between. F
 5 % or more are listed deepest first, an ongoing one included; the collapsed line always
 shows the current distance from the high. Recovery time runs from the high to the point
 back at it. Older Max points are weekly, so dates can be a few days off.
+The card is titled Highs and lows and switches between drops and rises. A rise runs from
+the low of a listed drop (or the first point) to the high where the next listed drop
+starts, or to the newest point while still climbing. Parqet's drawdown says nothing about
+climbs, so the rise's return is a time-weighted index worked out from the Max chart, with
+each step's change of invested capital taken out like the benchmark line; the amount is
+the value change minus new money. Rises of 5 % or more are listed strongest first, plus
+the ongoing one at any size.
 
 The Activities yearly card can export a CSV for the selected year and active
 activity filters. It contains individual bookings and their original currencies,
