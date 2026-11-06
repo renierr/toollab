@@ -11512,6 +11512,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotChartGain => 'Performance';
 
   @override
+  String get depotDetailSector => 'Sektor';
+
+  @override
+  String get depotDetailIndustry => 'Branche';
+
+  @override
+  String get depotDetailCountry => 'Land';
+
+  @override
+  String get depotDetailDividendYield => 'Erwartete Dividendenrendite';
+
+  @override
+  String get depotDetailDividendFrequency => 'Ausschüttungsrhythmus';
+
+  @override
+  String get depotDetailNextExDate => 'Nächster Ex-Tag';
+
+  @override
+  String get depotDetailNextPayDate => 'Nächster Zahltag';
+
+  @override
   String get depotRangeToday => 'Heute';
 
   @override

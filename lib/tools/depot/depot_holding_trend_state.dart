@@ -14,10 +14,12 @@ class DepotHoldingTrendState extends ChangeNotifier {
     Future<List<String>> Function(DepotHolding)? resolve,
     Future<List<String>> Function(DepotHolding)? fallback,
     Future<MarketQuote> Function(String)? quote,
+    Future<double> Function(String, String)? fxRate,
     DateTime Function()? now,
   }) : _resolve = resolve ?? DepotMarketSearch.holdingSymbols,
        _fallback = fallback ?? DepotMarketSearch.fallbackSymbols,
        _quote = quote ?? YahooFinanceApi.intradayQuote,
+       _fxRate = fxRate ?? YahooFinanceApi.fxRate,
        _now = now ?? DateTime.now;
 
   static const _maxConcurrent = 4;
@@ -28,8 +30,12 @@ class DepotHoldingTrendState extends ChangeNotifier {
   final Future<List<String>> Function(DepotHolding) _resolve;
   final Future<List<String>> Function(DepotHolding) _fallback;
   final Future<MarketQuote> Function(String) _quote;
+  final Future<double> Function(String, String) _fxRate;
   final DateTime Function() _now;
   final Map<String, DepotHoldingTrend> _trends = {};
+  final Map<String, ({double rate, DateTime at})> _rates = {};
+  final Set<String> _rateLoads = {};
+  String? _targetCurrency;
   final Map<String, DateTime> _failed = {};
   final Map<String, DepotHolding> _queue = {};
   final Map<String, int> _active = {};
@@ -55,9 +61,20 @@ class DepotHoldingTrendState extends ChangeNotifier {
 
   DepotHoldingTrend? trendFor(DepotHolding holding) => _trends[keyOf(holding)];
 
-  void ensure(DepotHolding holding, {required bool Function() visible}) {
+  /// Multiplier from [from] into [to]; null until loaded.
+  double? rate(String from, String to) =>
+      from == to ? 1 : _rates['$from/$to']?.rate;
+
+  /// [currency] is the portfolio's; a listing in another one also loads its
+  /// exchange rate.
+  void ensure(
+    DepotHolding holding, {
+    required bool Function() visible,
+    String? currency,
+  }) {
     final key = keyOf(holding);
     if (_disposed || key == null) return;
+    if (currency != null && currency.isNotEmpty) _targetCurrency = currency;
     _pruneExpired();
     final active = _active[key];
     if (active != null) {
@@ -117,7 +134,13 @@ class DepotHoldingTrendState extends ChangeNotifier {
               currency: quote.currency,
               points: List.unmodifiable(points),
               fetchedAt: _now(),
+              dayLow: quote.dayLow,
+              dayHigh: quote.dayHigh,
+              yearLow: quote.yearLow,
+              yearHigh: quote.yearHigh,
             );
+            final target = _targetCurrency;
+            if (target != null) unawaited(_loadRate(quote.currency, target));
             _failed.remove(key);
             _trimCache();
             _scheduleExpiry();
@@ -200,6 +223,26 @@ class DepotHoldingTrendState extends ChangeNotifier {
     });
   }
 
+  Future<void> _loadRate(String from, String to) async {
+    final key = '$from/$to';
+    if (from.isEmpty || from == to || !_rateLoads.add(key)) return;
+    try {
+      final cached = _rates[key];
+      if (cached != null && _now().difference(cached.at) < _freshFor) return;
+      final rate = await _fxRate(from, to);
+      if (_disposed) return;
+      if (!rate.isFinite || rate <= 0) {
+        throw const FormatException('Invalid FX rate');
+      }
+      _rates[key] = (rate: rate, at: _now());
+      notifyListeners();
+    } catch (e) {
+      debugLog('[DepotHoldingTrendState] No rate for $key: $e');
+    } finally {
+      _rateLoads.remove(key);
+    }
+  }
+
   void reduceCache() {
     if (_disposed) return;
     _revision++;
@@ -213,6 +256,10 @@ class DepotHoldingTrendState extends ChangeNotifier {
         currency: trend.currency,
         points: reduceMarketPoints(trend.points),
         fetchedAt: trend.fetchedAt,
+        dayLow: trend.dayLow,
+        dayHigh: trend.dayHigh,
+        yearLow: trend.yearLow,
+        yearHigh: trend.yearHigh,
       );
     }
     _trimCache();
@@ -225,6 +272,7 @@ class DepotHoldingTrendState extends ChangeNotifier {
     _expiryTimer = null;
     _trends.clear();
     _failed.clear();
+    _rates.clear();
     _queue.clear();
     _observers.clear();
     if (!_disposed) notifyListeners();

@@ -11429,6 +11429,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotChartGain => 'Performance';
 
   @override
+  String get depotDetailSector => 'Sector';
+
+  @override
+  String get depotDetailIndustry => 'Industry';
+
+  @override
+  String get depotDetailCountry => 'Country';
+
+  @override
+  String get depotDetailDividendYield => 'Expected dividend yield';
+
+  @override
+  String get depotDetailDividendFrequency => 'Payout frequency';
+
+  @override
+  String get depotDetailNextExDate => 'Next ex-date';
+
+  @override
+  String get depotDetailNextPayDate => 'Next pay date';
+
+  @override
   String get depotRangeToday => 'Today';
 
   @override

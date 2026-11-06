@@ -67,6 +67,8 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     final allocation = context.read<DepotAllocationState>();
     final benchmark = context.read<DepotBenchmarkState>();
     logos.ensureLoaded();
+    // Cached dividend data only; the holding details read it.
+    dividends.ensureLoaded();
     onDispose(() {
       trends.reduceCache();
       wishlist.reduceCache();

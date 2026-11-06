@@ -20399,6 +20399,48 @@ abstract class AppLocalizations {
   /// **'Performance'**
   String get depotChartGain;
 
+  /// No description provided for @depotDetailSector.
+  ///
+  /// In en, this message translates to:
+  /// **'Sector'**
+  String get depotDetailSector;
+
+  /// No description provided for @depotDetailIndustry.
+  ///
+  /// In en, this message translates to:
+  /// **'Industry'**
+  String get depotDetailIndustry;
+
+  /// No description provided for @depotDetailCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get depotDetailCountry;
+
+  /// No description provided for @depotDetailDividendYield.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected dividend yield'**
+  String get depotDetailDividendYield;
+
+  /// No description provided for @depotDetailDividendFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout frequency'**
+  String get depotDetailDividendFrequency;
+
+  /// No description provided for @depotDetailNextExDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Next ex-date'**
+  String get depotDetailNextExDate;
+
+  /// No description provided for @depotDetailNextPayDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Next pay date'**
+  String get depotDetailNextPayDate;
+
   /// No description provided for @depotRangeToday.
   ///
   /// In en, this message translates to:

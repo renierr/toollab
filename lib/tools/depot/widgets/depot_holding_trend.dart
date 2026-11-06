@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import '../depot_holding_trend_state.dart';
+import '../depot_portfolio_state.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_holding_trend.dart';
 import 'depot_market_sparkline.dart';
@@ -33,14 +34,15 @@ class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(minutes: 5), (_) {
-      if (mounted && _visible()) {
-        context.read<DepotHoldingTrendState>().ensure(
-          widget.holding,
-          visible: _visible,
-        );
-      }
+      if (mounted && _visible()) _ensure();
     });
   }
+
+  void _ensure() => context.read<DepotHoldingTrendState>().ensure(
+    widget.holding,
+    visible: _visible,
+    currency: context.read<DepotPortfolioState?>()?.currency,
+  );
 
   @override
   void didChangeDependencies() {
@@ -68,12 +70,7 @@ class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView> {
     _scheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scheduled = false;
-      if (mounted && _visible()) {
-        context.read<DepotHoldingTrendState>().ensure(
-          widget.holding,
-          visible: _visible,
-        );
-      }
+      if (mounted && _visible()) _ensure();
     });
   }
 

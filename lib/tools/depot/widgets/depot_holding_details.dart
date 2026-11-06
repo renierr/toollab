@@ -6,13 +6,18 @@ import 'package:tool_lab/widgets/data_row.dart';
 
 import '../depot_allocation_state.dart';
 import '../depot_details_link.dart';
+import '../depot_dividend_state.dart';
 import '../depot_format.dart';
+import '../depot_holding_trend_state.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../depot_savings_plans.dart';
 import '../depot_state.dart';
+import '../dividends/depot_dividend_calendar.dart';
+import '../models/depot_asset_profile.dart';
 import '../models/depot_filters.dart';
 import '../models/depot_holding.dart';
+import '../models/depot_holding_trend.dart';
 import '../models/depot_period.dart';
 import '../models/depot_transaction.dart';
 import 'depot_details_link_button.dart';
@@ -52,12 +57,69 @@ class DepotHoldingDetails extends StatelessWidget {
     final hasSales = context.select<DepotPortfolioState?, bool>(
       (state) => state?.hasSalesFor(h) ?? false,
     );
-    final expenseRatio = context.select<DepotAllocationState?, double?>(
-      (state) => state?.profileOf(h)?.expenseRatio,
+    final profile = context.select<DepotAllocationState?, DepotAssetProfile?>(
+      (state) => state?.profileOf(h),
     );
+    final expenseRatio = profile?.expenseRatio;
+    final sector = profile?.sector;
+    final industry = profile?.industry;
+    final country = profile?.country;
     final plan = context.select<DepotPortfolioState?, DepotSavingsPlan?>(
       (state) => state?.savingsPlans.of(h),
     );
+    final portfolio = context
+        .select<
+          DepotPortfolioState?,
+          (List<DepotHolding>, List<DepotTransaction>, String)?
+        >(
+          (state) => state == null
+              ? null
+              : (state.holdings, state.transactions, state.currency),
+        );
+    final currency = portfolio?.$3;
+    final trend = context.select<DepotHoldingTrendState?, DepotHoldingTrend?>(
+      (state) => state?.trendFor(h),
+    );
+    final rate = context.select<DepotHoldingTrendState?, double?>(
+      (state) => trend == null || currency == null
+          ? null
+          : state?.rate(trend.currency, currency),
+    );
+    final dividend = context
+        .select<DepotDividendState?, DepotDividendPosition?>(
+          (state) => portfolio == null
+              ? null
+              : state
+                    ?.calendarFor(portfolio.$1, portfolio.$2, portfolio.$3)
+                    .positions
+                    .where(
+                      (p) =>
+                          p.holding.id == h.id &&
+                          p.holding.portfolioId == h.portfolioId,
+                    )
+                    .firstOrNull,
+        );
+    final dividendYield = dividend?.yieldPercent;
+    final frequency = dividend?.frequency;
+    final next = dividend?.next;
+    final nextExDate = next?.exDate;
+    final estimated = next?.status == DepotDividendStatus.projected ? '≈ ' : '';
+    String day(DateTime date) =>
+        FormatHelper.dateTime(date, style: DateStyle.dateOnly);
+
+    // Yahoo quotes in the listing currency; converted when the rate is known.
+    String listingRange(double? low, double? high) {
+      if (trend == null || trend.currency.isEmpty) return '';
+      if (low == null || high == null) return '';
+      final listing = DepotFormat.of(context, trend.currency);
+      final text = '${listing.money(low)} – ${listing.money(high)}';
+      if (trend.currency == currency || rate == null) return text;
+      return '≈ ${format.money(low * rate)} – ${format.money(high * rate)} '
+          '($text)';
+    }
+
+    final dayRange = listingRange(trend?.dayLow, trend?.dayHigh);
+    final yearRange = listingRange(trend?.yearLow, trend?.yearHigh);
 
     final rows = <(String, String)>[
       (l10n.depotDetailType, DepotPortfolioLabels.kind(l10n, h.kind)),
@@ -72,6 +134,12 @@ class DepotHoldingDetails extends StatelessWidget {
         ),
       if (h.isin == null && h.symbol != null)
         (l10n.depotDetailSymbol, h.symbol!),
+      if (sector != null && sector.isNotEmpty)
+        (l10n.depotDetailSector, DepotPortfolioLabels.sector(l10n, sector)),
+      if (industry != null && industry.isNotEmpty)
+        (l10n.depotDetailIndustry, industry),
+      if (country != null && country.isNotEmpty)
+        (l10n.depotDetailCountry, country),
       if (plan != null)
         (
           l10n.depotHoldingSavingsPlan,
@@ -92,6 +160,8 @@ class DepotHoldingDetails extends StatelessWidget {
               : l10n.depotDetailStartPrice(periodLabel),
           format.money(startPrice),
         ),
+      if (dayRange.isNotEmpty) (l10n.depotWishlistDayRange, dayRange),
+      if (yearRange.isNotEmpty) (l10n.depotWishlistYearRange, yearRange),
       if (quoteAt != null)
         (l10n.depotDetailQuoteAt, FormatHelper.dateTime(quoteAt)),
       if (exchange != null && exchange.isNotEmpty)
@@ -117,6 +187,20 @@ class DepotHoldingDetails extends StatelessWidget {
       ),
       (l10n.depotDetailRealized, format.money(h.realizedGain, signed: true)),
       (l10n.depotDetailDividends, format.money(h.dividends)),
+      if (dividendYield != null)
+        (
+          l10n.depotDetailDividendYield,
+          format.percent(dividendYield, signed: false),
+        ),
+      if (frequency != null)
+        (
+          l10n.depotDetailDividendFrequency,
+          DepotPortfolioLabels.frequency(l10n, frequency),
+        ),
+      if (nextExDate != null)
+        (l10n.depotDetailNextExDate, '$estimated${day(nextExDate)}'),
+      if (next != null)
+        (l10n.depotDetailNextPayDate, '$estimated${day(next.date)}'),
       (l10n.depotHoldingTotalGain, format.money(h.totalGain, signed: true)),
       (l10n.depotKpiCosts, format.money(h.fees + h.taxes)),
       if (xirr != null) (l10n.depotKpiXirr, format.percent(xirr)),

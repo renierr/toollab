@@ -441,7 +441,14 @@ crypto symbols are searched on Yahoo. After the matching quote exchange, OTC lis
 tried last because they often have no intraday chart. When Parqet lists no symbol or none of
 its symbols has a chart, the first supported result of Yahoo's ISIN search is the fallback.
 Yahoo does not return the ISIN in search results, so this fallback is not independently
-confirmed. Yahoo receives the selected listing symbol, not portfolio amounts. Up to four holding lookups run
+confirmed. The same quote supplies the day and 52-week ranges in the holding details, in
+the listing's currency. When that differs from the portfolio's, the exchange rate is loaded
+alongside the quote (cached for 15 minutes) and the converted range is shown first, with the
+listing values in brackets. The holding details also show what is already cached locally: sector, industry
+and country from the allocation profile, and the expected yield, payout frequency and next
+ex- and pay date from the dividend data, once the Dividends tab has fetched it. Estimated
+dates are marked with ≈.
+Yahoo receives the selected listing symbol, not portfolio amounts. Up to four holding lookups run
 concurrently, deduplicated by asset, with intraday results cached in memory for 15
 minutes and failed lookups retried after 5 minutes. The cache holds at most 128 trends
 and 128 failed lookups, and removes expired entries even while the tool is closed. Up to
