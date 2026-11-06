@@ -80,7 +80,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
     try {
       if (isImage) {
         final bytes = await File(path).readAsBytes();
-        copied = await ClipboardHelper.copyEncodedImage(bytes);
+        copied = await ClipboardHelper.copyImageBytes(bytes);
       } else {
         final text = await File(path).readAsString(encoding: utf8);
         await ClipboardHelper.setText(text);

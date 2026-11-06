@@ -8,9 +8,11 @@ import 'package:tool_lab/helpers/debug_log.dart';
 class ClipboardHelper {
   ClipboardHelper._();
 
-  static const MethodChannel _windowsChannel = MethodChannel(
+  static const MethodChannel _nativeChannel = MethodChannel(
     'de.renier.tool_lab/clipboard',
   );
+
+  static const String _png = 'image/png';
 
   static Future<String?> getText() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -64,61 +66,6 @@ class ClipboardHelper {
     return null;
   }
 
-  /// Copies encoded image [bytes] as-is. On Windows a PNG goes through the
-  /// runner, which keeps its alpha; other formats fall back to Pasteboard
-  /// (GDI+, no alpha). The Linux tools declare `image/png`, so pass PNG there.
-  static Future<bool> copyImageBytes(Uint8List bytes) async {
-    if (Platform.isWindows && isPng(bytes)) {
-      try {
-        final copied = await _windowsChannel.invokeMethod<bool>(
-          'writeImagePng',
-          bytes,
-        );
-        if (copied == true) return true;
-        errorLog('ClipboardHelper: native PNG copy failed, using Pasteboard');
-      } catch (e) {
-        errorLog('ClipboardHelper: native PNG copy failed: $e');
-      }
-    }
-
-    if (Platform.isLinux) {
-      try {
-        final hasWlCopy = await _isCommandAvailable('wl-copy');
-        if (hasWlCopy) {
-          final process = await Process.start('wl-copy', ['-t', 'image/png']);
-          process.stdin.add(bytes);
-          await process.stdin.close();
-          final exitCode = await process.exitCode;
-          if (exitCode == 0) return true;
-        }
-      } catch (_) {}
-
-      try {
-        final hasXclip = await _isCommandAvailable('xclip');
-        if (hasXclip) {
-          final process = await Process.start('xclip', [
-            '-selection',
-            'clipboard',
-            '-t',
-            'image/png',
-            '-i',
-          ]);
-          process.stdin.add(bytes);
-          await process.stdin.close();
-          final exitCode = await process.exitCode;
-          if (exitCode == 0) return true;
-        }
-      } catch (_) {}
-    }
-
-    try {
-      await Pasteboard.writeImage(bytes);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
   static Future<bool> _isCommandAvailable(String cmd) async {
     try {
       final res = await Process.run('which', [cmd]);
@@ -128,20 +75,20 @@ class ClipboardHelper {
     }
   }
 
-  /// Copies encoded image [bytes], passing a PNG within [maxDimension] through
-  /// untouched and re-encoding anything else via [setImagePng]. [decoded], when
-  /// the caller already holds it, spares a second decode.
-  static Future<bool> copyEncodedImage(
+  /// Copies encoded image [bytes]. Android shares them untouched under their
+  /// own MIME type; the desktops take a PNG within [maxDimension] as-is.
+  /// Anything else is re-encoded to PNG, reusing [decoded] when given.
+  /// [keepMetadata] false re-encodes formats that may carry EXIF (GPS).
+  static Future<bool> copyImageBytes(
     Uint8List bytes, {
     ui.Image? decoded,
     int maxDimension = 4096,
+    bool keepMetadata = true,
   }) async {
-    // Only PNG passes through: JPEG and others may carry an EXIF orientation
-    // that the native clipboard decoders ignore.
-    final pngSize = _pngSize(bytes);
-    if (pngSize != null &&
-        math.max(pngSize.width, pngSize.height) <= maxDimension &&
-        await copyImageBytes(bytes)) {
+    final mimeType = _imageMimeType(bytes);
+    if (mimeType != null &&
+        _canPassThrough(bytes, mimeType, maxDimension, keepMetadata) &&
+        await _writeEncoded(bytes, mimeType)) {
       return true;
     }
 
@@ -161,20 +108,98 @@ class ClipboardHelper {
     }
   }
 
-  /// Whether [bytes] is a PNG that [copyEncodedImage] can pass through.
-  static bool isPng(Uint8List bytes) {
-    const signature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-    if (bytes.length < 24) return false;
-    for (var i = 0; i < signature.length; i++) {
-      if (bytes[i] != signature[i]) return false;
-    }
-    return true;
+  /// Whether [copyImageBytes] can hand [bytes] over without re-encoding,
+  /// so callers know if keeping the source around pays off.
+  static bool canCopyAsIs(Uint8List bytes) {
+    final mimeType = _imageMimeType(bytes);
+    if (mimeType == null) return false;
+    return Platform.isAndroid || mimeType == _png;
   }
 
-  static ({int width, int height})? _pngSize(Uint8List bytes) {
-    if (!isPng(bytes)) return null;
+  static bool _canPassThrough(
+    Uint8List bytes,
+    String mimeType,
+    int maxDimension,
+    bool keepMetadata,
+  ) {
+    if (Platform.isAndroid) {
+      // Receivers read the file and honor its EXIF orientation themselves.
+      return keepMetadata || mimeType == _png || mimeType == 'image/gif';
+    }
+    // The desktops only exchange PNG; JPEG and others may also carry an EXIF
+    // orientation that the native decoders there would ignore.
+    if (mimeType != _png) return false;
     final header = ByteData.sublistView(bytes, 16, 24);
-    return (width: header.getUint32(0), height: header.getUint32(4));
+    return math.max(header.getUint32(0), header.getUint32(4)) <= maxDimension;
+  }
+
+  static String? _imageMimeType(Uint8List b) {
+    bool startsWith(List<int> sig, [int offset = 0]) {
+      if (b.length < offset + sig.length) return false;
+      for (var i = 0; i < sig.length; i++) {
+        if (b[offset + i] != sig[i]) return false;
+      }
+      return true;
+    }
+
+    if (b.length >= 24 &&
+        startsWith(const [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
+      return _png;
+    }
+    if (startsWith(const [0xFF, 0xD8, 0xFF])) return 'image/jpeg';
+    if (startsWith(const [0x47, 0x49, 0x46, 0x38])) return 'image/gif';
+    if (startsWith(const [0x52, 0x49, 0x46, 0x46]) &&
+        startsWith(const [0x57, 0x45, 0x42, 0x50], 8)) {
+      return 'image/webp';
+    }
+    return null;
+  }
+
+  static Future<bool> _writeEncoded(Uint8List bytes, String mimeType) async {
+    try {
+      if (Platform.isAndroid) {
+        final copied = await _nativeChannel.invokeMethod<bool>('writeImage', {
+          'bytes': bytes,
+          'mimeType': mimeType,
+        });
+        return copied == true;
+      }
+      if (mimeType != _png) return false;
+      if (Platform.isWindows) {
+        final copied = await _nativeChannel.invokeMethod<bool>(
+          'writeImagePng',
+          bytes,
+        );
+        return copied == true;
+      }
+      if (Platform.isLinux) return await _writeLinuxPng(bytes);
+    } catch (e) {
+      errorLog('ClipboardHelper: image copy failed: $e');
+    }
+    return false;
+  }
+
+  static Future<bool> _writeLinuxPng(Uint8List png) async {
+    const wayland = ['wl-copy', '-t', _png];
+    const x11 = ['xclip', '-selection', 'clipboard', '-t', _png, '-i'];
+    final commands = Platform.environment.containsKey('WAYLAND_DISPLAY')
+        ? [wayland, x11]
+        : [x11, wayland];
+
+    for (final command in commands) {
+      try {
+        // Both tools fork a background owner that serves the clipboard, so
+        // the started process exits once it has read the input.
+        final process = await Process.start(command.first, command.sublist(1));
+        process.stdin.add(png);
+        await process.stdin.close();
+        if (await process.exitCode == 0) return true;
+      } on ProcessException {
+        // Tool not installed; try the next one.
+      }
+    }
+    errorLog('ClipboardHelper: image copy needs wl-clipboard or xclip');
+    return false;
   }
 
   /// Copies [image] to the clipboard as PNG. If the longest side exceeds
@@ -212,7 +237,7 @@ class ClipboardHelper {
       if (byteData == null) {
         throw Exception('Failed to encode image.');
       }
-      return await copyImageBytes(byteData.buffer.asUint8List());
+      return await _writeEncoded(byteData.buffer.asUint8List(), _png);
     } finally {
       if (ownsTarget) target.dispose();
     }

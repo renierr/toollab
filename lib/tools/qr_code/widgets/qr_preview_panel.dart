@@ -37,7 +37,7 @@ class QrPreviewPanel extends StatelessWidget {
   Future<void> _copyImage(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     try {
-      final copied = await ClipboardHelper.copyEncodedImage(pngBytes!);
+      final copied = await ClipboardHelper.copyImageBytes(pngBytes!);
       if (!copied) throw Exception('Clipboard rejected the image.');
       if (context.mounted) {
         ScaffoldMessenger.of(

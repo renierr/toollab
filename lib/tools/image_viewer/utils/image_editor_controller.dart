@@ -33,7 +33,7 @@ class ImageEditorController extends ChangeNotifier {
   img.Image? _decodedImage;
   ui.Image? _uiImage;
   Uint8List? _rawBytes;
-  // PNG source kept until the first edit so an unchanged image copies as-is.
+  // Source kept until the first edit so an unchanged image copies as-is.
   Uint8List? _unchangedBytes;
   bool _isAnimated = false;
   String? _fileName;
@@ -191,7 +191,7 @@ class ImageEditorController extends ChangeNotifier {
       _isAnimated = animated;
       // Transcoded sources keep the PNG bytes so later re-decodes stay valid.
       _rawBytes = data;
-      _unchangedBytes = ClipboardHelper.isPng(data) ? data : null;
+      _unchangedBytes = ClipboardHelper.canCopyAsIs(data) ? data : null;
 
       _fileName = name;
       _fileSizeBytes = sizeBytes;
@@ -913,7 +913,11 @@ class ImageEditorController extends ChangeNotifier {
     try {
       final source = _unchangedBytes;
       final copied = source != null
-          ? await ClipboardHelper.copyEncodedImage(source, decoded: _uiImage)
+          ? await ClipboardHelper.copyImageBytes(
+              source,
+              decoded: _uiImage,
+              keepMetadata: _preserveExif,
+            )
           : await ClipboardHelper.setImagePng(_uiImage!);
       if (!copied) throw Exception('Clipboard rejected the image.');
     } finally {

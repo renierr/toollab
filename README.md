@@ -1,6 +1,6 @@
 # ToolLab
 
-**ToolLab** is a privacy-first, multi-platform utility toolkit for **Android** and **Windows**. No accounts. No tracking. Just tools.
+**ToolLab** is a privacy-first, multi-platform utility toolkit for **Android**, **Windows** and **Linux**. No accounts. No tracking. Just tools.
 
 ---
 
@@ -150,6 +150,7 @@ native build artifacts and makes the next rhttp build slower.
 ### Run the App
 ```bash
 flutter run -d windows    # Windows Desktop
+flutter run -d linux      # Linux Desktop
 flutter run -d android    # Android Device or Emulator
 ```
 
@@ -164,6 +165,7 @@ flutter test
 ./build.sh apks          # Android split APKs (per-ABI)
 ./build.sh bundle        # Android App Bundle
 ./build.sh windows       # Windows Desktop
+./build.sh linux         # Linux Desktop
 ./build.sh clean         # Clean build artifacts
 ```
 
