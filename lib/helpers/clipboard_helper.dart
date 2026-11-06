@@ -3,9 +3,14 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:pasteboard/pasteboard.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 class ClipboardHelper {
   ClipboardHelper._();
+
+  static const MethodChannel _windowsChannel = MethodChannel(
+    'de.renier.tool_lab/clipboard',
+  );
 
   static Future<String?> getText() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -59,10 +64,23 @@ class ClipboardHelper {
     return null;
   }
 
-  /// Copies encoded image [bytes] as-is. Windows (GDI+) and Android decode any
-  /// common format natively; the Linux tools declare `image/png`, so pass PNG
-  /// there.
+  /// Copies encoded image [bytes] as-is. On Windows a PNG goes through the
+  /// runner, which keeps its alpha; other formats fall back to Pasteboard
+  /// (GDI+, no alpha). The Linux tools declare `image/png`, so pass PNG there.
   static Future<bool> copyImageBytes(Uint8List bytes) async {
+    if (Platform.isWindows && isPng(bytes)) {
+      try {
+        final copied = await _windowsChannel.invokeMethod<bool>(
+          'writeImagePng',
+          bytes,
+        );
+        if (copied == true) return true;
+        errorLog('ClipboardHelper: native PNG copy failed, using Pasteboard');
+      } catch (e) {
+        errorLog('ClipboardHelper: native PNG copy failed: $e');
+      }
+    }
+
     if (Platform.isLinux) {
       try {
         final hasWlCopy = await _isCommandAvailable('wl-copy');

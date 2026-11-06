@@ -1,4 +1,5 @@
 #include "flutter_window.h"
+#include "clipboard_handler.h"
 #include "media_controls_handler.h"
 #include "ocr_handler.h"
 
@@ -266,6 +267,8 @@ bool FlutterWindow::OnCreate() {
 
   // Register built-in Windows OCR (Windows.Media.Ocr) handler.
   RegisterOcrHandler(messenger);
+
+  RegisterClipboardHandler(messenger, GetHandle());
 
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
