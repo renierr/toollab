@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
@@ -70,10 +69,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
     return tempPath;
   }
 
-  Future<void> _copyToClipboard({
-    required bool isImage,
-    required String mimeType,
-  }) async {
+  Future<void> _copyToClipboard({required bool isImage}) async {
     final path = _previewPath;
     if (path == null || _copying) return;
     final messenger = ScaffoldMessenger.of(context);
@@ -84,20 +80,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
     try {
       if (isImage) {
         final bytes = await File(path).readAsBytes();
-        if (mimeType == 'image/png') {
-          copied = await ClipboardHelper.copyImageBytes(bytes);
-        } else {
-          // The clipboard helpers only take PNG, so other formats are re-encoded.
-          final codec = await ui.instantiateImageCodec(bytes);
-          final frame = await codec.getNextFrame();
-          codec.dispose();
-          try {
-            await ClipboardHelper.setImagePng(frame.image);
-            copied = true;
-          } finally {
-            frame.image.dispose();
-          }
-        }
+        copied = await ClipboardHelper.copyEncodedImage(bytes);
       } else {
         final text = await File(path).readAsString(encoding: utf8);
         await ClipboardHelper.setText(text);
@@ -297,10 +280,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
           FilledButton.icon(
             onPressed: _copying
                 ? null
-                : () => _copyToClipboard(
-                    isImage: isImage,
-                    mimeType: resolvedMimeType,
-                  ),
+                : () => _copyToClipboard(isImage: isImage),
             icon: const Icon(Icons.copy),
             label: Text(l10n.commonCopy),
             style: FilledButton.styleFrom(

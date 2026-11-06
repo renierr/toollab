@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:pasteboard/pasteboard.dart';
@@ -58,8 +59,9 @@ class ClipboardHelper {
     return null;
   }
 
-  /// Copies [bytes] (PNG image data) to the clipboard. On Linux, tries wl-copy and
-  /// xclip before falling back to Pasteboard.
+  /// Copies encoded image [bytes] as-is. Windows (GDI+) and Android decode any
+  /// common format natively; the Linux tools declare `image/png`, so pass PNG
+  /// there.
   static Future<bool> copyImageBytes(Uint8List bytes) async {
     if (Platform.isLinux) {
       try {
@@ -108,10 +110,59 @@ class ClipboardHelper {
     }
   }
 
+  /// Copies encoded image [bytes], passing a PNG within [maxDimension] through
+  /// untouched and re-encoding anything else via [setImagePng]. [decoded], when
+  /// the caller already holds it, spares a second decode.
+  static Future<bool> copyEncodedImage(
+    Uint8List bytes, {
+    ui.Image? decoded,
+    int maxDimension = 4096,
+  }) async {
+    // Only PNG passes through: JPEG and others may carry an EXIF orientation
+    // that the native clipboard decoders ignore.
+    final pngSize = _pngSize(bytes);
+    if (pngSize != null &&
+        math.max(pngSize.width, pngSize.height) <= maxDimension &&
+        await copyImageBytes(bytes)) {
+      return true;
+    }
+
+    if (decoded != null) {
+      return setImagePng(decoded, maxDimension: maxDimension);
+    }
+    final codec = await ui.instantiateImageCodec(bytes);
+    try {
+      final frame = await codec.getNextFrame();
+      try {
+        return await setImagePng(frame.image, maxDimension: maxDimension);
+      } finally {
+        frame.image.dispose();
+      }
+    } finally {
+      codec.dispose();
+    }
+  }
+
+  /// Whether [bytes] is a PNG that [copyEncodedImage] can pass through.
+  static bool isPng(Uint8List bytes) {
+    const signature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+    if (bytes.length < 24) return false;
+    for (var i = 0; i < signature.length; i++) {
+      if (bytes[i] != signature[i]) return false;
+    }
+    return true;
+  }
+
+  static ({int width, int height})? _pngSize(Uint8List bytes) {
+    if (!isPng(bytes)) return null;
+    final header = ByteData.sublistView(bytes, 16, 24);
+    return (width: header.getUint32(0), height: header.getUint32(4));
+  }
+
   /// Copies [image] to the clipboard as PNG. If the longest side exceeds
   /// [maxDimension], the image is downscaled with high-quality filtering first
   /// to keep clipboard payloads (and memory) reasonable.
-  static Future<void> setImagePng(
+  static Future<bool> setImagePng(
     ui.Image image, {
     int maxDimension = 4096,
   }) async {
@@ -143,7 +194,7 @@ class ClipboardHelper {
       if (byteData == null) {
         throw Exception('Failed to encode image.');
       }
-      await copyImageBytes(byteData.buffer.asUint8List());
+      return await copyImageBytes(byteData.buffer.asUint8List());
     } finally {
       if (ownsTarget) target.dispose();
     }

@@ -33,6 +33,8 @@ class ImageEditorController extends ChangeNotifier {
   img.Image? _decodedImage;
   ui.Image? _uiImage;
   Uint8List? _rawBytes;
+  // PNG source kept until the first edit so an unchanged image copies as-is.
+  Uint8List? _unchangedBytes;
   bool _isAnimated = false;
   String? _fileName;
   int _fileSizeBytes = 0;
@@ -189,6 +191,7 @@ class ImageEditorController extends ChangeNotifier {
       _isAnimated = animated;
       // Transcoded sources keep the PNG bytes so later re-decodes stay valid.
       _rawBytes = data;
+      _unchangedBytes = ClipboardHelper.isPng(data) ? data : null;
 
       _fileName = name;
       _fileSizeBytes = sizeBytes;
@@ -311,6 +314,12 @@ class ImageEditorController extends ChangeNotifier {
     return completer.future;
   }
 
+  void _replaceUiImage(ui.Image next) {
+    _uiImage?.dispose();
+    _uiImage = next;
+    _unchangedBytes = null;
+  }
+
   void _syncDimensionFields() {
     widthController.removeListener(_onWidthChanged);
     heightController.removeListener(_onHeightChanged);
@@ -419,8 +428,7 @@ class ImageEditorController extends ChangeNotifier {
 
   Future<void> _applyHistoryImage(img.Image image) async {
     final newUi = await _convertToUiImage(image);
-    _uiImage?.dispose();
-    _uiImage = newUi;
+    _replaceUiImage(newUi);
     _decodedImage = image;
     _originalWidth = image.width;
     _originalHeight = image.height;
@@ -437,8 +445,7 @@ class ImageEditorController extends ChangeNotifier {
     if (_uiImage == null) return;
 
     final newUi = await canvasRotate(_uiImage!, angle);
-    _uiImage?.dispose();
-    _uiImage = newUi;
+    _replaceUiImage(newUi);
     _originalWidth = newUi.width;
     _originalHeight = newUi.height;
     _isAnimated = false;
@@ -455,8 +462,7 @@ class ImageEditorController extends ChangeNotifier {
     if (_uiImage == null) return;
 
     final newUi = await canvasFlip(_uiImage!, direction);
-    _uiImage?.dispose();
-    _uiImage = newUi;
+    _replaceUiImage(newUi);
     _isAnimated = false;
     notifyListeners();
 
@@ -508,8 +514,7 @@ class ImageEditorController extends ChangeNotifier {
       final newDecodedImage = await compute(decodeImageTask, segmentedBytes);
 
       // Apply changes
-      _uiImage?.dispose();
-      _uiImage = newUiImage;
+      _replaceUiImage(newUiImage);
       _decodedImage = newDecodedImage;
       _originalWidth = newUiImage.width;
       _originalHeight = newUiImage.height;
@@ -590,8 +595,7 @@ class ImageEditorController extends ChangeNotifier {
     _isCropMode = false;
 
     final newUi = await canvasCrop(_uiImage!, x, y, w, h);
-    _uiImage?.dispose();
-    _uiImage = newUi;
+    _replaceUiImage(newUi);
     _originalWidth = w;
     _originalHeight = h;
     _isAnimated = false;
@@ -637,8 +641,7 @@ class ImageEditorController extends ChangeNotifier {
       solidColor,
       relativePathPoints,
     );
-    _uiImage?.dispose();
-    _uiImage = newUi;
+    _replaceUiImage(newUi);
     _isAnimated = false;
     notifyListeners();
 
@@ -727,6 +730,7 @@ class ImageEditorController extends ChangeNotifier {
     _uiImage?.dispose();
     _uiImage = null;
     _rawBytes = null;
+    _unchangedBytes = null;
     _isAnimated = false;
     _fileName = null;
     _fileSizeBytes = 0;
@@ -784,8 +788,7 @@ class ImageEditorController extends ChangeNotifier {
       );
 
       final newUi = await _convertToUiImage(resized);
-      _uiImage?.dispose();
-      _uiImage = newUi;
+      _replaceUiImage(newUi);
       _decodedImage = resized;
       _originalWidth = resized.width;
       _originalHeight = resized.height;
@@ -908,7 +911,11 @@ class ImageEditorController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await ClipboardHelper.setImagePng(_uiImage!);
+      final source = _unchangedBytes;
+      final copied = source != null
+          ? await ClipboardHelper.copyEncodedImage(source, decoded: _uiImage)
+          : await ClipboardHelper.setImagePng(_uiImage!);
+      if (!copied) throw Exception('Clipboard rejected the image.');
     } finally {
       _isProcessing = false;
       notifyListeners();

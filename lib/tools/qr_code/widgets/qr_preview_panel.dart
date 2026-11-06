@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
@@ -38,10 +37,8 @@ class QrPreviewPanel extends StatelessWidget {
   Future<void> _copyImage(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     try {
-      final codec = await ui.instantiateImageCodec(pngBytes!);
-      final frame = await codec.getNextFrame();
-      await ClipboardHelper.setImagePng(frame.image);
-      frame.image.dispose();
+      final copied = await ClipboardHelper.copyEncodedImage(pngBytes!);
+      if (!copied) throw Exception('Clipboard rejected the image.');
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
