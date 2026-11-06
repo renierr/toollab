@@ -169,7 +169,8 @@ all use this net capital, so the value chart's invested line is lower than in Pa
 realized gains so far, and value minus invested includes them.
 
 The optional benchmark compares the portfolio with EUR-listed accumulating ETF
-proxies for MSCI World (EUNL.DE) or the S&P 500 (SXR8.DE). It fetches Yahoo daily
+proxies for MSCI World (EUNL.DE), the S&P 500 (SXR8.DE), MSCI Europe (EUNK.DE) or the
+FTSE All-World (VWCE.DE). It fetches Yahoo daily
 closing prices on demand; EUR portfolios only. Both lines start at 100 on their
 first overlapping date. It starts off and resets when leaving Depot. The static
 comparison replaces the value plot inside its card; its selector is hidden when

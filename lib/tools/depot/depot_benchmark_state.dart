@@ -9,7 +9,9 @@ import 'models/market_quote.dart';
 enum DepotBenchmark {
   off('', ''),
   world('EUNL.DE', 'iShares MSCI World (EUNL.DE)'),
-  sp500('SXR8.DE', 'iShares S&P 500 (SXR8.DE)');
+  sp500('SXR8.DE', 'iShares S&P 500 (SXR8.DE)'),
+  europe('EUNK.DE', 'iShares MSCI Europe (EUNK.DE)'),
+  allWorld('VWCE.DE', 'Vanguard FTSE All-World (VWCE.DE)');
 
   final String symbol;
   final String label;
