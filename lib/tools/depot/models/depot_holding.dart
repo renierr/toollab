@@ -71,19 +71,19 @@ enum DepotHoldingKind {
 
   /// Splits [stock], [etf] and [fund] into distributing/dividend and
   /// accumulating/growth variants for the overview allocation.
-  DepotHoldingKind detailed({required String name, required double dividends}) =>
-      switch (this) {
-        stock => dividends > 0 ? stockDividend : stockGrowth,
-        etf =>
-          _isDistributingFund(name, dividends)
-              ? etfDistributing
-              : etfAccumulating,
-        fund =>
-          _isDistributingFund(name, dividends)
-              ? fundDistributing
-              : fundAccumulating,
-        final other => other,
-      };
+  DepotHoldingKind detailed({
+    required String name,
+    required double dividends,
+  }) => switch (this) {
+    stock => dividends > 0 ? stockDividend : stockGrowth,
+    etf =>
+      _isDistributingFund(name, dividends) ? etfDistributing : etfAccumulating,
+    fund =>
+      _isDistributingFund(name, dividends)
+          ? fundDistributing
+          : fundAccumulating,
+    final other => other,
+  };
 
   static DepotHoldingKind of(DepotAssetType type, String name) =>
       switch (type) {

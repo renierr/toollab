@@ -71,6 +71,7 @@ class DepotPortfolioLabels {
   static String period(AppLocalizations l10n, DepotPeriod period) =>
       switch (period) {
         DepotPeriod.today => l10n.depotRangeToday,
+        DepotPeriod.days7 => l10n.depotRange7d,
         DepotPeriod.month1 => l10n.depotRange1m,
         DepotPeriod.month3 => l10n.depotRange3m,
         DepotPeriod.ytd => l10n.depotRangeYtd,

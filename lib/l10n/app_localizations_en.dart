@@ -11432,6 +11432,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotRangeToday => 'Today';
 
   @override
+  String get depotRange7d => '7D';
+
+  @override
   String get depotRange1m => '1M';
 
   @override

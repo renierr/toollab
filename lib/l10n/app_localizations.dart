@@ -20405,6 +20405,12 @@ abstract class AppLocalizations {
   /// **'Today'**
   String get depotRangeToday;
 
+  /// No description provided for @depotRange7d.
+  ///
+  /// In en, this message translates to:
+  /// **'7D'**
+  String get depotRange7d;
+
   /// No description provided for @depotRange1m.
   ///
   /// In en, this message translates to:

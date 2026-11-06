@@ -11515,6 +11515,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotRangeToday => 'Heute';
 
   @override
+  String get depotRange7d => '7T';
+
+  @override
   String get depotRange1m => '1M';
 
   @override

@@ -131,14 +131,19 @@ class ParqetApi {
     return listed ? writable : null;
   }
 
-  /// Parqet's relative `1d` starts at the close before yesterday, so today is
-  /// requested as an absolute range from midnight.
+  /// Parqet's relative `1d` starts at the close before yesterday, so today and
+  /// 7 days are requested as absolute ranges from midnight.
   static Map<String, String> _interval(DepotPeriod period) {
-    if (period != DepotPeriod.today) {
+    final daysBack = switch (period) {
+      DepotPeriod.today => 0,
+      DepotPeriod.days7 => 6,
+      _ => null,
+    };
+    if (daysBack == null) {
       return {'type': 'relative', 'value': period.wire};
     }
     final now = DateTime.now();
-    final start = DateTime.utc(now.year, now.month, now.day);
+    final start = DateTime.utc(now.year, now.month, now.day - daysBack);
     return {'type': 'absolute', 'start': start.toIso8601String()};
   }
 

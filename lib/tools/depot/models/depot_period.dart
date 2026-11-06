@@ -2,6 +2,7 @@
 /// on a time frame is stored once per period.
 enum DepotPeriod {
   today('1d'),
+  days7('7d'),
   month1('1m'),
   month3('3m'),
   ytd('ytd'),
