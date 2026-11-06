@@ -323,6 +323,8 @@
   "fastDropPreviewTooltip": "Vorschau",
   "fastDropOpenShare": "Öffnen / Teilen",
   "fastDropDownload": "Herunterladen",
+  "fastDropCopied": "In die Zwischenablage kopiert",
+  "fastDropCopyFailed": "Kopieren in die Zwischenablage fehlgeschlagen",
   "fastDropConnectionStatus": "Verbindungsstatus",
   "fastDropRetryConnection": "Verbindung erneut versuchen",
   "fastDropNoDropsTitle": "Noch keine Drops",

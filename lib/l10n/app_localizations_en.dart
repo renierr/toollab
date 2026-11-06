@@ -1077,6 +1077,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fastDropDownload => 'Download';
 
   @override
+  String get fastDropCopied => 'Copied to clipboard';
+
+  @override
+  String get fastDropCopyFailed => 'Could not copy to clipboard';
+
+  @override
   String get fastDropConnectionStatus => 'Connection Status';
 
   @override

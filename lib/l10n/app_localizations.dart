@@ -1969,6 +1969,18 @@ abstract class AppLocalizations {
   /// **'Download'**
   String get fastDropDownload;
 
+  /// No description provided for @fastDropCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get fastDropCopied;
+
+  /// No description provided for @fastDropCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy to clipboard'**
+  String get fastDropCopyFailed;
+
   /// No description provided for @fastDropConnectionStatus.
   ///
   /// In en, this message translates to:

@@ -1087,6 +1087,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropDownload => 'Herunterladen';
 
   @override
+  String get fastDropCopied => 'In die Zwischenablage kopiert';
+
+  @override
+  String get fastDropCopyFailed =>
+      'Kopieren in die Zwischenablage fehlgeschlagen';
+
+  @override
   String get fastDropConnectionStatus => 'Verbindungsstatus';
 
   @override

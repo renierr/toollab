@@ -574,6 +574,8 @@
   "fastDropPreviewTooltip": "Preview",
   "fastDropOpenShare": "Open / Share",
   "fastDropDownload": "Download",
+  "fastDropCopied": "Copied to clipboard",
+  "fastDropCopyFailed": "Could not copy to clipboard",
   "fastDropConnectionStatus": "Connection Status",
   "fastDropRetryConnection": "Retry Connection",
   "fastDropNoDropsTitle": "No Drops Yet",

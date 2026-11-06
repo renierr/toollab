@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -32,6 +35,8 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
     with DisposeCleanup {
   late final TempFileScope _scope = TempFileManager.createScope();
   Future<String>? _downloadFuture;
+  String? _previewPath;
+  bool _copying = false;
 
   bool get _isPreviewable {
     if (widget.item.size > 10 * 1024 * 1024) return false;
@@ -61,7 +66,53 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
       'fast_drop_preview_${widget.item.id}',
     );
     await widget.onDownloadToFile(widget.item.id, tempPath);
+    if (mounted) setState(() => _previewPath = tempPath);
     return tempPath;
+  }
+
+  Future<void> _copyToClipboard({
+    required bool isImage,
+    required String mimeType,
+  }) async {
+    final path = _previewPath;
+    if (path == null || _copying) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    setState(() => _copying = true);
+
+    var copied = false;
+    try {
+      if (isImage) {
+        final bytes = await File(path).readAsBytes();
+        if (mimeType == 'image/png') {
+          copied = await ClipboardHelper.copyImageBytes(bytes);
+        } else {
+          // The clipboard helpers only take PNG, so other formats are re-encoded.
+          final codec = await ui.instantiateImageCodec(bytes);
+          final frame = await codec.getNextFrame();
+          codec.dispose();
+          try {
+            await ClipboardHelper.setImagePng(frame.image);
+            copied = true;
+          } finally {
+            frame.image.dispose();
+          }
+        }
+      } else {
+        final text = await File(path).readAsString(encoding: utf8);
+        await ClipboardHelper.setText(text);
+        copied = true;
+      }
+    } catch (e) {
+      errorLog('FastDropPreviewDialog: copy to clipboard failed: $e');
+    }
+
+    if (mounted) setState(() => _copying = false);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(copied ? l10n.fastDropCopied : l10n.fastDropCopyFailed),
+      ),
+    );
   }
 
   @override
@@ -242,6 +293,21 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.commonClose),
         ),
+        if (_previewPath != null && (isText || isImage))
+          FilledButton.icon(
+            onPressed: _copying
+                ? null
+                : () => _copyToClipboard(
+                    isImage: isImage,
+                    mimeType: resolvedMimeType,
+                  ),
+            icon: const Icon(Icons.copy),
+            label: Text(l10n.commonCopy),
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.secondaryContainer,
+              foregroundColor: theme.colorScheme.onSecondaryContainer,
+            ),
+          ),
         FilledButton.icon(
           onPressed: () {
             Navigator.of(context).pop();
