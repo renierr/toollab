@@ -15,6 +15,25 @@ DateStyle _dateStyle(List<DepotChartPoint> points) =>
     ? DateStyle.dateAndTime
     : DateStyle.dateOnly;
 
+typedef _Range = ({double min, double max, double pad});
+
+/// Scaled to the value line alone: invested capital is often far below it and
+/// would flatten the value's swings into a thin band.
+_Range _valueRange(List<DepotChartPoint> points) {
+  var min = double.infinity;
+  var max = -double.infinity;
+  for (final p in points) {
+    min = math.min(min, p.value);
+    max = math.max(max, p.value);
+  }
+  if (max - min < 1) max = min + 1;
+  final pad = (max - min) * 0.08;
+  return (min: min - pad, max: max + pad, pad: pad);
+}
+
+bool _capitalVisible(List<DepotChartPoint> points, _Range range) =>
+    points.any((p) => p.capital >= range.min && p.capital <= range.max);
+
 /// The value and invested-capital plot of one period.
 class DepotValueChart extends StatelessWidget {
   final List<DepotChartPoint> points;
@@ -32,6 +51,8 @@ class DepotValueChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final showCapital =
+        points.length >= 2 && _capitalVisible(points, _valueRange(points));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,10 +80,11 @@ class DepotValueChart extends StatelessWidget {
               color: AppTheme.accentGreen,
               label: l10n.depotChartValue,
             ),
-            DepotLegendDot(
-              color: theme.hintColor,
-              label: l10n.depotChartInvested,
-            ),
+            if (showCapital)
+              DepotLegendDot(
+                color: theme.hintColor,
+                label: l10n.depotChartInvested,
+              ),
           ],
         ),
       ],
@@ -202,16 +224,7 @@ class _ChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var minY = double.infinity;
-    var maxY = -double.infinity;
-    for (final p in points) {
-      minY = math.min(minY, math.min(p.value, p.capital));
-      maxY = math.max(maxY, math.max(p.value, p.capital));
-    }
-    if (maxY - minY < 1) maxY = minY + 1;
-    final pad = (maxY - minY) * 0.08;
-    minY -= pad;
-    maxY += pad;
+    final (min: minY, max: maxY, :pad) = _valueRange(points);
 
     final chart = Rect.fromLTWH(0, 0, size.width, size.height - _labelHeight);
     Offset at(int i, double v) => Offset(
@@ -257,13 +270,17 @@ class _ChartPainter extends CustomPainter {
           ],
         ).createShader(chart),
     );
-    canvas.drawPath(
-      capital,
-      Paint()
-        ..color = capitalColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    );
+    canvas
+      ..save()
+      ..clipRect(chart)
+      ..drawPath(
+        capital,
+        Paint()
+          ..color = capitalColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      )
+      ..restore();
     canvas.drawPath(
       value,
       Paint()
