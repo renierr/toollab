@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -13,6 +14,9 @@ class ClipboardHelper {
   );
 
   static const String _png = 'image/png';
+  static const String _jpeg = 'image/jpeg';
+  static const String _gif = 'image/gif';
+  static const String _webp = 'image/webp';
 
   static Future<String?> getText() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -85,11 +89,17 @@ class ClipboardHelper {
     int maxDimension = 4096,
     bool keepMetadata = true,
   }) async {
-    final mimeType = _imageMimeType(bytes);
+    final mimeType = imageMimeType(bytes);
     if (mimeType != null &&
-        _canPassThrough(bytes, mimeType, maxDimension, keepMetadata) &&
-        await _writeEncoded(bytes, mimeType)) {
-      return true;
+        _canPassThrough(bytes, mimeType, maxDimension, keepMetadata)) {
+      if (await _writeEncoded(bytes, mimeType)) {
+        return true;
+      }
+      // The Linux writers share one code path, so a failed pass-through cannot
+      // be recovered by re-encoding the same bytes.
+      if (Platform.isLinux) {
+        return false;
+      }
     }
 
     if (decoded != null) {
@@ -111,7 +121,7 @@ class ClipboardHelper {
   /// Whether [copyImageBytes] can hand [bytes] over without re-encoding,
   /// so callers know if keeping the source around pays off.
   static bool canCopyAsIs(Uint8List bytes) {
-    final mimeType = _imageMimeType(bytes);
+    final mimeType = imageMimeType(bytes);
     if (mimeType == null) return false;
     return Platform.isAndroid || mimeType == _png;
   }
@@ -124,7 +134,12 @@ class ClipboardHelper {
   ) {
     if (Platform.isAndroid) {
       // Receivers read the file and honor its EXIF orientation themselves.
-      return keepMetadata || mimeType == _png || mimeType == 'image/gif';
+      if (!(keepMetadata || mimeType == _png || mimeType == _gif)) {
+        return false;
+      }
+      if (mimeType != _png) return true;
+      final header = ByteData.sublistView(bytes, 16, 24);
+      return math.max(header.getUint32(0), header.getUint32(4)) <= maxDimension;
     }
     // The desktops only exchange PNG; JPEG and others may also carry an EXIF
     // orientation that the native decoders there would ignore.
@@ -133,24 +148,26 @@ class ClipboardHelper {
     return math.max(header.getUint32(0), header.getUint32(4)) <= maxDimension;
   }
 
-  static String? _imageMimeType(Uint8List b) {
+  /// Best-effort MIME type from the byte signature; null when unknown.
+  @visibleForTesting
+  static String? imageMimeType(Uint8List bytes) {
     bool startsWith(List<int> sig, [int offset = 0]) {
-      if (b.length < offset + sig.length) return false;
+      if (bytes.length < offset + sig.length) return false;
       for (var i = 0; i < sig.length; i++) {
-        if (b[offset + i] != sig[i]) return false;
+        if (bytes[offset + i] != sig[i]) return false;
       }
       return true;
     }
 
-    if (b.length >= 24 &&
+    if (bytes.length >= 24 &&
         startsWith(const [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
       return _png;
     }
-    if (startsWith(const [0xFF, 0xD8, 0xFF])) return 'image/jpeg';
-    if (startsWith(const [0x47, 0x49, 0x46, 0x38])) return 'image/gif';
+    if (startsWith(const [0xFF, 0xD8, 0xFF])) return _jpeg;
+    if (startsWith(const [0x47, 0x49, 0x46, 0x38])) return _gif;
     if (startsWith(const [0x52, 0x49, 0x46, 0x46]) &&
         startsWith(const [0x57, 0x45, 0x42, 0x50], 8)) {
-      return 'image/webp';
+      return _webp;
     }
     return null;
   }
