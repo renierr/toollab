@@ -17,6 +17,7 @@ class NewsDbHelper {
   static const int _dayMs = 86400000;
   static const int _bucketCount = 8;
   static const int readRetentionMs = 7 * _dayMs;
+  static const Duration newArticleWindow = Duration(days: 2);
   static const String readBucketPrefix = 'read:';
 
   /// Read articles are disposable once they are old; unread ones are kept long
@@ -27,6 +28,10 @@ class NewsDbHelper {
 
   NewsDbHelper._privateConstructor();
   static final NewsDbHelper instance = NewsDbHelper._privateConstructor();
+
+  static int newArticleCutoff([int? now]) =>
+      (now ?? DateTime.now().millisecondsSinceEpoch) -
+      newArticleWindow.inMilliseconds;
 
   Future<ToolDatabase>? _dbFuture;
 
@@ -277,9 +282,11 @@ class NewsDbHelper {
     String? sourceShortId,
     bool unreadOnly = false,
     int? readAfter,
+    int? newSince,
     int limit = 2000,
   }) async {
     final db = await _getDb();
+    final cutoff = newSince ?? newArticleCutoff();
     final conditions = <String>[
       'source_short_id IN (SELECT short_id FROM ${db.nameTable(sourcesTable)} '
           'WHERE enabled = 1 AND deleted = 0)',
@@ -290,6 +297,8 @@ class NewsDbHelper {
       args.add(sourceShortId);
     }
     if (unreadOnly) {
+      conditions.add('published_at >= ?');
+      args.add(cutoff);
       if (readAfter == null) {
         conditions.add('read_at IS NULL');
       } else {
@@ -317,17 +326,21 @@ class NewsDbHelper {
       orderBy: 'published_at DESC, id DESC',
       limit: limit,
     );
-    return rows.map(NewsArticle.fromMap).toList();
+    return rows.map((row) {
+      final article = NewsArticle.fromMap(row);
+      return article.copyWith(agedOut: article.publishedAt < cutoff);
+    }).toList();
   }
 
-  Future<Map<String, int>> getUnreadCounts() async {
+  Future<Map<String, int>> getUnreadCounts({int? newSince}) async {
     final db = await _getDb();
     final rows = await db.rawQuery(
       'SELECT source_short_id, COUNT(*) AS total '
       'FROM ${db.nameTable(articlesTable)} '
-      'WHERE read_at IS NULL AND source_short_id IN '
+      'WHERE read_at IS NULL AND published_at >= ? AND source_short_id IN '
       '(SELECT short_id FROM ${db.nameTable(sourcesTable)} '
       'WHERE enabled = 1 AND deleted = 0) GROUP BY source_short_id',
+      [newSince ?? newArticleCutoff()],
     );
     return {
       for (final row in rows)
@@ -335,15 +348,29 @@ class NewsDbHelper {
     };
   }
 
-  Future<int> getTotalUnreadCount() async {
+  Future<int> getTotalUnreadCount({int? newSince}) async {
     final db = await _getDb();
     final rows = await db.rawQuery(
       'SELECT COUNT(*) AS total FROM ${db.nameTable(articlesTable)} '
-      'WHERE read_at IS NULL AND source_short_id IN '
+      'WHERE read_at IS NULL AND published_at >= ? AND source_short_id IN '
       '(SELECT short_id FROM ${db.nameTable(sourcesTable)} '
       'WHERE enabled = 1 AND deleted = 0)',
+      [newSince ?? newArticleCutoff()],
     );
     return rows.first['total'] as int? ?? 0;
+  }
+
+  Future<int?> getNextUnreadExpiry({int? newSince}) async {
+    final db = await _getDb();
+    final rows = await db.rawQuery(
+      'SELECT MIN(published_at) AS oldest FROM ${db.nameTable(articlesTable)} '
+      'WHERE read_at IS NULL AND published_at >= ? AND source_short_id IN '
+      '(SELECT short_id FROM ${db.nameTable(sourcesTable)} '
+      'WHERE enabled = 1 AND deleted = 0)',
+      [newSince ?? newArticleCutoff()],
+    );
+    final oldest = rows.first['oldest'] as int?;
+    return oldest == null ? null : oldest + newArticleWindow.inMilliseconds + 1;
   }
 
   /// Inserts new feed entries and refreshes the card metadata of known ones
@@ -354,6 +381,7 @@ class NewsDbHelper {
   ) async {
     if (articles.isEmpty) return 0;
     final db = await _getDb();
+    final newCutoff = newArticleCutoff();
     var added = 0;
     await db.transaction((txn) async {
       final existing = <String>{};
@@ -390,6 +418,8 @@ class NewsDbHelper {
               'summary': article.summary,
               'author': article.author,
               'link': article.link,
+              if (article.hasPublicationDate && article.publishedAt > 0)
+                'published_at': article.publishedAt,
               if (article.imageUrl != null && article.imageUrl!.isNotEmpty)
                 'image_url': article.imageUrl,
               'fetched_at': article.fetchedAt,
@@ -407,7 +437,7 @@ class NewsDbHelper {
                 )
                 .toMap(),
           );
-          added++;
+          if (article.publishedAt >= newCutoff) added++;
         }
       }
     });
@@ -492,9 +522,9 @@ class NewsDbHelper {
     final time = readAt ?? DateTime.now().millisecondsSinceEpoch;
     await db.transaction((txn) async {
       final where = sourceShortId == null
-          ? 'read_at IS NULL'
-          : 'read_at IS NULL AND source_short_id = ?';
-      final args = sourceShortId == null ? null : [sourceShortId];
+          ? 'read_at IS NULL AND published_at >= ?'
+          : 'read_at IS NULL AND published_at >= ? AND source_short_id = ?';
+      final args = [newArticleCutoff(), ?sourceShortId];
       final rows = await txn.query(
         articlesTable,
         columns: ['guid_key'],

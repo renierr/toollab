@@ -11,6 +11,8 @@ class NewsArticle {
   final String? contentMarkdown;
   final int? readAt;
   final int fetchedAt;
+  final bool agedOut;
+  final bool hasPublicationDate;
 
   const NewsArticle({
     this.id,
@@ -25,9 +27,11 @@ class NewsArticle {
     this.contentMarkdown,
     this.readAt,
     required this.fetchedAt,
+    this.agedOut = false,
+    this.hasPublicationDate = true,
   });
 
-  bool get isRead => readAt != null;
+  bool get isRead => readAt != null || agedOut;
 
   NewsArticle copyWith({
     int? id,
@@ -42,6 +46,8 @@ class NewsArticle {
     String? contentMarkdown,
     int? readAt,
     int? fetchedAt,
+    bool? agedOut,
+    bool? hasPublicationDate,
   }) {
     return NewsArticle(
       id: id ?? this.id,
@@ -56,6 +62,8 @@ class NewsArticle {
       contentMarkdown: contentMarkdown ?? this.contentMarkdown,
       readAt: readAt ?? this.readAt,
       fetchedAt: fetchedAt ?? this.fetchedAt,
+      agedOut: agedOut ?? this.agedOut,
+      hasPublicationDate: hasPublicationDate ?? this.hasPublicationDate,
     );
   }
 

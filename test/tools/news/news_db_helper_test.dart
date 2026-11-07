@@ -35,13 +35,14 @@ void main() {
       lastModified: 'date',
     );
 
-    const article = NewsArticle(
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final article = NewsArticle(
       guidKey: 'item',
       sourceShortId: 'source',
       title: 'Original',
       link: 'https://example.com/item',
-      publishedAt: 10,
-      fetchedAt: 10,
+      publishedAt: now,
+      fetchedAt: now,
     );
     expect(await db.saveFetchedArticles(source.shortId, [article]), 1);
     final first = (await db.getArticles()).single;

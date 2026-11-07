@@ -43,6 +43,7 @@ class ParsedFeedItem {
       imageUrl: imageUrl,
       publishedAt: publishedAt > 0 ? publishedAt : fetchedAt,
       fetchedAt: fetchedAt,
+      hasPublicationDate: publishedAt > 0,
     );
   }
 }

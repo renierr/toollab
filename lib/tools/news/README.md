@@ -12,10 +12,11 @@ Custom feeds are checked when added and need at least one usable entry. Feed URL
 
 ## Reading
 
-- Opening an article marks it as read; returning to the feed also triggers a sync if configured. Optionally, **Mark as read while scrolling** marks visible articles after they pass above the viewport. When you scroll to the end and pause for a second, fully visible cards are also marked read, as are oversized cards whose bottom is visible. A short timeline is not marked merely by opening it. Read cards are dimmed.
+- Opening an article marks it as read; returning to the feed also triggers a sync if configured. Optionally, **Mark as read while scrolling** marks visible articles after they pass above the viewport. When you scroll to the end and pause for a second, all visible cards, including partially visible ones, are also marked read. A short timeline is not marked merely by opening it. Read cards are dimmed.
 - Use the text-size buttons in the article reader to adjust the headline, article text and fallback summary from 80% to 200% in 10% steps. The size is saved locally, applies to all articles, and works alongside the device text-size setting.
 - With **Hide read articles** enabled, articles read in the current timeline remain visible until the next refresh, so they can be revisited by scrolling back. Previously read articles are filtered when the timeline is loaded or the filter is enabled.
-- Refresh using the toolbar button or pull-to-refresh. **Refresh when opened** uses a ten-minute minimum interval during initialization.
+- Refresh using the toolbar button or pull-to-refresh. With **Refresh when opened** enabled, News checks the last refresh during state initialization and fetches if it is at least ten minutes old. This is not a periodic ten-minute poll; reopening News while its state remains initialized does not by itself start another feed refresh.
+- Articles stop counting as new or unread once they are more than 48 hours past their publication time. They are dimmed in the full timeline and excluded from **Hide read articles**, but are not deleted. The count updates as articles age while News is active. If a feed has no usable date, News uses the first local fetch time for that item; after clearing the cache, an undated item can appear new again.
 - The reader extracts the source page on a best-effort basis. If the site blocks access, requires JavaScript, or does not expose a readable body, News shows the feed summary and a link to the original instead. Paywalls are not bypassed.
 
 ## Fetching and storage
@@ -25,6 +26,7 @@ Custom feeds are checked when added and need at least one usable entry. Feed URL
 Each refresh considers the **first 80 entries** returned by each enabled feed, in the feed's order. A feed may return fewer entries; unusable or duplicate entries are skipped. News does not page through older feed entries. Previously cached articles can remain available across refreshes, so the total stored for a source can exceed 80.
 
 - Refresh processes up to three enabled feeds concurrently and uses `ETag` and `Last-Modified` when available. An unchanged feed can return no entries to process. Feed responses are buffered before the 8 MB size check.
+- The refresh message counts newly inserted articles only when their publication time is within the last 48 hours. Older entries can still be cached for the full timeline. A later usable feed date updates a cached item's publication time; missing dates do not reset its first-fetch fallback on each refresh.
 - Cards use images supplied by the feed. For visible cards without one, News fetches the article page to look for an image and readable text, with at most two preview requests in flight. Opening an article shares an in-flight preview request where possible. Article responses are buffered before the 6 MB size check. Publishers can still block requests or omit images.
 - Sources, article metadata, extracted Markdown, image URLs and read marks are stored locally in SQLite. Image bytes use Flutter's image cache rather than the News database. Clearing cached articles keeps recent read marks and sources.
 - Refresh prunes read articles published more than 30 days ago, all articles published more than 365 days ago, and entries beyond the newest 5,000. The timeline query shows up to 2,000 articles.
@@ -46,6 +48,7 @@ News uses the app's generic backend sync. To share data, devices must use the sa
 
 - **Sources:** title, feed and site URLs, category, enabled state, order and timestamps. Source additions, edits and deletions sync. For conflicting edits to the same source, the sync engine compares update timestamps; device clocks therefore matter. Feed fetch validators, errors and fetch times stay local.
 - **Read marks:** an article key and read timestamp. The key is the existing SHA-1 hash of `source ID | feed GUID`; when the feed has no GUID, News uses its link instead. Article URLs, titles, summaries, images and bodies are not included in read-mark payloads. Matching depends on the devices seeing the same source ID and feed identity; a publisher changing its GUID or link can make an item appear new.
+- Aging out after 48 hours is a local display and counting rule, not a read event sent to the backend. Explicitly opening an older article still records and syncs its read mark.
 - **Local only:** cached article metadata, extracted bodies, images, and News display preferences. When a read mark arrives before its article is fetched, News stores the mark and applies it if the matching article is fetched within the retention window. Clearing cached articles keeps recent read marks and sources.
 
 Read hashes are identifiers, not encryption or guaranteed anonymity: someone with the same feed data can calculate and compare them. Source records include URLs, and News sync payloads are not end-to-end encrypted by the app. Use a trusted backend and HTTPS as appropriate.

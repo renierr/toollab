@@ -53,6 +53,7 @@ class NewsState extends ChangeNotifier {
   int _readerFontPercent = 100;
   Future<void> _readerFontSave = Future.value();
   Future<void>? _initialization;
+  Timer? _unreadExpiryTimer;
   Completer<void>? _refreshCompletion;
   int _readFilterCutoff = DateTime.now().millisecondsSinceEpoch;
   int _lastReadAt = 0;
@@ -177,20 +178,41 @@ class NewsState extends ChangeNotifier {
   }
 
   Future<void> _reloadArticles() async {
+    final cutoff = NewsDbHelper.newArticleCutoff();
     _articles = await NewsDbHelper.instance.getArticles(
       sourceShortId: _selectedSourceId,
       unreadOnly: _hideRead,
       readAfter: _readFilterCutoff,
+      newSince: cutoff,
     );
-    _unreadCounts = await NewsDbHelper.instance.getUnreadCounts();
+    _unreadCounts = await NewsDbHelper.instance.getUnreadCounts(
+      newSince: cutoff,
+    );
     for (var index = 0; index < _articles.length; index++) {
       final article = _articles[index];
       final pendingAt = _pendingReads[article.id];
-      if (pendingAt != null && !article.isRead) {
+      if (pendingAt != null && article.readAt == null) {
         _articles[index] = article.copyWith(readAt: pendingAt);
-        final count = _unreadCounts[article.sourceShortId] ?? 0;
-        _unreadCounts[article.sourceShortId] = max(0, count - 1);
+        if (!article.isRead) {
+          final count = _unreadCounts[article.sourceShortId] ?? 0;
+          _unreadCounts[article.sourceShortId] = max(0, count - 1);
+        }
       }
+    }
+    final expiry = await NewsDbHelper.instance.getNextUnreadExpiry(
+      newSince: cutoff,
+    );
+    _unreadExpiryTimer?.cancel();
+    if (expiry != null && !_disposed) {
+      final delay = max(1, expiry - DateTime.now().millisecondsSinceEpoch);
+      _unreadExpiryTimer = Timer(Duration(milliseconds: delay), () async {
+        try {
+          await _reloadArticles();
+          if (!_disposed) notifyListeners();
+        } catch (e) {
+          errorLog('[NewsState] Failed to update expired articles: $e');
+        }
+      });
     }
   }
 
@@ -465,17 +487,21 @@ class NewsState extends ChangeNotifier {
 
   Future<void> markRead(NewsArticle article) async {
     final id = article.id;
-    if (id == null || article.isRead || _pendingReads.containsKey(id)) return;
+    if (id == null || article.readAt != null || _pendingReads.containsKey(id)) {
+      return;
+    }
     final current = _articles.where((item) => item.id == id).firstOrNull;
-    if (current == null || current.isRead) return;
+    if (current == null || current.readAt != null) return;
     final now = _nextReadTime();
     _pendingReads[id] = now;
     _articles = [
       for (final item in _articles)
         if (item.id == id) item.copyWith(readAt: now) else item,
     ];
-    final count = _unreadCounts[article.sourceShortId] ?? 0;
-    _unreadCounts[article.sourceShortId] = max(0, count - 1);
+    if (!current.isRead) {
+      final count = _unreadCounts[article.sourceShortId] ?? 0;
+      _unreadCounts[article.sourceShortId] = max(0, count - 1);
+    }
     final write = NewsDbHelper.instance.markRead(id, readAt: now);
     _pendingReadWrites.add(write);
     notifyListeners();
@@ -651,6 +677,7 @@ class NewsState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _unreadExpiryTimer?.cancel();
     _previewQueue.clear();
     super.dispose();
   }

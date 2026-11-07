@@ -134,9 +134,7 @@ class _NewsReadTrackerState extends State<NewsReadTracker> {
     final bottom = top + box.size.height;
     final viewportTop = viewport.localToGlobal(Offset.zero).dy;
     final viewportBottom = viewportTop + viewport.size.height;
-    if (bottom > viewportTop &&
-        bottom <= viewportBottom &&
-        (top >= viewportTop || box.size.height > viewport.size.height)) {
+    if (bottom > viewportTop && top < viewportBottom) {
       _markSeen();
     }
   }

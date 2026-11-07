@@ -220,6 +220,15 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     await tester.pump();
     expect(seen, contains(11));
+    final viewport = tester.getRect(find.byType(ListView));
+    final visible = tester
+        .widgetList<NewsReadTracker>(find.byType(NewsReadTracker))
+        .where(
+          (tracker) =>
+              tester.getRect(find.byWidget(tracker)).overlaps(viewport),
+        )
+        .map((tracker) => tracker.article.id!);
+    expect(seen, containsAll(visible));
     expect(seen.toSet(), hasLength(seen.length));
   });
 
@@ -369,9 +378,7 @@ void main() {
     },
   );
 
-  testWidgets('end signal skips partially visible normal cards', (
-    tester,
-  ) async {
+  testWidgets('end signal marks partially visible cards', (tester) async {
     final controller = ScrollController();
     final reachedEnd = ValueNotifier(0);
     addTearDown(controller.dispose);
@@ -413,7 +420,8 @@ void main() {
     await tester.pump();
     reachedEnd.value++;
     await tester.pump();
-    expect(seen, [1]);
+    expect(seen, containsAll([0, 1]));
+    expect(seen, hasLength(2));
   });
 
   testWidgets('end signal handles a card taller than the viewport', (
