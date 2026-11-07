@@ -13,6 +13,7 @@ Custom feeds are checked when added and need at least one usable entry. Feed URL
 ## Reading
 
 - Opening an article marks it as read. Optionally, **Mark as read while scrolling** marks visible articles after they pass above the viewport. Read cards are dimmed.
+- Use the text-size buttons in the article reader to adjust the headline, article text and fallback summary from 80% to 200% in 10% steps. The size is saved locally, applies to all articles, and works alongside the device text-size setting.
 - With **Hide read articles** enabled, articles read in the current timeline remain visible until the next refresh, so they can be revisited by scrolling back. Previously read articles are filtered when the timeline is loaded or the filter is enabled.
 - Refresh using the toolbar button or pull-to-refresh. **Refresh when opened** uses a ten-minute minimum interval during initialization.
 - The reader extracts the source page on a best-effort basis. If the site blocks access, requires JavaScript, or does not expose a readable body, News shows the feed summary and a link to the original instead. Paywalls are not bypassed.

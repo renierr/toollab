@@ -14459,6 +14459,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newsReaderSummaryLabel => 'Zusammenfassung';
 
   @override
+  String get newsReaderFontSmaller => 'Text verkleinern';
+
+  @override
+  String get newsReaderFontLarger => 'Text vergrößern';
+
+  @override
   String get newsReadingSection => 'Lesen';
 
   @override

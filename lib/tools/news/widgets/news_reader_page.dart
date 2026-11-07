@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/info_card.dart';
@@ -23,7 +24,7 @@ class NewsReaderPage extends StatefulWidget {
   State<NewsReaderPage> createState() => _NewsReaderPageState();
 }
 
-class _NewsReaderPageState extends State<NewsReaderPage> {
+class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
   Future<ExtractedArticle>? _body;
   bool _started = false;
 
@@ -47,6 +48,10 @@ class _NewsReaderPageState extends State<NewsReaderPage> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).toString();
+    final fontPercent = context.select<NewsState, int>(
+      (state) => state.readerFontPercent,
+    );
+    final readerScale = fontPercent / 100;
 
     return Scaffold(
       appBar: AppBar(
@@ -56,6 +61,24 @@ class _NewsReaderPageState extends State<NewsReaderPage> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          IconButton(
+            onPressed: fontPercent <= NewsState.minReaderFontPercent
+                ? null
+                : () => context.read<NewsState>().setReaderFontPercent(
+                    fontPercent - NewsState.readerFontStep,
+                  ),
+            icon: const Icon(Icons.text_decrease),
+            tooltip: l10n.newsReaderFontSmaller,
+          ),
+          IconButton(
+            onPressed: fontPercent >= NewsState.maxReaderFontPercent
+                ? null
+                : () => context.read<NewsState>().setReaderFontPercent(
+                    fontPercent + NewsState.readerFontStep,
+                  ),
+            icon: const Icon(Icons.text_increase),
+            tooltip: l10n.newsReaderFontLarger,
+          ),
           IconButton(
             onPressed: _openOriginal,
             icon: const Icon(Icons.open_in_browser),
@@ -79,6 +102,7 @@ class _NewsReaderPageState extends State<NewsReaderPage> {
                   article: widget.article,
                   source: widget.source,
                   heroImage: widget.article.imageUrl ?? extracted?.imageUrl,
+                  fontScale: readerScale,
                   relativeTime: newsRelativeTimeFor(
                     l10n,
                     locale,
@@ -98,12 +122,17 @@ class _NewsReaderPageState extends State<NewsReaderPage> {
                 ] else if (failed)
                   _ReaderFallback(
                     article: widget.article,
+                    fontScale: readerScale,
                     onOpen: _openOriginal,
                   )
                 else
                   MarkdownView(
                     data: extracted?.markdown ?? '',
                     accentColor: AppTheme.accentAmber,
+                    scale:
+                        readerScale *
+                        MediaQuery.textScalerOf(context).scale(16) /
+                        16,
                   ),
                 const SizedBox(height: 28),
                 Divider(color: theme.colorScheme.outlineVariant),
@@ -146,12 +175,14 @@ class _ReaderHeader extends StatelessWidget {
   final NewsSource? source;
   final String? heroImage;
   final String relativeTime;
+  final double fontScale;
 
   const _ReaderHeader({
     required this.article,
     required this.source,
     required this.heroImage,
     required this.relativeTime,
+    required this.fontScale,
   });
 
   @override
@@ -198,6 +229,8 @@ class _ReaderHeader extends StatelessWidget {
         SelectableText(
           article.title,
           style: theme.textTheme.headlineSmall?.copyWith(
+            fontSize:
+                (theme.textTheme.headlineSmall?.fontSize ?? 24) * fontScale,
             fontWeight: FontWeight.w700,
             height: 1.25,
           ),
@@ -240,8 +273,13 @@ class _ReaderHeader extends StatelessWidget {
 class _ReaderFallback extends StatelessWidget {
   final NewsArticle article;
   final VoidCallback onOpen;
+  final double fontScale;
 
-  const _ReaderFallback({required this.article, required this.onOpen});
+  const _ReaderFallback({
+    required this.article,
+    required this.onOpen,
+    required this.fontScale,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -269,7 +307,10 @@ class _ReaderFallback extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             article.summary,
-            style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontSize: (theme.textTheme.bodyLarge?.fontSize ?? 16) * fontScale,
+              height: 1.5,
+            ),
           ),
         ],
         const SizedBox(height: 16),

@@ -14349,6 +14349,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsReaderSummaryLabel => 'Summary';
 
   @override
+  String get newsReaderFontSmaller => 'Decrease text size';
+
+  @override
+  String get newsReaderFontLarger => 'Increase text size';
+
+  @override
   String get newsReadingSection => 'Reading';
 
   @override

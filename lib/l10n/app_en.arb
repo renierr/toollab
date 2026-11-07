@@ -7050,6 +7050,8 @@
   "newsOpenInBrowser": "Open in browser",
   "newsOpenOriginal": "Open original",
   "newsReaderSummaryLabel": "Summary",
+  "newsReaderFontSmaller": "Decrease text size",
+  "newsReaderFontLarger": "Increase text size",
   "newsReadingSection": "Reading",
   "newsReadOnSource": "Read on {source}",
   "@newsReadOnSource": {"placeholders": {"source": {"type": "String"}}},

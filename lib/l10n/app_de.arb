@@ -5581,6 +5581,8 @@
   "newsOpenInBrowser": "Im Browser öffnen",
   "newsOpenOriginal": "Original öffnen",
   "newsReaderSummaryLabel": "Zusammenfassung",
+  "newsReaderFontSmaller": "Text verkleinern",
+  "newsReaderFontLarger": "Text vergrößern",
   "newsReadingSection": "Lesen",
   "newsReadOnSource": "Auf {source} lesen",
   "@newsReadOnSource": {"placeholders": {"source": {"type": "String"}}},
