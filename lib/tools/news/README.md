@@ -19,7 +19,11 @@ Custom feeds are checked when added and need at least one usable entry. Feed URL
 
 ## Fetching and storage
 
-- Refresh processes up to three enabled feeds concurrently, uses `ETag` and `Last-Modified` when available, and parses up to 80 entries per feed. Feed responses are buffered before the 8 MB size check.
+### How much is loaded per source?
+
+Each refresh considers the **first 80 entries** returned by each enabled feed, in the feed's order. A feed may return fewer entries; unusable or duplicate entries are skipped. News does not page through older feed entries. Previously cached articles can remain available across refreshes, so the total stored for a source can exceed 80.
+
+- Refresh processes up to three enabled feeds concurrently and uses `ETag` and `Last-Modified` when available. An unchanged feed can return no entries to process. Feed responses are buffered before the 8 MB size check.
 - Cards use images supplied by the feed. For visible cards without one, News fetches the article page to look for an image and readable text, with at most two preview requests in flight. Opening an article shares an in-flight preview request where possible. Article responses are buffered before the 6 MB size check. Publishers can still block requests or omit images.
 - Sources, article metadata, extracted Markdown, image URLs and read marks are stored locally in SQLite. Image bytes use Flutter's image cache rather than the News database. Clearing cached articles also clears read marks, but keeps sources.
 - Configured sources sync through the backend when News sync is enabled. Cached articles and read marks remain device-local.
