@@ -12,11 +12,13 @@ class NewsCatalogSource {
   final String title;
   final String feedUrl;
   final String siteUrl;
+  final bool enabledByDefault;
 
   const NewsCatalogSource({
     required this.title,
     required this.feedUrl,
     this.siteUrl = '',
+    this.enabledByDefault = true,
   });
 }
 
@@ -248,6 +250,7 @@ class NewsCatalog {
       title: 'Al Jazeera',
       feedUrl: 'https://www.aljazeera.com/xml/rss/all.xml',
       siteUrl: 'https://www.aljazeera.com',
+      enabledByDefault: false,
     ),
     NewsCatalogSource(
       title: 'The Guardian World',

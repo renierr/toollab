@@ -17,6 +17,7 @@ class NewsList extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final void Function(NewsArticle article) onOpen;
   final void Function(NewsArticle article) onSeen;
+  final void Function(NewsArticle article)? onVisible;
 
   const NewsList({
     super.key,
@@ -27,6 +28,7 @@ class NewsList extends StatelessWidget {
     required this.onRefresh,
     required this.onOpen,
     required this.onSeen,
+    this.onVisible,
   });
 
   @override
@@ -47,6 +49,7 @@ class NewsList extends StatelessWidget {
                 markReadOnScroll: markReadOnScroll,
                 onOpen: onOpen,
                 onSeen: onSeen,
+                onVisible: onVisible,
               ),
       ),
     );
@@ -59,6 +62,7 @@ class _TimelineList extends StatelessWidget {
   final bool markReadOnScroll;
   final void Function(NewsArticle article) onOpen;
   final void Function(NewsArticle article) onSeen;
+  final void Function(NewsArticle article)? onVisible;
 
   const _TimelineList({
     required this.articles,
@@ -66,6 +70,7 @@ class _TimelineList extends StatelessWidget {
     required this.markReadOnScroll,
     required this.onOpen,
     required this.onSeen,
+    this.onVisible,
   });
 
   @override
@@ -103,6 +108,7 @@ class _TimelineList extends StatelessWidget {
           article: article,
           enabled: markReadOnScroll,
           onSeen: () => onSeen(article),
+          onVisible: () => onVisible?.call(article),
           child: NewsCard(
             article: article,
             source: sourceResolver(article.sourceShortId),

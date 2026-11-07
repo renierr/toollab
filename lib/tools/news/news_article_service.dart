@@ -55,6 +55,7 @@ class NewsArticleService {
     'select',
     'textarea',
     'nav',
+    'header',
     'footer',
     'aside',
     '[role="navigation"]',
@@ -104,6 +105,7 @@ class NewsArticleService {
   static Future<ExtractedArticle> fetch(
     NewsArticle article, {
     String? feedHtml,
+    bool allowImageOnly = false,
   }) async {
     if (article.link.isEmpty) {
       throw const ArticleExtractException('Article has no link');
@@ -145,21 +147,41 @@ class NewsArticleService {
     }
 
     final html = _decodeBody(response);
-    final extracted = extract(html, article.link);
+    final extracted = extract(
+      html,
+      article.link,
+      title: article.title,
+      author: article.author,
+      heroImageUrl: article.imageUrl,
+    );
     if (extracted == null && feedHtml != null && feedHtml.isNotEmpty) {
       final fallback = _extractFragment(feedHtml, article.link);
       if (fallback != null) return fallback;
     }
     if (extracted == null) {
+      if (allowImageOnly) {
+        final image = extractImage(html, article.link);
+        if (image != null) {
+          return ExtractedArticle(markdown: '', imageUrl: image, title: null);
+        }
+      }
       throw const ArticleExtractException('Could not find the article body');
     }
     return extracted;
   }
 
   /// Exposed for tests and for already-downloaded pages.
-  static ExtractedArticle? extract(String html, String baseUrl) {
+  static ExtractedArticle? extract(
+    String html,
+    String baseUrl, {
+    String? title,
+    String? author,
+    String? heroImageUrl,
+  }) {
     final document = html_parser.parse(html);
     final baseUri = _baseUri(document, baseUrl);
+    final metadataImage = _imageFromDocument(document, baseUri);
+    final pageTitle = _metaContent(document, 'meta[property="og:title"]');
 
     for (final selector in _dropSelectors) {
       for (final element in document.querySelectorAll(selector)) {
@@ -171,17 +193,149 @@ class NewsArticleService {
     if (main == null) return null;
 
     _prepareForMarkdown(main, baseUri);
+    final image =
+        metadataImage ?? main.querySelector('img[src]')?.attributes['src'];
+    _deduplicate(
+      main,
+      title ?? pageTitle,
+      author,
+      heroImageUrl ?? image,
+      baseUri,
+    );
 
     final markdown = _toMarkdown(main, baseUrl);
     if (_usableLength(markdown) < 40) return null;
 
     return ExtractedArticle(
       markdown: markdown,
-      imageUrl:
-          _metaContent(document, 'meta[property="og:image"]') ??
-          _metaContent(document, 'meta[name="twitter:image"]'),
-      title: _metaContent(document, 'meta[property="og:title"]'),
+      imageUrl: image,
+      title: pageTitle,
     );
+  }
+
+  static String? extractImage(String html, String baseUrl) {
+    final document = html_parser.parse(html);
+    return _imageFromDocument(document, _baseUri(document, baseUrl));
+  }
+
+  static String? _imageFromDocument(dom.Document document, Uri baseUri) {
+    return _resolve(
+      _metaContent(document, 'meta[property="og:image"]') ??
+          _metaContent(document, 'meta[name="twitter:image"]') ??
+          '',
+      baseUri,
+    );
+  }
+
+  static void _deduplicate(
+    dom.Element root,
+    String? title,
+    String? author,
+    String? heroImageUrl,
+    Uri baseUri,
+  ) {
+    String normalize(String text) =>
+        text.replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase();
+    final headline = normalize(title ?? '');
+    final byline = normalize(author ?? '');
+    final seenText = <String>{};
+    for (final element in root.querySelectorAll(
+      'h1, h2, h3, h4, h5, h6, p, div',
+    )) {
+      if (element.localName == 'div' &&
+          element.querySelector('div, p, h1, h2, h3, h4, h5, h6, img') !=
+              null) {
+        continue;
+      }
+      final text = normalize(element.text);
+      if (text.isEmpty) continue;
+      if ((headline.isNotEmpty && text == headline) ||
+          (byline.isNotEmpty && (text == byline || text == 'by $byline')) ||
+          (text.length >= 40 && !seenText.add(text))) {
+        element.remove();
+      }
+    }
+    final seenImages = <String>{};
+    final hero = heroImageUrl == null ? null : _resolve(heroImageUrl, baseUri);
+    if (hero != null) seenImages.add(_imageIdentity(hero));
+    for (final image in root.querySelectorAll('img[src]')) {
+      final url = _imageIdentity(image.attributes['src']!);
+      if (!seenImages.add(url)) image.remove();
+    }
+    for (final item in root.querySelectorAll('li')) {
+      if (item.text.trim().isEmpty && item.querySelector('img') == null) {
+        item.remove();
+      }
+    }
+    for (final time in root.querySelectorAll('time')) {
+      if (time.parent?.localName != 'p') time.remove();
+    }
+  }
+
+  static String _imageIdentity(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+    const dimensions = {'width', 'height', 'w', 'h', 'quality', 'q', 'format'};
+    final parameters = Map<String, String>.from(uri.queryParameters)
+      ..removeWhere((key, _) => dimensions.contains(key.toLowerCase()));
+    final base = uri.replace(query: '', fragment: '').toString();
+    final withoutQuery = base.endsWith('?')
+        ? base.substring(0, base.length - 1)
+        : base;
+    if (parameters.isEmpty) return withoutQuery;
+    return '$withoutQuery?${Uri(queryParameters: parameters).query}';
+  }
+
+  static String cleanCachedMarkdown(
+    String markdown, {
+    required String title,
+    String? author,
+    String? heroImageUrl,
+  }) {
+    final seenText = <String>{};
+    final seenImages = <String>{};
+    if (heroImageUrl != null && heroImageUrl.isNotEmpty) {
+      seenImages.add(_imageIdentity(heroImageUrl));
+    }
+    final headline = title.replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase();
+    final byline = (author ?? '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim()
+        .toLowerCase();
+    final imagePattern = RegExp(r'!\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)');
+    var inCode = false;
+    final lines = <String>[];
+    for (var line in markdown.split('\n')) {
+      if (line.trimLeft().startsWith('```') ||
+          line.trimLeft().startsWith('~~~')) {
+        inCode = !inCode;
+        lines.add(line);
+        continue;
+      }
+      if (!inCode) {
+        line = line.replaceAllMapped(imagePattern, (match) {
+          return seenImages.add(_imageIdentity(match.group(1)!))
+              ? match.group(0)!
+              : '';
+        });
+        final text = line
+            .replaceFirst(RegExp(r'^\s*#{1,6}\s+'), '')
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim();
+        final lower = text
+            .replaceAllMapped(RegExp(r'\[([^\]]+)\]\([^)]+\)'), (m) => m[1]!)
+            .replaceAll(RegExp(r'[*_`]'), '')
+            .toLowerCase();
+        if (lower == headline && headline.isNotEmpty) continue;
+        if (byline.isNotEmpty && (lower == byline || lower == 'by $byline')) {
+          continue;
+        }
+        if (lower.length >= 40 && !seenText.add(lower)) continue;
+        if (RegExp(r'^\s*[-*+]\s*$').hasMatch(line)) continue;
+      }
+      lines.add(line);
+    }
+    return _cleanMarkdown(lines.join('\n'));
   }
 
   static ExtractedArticle? _extractFragment(String html, String baseUrl) {
@@ -358,6 +512,7 @@ class NewsArticleService {
   }
 
   static String? _resolve(String raw, Uri baseUri) {
+    if (raw.trim().isEmpty) return null;
     final uri = Uri.tryParse(raw.trim());
     if (uri == null) return null;
     final resolved = uri.hasScheme ? uri : baseUri.resolveUri(uri);

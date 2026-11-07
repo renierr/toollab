@@ -243,16 +243,27 @@ class NewsDbHelper {
   Future<List<NewsArticle>> getArticles({
     String? sourceShortId,
     bool unreadOnly = false,
+    int? readAfter,
     int limit = 2000,
   }) async {
     final db = await _getDb();
-    final conditions = <String>[];
+    final conditions = <String>[
+      'source_short_id IN (SELECT short_id FROM ${db.nameTable(sourcesTable)} '
+          'WHERE enabled = 1 AND deleted = 0)',
+    ];
     final args = <Object?>[];
     if (sourceShortId != null) {
       conditions.add('source_short_id = ?');
       args.add(sourceShortId);
     }
-    if (unreadOnly) conditions.add('read_at IS NULL');
+    if (unreadOnly) {
+      if (readAfter == null) {
+        conditions.add('read_at IS NULL');
+      } else {
+        conditions.add('(read_at IS NULL OR read_at > ?)');
+        args.add(readAfter);
+      }
+    }
     final rows = await db.query(
       articlesTable,
       columns: [
@@ -281,7 +292,9 @@ class NewsDbHelper {
     final rows = await db.rawQuery(
       'SELECT source_short_id, COUNT(*) AS total '
       'FROM ${db.nameTable(articlesTable)} '
-      'WHERE read_at IS NULL GROUP BY source_short_id',
+      'WHERE read_at IS NULL AND source_short_id IN '
+      '(SELECT short_id FROM ${db.nameTable(sourcesTable)} '
+      'WHERE enabled = 1 AND deleted = 0) GROUP BY source_short_id',
     );
     return {
       for (final row in rows)
@@ -293,7 +306,9 @@ class NewsDbHelper {
     final db = await _getDb();
     final rows = await db.rawQuery(
       'SELECT COUNT(*) AS total FROM ${db.nameTable(articlesTable)} '
-      'WHERE read_at IS NULL',
+      'WHERE read_at IS NULL AND source_short_id IN '
+      '(SELECT short_id FROM ${db.nameTable(sourcesTable)} '
+      'WHERE enabled = 1 AND deleted = 0)',
     );
     return rows.first['total'] as int? ?? 0;
   }
@@ -331,7 +346,8 @@ class NewsDbHelper {
               'summary': article.summary,
               'author': article.author,
               'link': article.link,
-              'image_url': article.imageUrl,
+              if (article.imageUrl != null && article.imageUrl!.isNotEmpty)
+                'image_url': article.imageUrl,
               'fetched_at': article.fetchedAt,
             },
             where: 'guid_key = ?',
@@ -361,21 +377,37 @@ class NewsDbHelper {
     return rows.isEmpty ? null : rows.first['content_md'] as String?;
   }
 
-  Future<void> setArticleContent(String guidKey, String markdown) async {
+  Future<void> setArticleContent(
+    String guidKey,
+    String markdown, {
+    String? imageUrl,
+  }) async {
     final db = await _getDb();
-    await db.update(
-      articlesTable,
-      {'content_md': markdown},
-      where: 'guid_key = ?',
-      whereArgs: [guidKey],
-    );
+    await db.transaction((txn) async {
+      if (markdown.isNotEmpty) {
+        await txn.update(
+          articlesTable,
+          {'content_md': markdown},
+          where: 'guid_key = ?',
+          whereArgs: [guidKey],
+        );
+      }
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        await txn.update(
+          articlesTable,
+          {'image_url': imageUrl},
+          where: "guid_key = ? AND (image_url IS NULL OR image_url = '')",
+          whereArgs: [guidKey],
+        );
+      }
+    });
   }
 
-  Future<void> markRead(int id) async {
+  Future<void> markRead(int id, {int? readAt}) async {
     final db = await _getDb();
     await db.update(
       articlesTable,
-      {'read_at': DateTime.now().millisecondsSinceEpoch},
+      {'read_at': readAt ?? DateTime.now().millisecondsSinceEpoch},
       where: 'id = ? AND read_at IS NULL',
       whereArgs: [id],
     );
@@ -391,11 +423,11 @@ class NewsDbHelper {
     );
   }
 
-  Future<void> markAllRead({String? sourceShortId}) async {
+  Future<void> markAllRead({String? sourceShortId, int? readAt}) async {
     final db = await _getDb();
     await db.update(
       articlesTable,
-      {'read_at': DateTime.now().millisecondsSinceEpoch},
+      {'read_at': readAt ?? DateTime.now().millisecondsSinceEpoch},
       where: sourceShortId == null
           ? 'read_at IS NULL'
           : 'read_at IS NULL AND source_short_id = ?',

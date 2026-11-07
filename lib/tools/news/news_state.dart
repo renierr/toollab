@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -28,6 +29,8 @@ class NewsState extends ChangeNotifier {
 
   static const Duration _autoRefreshInterval = Duration(minutes: 10);
   static const int _refreshWorkers = 3;
+  static const int _previewWorkers = 2;
+  static const int _maxQueuedPreviews = 12;
 
   List<NewsSource> _sources = [];
   Map<String, NewsSource> _sourceMap = {};
@@ -44,6 +47,15 @@ class NewsState extends ChangeNotifier {
   int _lastRefreshFailures = 0;
   Future<void>? _initialization;
   Completer<void>? _refreshCompletion;
+  int _readFilterCutoff = DateTime.now().millisecondsSinceEpoch;
+  int _lastReadAt = 0;
+  final Map<int, int> _pendingReads = {};
+  final Set<Future<void>> _pendingReadWrites = {};
+  final Queue<NewsArticle> _previewQueue = Queue();
+  final Set<String> _previewAttempts = {};
+  final Map<String, Future<ExtractedArticle>> _articleFetches = {};
+  int _activePreviews = 0;
+  bool _disposed = false;
 
   List<NewsSource> get sources => _sources;
   List<NewsArticle> get articles => _articles;
@@ -119,6 +131,7 @@ class NewsState extends ChangeNotifier {
             feedUrl: seed.feedUrl,
             siteUrl: seed.siteUrl,
             category: NewsCatalog.categoryForFeed(seed.feedUrl) ?? 'top',
+            enabled: seed.enabledByDefault,
             sortOrder: order++,
             createdAt: now,
             updatedAt: now,
@@ -133,7 +146,7 @@ class NewsState extends ChangeNotifier {
     _sources = await NewsDbHelper.instance.getSources();
     _sourceMap = {for (final source in _sources) source.shortId: source};
     if (_selectedSourceId != null &&
-        !_sourceMap.containsKey(_selectedSourceId)) {
+        (_sourceMap[_selectedSourceId]?.enabled != true)) {
       _selectedSourceId = null;
       await DatabaseService.instance.setSetting(
         _toolId,
@@ -150,8 +163,18 @@ class NewsState extends ChangeNotifier {
     _articles = await NewsDbHelper.instance.getArticles(
       sourceShortId: _selectedSourceId,
       unreadOnly: _hideRead,
+      readAfter: _readFilterCutoff,
     );
     _unreadCounts = await NewsDbHelper.instance.getUnreadCounts();
+    for (var index = 0; index < _articles.length; index++) {
+      final article = _articles[index];
+      final pendingAt = _pendingReads[article.id];
+      if (pendingAt != null && !article.isRead) {
+        _articles[index] = article.copyWith(readAt: pendingAt);
+        final count = _unreadCounts[article.sourceShortId] ?? 0;
+        _unreadCounts[article.sourceShortId] = max(0, count - 1);
+      }
+    }
   }
 
   Future<void> setSelectedSource(String? shortId) async {
@@ -166,6 +189,7 @@ class NewsState extends ChangeNotifier {
   }
 
   Future<void> setHideRead(bool value) async {
+    if (value && !_hideRead) _resetReadFilterCutoff();
     _hideRead = value;
     await DatabaseService.instance.setSetting(
       _toolId,
@@ -210,7 +234,12 @@ class NewsState extends ChangeNotifier {
     final targets = (only ?? enabledSources)
         .where((source) => source.enabled || only != null)
         .toList();
-    if (targets.isEmpty) return;
+    if (targets.isEmpty) {
+      await _waitForReadWrites();
+      _resetReadFilterCutoff();
+      await reload();
+      return;
+    }
 
     _isRefreshing = true;
     final completion = _refreshCompletion = Completer<void>();
@@ -288,6 +317,8 @@ class NewsState extends ChangeNotifier {
     } finally {
       _isRefreshing = false;
       try {
+        await _waitForReadWrites();
+        _resetReadFilterCutoff();
         await reload();
       } finally {
         completion.complete();
@@ -398,31 +429,68 @@ class NewsState extends ChangeNotifier {
 
   Future<void> markRead(NewsArticle article) async {
     final id = article.id;
-    if (id == null || article.isRead) return;
-    final now = DateTime.now().millisecondsSinceEpoch;
+    if (id == null || article.isRead || _pendingReads.containsKey(id)) return;
+    final current = _articles.where((item) => item.id == id).firstOrNull;
+    if (current == null || current.isRead) return;
+    final now = _nextReadTime();
+    _pendingReads[id] = now;
     _articles = [
       for (final item in _articles)
         if (item.id == id) item.copyWith(readAt: now) else item,
     ];
-    if (_hideRead) {
-      _articles = _articles.where((item) => item.id != id).toList();
-    }
     final count = _unreadCounts[article.sourceShortId] ?? 0;
     _unreadCounts[article.sourceShortId] = max(0, count - 1);
+    final write = NewsDbHelper.instance.markRead(id, readAt: now);
+    _pendingReadWrites.add(write);
     notifyListeners();
     try {
-      await NewsDbHelper.instance.markRead(id);
+      await write;
     } catch (e) {
       errorLog('[NewsState] Failed to mark article read: $e');
+      _pendingReads.remove(id);
+      await reload();
+      return;
+    } finally {
+      _pendingReadWrites.remove(write);
     }
+    _pendingReads.remove(id);
   }
 
   Future<void> markAllRead({String? sourceShortId}) async {
-    await NewsDbHelper.instance.markAllRead(sourceShortId: sourceShortId);
+    await NewsDbHelper.instance.markAllRead(
+      sourceShortId: sourceShortId,
+      readAt: _nextReadTime(),
+    );
     await reload();
   }
 
+  int _nextReadTime() {
+    _lastReadAt = max(
+      DateTime.now().millisecondsSinceEpoch,
+      max(_readFilterCutoff + 1, _lastReadAt + 1),
+    );
+    return _lastReadAt;
+  }
+
+  void _resetReadFilterCutoff() {
+    _readFilterCutoff = max(DateTime.now().millisecondsSinceEpoch, _lastReadAt);
+  }
+
+  Future<void> _waitForReadWrites() async {
+    while (_pendingReadWrites.isNotEmpty) {
+      await Future.wait(
+        _pendingReadWrites.map((write) async {
+          try {
+            await write;
+          } catch (_) {}
+        }).toList(),
+      );
+    }
+  }
+
   Future<void> clearCachedArticles() async {
+    _previewQueue.clear();
+    _previewAttempts.clear();
     await NewsDbHelper.instance.clearArticles();
     await reload();
   }
@@ -432,13 +500,119 @@ class NewsState extends ChangeNotifier {
       article.guidKey,
     );
     if (cached != null && cached.trim().isNotEmpty) {
-      return ExtractedArticle(markdown: cached, imageUrl: null, title: null);
+      final current = _articles
+          .where((item) => item.guidKey == article.guidKey)
+          .firstOrNull;
+      return ExtractedArticle(
+        markdown: NewsArticleService.cleanCachedMarkdown(
+          cached,
+          title: article.title,
+          author: article.author,
+          heroImageUrl: current?.imageUrl ?? article.imageUrl,
+        ),
+        imageUrl: current?.imageUrl ?? article.imageUrl,
+        title: null,
+      );
     }
-    final extracted = await NewsArticleService.fetch(article);
+    final extracted = await _fetchArticle(article);
+    if (extracted.markdown.isEmpty) return _fetchArticle(article);
+    return extracted;
+  }
+
+  void prefetchArticleImage(NewsArticle article) {
+    if (_disposed ||
+        (article.imageUrl ?? '').isNotEmpty ||
+        article.link.isEmpty ||
+        _previewAttempts.contains(article.guidKey)) {
+      return;
+    }
+    final current = _articles
+        .where((item) => item.guidKey == article.guidKey)
+        .firstOrNull;
+    if (current == null || (current.imageUrl ?? '').isNotEmpty) return;
+    if (_previewQueue.length >= _maxQueuedPreviews) {
+      _previewAttempts.remove(_previewQueue.removeFirst().guidKey);
+    }
+    _previewAttempts.add(article.guidKey);
+    _previewQueue.add(current);
+    _drainPreviewQueue();
+  }
+
+  void _drainPreviewQueue() {
+    while (!_disposed &&
+        _activePreviews < _previewWorkers &&
+        _previewQueue.isNotEmpty) {
+      final article = _previewQueue.removeFirst();
+      _activePreviews++;
+      unawaited(_runPreview(article));
+    }
+  }
+
+  Future<void> _runPreview(NewsArticle article) async {
+    try {
+      await _fetchArticle(article, allowImageOnly: true);
+    } catch (e) {
+      debugLog('[NewsState] Preview failed for ${article.link}: $e');
+    } finally {
+      _activePreviews--;
+      _drainPreviewQueue();
+    }
+  }
+
+  Future<ExtractedArticle> _fetchArticle(
+    NewsArticle article, {
+    bool allowImageOnly = false,
+  }) async {
+    final fetch = _articleFetches.putIfAbsent(
+      article.guidKey,
+      () => _fetchAndCacheArticle(article, allowImageOnly: allowImageOnly),
+    );
+    try {
+      return await fetch;
+    } finally {
+      if (identical(_articleFetches[article.guidKey], fetch)) {
+        _articleFetches.remove(article.guidKey);
+      }
+    }
+  }
+
+  Future<ExtractedArticle> _fetchAndCacheArticle(
+    NewsArticle article, {
+    required bool allowImageOnly,
+  }) async {
+    final extracted = await NewsArticleService.fetch(
+      article,
+      allowImageOnly: allowImageOnly,
+    );
     await NewsDbHelper.instance.setArticleContent(
       article.guidKey,
       extracted.markdown,
+      imageUrl: extracted.imageUrl,
     );
+    final image = extracted.imageUrl;
+    if (!_disposed && image != null && image.isNotEmpty) {
+      final current = _articles
+          .where((item) => item.guidKey == article.guidKey)
+          .firstOrNull;
+      if (current == null || (current.imageUrl ?? '').isNotEmpty) {
+        return extracted;
+      }
+      _articles = [
+        for (final item in _articles)
+          if (item.guidKey == article.guidKey && (item.imageUrl ?? '').isEmpty)
+            item.copyWith(imageUrl: image)
+          else
+            item,
+      ];
+      notifyListeners();
+    }
     return extracted;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _previewQueue.clear();
+    super.dispose();
   }
 }

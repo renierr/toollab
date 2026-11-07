@@ -110,13 +110,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
         IconButton(
           onPressed: () => state.setHideRead(!state.hideRead),
           tooltip: state.hideRead ? l10n.newsShowAll : l10n.newsUnreadOnly,
-          icon: Badge.count(
-            count: state.totalUnread,
-            isLabelVisible: state.totalUnread > 0,
-            child: Icon(
-              state.hideRead ? Icons.filter_alt : Icons.filter_alt_off,
-            ),
-          ),
+          icon: Icon(state.hideRead ? Icons.filter_alt : Icons.filter_alt_off),
         ),
         IconButton(
           onPressed: state.isRefreshing ? null : _refresh,
@@ -162,8 +156,9 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
                     ),
                     onRefresh: _refresh,
                     onOpen: _openArticle,
+                    onVisible: state.prefetchArticleImage,
                     onSeen: (article) {
-                      unawaited(state.markRead(article));
+                      if (mounted) unawaited(state.markRead(article));
                     },
                   ),
                 ),
