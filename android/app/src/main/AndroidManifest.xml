@@ -350,6 +350,22 @@
         </activity>
 
         <activity
+            android:name="de.renier.tool_lab.NewsActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":news"
+            android:taskAffinity="de.renier.tool_lab.news"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+        </activity>
+
+        <activity
             android:name="de.renier.tool_lab.TotpAuthActivity"
             android:exported="false"
             android:launchMode="singleTask"
@@ -484,7 +500,7 @@
 
         <activity-alias
             android:name="de.renier.tool_lab.NewsAlias"
-            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:targetActivity="de.renier.tool_lab.NewsActivity"
             android:label="News"
             android:icon="@mipmap/ic_launcher_news"
             android:enabled="false"

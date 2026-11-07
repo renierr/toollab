@@ -21,6 +21,7 @@ class NewsTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameNews,
     descriptionL10n: (l10n) => l10n.toolDescNews,
+    androidProcessIsolated: true,
     createPage: (_) => const NewsPage(),
     syncDelegateFactory: NewsSyncDelegate.new,
     stateProviders: () => [
