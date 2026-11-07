@@ -24963,6 +24963,534 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Benchmark currency must match the portfolio currency.'**
   String get depotBenchmarkCurrency;
+
+  /// No description provided for @toolNameNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get toolNameNews;
+
+  /// No description provided for @toolDescNews.
+  ///
+  /// In en, this message translates to:
+  /// **'A timeline news reader with curated feeds and configurable sources'**
+  String get toolDescNews;
+
+  /// No description provided for @newsAddFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add feed'**
+  String get newsAddFeed;
+
+  /// No description provided for @newsAdding.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking feed…'**
+  String get newsAdding;
+
+  /// No description provided for @newsAddSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Add source'**
+  String get newsAddSource;
+
+  /// No description provided for @newsAddSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Add sources'**
+  String get newsAddSources;
+
+  /// No description provided for @newsAllSources.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get newsAllSources;
+
+  /// No description provided for @newsAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get newsAlreadyAdded;
+
+  /// No description provided for @newsArticleFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The source did not return an article body. You can read the summary or open the original.'**
+  String get newsArticleFailedBody;
+
+  /// No description provided for @newsArticleFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the full article'**
+  String get newsArticleFailedTitle;
+
+  /// No description provided for @newsArticleLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading article…'**
+  String get newsArticleLoading;
+
+  /// No description provided for @newsBrowseTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse'**
+  String get newsBrowseTab;
+
+  /// No description provided for @newsCategoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get newsCategoryAll;
+
+  /// No description provided for @newsCategoryBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get newsCategoryBusiness;
+
+  /// No description provided for @newsCategoryCulture.
+  ///
+  /// In en, this message translates to:
+  /// **'Culture'**
+  String get newsCategoryCulture;
+
+  /// No description provided for @newsCategoryCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get newsCategoryCustom;
+
+  /// No description provided for @newsCategoryGermany.
+  ///
+  /// In en, this message translates to:
+  /// **'Germany'**
+  String get newsCategoryGermany;
+
+  /// No description provided for @newsCategoryScience.
+  ///
+  /// In en, this message translates to:
+  /// **'Science'**
+  String get newsCategoryScience;
+
+  /// No description provided for @newsCategorySport.
+  ///
+  /// In en, this message translates to:
+  /// **'Sport'**
+  String get newsCategorySport;
+
+  /// No description provided for @newsCategoryTechnology.
+  ///
+  /// In en, this message translates to:
+  /// **'Technology'**
+  String get newsCategoryTechnology;
+
+  /// No description provided for @newsCategoryTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top stories'**
+  String get newsCategoryTop;
+
+  /// No description provided for @newsCategoryWorld.
+  ///
+  /// In en, this message translates to:
+  /// **'World'**
+  String get newsCategoryWorld;
+
+  /// No description provided for @newsClearCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cached articles'**
+  String get newsClearCache;
+
+  /// No description provided for @newsClearCacheBody.
+  ///
+  /// In en, this message translates to:
+  /// **'All downloaded stories and read marks will be removed.'**
+  String get newsClearCacheBody;
+
+  /// No description provided for @newsClearCacheDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached articles cleared'**
+  String get newsClearCacheDone;
+
+  /// No description provided for @newsClearCacheSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes downloaded articles and read marks. Sources stay.'**
+  String get newsClearCacheSubtitle;
+
+  /// No description provided for @newsClearCacheTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear cached articles?'**
+  String get newsClearCacheTitle;
+
+  /// No description provided for @newsCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste a feed URL. Feeds from most news sites work.'**
+  String get newsCustomHint;
+
+  /// No description provided for @newsCustomNameOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get newsCustomNameOptional;
+
+  /// No description provided for @newsCustomSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom RSS or Atom feed'**
+  String get newsCustomSection;
+
+  /// No description provided for @newsCustomTab.
+  ///
+  /// In en, this message translates to:
+  /// **'By URL'**
+  String get newsCustomTab;
+
+  /// No description provided for @newsDataSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get newsDataSection;
+
+  /// No description provided for @newsDeleteSourceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes {name} and its cached articles.'**
+  String newsDeleteSourceBody(String name);
+
+  /// No description provided for @newsDeleteSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove source?'**
+  String get newsDeleteSourceTitle;
+
+  /// No description provided for @newsEditSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit source'**
+  String get newsEditSource;
+
+  /// No description provided for @newsEmptyNoArticlesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull down or tap refresh to fetch the latest stories.'**
+  String get newsEmptyNoArticlesBody;
+
+  /// No description provided for @newsEmptyNoArticlesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to read yet'**
+  String get newsEmptyNoArticlesTitle;
+
+  /// No description provided for @newsEmptyNoSourcesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add RSS feeds or pick from well-known publishers to build your timeline.'**
+  String get newsEmptyNoSourcesBody;
+
+  /// No description provided for @newsEmptyNoSourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No news sources yet'**
+  String get newsEmptyNoSourcesTitle;
+
+  /// No description provided for @newsEmptyNoUnreadBody.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no unread articles in this selection.'**
+  String get newsEmptyNoUnreadBody;
+
+  /// No description provided for @newsEmptyNoUnreadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up'**
+  String get newsEmptyNoUnreadTitle;
+
+  /// No description provided for @newsHideRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide read articles'**
+  String get newsHideRead;
+
+  /// No description provided for @newsHideReadSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the timeline to unread stories'**
+  String get newsHideReadSubtitle;
+
+  /// No description provided for @newsMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get newsMarkAllRead;
+
+  /// No description provided for @newsMarkAllReadDone.
+  ///
+  /// In en, this message translates to:
+  /// **'All articles marked as read'**
+  String get newsMarkAllReadDone;
+
+  /// No description provided for @newsMarkReadOnScroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read while scrolling'**
+  String get newsMarkReadOnScroll;
+
+  /// No description provided for @newsMarkReadOnScrollSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Articles you scroll past are marked as read'**
+  String get newsMarkReadOnScrollSubtitle;
+
+  /// No description provided for @newsNoSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching sources'**
+  String get newsNoSearchResults;
+
+  /// No description provided for @newsOpenInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser'**
+  String get newsOpenInBrowser;
+
+  /// No description provided for @newsOpenOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open original'**
+  String get newsOpenOriginal;
+
+  /// No description provided for @newsReaderSummaryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get newsReaderSummaryLabel;
+
+  /// No description provided for @newsReadingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get newsReadingSection;
+
+  /// No description provided for @newsReadOnSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Read on {source}'**
+  String newsReadOnSource(String source);
+
+  /// No description provided for @newsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get newsRefresh;
+
+  /// No description provided for @newsRefreshAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new articles'**
+  String newsRefreshAdded(int count);
+
+  /// No description provided for @newsRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sources could not be refreshed'**
+  String newsRefreshFailed(int count);
+
+  /// No description provided for @newsRefreshNoNew.
+  ///
+  /// In en, this message translates to:
+  /// **'No new articles'**
+  String get newsRefreshNoNew;
+
+  /// No description provided for @newsRefreshOnOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh when opened'**
+  String get newsRefreshOnOpen;
+
+  /// No description provided for @newsRefreshOnOpenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch new stories at most every 10 minutes'**
+  String get newsRefreshOnOpenSubtitle;
+
+  /// No description provided for @newsSearchSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Search publishers and categories'**
+  String get newsSearchSources;
+
+  /// No description provided for @newsSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'News settings'**
+  String get newsSettingsTitle;
+
+  /// No description provided for @newsShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get newsShowAll;
+
+  /// No description provided for @newsSourceAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Source added'**
+  String get newsSourceAdded;
+
+  /// No description provided for @newsSourceCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get newsSourceCategory;
+
+  /// No description provided for @newsSourceDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Source removed'**
+  String get newsSourceDeleted;
+
+  /// No description provided for @newsSourceEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get newsSourceEnabled;
+
+  /// No description provided for @newsSourceExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This feed is already in your list'**
+  String get newsSourceExists;
+
+  /// No description provided for @newsSourceInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That feed could not be read'**
+  String get newsSourceInvalid;
+
+  /// No description provided for @newsSourceInvalidDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read feed: {error}'**
+  String newsSourceInvalidDetail(String error);
+
+  /// No description provided for @newsSourceInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid http or https feed URL'**
+  String get newsSourceInvalidUrl;
+
+  /// No description provided for @newsSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get newsSourceLabel;
+
+  /// No description provided for @newsSourceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get newsSourceName;
+
+  /// No description provided for @newsSourceNeverUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Never updated'**
+  String get newsSourceNeverUpdated;
+
+  /// No description provided for @newsSourceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a feed URL'**
+  String get newsSourceRequired;
+
+  /// No description provided for @newsSourcesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sources'**
+  String get newsSourcesSection;
+
+  /// No description provided for @newsSourcesSectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable, edit or remove the feeds in your timeline.'**
+  String get newsSourcesSectionHint;
+
+  /// No description provided for @newsSourceUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String newsSourceUpdated(String time);
+
+  /// No description provided for @newsSourceUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed URL'**
+  String get newsSourceUrl;
+
+  /// No description provided for @newsSourceUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://example.com/feed.xml'**
+  String get newsSourceUrlHint;
+
+  /// No description provided for @newsTimeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} d ago'**
+  String newsTimeDaysAgo(int count);
+
+  /// No description provided for @newsTimeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} h ago'**
+  String newsTimeHoursAgo(int count);
+
+  /// No description provided for @newsTimeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get newsTimeJustNow;
+
+  /// No description provided for @newsTimeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min ago'**
+  String newsTimeMinutesAgo(int count);
+
+  /// No description provided for @newsTimeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'yesterday'**
+  String get newsTimeYesterday;
+
+  /// No description provided for @newsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get newsToday;
+
+  /// No description provided for @newsUnknownSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown source'**
+  String get newsUnknownSource;
+
+  /// No description provided for @newsUnreadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread only'**
+  String get newsUnreadOnly;
+
+  /// No description provided for @newsYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get newsYesterday;
 }
 
 class _AppLocalizationsDelegate

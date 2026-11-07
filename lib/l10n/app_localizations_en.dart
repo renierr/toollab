@@ -14183,4 +14183,297 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get depotBenchmarkCurrency =>
       'Benchmark currency must match the portfolio currency.';
+
+  @override
+  String get toolNameNews => 'News';
+
+  @override
+  String get toolDescNews =>
+      'A timeline news reader with curated feeds and configurable sources';
+
+  @override
+  String get newsAddFeed => 'Add feed';
+
+  @override
+  String get newsAdding => 'Checking feed…';
+
+  @override
+  String get newsAddSource => 'Add source';
+
+  @override
+  String get newsAddSources => 'Add sources';
+
+  @override
+  String get newsAllSources => 'All';
+
+  @override
+  String get newsAlreadyAdded => 'Added';
+
+  @override
+  String get newsArticleFailedBody =>
+      'The source did not return an article body. You can read the summary or open the original.';
+
+  @override
+  String get newsArticleFailedTitle => 'Could not load the full article';
+
+  @override
+  String get newsArticleLoading => 'Loading article…';
+
+  @override
+  String get newsBrowseTab => 'Browse';
+
+  @override
+  String get newsCategoryAll => 'All';
+
+  @override
+  String get newsCategoryBusiness => 'Business';
+
+  @override
+  String get newsCategoryCulture => 'Culture';
+
+  @override
+  String get newsCategoryCustom => 'Custom';
+
+  @override
+  String get newsCategoryGermany => 'Germany';
+
+  @override
+  String get newsCategoryScience => 'Science';
+
+  @override
+  String get newsCategorySport => 'Sport';
+
+  @override
+  String get newsCategoryTechnology => 'Technology';
+
+  @override
+  String get newsCategoryTop => 'Top stories';
+
+  @override
+  String get newsCategoryWorld => 'World';
+
+  @override
+  String get newsClearCache => 'Clear cached articles';
+
+  @override
+  String get newsClearCacheBody =>
+      'All downloaded stories and read marks will be removed.';
+
+  @override
+  String get newsClearCacheDone => 'Cached articles cleared';
+
+  @override
+  String get newsClearCacheSubtitle =>
+      'Removes downloaded articles and read marks. Sources stay.';
+
+  @override
+  String get newsClearCacheTitle => 'Clear cached articles?';
+
+  @override
+  String get newsCustomHint =>
+      'Paste a feed URL. Feeds from most news sites work.';
+
+  @override
+  String get newsCustomNameOptional => 'Name (optional)';
+
+  @override
+  String get newsCustomSection => 'Custom RSS or Atom feed';
+
+  @override
+  String get newsCustomTab => 'By URL';
+
+  @override
+  String get newsDataSection => 'Data';
+
+  @override
+  String newsDeleteSourceBody(String name) {
+    return 'This removes $name and its cached articles.';
+  }
+
+  @override
+  String get newsDeleteSourceTitle => 'Remove source?';
+
+  @override
+  String get newsEditSource => 'Edit source';
+
+  @override
+  String get newsEmptyNoArticlesBody =>
+      'Pull down or tap refresh to fetch the latest stories.';
+
+  @override
+  String get newsEmptyNoArticlesTitle => 'Nothing to read yet';
+
+  @override
+  String get newsEmptyNoSourcesBody =>
+      'Add RSS feeds or pick from well-known publishers to build your timeline.';
+
+  @override
+  String get newsEmptyNoSourcesTitle => 'No news sources yet';
+
+  @override
+  String get newsEmptyNoUnreadBody =>
+      'There are no unread articles in this selection.';
+
+  @override
+  String get newsEmptyNoUnreadTitle => 'All caught up';
+
+  @override
+  String get newsHideRead => 'Hide read articles';
+
+  @override
+  String get newsHideReadSubtitle => 'Keep the timeline to unread stories';
+
+  @override
+  String get newsMarkAllRead => 'Mark all as read';
+
+  @override
+  String get newsMarkAllReadDone => 'All articles marked as read';
+
+  @override
+  String get newsMarkReadOnScroll => 'Mark as read while scrolling';
+
+  @override
+  String get newsMarkReadOnScrollSubtitle =>
+      'Articles you scroll past are marked as read';
+
+  @override
+  String get newsNoSearchResults => 'No matching sources';
+
+  @override
+  String get newsOpenInBrowser => 'Open in browser';
+
+  @override
+  String get newsOpenOriginal => 'Open original';
+
+  @override
+  String get newsReaderSummaryLabel => 'Summary';
+
+  @override
+  String get newsReadingSection => 'Reading';
+
+  @override
+  String newsReadOnSource(String source) {
+    return 'Read on $source';
+  }
+
+  @override
+  String get newsRefresh => 'Refresh';
+
+  @override
+  String newsRefreshAdded(int count) {
+    return '$count new articles';
+  }
+
+  @override
+  String newsRefreshFailed(int count) {
+    return '$count sources could not be refreshed';
+  }
+
+  @override
+  String get newsRefreshNoNew => 'No new articles';
+
+  @override
+  String get newsRefreshOnOpen => 'Refresh when opened';
+
+  @override
+  String get newsRefreshOnOpenSubtitle =>
+      'Fetch new stories at most every 10 minutes';
+
+  @override
+  String get newsSearchSources => 'Search publishers and categories';
+
+  @override
+  String get newsSettingsTitle => 'News settings';
+
+  @override
+  String get newsShowAll => 'Show all';
+
+  @override
+  String get newsSourceAdded => 'Source added';
+
+  @override
+  String get newsSourceCategory => 'Category';
+
+  @override
+  String get newsSourceDeleted => 'Source removed';
+
+  @override
+  String get newsSourceEnabled => 'Enabled';
+
+  @override
+  String get newsSourceExists => 'This feed is already in your list';
+
+  @override
+  String get newsSourceInvalid => 'That feed could not be read';
+
+  @override
+  String newsSourceInvalidDetail(String error) {
+    return 'Could not read feed: $error';
+  }
+
+  @override
+  String get newsSourceInvalidUrl => 'Enter a valid http or https feed URL';
+
+  @override
+  String get newsSourceLabel => 'Source';
+
+  @override
+  String get newsSourceName => 'Name';
+
+  @override
+  String get newsSourceNeverUpdated => 'Never updated';
+
+  @override
+  String get newsSourceRequired => 'Enter a feed URL';
+
+  @override
+  String get newsSourcesSection => 'Sources';
+
+  @override
+  String get newsSourcesSectionHint =>
+      'Enable, edit or remove the feeds in your timeline.';
+
+  @override
+  String newsSourceUpdated(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String get newsSourceUrl => 'Feed URL';
+
+  @override
+  String get newsSourceUrlHint => 'https://example.com/feed.xml';
+
+  @override
+  String newsTimeDaysAgo(int count) {
+    return '$count d ago';
+  }
+
+  @override
+  String newsTimeHoursAgo(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String get newsTimeJustNow => 'just now';
+
+  @override
+  String newsTimeMinutesAgo(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String get newsTimeYesterday => 'yesterday';
+
+  @override
+  String get newsToday => 'Today';
+
+  @override
+  String get newsUnknownSource => 'Unknown source';
+
+  @override
+  String get newsUnreadOnly => 'Unread only';
+
+  @override
+  String get newsYesterday => 'Yesterday';
 }

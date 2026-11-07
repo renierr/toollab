@@ -14291,4 +14291,300 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get depotBenchmarkCurrency =>
       'Benchmark- und Depotwährung müssen übereinstimmen.';
+
+  @override
+  String get toolNameNews => 'News';
+
+  @override
+  String get toolDescNews =>
+      'Ein Timeline-Nachrichtenleser mit kuratierten Feeds und eigenen Quellen';
+
+  @override
+  String get newsAddFeed => 'Feed hinzufügen';
+
+  @override
+  String get newsAdding => 'Feed wird geprüft…';
+
+  @override
+  String get newsAddSource => 'Quelle hinzufügen';
+
+  @override
+  String get newsAddSources => 'Quellen hinzufügen';
+
+  @override
+  String get newsAllSources => 'Alle';
+
+  @override
+  String get newsAlreadyAdded => 'Hinzugefügt';
+
+  @override
+  String get newsArticleFailedBody =>
+      'Die Quelle hat keinen Artikeltext geliefert. Du kannst die Zusammenfassung lesen oder das Original öffnen.';
+
+  @override
+  String get newsArticleFailedTitle =>
+      'Artikel konnte nicht vollständig geladen werden';
+
+  @override
+  String get newsArticleLoading => 'Artikel wird geladen…';
+
+  @override
+  String get newsBrowseTab => 'Entdecken';
+
+  @override
+  String get newsCategoryAll => 'Alle';
+
+  @override
+  String get newsCategoryBusiness => 'Wirtschaft';
+
+  @override
+  String get newsCategoryCulture => 'Kultur';
+
+  @override
+  String get newsCategoryCustom => 'Eigene';
+
+  @override
+  String get newsCategoryGermany => 'Deutschland';
+
+  @override
+  String get newsCategoryScience => 'Wissenschaft';
+
+  @override
+  String get newsCategorySport => 'Sport';
+
+  @override
+  String get newsCategoryTechnology => 'Technik';
+
+  @override
+  String get newsCategoryTop => 'Top-Themen';
+
+  @override
+  String get newsCategoryWorld => 'Welt';
+
+  @override
+  String get newsClearCache => 'Zwischengespeicherte Artikel löschen';
+
+  @override
+  String get newsClearCacheBody =>
+      'Alle heruntergeladenen Artikel und Lesemarken werden entfernt.';
+
+  @override
+  String get newsClearCacheDone => 'Zwischengespeicherte Artikel gelöscht';
+
+  @override
+  String get newsClearCacheSubtitle =>
+      'Entfernt heruntergeladene Artikel und Lesemarken. Quellen bleiben erhalten.';
+
+  @override
+  String get newsClearCacheTitle => 'Zwischengespeicherte Artikel löschen?';
+
+  @override
+  String get newsCustomHint =>
+      'Füge eine Feed-URL ein. Feeds der meisten Nachrichtenseiten funktionieren.';
+
+  @override
+  String get newsCustomNameOptional => 'Name (optional)';
+
+  @override
+  String get newsCustomSection => 'Eigener RSS- oder Atom-Feed';
+
+  @override
+  String get newsCustomTab => 'Per URL';
+
+  @override
+  String get newsDataSection => 'Daten';
+
+  @override
+  String newsDeleteSourceBody(String name) {
+    return 'Entfernt $name und die zwischengespeicherten Artikel.';
+  }
+
+  @override
+  String get newsDeleteSourceTitle => 'Quelle entfernen?';
+
+  @override
+  String get newsEditSource => 'Quelle bearbeiten';
+
+  @override
+  String get newsEmptyNoArticlesBody =>
+      'Ziehe nach unten oder tippe auf Aktualisieren, um die neuesten Artikel zu laden.';
+
+  @override
+  String get newsEmptyNoArticlesTitle => 'Noch nichts zu lesen';
+
+  @override
+  String get newsEmptyNoSourcesBody =>
+      'Füge RSS-Feeds hinzu oder wähle bekannte Nachrichtenquellen aus, um deine Timeline aufzubauen.';
+
+  @override
+  String get newsEmptyNoSourcesTitle => 'Noch keine Nachrichtenquellen';
+
+  @override
+  String get newsEmptyNoUnreadBody =>
+      'In dieser Auswahl gibt es keine ungelesenen Artikel.';
+
+  @override
+  String get newsEmptyNoUnreadTitle => 'Alles gelesen';
+
+  @override
+  String get newsHideRead => 'Gelesene Artikel ausblenden';
+
+  @override
+  String get newsHideReadSubtitle =>
+      'Beschränkt die Timeline auf ungelesene Beiträge';
+
+  @override
+  String get newsMarkAllRead => 'Alle als gelesen markieren';
+
+  @override
+  String get newsMarkAllReadDone => 'Alle Artikel als gelesen markiert';
+
+  @override
+  String get newsMarkReadOnScroll => 'Beim Scrollen als gelesen markieren';
+
+  @override
+  String get newsMarkReadOnScrollSubtitle =>
+      'Artikel, an denen du vorbeiscrollst, werden als gelesen markiert';
+
+  @override
+  String get newsNoSearchResults => 'Keine passenden Quellen';
+
+  @override
+  String get newsOpenInBrowser => 'Im Browser öffnen';
+
+  @override
+  String get newsOpenOriginal => 'Original öffnen';
+
+  @override
+  String get newsReaderSummaryLabel => 'Zusammenfassung';
+
+  @override
+  String get newsReadingSection => 'Lesen';
+
+  @override
+  String newsReadOnSource(String source) {
+    return 'Auf $source lesen';
+  }
+
+  @override
+  String get newsRefresh => 'Aktualisieren';
+
+  @override
+  String newsRefreshAdded(int count) {
+    return '$count neue Artikel';
+  }
+
+  @override
+  String newsRefreshFailed(int count) {
+    return '$count Quellen konnten nicht aktualisiert werden';
+  }
+
+  @override
+  String get newsRefreshNoNew => 'Keine neuen Artikel';
+
+  @override
+  String get newsRefreshOnOpen => 'Beim Öffnen aktualisieren';
+
+  @override
+  String get newsRefreshOnOpenSubtitle =>
+      'Höchstens alle 10 Minuten neue Artikel abrufen';
+
+  @override
+  String get newsSearchSources => 'Herausgeber und Kategorien durchsuchen';
+
+  @override
+  String get newsSettingsTitle => 'News-Einstellungen';
+
+  @override
+  String get newsShowAll => 'Alle anzeigen';
+
+  @override
+  String get newsSourceAdded => 'Quelle hinzugefügt';
+
+  @override
+  String get newsSourceCategory => 'Kategorie';
+
+  @override
+  String get newsSourceDeleted => 'Quelle entfernt';
+
+  @override
+  String get newsSourceEnabled => 'Aktiviert';
+
+  @override
+  String get newsSourceExists => 'Dieser Feed ist bereits in deiner Liste';
+
+  @override
+  String get newsSourceInvalid => 'Dieser Feed konnte nicht gelesen werden';
+
+  @override
+  String newsSourceInvalidDetail(String error) {
+    return 'Feed konnte nicht gelesen werden: $error';
+  }
+
+  @override
+  String get newsSourceInvalidUrl =>
+      'Gib eine gültige http- oder https-Feed-URL ein';
+
+  @override
+  String get newsSourceLabel => 'Quelle';
+
+  @override
+  String get newsSourceName => 'Name';
+
+  @override
+  String get newsSourceNeverUpdated => 'Noch nie aktualisiert';
+
+  @override
+  String get newsSourceRequired => 'Gib eine Feed-URL ein';
+
+  @override
+  String get newsSourcesSection => 'Quellen';
+
+  @override
+  String get newsSourcesSectionHint =>
+      'Aktiviere, bearbeite oder entferne die Feeds deiner Timeline.';
+
+  @override
+  String newsSourceUpdated(String time) {
+    return 'Aktualisiert $time';
+  }
+
+  @override
+  String get newsSourceUrl => 'Feed-URL';
+
+  @override
+  String get newsSourceUrlHint => 'https://example.com/feed.xml';
+
+  @override
+  String newsTimeDaysAgo(int count) {
+    return 'vor $count T.';
+  }
+
+  @override
+  String newsTimeHoursAgo(int count) {
+    return 'vor $count Std.';
+  }
+
+  @override
+  String get newsTimeJustNow => 'gerade eben';
+
+  @override
+  String newsTimeMinutesAgo(int count) {
+    return 'vor $count Min.';
+  }
+
+  @override
+  String get newsTimeYesterday => 'gestern';
+
+  @override
+  String get newsToday => 'Heute';
+
+  @override
+  String get newsUnknownSource => 'Unbekannte Quelle';
+
+  @override
+  String get newsUnreadOnly => 'Nur ungelesene';
+
+  @override
+  String get newsYesterday => 'Gestern';
 }
