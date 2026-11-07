@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/news/news_article.dart';
 import 'package:tool_lab/tools/news/news_article_service.dart';
 import 'package:tool_lab/tools/news/news_page.dart';
@@ -13,7 +15,26 @@ import 'package:tool_lab/tools/news/news_state.dart';
 import 'package:tool_lab/tools/news/widgets/news_card.dart';
 import 'package:tool_lab/tools/news/widgets/news_reader_page.dart';
 
+class _AppState extends ChangeNotifier implements AppState {
+  int syncCalls = 0;
+
+  @override
+  bool syncsTool(String toolId) => true;
+
+  @override
+  Future<Map<String, int>?> syncWithBackend(
+    List<SyncDelegate> delegates,
+  ) async {
+    syncCalls++;
+    return {'pulled': 0, 'pushed': 0, 'deleted': 0};
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _NewsState extends NewsState {
+  int _readGeneration = 0;
   static const source = NewsSource(
     shortId: 'source',
     title: 'Source',
@@ -34,6 +55,8 @@ class _NewsState extends NewsState {
   @override
   bool get isLoading => false;
   @override
+  int get readGeneration => _readGeneration;
+  @override
   bool get hideRead => true;
   @override
   List<NewsSource> get sources => [source];
@@ -46,6 +69,7 @@ class _NewsState extends NewsState {
   @override
   Future<void> markRead(NewsArticle item) async {
     article = article.copyWith(readAt: 1);
+    _readGeneration++;
     notifyListeners();
   }
 
@@ -59,10 +83,12 @@ class _NewsState extends NewsState {
 }
 
 void main() {
-  testWidgets('opening an article leaves a dimmed card in the unread view', (
+  testWidgets('opening an article dims its card and syncs on return', (
     tester,
   ) async {
     final state = _NewsState();
+    final appState = _AppState();
+    addTearDown(appState.dispose);
     final router = GoRouter(
       routes: [GoRoute(path: '/', builder: (_, _) => const NewsPage())],
     );
@@ -71,10 +97,13 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider<NewsState>.value(
         value: state,
-        child: MaterialApp.router(
-          routerConfig: router,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
+        child: ChangeNotifierProvider<AppState>.value(
+          value: appState,
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
         ),
       ),
     );
@@ -85,6 +114,9 @@ void main() {
     Navigator.of(tester.element(find.byType(NewsReaderPage))).pop();
     await tester.pumpAndSettle();
     expect(find.text('Article title'), findsOneWidget);
+    expect(appState.syncCalls, 1);
+    await tester.pump(const Duration(seconds: 3));
+    expect(appState.syncCalls, 1);
     final opacity = tester.widget<Opacity>(
       find.descendant(
         of: find.byType(NewsCard),

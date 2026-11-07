@@ -10,6 +10,7 @@ import 'package:tool_lab/pages/maintenance/import_backup_card.dart';
 import 'package:tool_lab/pages/maintenance/temp_files_card.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/health_dashboard/store/health_store.dart';
+import 'package:tool_lab/tools/news/news_db_helper.dart';
 import 'package:tool_lab/tools/totp_auth/totp_auth_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -117,6 +118,7 @@ class MaintenancePage extends StatelessWidget {
       totpState.lockController.lock();
       await DatabaseService.instance.importDatabaseFile(file.path);
       HealthStore.instance.reset();
+      await NewsDbHelper.instance.resetAfterDatabaseRestore();
       if (!context.mounted) return;
       await totpState.reloadAfterDatabaseRestore();
       if (!context.mounted) return;

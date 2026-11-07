@@ -283,6 +283,11 @@ class AppState extends ChangeNotifier {
     required String url,
     required String userId,
   }) async {
+    if (_syncServerUrl != url) {
+      for (final tool in syncCapableTools) {
+        await _clearSyncCursors(tool.id);
+      }
+    }
     _syncEnabled = enabled;
     _syncServerUrl = url;
     _syncUserId = userId;

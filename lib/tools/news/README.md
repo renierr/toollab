@@ -12,7 +12,7 @@ Custom feeds are checked when added and need at least one usable entry. Feed URL
 
 ## Reading
 
-- Opening an article marks it as read. Optionally, **Mark as read while scrolling** marks visible articles after they pass above the viewport. Read cards are dimmed.
+- Opening an article marks it as read; returning to the feed also triggers a sync if configured. Optionally, **Mark as read while scrolling** marks visible articles after they pass above the viewport. When you scroll to the end and pause for a second, fully visible cards are also marked read, as are oversized cards whose bottom is visible. A short timeline is not marked merely by opening it. Read cards are dimmed.
 - Use the text-size buttons in the article reader to adjust the headline, article text and fallback summary from 80% to 200% in 10% steps. The size is saved locally, applies to all articles, and works alongside the device text-size setting.
 - With **Hide read articles** enabled, articles read in the current timeline remain visible until the next refresh, so they can be revisited by scrolling back. Previously read articles are filtered when the timeline is loaded or the filter is enabled.
 - Refresh using the toolbar button or pull-to-refresh. **Refresh when opened** uses a ten-minute minimum interval during initialization.
@@ -26,9 +26,37 @@ Each refresh considers the **first 80 entries** returned by each enabled feed, i
 
 - Refresh processes up to three enabled feeds concurrently and uses `ETag` and `Last-Modified` when available. An unchanged feed can return no entries to process. Feed responses are buffered before the 8 MB size check.
 - Cards use images supplied by the feed. For visible cards without one, News fetches the article page to look for an image and readable text, with at most two preview requests in flight. Opening an article shares an in-flight preview request where possible. Article responses are buffered before the 6 MB size check. Publishers can still block requests or omit images.
-- Sources, article metadata, extracted Markdown, image URLs and read marks are stored locally in SQLite. Image bytes use Flutter's image cache rather than the News database. Clearing cached articles also clears read marks, but keeps sources.
-- Configured sources sync through the backend when News sync is enabled. Cached articles and read marks remain device-local.
+- Sources, article metadata, extracted Markdown, image URLs and read marks are stored locally in SQLite. Image bytes use Flutter's image cache rather than the News database. Clearing cached articles keeps recent read marks and sources.
 - Refresh prunes read articles published more than 30 days ago, all articles published more than 365 days ago, and entries beyond the newest 5,000. The timeline query shows up to 2,000 articles.
+
+## Synchronization
+
+News uses the app's generic backend sync. To share data, devices must use the same backend URL and user ID, with News enabled in the per-tool sync settings. A blank user ID uses the shared, unsuffixed News namespace. Devices do not need to be online at the same time.
+
+**Current switch limitation:** News's own automatic sync checks the server URL and the News switch, but does not check the global sync switch. Turning off the global switch alone therefore does not reliably stop News syncing when a URL is still configured. Turn off the News switch to stop News sync. The Android scheduled all-tools sync does check the global switch.
+
+### When sync runs
+
+- News attempts a sync when opened, after a manual feed refresh, after source changes, and when returning from an article reader. The app-wide **Sync Now** also includes News when its tool switch is on. Android's scheduled backend sync can include News if that task is enabled.
+- Opening an article, scrolling past one, or using **Mark all as read** records the read locally. While News is open, it batches read changes and attempts sync two seconds after the latest saved mark. The timer can fire while the reader is open; returning to the feed requests another sync, including any pending changes.
+- If a sync triggered by opening News, a buffered read, or returning from the reader fails or finds another sync in progress, News retries after 30 seconds while the page remains open. Source-edit and manual-refresh attempts do not independently schedule a retry. Pending changes are stored in SQLite, not just memory, and can be sent by a later sync. Closing the page makes a best-effort attempt if a read-sync timer is pending; it does not guarantee completion.
+- Sync is not a live push between devices. The other device applies changes on its next News or app-wide sync. A refresh also fetches feeds independently; the backend does not supply cached articles.
+
+### What is shared
+
+- **Sources:** title, feed and site URLs, category, enabled state, order and timestamps. Source additions, edits and deletions sync. For conflicting edits to the same source, the sync engine compares update timestamps; device clocks therefore matter. Feed fetch validators, errors and fetch times stay local.
+- **Read marks:** an article key and read timestamp. The key is the existing SHA-1 hash of `source ID | feed GUID`; when the feed has no GUID, News uses its link instead. Article URLs, titles, summaries, images and bodies are not included in read-mark payloads. Matching depends on the devices seeing the same source ID and feed identity; a publisher changing its GUID or link can make an item appear new.
+- **Local only:** cached article metadata, extracted bodies, images, and News display preferences. When a read mark arrives before its article is fetched, News stores the mark and applies it if the matching article is fetched within the retention window. Clearing cached articles keeps recent read marks and sources.
+
+Read hashes are identifiers, not encryption or guaranteed anonymity: someone with the same feed data can calculate and compare them. Source records include URLs, and News sync payloads are not end-to-end encrypted by the app. Use a trusted backend and HTTPS as appropriate.
+
+### Incremental sync and retention
+
+Each installation has its own writer ID and groups read marks into eight rotating UTC-day slots. Multiple marks from the same day share a record. Reusing a slot replaces its previous contents, avoiding a separate backend record or tombstone per article. Separate writers prevent two devices reading different articles from overwriting each other's daily record. Restoring a database generates a new writer ID and carries over recent pending reads.
+
+The first sync compares local and backend metadata. When the backend supports revision cursors, later runs request changes since the saved cursor and send locally pending records; if a cursor cannot be resumed or the backend does not provide one, the sync engine can use a full metadata pass. It pulls needed records, pushes local changes, and only marks a local record synced if it has not changed during the run. Re-enabling News sync or changing the backend URL clears the relevant saved cursors and triggers a full comparison next time.
+
+Read-mark synchronization is limited to approximately **seven days from the read**, not the article's publication date. A device offline longer than that can miss marks or discard unsent marks; articles already marked read in its local cache remain read. The eight slots bound the **number of records per writer**, not the number of hashes in a busy day's record or the total number of writers. The generic backend is not instructed to physically delete expired slots: slots from abandoned installations or old restores can remain indefinitely, so total backend storage is not globally bounded by seven days. No backend-specific cleanup is assumed.
 
 ## Built-in catalog
 

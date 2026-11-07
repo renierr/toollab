@@ -56,6 +56,7 @@ class NewsState extends ChangeNotifier {
   Completer<void>? _refreshCompletion;
   int _readFilterCutoff = DateTime.now().millisecondsSinceEpoch;
   int _lastReadAt = 0;
+  int _readGeneration = 0;
   final Map<int, int> _pendingReads = {};
   final Set<Future<void>> _pendingReadWrites = {};
   final Queue<NewsArticle> _previewQueue = Queue();
@@ -77,6 +78,7 @@ class NewsState extends ChangeNotifier {
   int get lastRefreshAdded => _lastRefreshAdded;
   int get lastRefreshFailures => _lastRefreshFailures;
   int get readerFontPercent => _readerFontPercent;
+  int get readGeneration => _readGeneration;
   double get readerFontScale => _readerFontPercent / 100;
   int get totalUnread =>
       _unreadCounts.values.fold(0, (sum, count) => sum + count);
@@ -488,6 +490,8 @@ class NewsState extends ChangeNotifier {
       _pendingReadWrites.remove(write);
     }
     _pendingReads.remove(id);
+    _readGeneration++;
+    notifyListeners();
   }
 
   Future<void> markAllRead({String? sourceShortId}) async {
@@ -495,6 +499,7 @@ class NewsState extends ChangeNotifier {
       sourceShortId: sourceShortId,
       readAt: _nextReadTime(),
     );
+    _readGeneration++;
     await reload();
   }
 

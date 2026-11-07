@@ -78,20 +78,31 @@ void main() {
       lastModified: 'new-date',
     );
     await db.savePulledSource(
-      changed.copyWith(feedUrl: 'https://example.com/synced'),
+      changed.copyWith(
+        feedUrl: 'https://example.com/synced',
+        updatedAt: changed.updatedAt + 1,
+      ),
       deleted: false,
     );
     final pulled = (await db.getSource(source.shortId))!;
     expect(pulled.etag, isNull);
     expect(pulled.lastModified, isNull);
     final sync = NewsSyncDelegate();
-    expect((await sync.getLocalSyncRecords()).single['id'], source.shortId);
+    expect(
+      (await sync.getLocalSyncRecords()).any((r) => r['id'] == source.shortId),
+      isTrue,
+    );
     expect(
       (await sync.getLocalRecordData(source.shortId))!['feedUrl'],
       pulled.feedUrl,
     );
     await db.deleteSource(source.shortId);
-    expect((await sync.getLocalSyncRecords()).single['deleted'], isTrue);
+    expect(
+      (await sync.getLocalSyncRecords()).singleWhere(
+        (r) => r['id'] == source.shortId,
+      )['deleted'],
+      isTrue,
+    );
     expect(await sync.getLocalRecordData(source.shortId), isNull);
   });
 }

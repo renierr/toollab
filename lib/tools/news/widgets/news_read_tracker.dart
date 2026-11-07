@@ -7,6 +7,7 @@ class NewsReadTracker extends StatefulWidget {
   final bool enabled;
   final VoidCallback onSeen;
   final VoidCallback? onVisible;
+  final Listenable? reachedEnd;
   final Widget child;
 
   const NewsReadTracker({
@@ -15,6 +16,7 @@ class NewsReadTracker extends StatefulWidget {
     required this.enabled,
     required this.onSeen,
     this.onVisible,
+    this.reachedEnd,
     required this.child,
   });
 
@@ -35,6 +37,7 @@ class _NewsReadTrackerState extends State<NewsReadTracker> {
   @override
   void initState() {
     super.initState();
+    widget.reachedEnd?.addListener(_onReachedEnd);
     _scheduleCheck();
   }
 
@@ -53,6 +56,10 @@ class _NewsReadTrackerState extends State<NewsReadTracker> {
   @override
   void didUpdateWidget(NewsReadTracker oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.reachedEnd != widget.reachedEnd) {
+      oldWidget.reachedEnd?.removeListener(_onReachedEnd);
+      widget.reachedEnd?.addListener(_onReachedEnd);
+    }
     if (oldWidget.enabled != widget.enabled ||
         oldWidget.article.id != widget.article.id ||
         oldWidget.article.isRead != widget.article.isRead) {
@@ -69,6 +76,7 @@ class _NewsReadTrackerState extends State<NewsReadTracker> {
   @override
   void dispose() {
     _position?.removeListener(_onScroll);
+    widget.reachedEnd?.removeListener(_onReachedEnd);
     super.dispose();
   }
 
@@ -106,6 +114,31 @@ class _NewsReadTrackerState extends State<NewsReadTracker> {
     final onSeen = widget.onSeen;
     WidgetsBinding.instance.addPostFrameCallback((_) => onSeen());
     WidgetsBinding.instance.scheduleFrame();
+  }
+
+  void _onReachedEnd() {
+    if (!widget.enabled || widget.article.isRead || _marked || !_wasVisible) {
+      return;
+    }
+    final box = context.findRenderObject();
+    final viewport = Scrollable.maybeOf(context)?.context.findRenderObject();
+    if (box is! RenderBox ||
+        !box.hasSize ||
+        !box.attached ||
+        viewport is! RenderBox ||
+        !viewport.hasSize ||
+        !viewport.attached) {
+      return;
+    }
+    final top = box.localToGlobal(Offset.zero).dy;
+    final bottom = top + box.size.height;
+    final viewportTop = viewport.localToGlobal(Offset.zero).dy;
+    final viewportBottom = viewportTop + viewport.size.height;
+    if (bottom > viewportTop &&
+        bottom <= viewportBottom &&
+        (top >= viewportTop || box.size.height > viewport.size.height)) {
+      _markSeen();
+    }
   }
 
   void _evaluate() {

@@ -12,6 +12,7 @@ import 'config.dart';
 import 'news_article.dart';
 import 'news_state.dart';
 import 'news_sync_delegate.dart';
+import 'news_sync_helper.dart';
 import 'widgets/news_empty_view.dart';
 import 'widgets/news_list.dart';
 import 'widgets/news_reader_page.dart';
@@ -27,10 +28,42 @@ class NewsPage extends StatefulWidget {
 }
 
 class _NewsPageState extends State<NewsPage> with DisposeCleanup {
+  Timer? _readSyncTimer;
+  int _readGeneration = 0;
+  AppState? _appState;
+
   @override
   void initState() {
     super.initState();
+    final state = context.read<NewsState>();
+    _readGeneration = state.readGeneration;
+    void onStateChanged() {
+      if (state.readGeneration == _readGeneration) return;
+      _readGeneration = state.readGeneration;
+      _scheduleReadSync();
+    }
+
+    state.addListener(onStateChanged);
+    onDispose(() {
+      state.removeListener(onStateChanged);
+      if (_readSyncTimer?.isActive == true && _appState != null) {
+        unawaited(syncNewsSources(_appState!));
+      }
+      _readSyncTimer?.cancel();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  void _scheduleReadSync([Duration delay = const Duration(seconds: 2)]) {
+    _readSyncTimer?.cancel();
+    _readSyncTimer = Timer(delay, () async {
+      if (!mounted) return;
+      if (!context.read<AppState>().syncsTool(NewsTool.config.id)) return;
+      final success = await _syncSources();
+      if (mounted && !success && _readSyncTimer?.isActive != true) {
+        _scheduleReadSync(const Duration(seconds: 30));
+      }
+    });
   }
 
   Future<void> _bootstrap() async {
@@ -38,23 +71,48 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     final state = context.read<NewsState>();
     await state.init();
     if (!mounted) return;
-    await _syncSources();
+    final appState = context.read<AppState>();
+    _appState = appState;
+    var syncing = appState.isSyncing;
+    void onSyncChanged() {
+      final finished = syncing && !appState.isSyncing;
+      syncing = appState.isSyncing;
+      if (finished && mounted && !state.isLoading) unawaited(state.reload());
+    }
+
+    appState.addListener(onSyncChanged);
+    onDispose(() => appState.removeListener(onSyncChanged));
+    if (!await _syncSources() && mounted && _readSyncTimer?.isActive != true) {
+      _scheduleReadSync(const Duration(seconds: 30));
+    }
   }
 
-  Future<void> _syncSources() async {
+  Future<bool> _syncSources() async {
     final appState = context.read<AppState>();
     final state = context.read<NewsState>();
-    if (!appState.syncsTool(NewsTool.config.id)) return;
+    if (!appState.syncsTool(NewsTool.config.id)) return true;
     try {
+      final sourcesBefore = {
+        for (final source in state.sources) source.shortId: source.updatedAt,
+      };
       final result = await appState.syncWithBackend([NewsSyncDelegate()]);
-      final pulled = result?['pulled'] ?? 0;
-      if (!mounted || pulled == 0) return;
+      if (result == null) return false;
+      final pulled = result['pulled'] ?? 0;
+      final deleted = result['deleted'] ?? 0;
+      if (!mounted || (pulled == 0 && deleted == 0)) return true;
       await state.reload();
-      if (mounted && state.refreshOnOpen) {
+      final sourcesChanged =
+          state.sources.length != sourcesBefore.length ||
+          state.sources.any(
+            (source) => sourcesBefore[source.shortId] != source.updatedAt,
+          );
+      if (mounted && state.refreshOnOpen && sourcesChanged) {
         unawaited(state.refresh(only: state.enabledSources));
       }
+      return true;
     } catch (e) {
-      debugLog('[News] Source sync on open failed: $e');
+      debugLog('[News] Sync failed: $e');
+      return false;
     }
   }
 
@@ -63,6 +121,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     final l10n = AppLocalizations.of(context);
     await state.refresh();
     if (!mounted) return;
+    unawaited(_syncSources());
     final message = state.lastRefreshFailures > 0
         ? l10n.newsRefreshFailed(state.lastRefreshFailures)
         : state.lastRefreshAdded > 0
@@ -85,6 +144,11 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
         ),
       ),
     );
+    if (!mounted) return;
+    _readSyncTimer?.cancel();
+    if (!await _syncSources() && mounted && _readSyncTimer?.isActive != true) {
+      _scheduleReadSync(const Duration(seconds: 30));
+    }
   }
 
   Future<void> _openSettings() async {

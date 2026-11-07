@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollCacheExtent;
+import 'package:flutter/rendering.dart' show ScrollCacheExtent, ScrollDirection;
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
@@ -56,7 +60,7 @@ class NewsList extends StatelessWidget {
   }
 }
 
-class _TimelineList extends StatelessWidget {
+class _TimelineList extends StatefulWidget {
   final List<NewsArticle> articles;
   final NewsSource? Function(String sourceId) sourceResolver;
   final bool markReadOnScroll;
@@ -74,13 +78,92 @@ class _TimelineList extends StatelessWidget {
   });
 
   @override
+  State<_TimelineList> createState() => _TimelineListState();
+}
+
+class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
+  static const _endPause = Duration(seconds: 1);
+  final ScrollController _controller = ScrollController();
+  final ValueNotifier<int> _reachedEnd = ValueNotifier(0);
+  Timer? _endTimer;
+  bool _scrollingDown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    onDispose(() {
+      _endTimer?.cancel();
+      _controller.dispose();
+      _reachedEnd.dispose();
+    });
+  }
+
+  void _scheduleEndCheck() {
+    _endTimer?.cancel();
+    if (!widget.markReadOnScroll) return;
+    _endTimer = Timer(_endPause, () {
+      if (!mounted || !widget.markReadOnScroll || !_controller.hasClients) {
+        return;
+      }
+      final position = _controller.position;
+      if (position.extentAfter <= 1 && !position.isScrollingNotifier.value) {
+        _reachedEnd.value++;
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(_TimelineList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.markReadOnScroll) _endTimer?.cancel();
+  }
+
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) return;
+    _endTimer?.cancel();
+    if (event.scrollDelta.dy > 0 &&
+        _controller.hasClients &&
+        _controller.position.extentAfter <= 1) {
+      _scheduleEndCheck();
+    }
+  }
+
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification.depth != 0) return false;
+    if (notification is UserScrollNotification) {
+      if (notification.direction == ScrollDirection.reverse) {
+        _scrollingDown = true;
+      } else if (notification.direction == ScrollDirection.forward) {
+        _scrollingDown = false;
+      }
+    } else if (notification is ScrollUpdateNotification) {
+      _endTimer?.cancel();
+      if (notification.dragDetails != null &&
+          (notification.scrollDelta ?? 0) > 0) {
+        _scrollingDown = true;
+      }
+    } else if (notification is OverscrollNotification) {
+      _endTimer?.cancel();
+      if (notification.dragDetails != null && notification.overscroll > 0) {
+        _scrollingDown = true;
+      }
+    } else if (notification is ScrollEndNotification) {
+      if (_scrollingDown && notification.metrics.extentAfter <= 1) {
+        _scheduleEndCheck();
+      }
+      _scrollingDown = false;
+    }
+    return false;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
     final now = DateTime.now();
     final entries = <_TimelineEntry>[];
     DateTime? previousDay;
-    for (final article in articles) {
+    for (final article in widget.articles) {
       final date = DateTime.fromMillisecondsSinceEpoch(article.publishedAt);
       final day = DateTime(date.year, date.month, date.day);
       if (previousDay == null || day != previousDay) {
@@ -92,30 +175,38 @@ class _TimelineList extends StatelessWidget {
       entries.add(_TimelineEntry.article(article));
     }
 
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(top: 4, bottom: 28),
-      scrollCacheExtent: const ScrollCacheExtent.pixels(500),
-      itemCount: entries.length,
-      itemBuilder: (context, index) {
-        final entry = entries[index];
-        final article = entry.article;
-        if (article == null) {
-          return _DateHeader(label: entry.header ?? '');
-        }
-        return NewsReadTracker(
-          key: ValueKey(article.guidKey),
-          article: article,
-          enabled: markReadOnScroll,
-          onSeen: () => onSeen(article),
-          onVisible: () => onVisible?.call(article),
-          child: NewsCard(
-            article: article,
-            source: sourceResolver(article.sourceShortId),
-            onTap: () => onOpen(article),
-          ),
-        );
-      },
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScrollNotification,
+      child: Listener(
+        onPointerSignal: _onPointerSignal,
+        child: ListView.builder(
+          controller: _controller,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(top: 4, bottom: 28),
+          scrollCacheExtent: const ScrollCacheExtent.pixels(500),
+          itemCount: entries.length,
+          itemBuilder: (context, index) {
+            final entry = entries[index];
+            final article = entry.article;
+            if (article == null) {
+              return _DateHeader(label: entry.header ?? '');
+            }
+            return NewsReadTracker(
+              key: ValueKey(article.guidKey),
+              article: article,
+              enabled: widget.markReadOnScroll,
+              reachedEnd: _reachedEnd,
+              onSeen: () => widget.onSeen(article),
+              onVisible: () => widget.onVisible?.call(article),
+              child: NewsCard(
+                article: article,
+                source: widget.sourceResolver(article.sourceShortId),
+                onTap: () => widget.onOpen(article),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
