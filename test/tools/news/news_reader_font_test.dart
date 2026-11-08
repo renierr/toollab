@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -48,6 +49,138 @@ const _article = NewsArticle(
 );
 
 void main() {
+  testWidgets('shows an error when sharing fails', (tester) async {
+    const channel = MethodChannel('dev.fluttercommunity.plus/share');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      call,
+    ) async {
+      throw PlatformException(code: 'unavailable');
+    });
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      ),
+    );
+    final state = _NewsState();
+    addTearDown(state.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<NewsState>.value(
+        value: state,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const NewsReaderPage(article: _article),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Share link'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Share link'));
+    await tester.pump();
+    expect(find.text('Could not share the link.'), findsOneWidget);
+  }, variant: const TargetPlatformVariant({TargetPlatform.android}));
+
+  for (final fail in [false, true]) {
+    testWidgets('shares article URL from ${fail ? 'fallback' : 'reader'}', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      const channel = MethodChannel('dev.fluttercommunity.plus/share');
+      MethodCall? shareCall;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+        call,
+      ) async {
+        shareCall = call;
+        return null;
+      });
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          channel,
+          null,
+        ),
+      );
+      final state = _NewsState(fail: fail);
+      addTearDown(state.dispose);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<NewsState>.value(
+          value: state,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const NewsReaderPage(article: _article),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Share link'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Share link'));
+      await tester.pumpAndSettle();
+      expect(shareCall?.method, 'share');
+      expect(shareCall?.arguments['text'], _article.link);
+      expect(tester.takeException(), isNull);
+    }, variant: const TargetPlatformVariant({TargetPlatform.android}));
+  }
+
+  for (final platform in [
+    TargetPlatform.android,
+    TargetPlatform.linux,
+    TargetPlatform.windows,
+  ]) {
+    testWidgets('copies article URL on $platform', (tester) async {
+      tester.view.physicalSize = const Size(320, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      String? copied;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied =
+                (call.arguments as Map<dynamic, dynamic>)['text'] as String;
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      final state = _NewsState();
+      addTearDown(state.dispose);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<NewsState>.value(
+          value: state,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const NewsReaderPage(article: _article),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Share link'),
+        platform == TargetPlatform.android ? findsOneWidget : findsNothing,
+      );
+      await tester.ensureVisible(find.text('Copy link'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Copy link'));
+      await tester.pump();
+      expect(copied, _article.link);
+      expect(find.text('Link copied to clipboard'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    }, variant: TargetPlatformVariant({platform}));
+  }
+
   for (final fail in [false, true]) {
     testWidgets('font controls scale ${fail ? 'fallback' : 'article'} text', (
       tester,

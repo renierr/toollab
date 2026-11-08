@@ -14453,6 +14453,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newsOpenInBrowser => 'Im Browser öffnen';
 
   @override
+  String get newsShareLink => 'Link teilen';
+
+  @override
+  String get newsShareFailed => 'Der Link konnte nicht geteilt werden.';
+
+  @override
+  String get newsCopyLink => 'Link kopieren';
+
+  @override
+  String get newsLinkCopied => 'Link in die Zwischenablage kopiert';
+
+  @override
+  String get newsCopyFailed => 'Der Link konnte nicht kopiert werden.';
+
+  @override
   String get newsOpenOriginal => 'Original öffnen';
 
   @override

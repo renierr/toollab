@@ -14343,6 +14343,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsOpenInBrowser => 'Open in browser';
 
   @override
+  String get newsShareLink => 'Share link';
+
+  @override
+  String get newsShareFailed => 'Could not share the link.';
+
+  @override
+  String get newsCopyLink => 'Copy link';
+
+  @override
+  String get newsLinkCopied => 'Link copied to clipboard';
+
+  @override
+  String get newsCopyFailed => 'Could not copy the link.';
+
+  @override
   String get newsOpenOriginal => 'Open original';
 
   @override

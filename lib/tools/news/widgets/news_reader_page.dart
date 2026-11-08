@@ -1,6 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/info_card.dart';
@@ -41,6 +45,35 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
     final uri = Uri.tryParse(widget.article.link);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _shareLink() async {
+    try {
+      await SharePlus.instance.share(ShareParams(text: widget.article.link));
+    } catch (e) {
+      errorLog('[NewsReader] Failed to share link: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).newsShareFailed)),
+      );
+    }
+  }
+
+  Future<void> _copyLink() async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      await Clipboard.setData(ClipboardData(text: widget.article.link));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.newsLinkCopied)));
+    } catch (e) {
+      errorLog('[NewsReader] Failed to copy link: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.newsCopyFailed)));
+    }
   }
 
   @override
@@ -149,17 +182,35 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
                   style: theme.textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: FilledButton.tonalIcon(
-                    onPressed: _openOriginal,
-                    icon: const Icon(Icons.open_in_browser, size: 18),
-                    label: Text(
-                      l10n.newsReadOnSource(
-                        widget.source?.title ?? l10n.newsUnknownSource,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: _openOriginal,
+                      icon: const Icon(Icons.open_in_browser, size: 18),
+                      label: Text(
+                        l10n.newsReadOnSource(
+                          widget.source?.title ?? l10n.newsUnknownSource,
+                        ),
                       ),
                     ),
-                  ),
+                    if (defaultTargetPlatform == TargetPlatform.android)
+                      FilledButton.tonalIcon(
+                        onPressed: widget.article.link.trim().isEmpty
+                            ? null
+                            : _shareLink,
+                        icon: const Icon(Icons.share_outlined, size: 18),
+                        label: Text(l10n.newsShareLink),
+                      ),
+                    FilledButton.tonalIcon(
+                      onPressed: widget.article.link.trim().isEmpty
+                          ? null
+                          : _copyLink,
+                      icon: const Icon(Icons.copy, size: 18),
+                      label: Text(l10n.newsCopyLink),
+                    ),
+                  ],
                 ),
               ],
             );

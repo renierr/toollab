@@ -18,6 +18,7 @@ Custom feeds are checked when added and need at least one usable entry. Feed URL
 - Refresh using the toolbar button, pull-to-refresh at the top, or a fresh pull up from the bottom of a scrollable timeline. A manual refresh returns the timeline to the top. With **Refresh when opened** enabled, News checks the last refresh during state initialization and fetches if it is at least ten minutes old. This is not a periodic ten-minute poll; reopening News while its state remains initialized does not by itself start another feed refresh.
 - Articles stop counting as new or unread once they are more than 48 hours past their publication time. They are dimmed in the full timeline and excluded from **Hide read articles**, but are not deleted. The count updates as articles age while News is active. If a feed has no usable date, News uses the first local fetch time for that item; after clearing the cache, an undated item can appear new again.
 - The reader extracts the source page on a best-effort basis. If the site blocks access, requires JavaScript, or does not expose a readable body, News shows the feed summary and a link to the original instead. Paywalls are not bypassed.
+- At the bottom of the reader, copy the article URL or open the original in a browser. Android also offers system sharing.
 
 ## Fetching and storage
 

@@ -25258,6 +25258,36 @@ abstract class AppLocalizations {
   /// **'Open in browser'**
   String get newsOpenInBrowser;
 
+  /// No description provided for @newsShareLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link'**
+  String get newsShareLink;
+
+  /// No description provided for @newsShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share the link.'**
+  String get newsShareFailed;
+
+  /// No description provided for @newsCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get newsCopyLink;
+
+  /// No description provided for @newsLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard'**
+  String get newsLinkCopied;
+
+  /// No description provided for @newsCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the link.'**
+  String get newsCopyFailed;
+
   /// No description provided for @newsOpenOriginal.
   ///
   /// In en, this message translates to:
