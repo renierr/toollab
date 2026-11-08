@@ -39,7 +39,19 @@ void main() {
         ).existsSync(),
         isTrue,
       );
+      expect(
+        File(
+          'android/app/src/main/res/drawable-$density/${resource}_foreground.png',
+        ).existsSync(),
+        isTrue,
+      );
     }
+    expect(
+      File(
+        'android/app/src/main/res/mipmap-anydpi-v26/$resource.xml',
+      ).readAsStringSync(),
+      contains('@drawable/${resource}_foreground'),
+    );
     const kotlin = 'android/app/src/main/kotlin/de/renier/tool_lab';
     expect(
       File('$kotlin/MainActivity.kt').readAsStringSync(),

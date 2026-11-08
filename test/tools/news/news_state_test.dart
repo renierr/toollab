@@ -8,6 +8,7 @@ import 'package:tool_lab/services/app_http_client.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/news/config.dart';
 import 'package:tool_lab/tools/news/news_article.dart';
+import 'package:tool_lab/tools/news/news_catalog.dart';
 import 'package:tool_lab/tools/news/news_db_helper.dart';
 import 'package:tool_lab/tools/news/news_state.dart';
 
@@ -35,6 +36,20 @@ void main() {
       final state = NewsState();
       addTearDown(state.dispose);
       await state.init();
+      for (final title in [
+        'The Verge',
+        'Hacker News',
+        'The Guardian Business',
+        'heise online',
+        'ScienceDaily',
+        'Caschys Blog',
+        'Managermagazin',
+        'Danisch',
+      ]) {
+        final source = state.sources.singleWhere((s) => s.title == title);
+        expect(source.enabled, isTrue);
+        expect(NewsCatalog.categoryForFeed(source.feedUrl), isNotNull);
+      }
       final alJazeera = state.sources.singleWhere(
         (s) => s.title == 'Al Jazeera',
       );

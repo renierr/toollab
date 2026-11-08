@@ -100,6 +100,11 @@ class NewsCatalog {
         feedUrl: 'https://newsfeed.zeit.de/index',
         siteUrl: 'https://www.zeit.de',
       ),
+      NewsCatalogSource(
+        title: 'Danisch',
+        feedUrl: 'https://www.danisch.de/blog/feed/',
+        siteUrl: 'https://www.danisch.de/blog',
+      ),
     ],
     'technology': [
       NewsCatalogSource(
@@ -143,6 +148,11 @@ class NewsCatalog {
         siteUrl: 'https://www.theguardian.com/uk/technology',
       ),
       NewsCatalogSource(
+        title: 'Caschys Blog',
+        feedUrl: 'https://stadt-bremerhaven.de/feed/',
+        siteUrl: 'https://stadt-bremerhaven.de',
+      ),
+      NewsCatalogSource(
         title: 'New York Times Technology',
         feedUrl: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
         siteUrl: 'https://www.nytimes.com/section/technology',
@@ -168,6 +178,11 @@ class NewsCatalog {
         title: 'CNBC',
         feedUrl: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',
         siteUrl: 'https://www.cnbc.com',
+      ),
+      NewsCatalogSource(
+        title: 'Managermagazin',
+        feedUrl: 'https://www.manager-magazin.de/news/index.rss',
+        siteUrl: 'https://www.manager-magazin.de/',
       ),
     ],
     'science': [
@@ -256,6 +271,46 @@ class NewsCatalog {
       title: 'The Guardian World',
       feedUrl: 'https://www.theguardian.com/world/rss',
       siteUrl: 'https://www.theguardian.com/world',
+    ),
+    NewsCatalogSource(
+      title: 'The Verge',
+      feedUrl: 'https://www.theverge.com/rss/index.xml',
+      siteUrl: 'https://www.theverge.com',
+    ),
+    NewsCatalogSource(
+      title: 'Hacker News',
+      feedUrl: 'https://hnrss.org/frontpage',
+      siteUrl: 'https://news.ycombinator.com',
+    ),
+    NewsCatalogSource(
+      title: 'The Guardian Business',
+      feedUrl: 'https://www.theguardian.com/business/rss',
+      siteUrl: 'https://www.theguardian.com/business',
+    ),
+    NewsCatalogSource(
+      title: 'heise online',
+      feedUrl: 'https://www.heise.de/rss/heise-atom.xml',
+      siteUrl: 'https://www.heise.de',
+    ),
+    NewsCatalogSource(
+      title: 'ScienceDaily',
+      feedUrl: 'https://www.sciencedaily.com/rss/all.xml',
+      siteUrl: 'https://www.sciencedaily.com',
+    ),
+    NewsCatalogSource(
+      title: 'Caschys Blog',
+      feedUrl: 'https://stadt-bremerhaven.de/feed/',
+      siteUrl: 'https://stadt-bremerhaven.de',
+    ),
+    NewsCatalogSource(
+      title: 'Managermagazin',
+      feedUrl: 'https://www.manager-magazin.de/news/index.rss',
+      siteUrl: 'https://www.manager-magazin.de/',
+    ),
+    NewsCatalogSource(
+      title: 'Danisch',
+      feedUrl: 'https://www.danisch.de/blog/feed/',
+      siteUrl: 'https://www.danisch.de/blog',
     ),
   ];
 

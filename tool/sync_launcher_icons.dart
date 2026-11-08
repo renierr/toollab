@@ -9,6 +9,7 @@
 //
 // Run after adding or changing any icon under assets/logo/standalone/:
 //   dart run tool/sync_launcher_icons.dart
+// Pass tool IDs as arguments to update only those icons.
 import 'dart:io';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
@@ -31,7 +32,7 @@ const Map<String, int> _adaptiveForegroundSizes = {
   'xxxhdpi': 432,
 };
 
-void main() async {
+void main(List<String> args) async {
   final sourceDir = Directory('assets/logo/standalone');
   if (!await sourceDir.exists()) {
     print('Error: ${sourceDir.path} not found. Run from the repo root.');
@@ -49,6 +50,7 @@ void main() async {
     if (entity is! File || p.extension(entity.path) != '.png') continue;
 
     final toolId = p.basenameWithoutExtension(entity.path);
+    if (args.isNotEmpty && !args.contains(toolId)) continue;
     final resourceName = 'ic_launcher_${toolId.replaceAll('-', '_')}';
 
     final decoded = img.decodePng(await entity.readAsBytes());

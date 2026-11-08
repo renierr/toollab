@@ -28,6 +28,7 @@ class NewsPage extends StatefulWidget {
 }
 
 class _NewsPageState extends State<NewsPage> with DisposeCleanup {
+  final ScrollController _scrollController = ScrollController();
   Timer? _readSyncTimer;
   int _readGeneration = 0;
   AppState? _appState;
@@ -45,6 +46,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
 
     state.addListener(onStateChanged);
     onDispose(() {
+      _scrollController.dispose();
       state.removeListener(onStateChanged);
       if (_readSyncTimer?.isActive == true && _appState != null) {
         unawaited(syncNewsSources(_appState!));
@@ -118,9 +120,13 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
 
   Future<void> _refresh() async {
     final state = context.read<NewsState>();
+    if (state.isRefreshing) return;
     final l10n = AppLocalizations.of(context);
     await state.refresh();
     if (!mounted) return;
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.minScrollExtent);
+    }
     unawaited(_syncSources());
     final message = state.lastRefreshFailures > 0
         ? l10n.newsRefreshFailed(state.lastRefreshFailures)
@@ -208,6 +214,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
                   const LinearProgressIndicator(minHeight: 2),
                 Expanded(
                   child: NewsList(
+                    controller: _scrollController,
                     articles: state.articles,
                     sourceResolver: state.sourceFor,
                     markReadOnScroll: state.markReadOnScroll,

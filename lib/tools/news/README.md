@@ -15,7 +15,7 @@ Custom feeds are checked when added and need at least one usable entry. Feed URL
 - Opening an article marks it as read; returning to the feed also triggers a sync if configured. Optionally, **Mark as read while scrolling** marks visible articles after they pass above the viewport. When you scroll to the end and pause for a second, all visible cards, including partially visible ones, are also marked read. A short timeline is not marked merely by opening it. Read cards are dimmed.
 - Use the text-size buttons in the article reader to adjust the headline, article text and fallback summary from 80% to 200% in 10% steps. The size is saved locally, applies to all articles, and works alongside the device text-size setting.
 - With **Hide read articles** enabled, articles read in the current timeline remain visible until the next refresh, so they can be revisited by scrolling back. Previously read articles are filtered when the timeline is loaded or the filter is enabled.
-- Refresh using the toolbar button or pull-to-refresh. With **Refresh when opened** enabled, News checks the last refresh during state initialization and fetches if it is at least ten minutes old. This is not a periodic ten-minute poll; reopening News while its state remains initialized does not by itself start another feed refresh.
+- Refresh using the toolbar button, pull-to-refresh at the top, or a fresh pull up from the bottom of a scrollable timeline. A manual refresh returns the timeline to the top. With **Refresh when opened** enabled, News checks the last refresh during state initialization and fetches if it is at least ten minutes old. This is not a periodic ten-minute poll; reopening News while its state remains initialized does not by itself start another feed refresh.
 - Articles stop counting as new or unread once they are more than 48 hours past their publication time. They are dimmed in the full timeline and excluded from **Hide read articles**, but are not deleted. The count updates as articles age while News is active. If a feed has no usable date, News uses the first local fetch time for that item; after clearing the cache, an undated item can appear new again.
 - The reader extracts the source page on a best-effort basis. If the site blocks access, requires JavaScript, or does not expose a readable body, News shows the feed summary and a link to the original instead. Paywalls are not bypassed.
 
@@ -63,7 +63,7 @@ Read-mark synchronization is limited to approximately **seven days from the read
 
 ## Built-in catalog
 
-On a fresh setup, **BBC Top Stories**, **NPR News**, and **The Guardian World** are enabled. **Al Jazeera** is present but disabled by default. Existing source settings are not changed by the defaults. All other catalog entries are optional.
+On a fresh setup, **BBC Top Stories**, **NPR News**, **The Guardian World**, **The Verge**, **Hacker News**, **The Guardian Business**, **heise online**, **ScienceDaily**, **Caschys Blog**, **Managermagazin**, and **Danisch** are enabled. **Al Jazeera** is present but disabled by default. Existing source settings are not changed by the defaults; the catalog is available to all users.
 
 The catalog and feed URLs are defined in [`news_catalog.dart`](news_catalog.dart):
 
@@ -86,6 +86,7 @@ The catalog and feed URLs are defined in [`news_catalog.dart`](news_catalog.dart
 - [tagesschau](https://www.tagesschau.de/xml/rss2/)
 - [SPIEGEL](https://www.spiegel.de/schlagzeilen/index.rss)
 - [ZEIT ONLINE](https://newsfeed.zeit.de/index)
+- [Danisch](https://www.danisch.de/blog/feed/)
 
 ### Technology
 
@@ -97,6 +98,7 @@ The catalog and feed URLs are defined in [`news_catalog.dart`](news_catalog.dart
 - [heise online](https://www.heise.de/rss/heise-atom.xml)
 - [BBC Technology](https://feeds.bbci.co.uk/news/technology/rss.xml)
 - [The Guardian Technology](https://www.theguardian.com/uk/technology/rss)
+- [Caschys Blog](https://stadt-bremerhaven.de/feed/)
 - [New York Times Technology](https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml)
 
 ### Business
@@ -105,6 +107,7 @@ The catalog and feed URLs are defined in [`news_catalog.dart`](news_catalog.dart
 - [The Guardian Business](https://www.theguardian.com/business/rss)
 - [Financial Times](https://www.ft.com/rss/home)
 - [CNBC](https://www.cnbc.com/id/100003114/device/rss/rss.html)
+- [Managermagazin](https://www.manager-magazin.de/news/index.rss)
 
 ### Science
 

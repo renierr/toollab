@@ -14,6 +14,7 @@ import 'news_card.dart';
 import 'news_read_tracker.dart';
 
 class NewsList extends StatelessWidget {
+  final ScrollController? controller;
   final List<NewsArticle> articles;
   final NewsSource? Function(String sourceId) sourceResolver;
   final bool markReadOnScroll;
@@ -25,6 +26,7 @@ class NewsList extends StatelessWidget {
 
   const NewsList({
     super.key,
+    this.controller,
     required this.articles,
     required this.sourceResolver,
     required this.markReadOnScroll,
@@ -43,17 +45,20 @@ class NewsList extends StatelessWidget {
         onRefresh: onRefresh,
         child: articles.isEmpty
             ? ListView(
+                controller: controller,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(24),
                 children: [empty],
               )
             : _TimelineList(
+                controller: controller,
                 articles: articles,
                 sourceResolver: sourceResolver,
                 markReadOnScroll: markReadOnScroll,
                 onOpen: onOpen,
                 onSeen: onSeen,
                 onVisible: onVisible,
+                onRefresh: onRefresh,
               ),
       ),
     );
@@ -61,20 +66,24 @@ class NewsList extends StatelessWidget {
 }
 
 class _TimelineList extends StatefulWidget {
+  final ScrollController? controller;
   final List<NewsArticle> articles;
   final NewsSource? Function(String sourceId) sourceResolver;
   final bool markReadOnScroll;
   final void Function(NewsArticle article) onOpen;
   final void Function(NewsArticle article) onSeen;
   final void Function(NewsArticle article)? onVisible;
+  final Future<void> Function() onRefresh;
 
   const _TimelineList({
+    this.controller,
     required this.articles,
     required this.sourceResolver,
     required this.markReadOnScroll,
     required this.onOpen,
     required this.onSeen,
     this.onVisible,
+    required this.onRefresh,
   });
 
   @override
@@ -83,18 +92,23 @@ class _TimelineList extends StatefulWidget {
 
 class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
   static const _endPause = Duration(seconds: 1);
-  final ScrollController _controller = ScrollController();
+  late ScrollController _controller;
   final ValueNotifier<int> _reachedEnd = ValueNotifier(0);
+  final ValueNotifier<double> _bottomPull = ValueNotifier(0);
   Timer? _endTimer;
   bool _scrollingDown = false;
+  bool _startedAtBottom = false;
+  static const double _refreshDragDistance = 80;
 
   @override
   void initState() {
     super.initState();
+    _controller = widget.controller ?? ScrollController();
     onDispose(() {
       _endTimer?.cancel();
-      _controller.dispose();
+      if (widget.controller == null) _controller.dispose();
       _reachedEnd.dispose();
+      _bottomPull.dispose();
     });
   }
 
@@ -115,6 +129,10 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
   @override
   void didUpdateWidget(_TimelineList oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      if (oldWidget.controller == null) _controller.dispose();
+      _controller = widget.controller ?? ScrollController();
+    }
     if (!widget.markReadOnScroll) _endTimer?.cancel();
   }
 
@@ -130,7 +148,13 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
 
   bool _onScrollNotification(ScrollNotification notification) {
     if (notification.depth != 0) return false;
-    if (notification is UserScrollNotification) {
+    if (notification is ScrollStartNotification) {
+      _bottomPull.value = 0;
+      _startedAtBottom =
+          notification.dragDetails != null &&
+          notification.metrics.maxScrollExtent > 0 &&
+          notification.metrics.extentAfter <= 1;
+    } else if (notification is UserScrollNotification) {
       if (notification.direction == ScrollDirection.reverse) {
         _scrollingDown = true;
       } else if (notification.direction == ScrollDirection.forward) {
@@ -138,6 +162,20 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
       }
     } else if (notification is ScrollUpdateNotification) {
       _endTimer?.cancel();
+      if (_startedAtBottom &&
+          notification.dragDetails != null &&
+          notification.metrics.pixels > notification.metrics.maxScrollExtent) {
+        _bottomPull.value =
+            ((notification.metrics.pixels -
+                        notification.metrics.maxScrollExtent) /
+                    _refreshDragDistance)
+                .clamp(0, 1);
+      } else if (_startedAtBottom &&
+          notification.dragDetails != null &&
+          (notification.scrollDelta ?? 0) < 0 &&
+          notification.metrics.extentAfter > 0) {
+        _bottomPull.value = 0;
+      }
       if (notification.dragDetails != null &&
           (notification.scrollDelta ?? 0) > 0) {
         _scrollingDown = true;
@@ -146,8 +184,21 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
       _endTimer?.cancel();
       if (notification.dragDetails != null && notification.overscroll > 0) {
         _scrollingDown = true;
+        if (_startedAtBottom) {
+          _bottomPull.value =
+              (_bottomPull.value +
+                      notification.overscroll / _refreshDragDistance)
+                  .clamp(0, 1);
+        }
       }
     } else if (notification is ScrollEndNotification) {
+      if (_bottomPull.value >= 1) {
+        _bottomPull.value = 0;
+        _scrollingDown = false;
+        unawaited(widget.onRefresh());
+        return false;
+      }
+      _bottomPull.value = 0;
       if (_scrollingDown && notification.metrics.extentAfter <= 1) {
         _scheduleEndCheck();
       }
@@ -177,35 +228,65 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
 
     return NotificationListener<ScrollNotification>(
       onNotification: _onScrollNotification,
-      child: Listener(
-        onPointerSignal: _onPointerSignal,
-        child: ListView.builder(
-          controller: _controller,
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(top: 4, bottom: 28),
-          scrollCacheExtent: const ScrollCacheExtent.pixels(500),
-          itemCount: entries.length,
-          itemBuilder: (context, index) {
-            final entry = entries[index];
-            final article = entry.article;
-            if (article == null) {
-              return _DateHeader(label: entry.header ?? '');
-            }
-            return NewsReadTracker(
-              key: ValueKey(article.guidKey),
-              article: article,
-              enabled: widget.markReadOnScroll,
-              reachedEnd: _reachedEnd,
-              onSeen: () => widget.onSeen(article),
-              onVisible: () => widget.onVisible?.call(article),
-              child: NewsCard(
-                article: article,
-                source: widget.sourceResolver(article.sourceShortId),
-                onTap: () => widget.onOpen(article),
+      child: Stack(
+        children: [
+          Listener(
+            onPointerSignal: _onPointerSignal,
+            child: ListView.builder(
+              controller: _controller,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(top: 4, bottom: 28),
+              scrollCacheExtent: const ScrollCacheExtent.pixels(500),
+              itemCount: entries.length,
+              itemBuilder: (context, index) {
+                final entry = entries[index];
+                final article = entry.article;
+                if (article == null) {
+                  return _DateHeader(label: entry.header ?? '');
+                }
+                return NewsReadTracker(
+                  key: ValueKey(article.guidKey),
+                  article: article,
+                  enabled: widget.markReadOnScroll,
+                  reachedEnd: _reachedEnd,
+                  onSeen: () => widget.onSeen(article),
+                  onVisible: () => widget.onVisible?.call(article),
+                  child: NewsCard(
+                    article: article,
+                    source: widget.sourceResolver(article.sourceShortId),
+                    onTap: () => widget.onOpen(article),
+                  ),
+                );
+              },
+            ),
+          ),
+          Positioned(
+            bottom: 12,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: Center(
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _bottomPull,
+                  builder: (context, progress, _) => progress == 0
+                      ? const SizedBox.shrink()
+                      : Material(
+                          elevation: 3,
+                          shape: const CircleBorder(),
+                          color: Theme.of(context).colorScheme.surface,
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: SizedBox.square(
+                              dimension: 24,
+                              child: CircularProgressIndicator(value: progress),
+                            ),
+                          ),
+                        ),
+                ),
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
