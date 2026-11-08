@@ -21,11 +21,13 @@ class ExtractedArticle {
   final String markdown;
   final String? imageUrl;
   final String? title;
+  final List<String> videoUrls;
 
   const ExtractedArticle({
     required this.markdown,
     required this.imageUrl,
     required this.title,
+    this.videoUrls = const [],
   });
 }
 
@@ -189,9 +191,15 @@ class NewsArticleService {
       }
     }
 
-    final main = _selectMain(document);
+    final main =
+        _selectMain(document) ??
+        document
+            .querySelectorAll('article, main')
+            .where((element) => element.querySelector('video') != null)
+            .firstOrNull;
     if (main == null) return null;
 
+    final videoUrls = _videoUrls(main, baseUri);
     _prepareForMarkdown(main, baseUri);
     final image =
         metadataImage ?? main.querySelector('img[src]')?.attributes['src'];
@@ -204,12 +212,13 @@ class NewsArticleService {
     );
 
     final markdown = _toMarkdown(main, baseUrl);
-    if (_usableLength(markdown) < 40) return null;
+    if (_usableLength(markdown) < 40 && videoUrls.isEmpty) return null;
 
     return ExtractedArticle(
       markdown: markdown,
       imageUrl: image,
       title: pageTitle,
+      videoUrls: videoUrls,
     );
   }
 
@@ -343,10 +352,38 @@ class NewsArticleService {
     final wrapper = dom.Element.tag('div')..nodes.addAll(fragment.nodes);
     final baseUri = Uri.tryParse(baseUrl);
     if (baseUri == null) return null;
+    final videoUrls = _videoUrls(wrapper, baseUri);
     _prepareForMarkdown(wrapper, baseUri);
     final markdown = _toMarkdown(wrapper, baseUrl);
-    if (_usableLength(markdown) < 50) return null;
-    return ExtractedArticle(markdown: markdown, imageUrl: null, title: null);
+    if (_usableLength(markdown) < 50 && videoUrls.isEmpty) return null;
+    return ExtractedArticle(
+      markdown: markdown,
+      imageUrl: null,
+      title: null,
+      videoUrls: videoUrls,
+    );
+  }
+
+  static List<String> _videoUrls(dom.Element root, Uri baseUri) {
+    final urls = <String>{};
+    for (final video in root.querySelectorAll('video')) {
+      final candidates = [
+        video.attributes['src'],
+        ...video
+            .querySelectorAll('source')
+            .map((source) => source.attributes['src']),
+      ];
+      for (final candidate in candidates) {
+        if (candidate == null) continue;
+        final url = _resolve(candidate, baseUri);
+        if (url != null) {
+          urls.add(url);
+          break;
+        }
+      }
+      if (urls.length >= 8) break;
+    }
+    return urls.toList(growable: false);
   }
 
   static Uri _baseUri(dom.Document document, String baseUrl) {

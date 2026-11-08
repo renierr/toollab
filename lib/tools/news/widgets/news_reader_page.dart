@@ -7,6 +7,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/copyable_image.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
@@ -17,6 +18,7 @@ import '../news_article_service.dart';
 import '../news_source.dart';
 import '../news_state.dart';
 import '../news_time.dart';
+import 'news_video_actions.dart';
 
 class NewsReaderPage extends StatefulWidget {
   final NewsArticle article;
@@ -162,11 +164,16 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
                   MarkdownView(
                     data: extracted?.markdown ?? '',
                     accentColor: AppTheme.accentAmber,
+                    copyImages: true,
                     scale:
                         readerScale *
                         MediaQuery.textScalerOf(context).scale(16) /
                         16,
                   ),
+                if (!loading && (extracted?.videoUrls.isNotEmpty ?? false)) ...[
+                  const SizedBox(height: 16),
+                  NewsVideoActions(videoUrls: extracted!.videoUrls),
+                ],
                 const SizedBox(height: 28),
                 Divider(color: theme.colorScheme.outlineVariant),
                 const SizedBox(height: 16),
@@ -297,19 +304,22 @@ class _ReaderHeader extends StatelessWidget {
         ],
         if (image != null && image.isNotEmpty) ...[
           const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Image.network(
-                image,
-                fit: BoxFit.cover,
-                cacheWidth: 1200,
-                errorBuilder: (_, _, _) => Container(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.image_not_supported_outlined,
-                    color: theme.hintColor,
+          CopyableImage(
+            image: NetworkImage(image),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Image.network(
+                  image,
+                  fit: BoxFit.cover,
+                  cacheWidth: 1200,
+                  errorBuilder: (_, _, _) => Container(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      color: theme.hintColor,
+                    ),
                   ),
                 ),
               ),

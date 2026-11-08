@@ -3391,6 +3391,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get widgetMarkdownImageEnlarge => 'Zum Vergrößern tippen';
 
   @override
+  String get widgetImageCopied => 'Bild in die Zwischenablage kopiert';
+
+  @override
+  String get widgetImageCopyFailed => 'Das Bild konnte nicht kopiert werden.';
+
+  @override
   String get widgetMarkdownFrontmatter => 'Frontmatter';
 
   @override
@@ -14451,6 +14457,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get newsOpenInBrowser => 'Im Browser öffnen';
+
+  @override
+  String get newsPlayVideo => 'Video abspielen';
+
+  @override
+  String newsPlayVideoNumber(int number) {
+    return 'Video $number abspielen';
+  }
+
+  @override
+  String get newsVideoFailed => 'Das Video konnte nicht geöffnet werden.';
 
   @override
   String get newsShareLink => 'Link teilen';

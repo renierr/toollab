@@ -2035,6 +2035,8 @@
   },
   "widgetMarkdownNoContent": "No additional content",
   "widgetMarkdownImageEnlarge": "Tap to enlarge",
+  "widgetImageCopied": "Image copied to clipboard",
+  "widgetImageCopyFailed": "Could not copy the image.",
   "widgetMarkdownFrontmatter": "Frontmatter",
   "widgetMarkdownFrontmatterInvalid": "Invalid frontmatter YAML: {error}",
   "@widgetMarkdownFrontmatterInvalid": {
@@ -7048,6 +7050,14 @@
   "newsMarkReadOnScrollSubtitle": "Articles you scroll past are marked as read",
   "newsNoSearchResults": "No matching sources",
   "newsOpenInBrowser": "Open in browser",
+  "newsPlayVideo": "Play video",
+  "newsPlayVideoNumber": "Play video {number}",
+  "@newsPlayVideoNumber": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "newsVideoFailed": "Could not open the video.",
   "newsShareLink": "Share link",
   "newsShareFailed": "Could not share the link.",
   "newsCopyLink": "Copy link",

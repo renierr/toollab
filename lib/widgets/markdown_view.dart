@@ -8,6 +8,7 @@ import 'package:tool_lab/helpers/syntax/language_registry.dart';
 import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart' as syntax;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/copyable_image.dart';
 import 'package:tool_lab/widgets/image_preview_dialog.dart';
 import 'package:tool_lab/widgets/markdown_checkbox.dart';
 import 'package:tool_lab/widgets/markdown_code_block_builder.dart';
@@ -18,6 +19,7 @@ class MarkdownView extends StatefulWidget {
   final bool selectable;
   final Color accentColor;
   final double scale;
+  final bool copyImages;
 
   const MarkdownView({
     super.key,
@@ -25,6 +27,7 @@ class MarkdownView extends StatefulWidget {
     this.selectable = true,
     this.accentColor = AppTheme.accentBlue,
     this.scale = 1.0,
+    this.copyImages = false,
   });
 
   @override
@@ -350,6 +353,10 @@ class _MarkdownViewState extends State<MarkdownView>
           ),
         );
 
+        if (widget.copyImages) {
+          imageWidget = CopyableImage(image: provider, child: imageWidget);
+        }
+
         if (width != null || height != null) {
           imageWidget = SizedBox(
             width: width,
@@ -390,6 +397,7 @@ class _MarkdownViewState extends State<MarkdownView>
     super.didUpdateWidget(oldWidget);
     if (widget.data != oldWidget.data ||
         widget.scale != oldWidget.scale ||
+        widget.copyImages != oldWidget.copyImages ||
         widget.accentColor != oldWidget.accentColor) {
       _parseMarkdown();
       if (widget.data != oldWidget.data) {

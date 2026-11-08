@@ -121,5 +121,34 @@ void main() {
         'https://example.com/preview.jpg',
       );
     });
+
+    test('extracts direct video URLs but not embeds or unsafe URLs', () {
+      final article = NewsArticleService.extract(
+        '<html><body><article>'
+            '<p>A paragraph of article text long enough for the reader to use.</p>'
+            '<video src="/one.mp4"></video>'
+            '<video><source src="//cdn.example.com/two.webm" type="video/webm">'
+            '<source src="/alternate.mp4"></video>'
+            '<video src="javascript:alert(1)"></video>'
+            '<video src="/one.mp4"></video>'
+            '<iframe src="https://www.youtube.com/embed/example"></iframe>'
+            '</article></body></html>',
+        'https://example.com/story',
+      )!;
+      expect(article.videoUrls, [
+        'https://example.com/one.mp4',
+        'https://cdn.example.com/two.webm',
+      ]);
+      expect(article.markdown, isNot(contains('youtube')));
+    });
+
+    test('accepts a video-only article', () {
+      final article = NewsArticleService.extract(
+        '<html><body><article><video src="/clip.mp4"></video>'
+            '</article></body></html>',
+        'https://example.com/story',
+      );
+      expect(article?.videoUrls, ['https://example.com/clip.mp4']);
+    });
   });
 }

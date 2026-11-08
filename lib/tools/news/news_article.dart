@@ -1,3 +1,10 @@
+class NewsCachedContent {
+  final String? markdown;
+  final List<String>? videoUrls;
+
+  const NewsCachedContent({required this.markdown, required this.videoUrls});
+}
+
 class NewsArticle {
   final int? id;
   final String guidKey;

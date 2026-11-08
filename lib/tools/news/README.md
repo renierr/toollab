@@ -17,7 +17,8 @@ Custom feeds are checked when added and need at least one usable entry. Feed URL
 - With **Hide read articles** enabled, articles read in the current timeline remain visible until the next refresh, so they can be revisited by scrolling back. Previously read articles are filtered when the timeline is loaded or the filter is enabled.
 - Refresh using the toolbar button, pull-to-refresh at the top, or a fresh pull up from the bottom of a scrollable timeline. A manual refresh returns the timeline to the top. With **Refresh when opened** enabled, News checks the last refresh during state initialization and fetches if it is at least ten minutes old. This is not a periodic ten-minute poll; reopening News while its state remains initialized does not by itself start another feed refresh.
 - Articles stop counting as new or unread once they are more than 48 hours past their publication time. They are dimmed in the full timeline and excluded from **Hide read articles**, but are not deleted. The count updates as articles age while News is active. If a feed has no usable date, News uses the first local fetch time for that item; after clearing the cache, an undated item can appear new again.
-- The reader extracts the source page on a best-effort basis. If the site blocks access, requires JavaScript, or does not expose a readable body, News shows the feed summary and a link to the original instead. Paywalls are not bypassed.
+- The reader extracts the source page on a best-effort basis. Direct video URLs found in HTML video elements get play buttons: Android uses ToolLab's native player, while desktop opens the URL in the default handler. Playback depends on the source, format, access restrictions and network. Embedded players such as YouTube are not extracted; open the original page to watch them. If the site blocks access, requires JavaScript, or does not expose a readable body, News shows the feed summary and a link to the original instead. Paywalls are not bypassed.
+- Long-press an image in a card or reader to copy it; desktop also supports right-click. The copied image is converted to PNG and limited to 4096 pixels on its longest side. Linux requires `wl-copy` or `xclip`.
 - At the bottom of the reader, copy the article URL or open the original in a browser. Android also offers system sharing.
 
 ## Fetching and storage
@@ -29,7 +30,7 @@ Each refresh considers the **first 80 entries** returned by each enabled feed, i
 - Refresh processes up to three enabled feeds concurrently and uses `ETag` and `Last-Modified` when available. An unchanged feed can return no entries to process. Feed responses are buffered before the 8 MB size check.
 - The refresh message counts newly inserted articles only when their publication time is within the last 48 hours. Older entries can still be cached for the full timeline. A later usable feed date updates a cached item's publication time; missing dates do not reset its first-fetch fallback on each refresh.
 - Cards use images supplied by the feed. For visible cards without one, News fetches the article page to look for an image and readable text, with at most two preview requests in flight. Opening an article shares an in-flight preview request where possible. Article responses are buffered before the 6 MB size check. Publishers can still block requests or omit images.
-- Sources, article metadata, extracted Markdown, image URLs and read marks are stored locally in SQLite. Image bytes use Flutter's image cache rather than the News database. Clearing cached articles keeps recent read marks and sources.
+- Sources, article metadata, extracted Markdown, video and image URLs, and read marks are stored locally in SQLite. Image bytes use Flutter's image cache rather than the News database. Existing cached article bodies are fetched once more to discover videos; if fetching fails, the cached body remains available. Clearing cached articles keeps recent read marks and sources.
 - Refresh prunes read articles published more than 30 days ago, all articles published more than 365 days ago, and entries beyond the newest 5,000. The timeline query shows up to 2,000 articles.
 
 ## Synchronization
@@ -100,6 +101,11 @@ The catalog and feed URLs are defined in [`news_catalog.dart`](news_catalog.dart
 - [BBC Technology](https://feeds.bbci.co.uk/news/technology/rss.xml)
 - [The Guardian Technology](https://www.theguardian.com/uk/technology/rss)
 - [Caschys Blog](https://stadt-bremerhaven.de/feed/)
+- [ComputerBase](https://www.computerbase.de/rss/news.xml)
+- [Golem.de](https://rss.golem.de/rss.php?feed=RSS2.0)
+- [SmartDroid](https://www.smartdroid.de/feed/)
+- [mobiFlip](https://www.mobiflip.de/feed/)
+- [Hackaday](https://hackaday.com/blog/feed/)
 - [New York Times Technology](https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml)
 
 ### Business
@@ -116,6 +122,7 @@ The catalog and feed URLs are defined in [`news_catalog.dart`](news_catalog.dart
 - [ScienceDaily](https://www.sciencedaily.com/rss/all.xml)
 - [Nature](https://www.nature.com/nature.rss)
 - [The Guardian Science](https://www.theguardian.com/science/rss)
+- [scinexx](https://www.scinexx.de/feed/)
 
 ### Sport
 
@@ -129,6 +136,9 @@ The catalog and feed URLs are defined in [`news_catalog.dart`](news_catalog.dart
 - [BBC Entertainment & Arts](https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml)
 - [Variety](https://variety.com/feed/)
 - [Rolling Stone](https://www.rollingstone.com/feed/)
+- [LangweileDich.net](https://www.langweiledich.net/feed/)
+- [Atlas Obscura](https://www.atlasobscura.com/feeds/latest)
+- [xkcd](https://xkcd.com/rss.xml)
 
 ## Add a built-in catalog entry
 

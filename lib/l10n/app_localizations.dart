@@ -5915,6 +5915,18 @@ abstract class AppLocalizations {
   /// **'Tap to enlarge'**
   String get widgetMarkdownImageEnlarge;
 
+  /// No description provided for @widgetImageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Image copied to clipboard'**
+  String get widgetImageCopied;
+
+  /// No description provided for @widgetImageCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the image.'**
+  String get widgetImageCopyFailed;
+
   /// No description provided for @widgetMarkdownFrontmatter.
   ///
   /// In en, this message translates to:
@@ -25257,6 +25269,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open in browser'**
   String get newsOpenInBrowser;
+
+  /// No description provided for @newsPlayVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Play video'**
+  String get newsPlayVideo;
+
+  /// No description provided for @newsPlayVideoNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Play video {number}'**
+  String newsPlayVideoNumber(int number);
+
+  /// No description provided for @newsVideoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the video.'**
+  String get newsVideoFailed;
 
   /// No description provided for @newsShareLink.
   ///

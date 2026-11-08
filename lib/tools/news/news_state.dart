@@ -561,26 +561,39 @@ class NewsState extends ChangeNotifier {
   }
 
   Future<ExtractedArticle> loadArticleBody(NewsArticle article) async {
-    final cached = await NewsDbHelper.instance.getArticleContent(
+    final cached = await NewsDbHelper.instance.getCachedContent(
       article.guidKey,
     );
-    if (cached != null && cached.trim().isNotEmpty) {
+    if (cached?.markdown != null) {
       final current = _articles
           .where((item) => item.guidKey == article.guidKey)
           .firstOrNull;
-      return ExtractedArticle(
+      final saved = ExtractedArticle(
         markdown: NewsArticleService.cleanCachedMarkdown(
-          cached,
+          cached!.markdown!,
           title: article.title,
           author: article.author,
           heroImageUrl: current?.imageUrl ?? article.imageUrl,
         ),
         imageUrl: current?.imageUrl ?? article.imageUrl,
         title: null,
+        videoUrls: cached.videoUrls ?? const [],
       );
+      if (cached.videoUrls != null) return saved;
+      try {
+        final refreshed = await _fetchArticle(article);
+        if (refreshed.markdown.isNotEmpty || refreshed.videoUrls.isNotEmpty) {
+          return refreshed;
+        }
+        return saved;
+      } catch (_) {
+        return saved;
+      }
     }
     final extracted = await _fetchArticle(article);
-    if (extracted.markdown.isEmpty) return _fetchArticle(article);
+    if (extracted.markdown.isEmpty && extracted.videoUrls.isEmpty) {
+      return _fetchArticle(article);
+    }
     return extracted;
   }
 
@@ -653,6 +666,7 @@ class NewsState extends ChangeNotifier {
       article.guidKey,
       extracted.markdown,
       imageUrl: extracted.imageUrl,
+      videoUrls: extracted.videoUrls,
     );
     final image = extracted.imageUrl;
     if (!_disposed && image != null && image.isNotEmpty) {

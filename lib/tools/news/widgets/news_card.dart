@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/copyable_image.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 
 import '../news_article.dart';
@@ -214,34 +215,37 @@ class _NewsThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: width,
-        height: height,
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          alignment: Alignment.center,
-          cacheWidth: cacheWidth,
-          gaplessPlayback: true,
-          filterQuality: FilterQuality.medium,
-          errorBuilder: (_, _, _) => Icon(
-            Icons.image_not_supported_outlined,
-            color: theme.hintColor,
-            size: height * 0.3,
+    return CopyableImage(
+      image: NetworkImage(url),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: width,
+          height: height,
+          color: theme.colorScheme.surfaceContainerHighest,
+          child: Image.network(
+            url,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            cacheWidth: cacheWidth,
+            gaplessPlayback: true,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (_, _, _) => Icon(
+              Icons.image_not_supported_outlined,
+              color: theme.hintColor,
+              size: height * 0.3,
+            ),
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return Center(
+                child: SizedBox(
+                  width: height * 0.28,
+                  height: height * 0.28,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                ),
+              );
+            },
           ),
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) return child;
-            return Center(
-              child: SizedBox(
-                width: height * 0.28,
-                height: height * 0.28,
-                child: const CircularProgressIndicator(strokeWidth: 2),
-              ),
-            );
-          },
         ),
       ),
     );

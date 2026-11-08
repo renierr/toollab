@@ -352,7 +352,12 @@ open class MainActivity : FlutterFragmentActivity() {
                         return@setMethodCallHandler
                     }
                     try {
-                        val uri = FileSaveHelper.getUriForPath(this, path)
+                        val parsed = android.net.Uri.parse(path)
+                        val uri = if (parsed.scheme == "http" || parsed.scheme == "https") {
+                            parsed
+                        } else {
+                            FileSaveHelper.getUriForPath(this, path)
+                        }
                         startActivity(Intent(this, NativeMediaPlayerActivity::class.java).apply {
                             setDataAndType(uri, mimeType)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

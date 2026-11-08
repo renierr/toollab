@@ -10,9 +10,10 @@ import 'package:tool_lab/tools/news/widgets/news_reader_page.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 
 class _NewsState extends NewsState {
-  _NewsState({this.fail = false});
+  _NewsState({this.fail = false, this.videoUrls = const []});
 
   final bool fail;
+  final List<String> videoUrls;
   int _fontPercent = 100;
 
   @override
@@ -30,10 +31,11 @@ class _NewsState extends NewsState {
   @override
   Future<ExtractedArticle> loadArticleBody(NewsArticle article) async {
     if (fail) throw const ArticleExtractException('offline');
-    return const ExtractedArticle(
+    return ExtractedArticle(
       markdown: 'Readable article text.',
       imageUrl: null,
       title: null,
+      videoUrls: videoUrls,
     );
   }
 }
@@ -49,6 +51,29 @@ const _article = NewsArticle(
 );
 
 void main() {
+  testWidgets('reader offers direct video playback and image copying', (
+    tester,
+  ) async {
+    final state = _NewsState(videoUrls: ['https://example.invalid/video.mp4']);
+    addTearDown(state.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<NewsState>.value(
+        value: state,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const NewsReaderPage(article: _article),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Play video'), findsOneWidget);
+    expect(
+      tester.widget<MarkdownView>(find.byType(MarkdownView)).copyImages,
+      isTrue,
+    );
+  });
+
   testWidgets('shows an error when sharing fails', (tester) async {
     const channel = MethodChannel('dev.fluttercommunity.plus/share');
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (

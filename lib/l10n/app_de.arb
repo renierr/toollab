@@ -1237,6 +1237,8 @@
   "widgetMarkdownUpdated": "Aktualisiert: {date}",
   "widgetMarkdownNoContent": "Kein weiterer Inhalt",
   "widgetMarkdownImageEnlarge": "Zum Vergrößern tippen",
+  "widgetImageCopied": "Bild in die Zwischenablage kopiert",
+  "widgetImageCopyFailed": "Das Bild konnte nicht kopiert werden.",
   "widgetMarkdownFrontmatter": "Frontmatter",
   "widgetMarkdownFrontmatterInvalid": "Ungültiges Frontmatter-YAML: {error}",
   "@widgetMarkdownFrontmatterInvalid": {
@@ -5579,6 +5581,9 @@
   "newsMarkReadOnScrollSubtitle": "Artikel, an denen du vorbeiscrollst, werden als gelesen markiert",
   "newsNoSearchResults": "Keine passenden Quellen",
   "newsOpenInBrowser": "Im Browser öffnen",
+  "newsPlayVideo": "Video abspielen",
+  "newsPlayVideoNumber": "Video {number} abspielen",
+  "newsVideoFailed": "Das Video konnte nicht geöffnet werden.",
   "newsShareLink": "Link teilen",
   "newsShareFailed": "Der Link konnte nicht geteilt werden.",
   "newsCopyLink": "Link kopieren",

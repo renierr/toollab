@@ -56,6 +56,23 @@ void main() {
     );
     expect((await db.getArticles()).single.isRead, isTrue);
     expect(await db.getArticleContent(article.guidKey), 'Cached article');
+    expect((await db.getCachedContent(article.guidKey))!.videoUrls, isNull);
+    await db.setArticleContent(
+      article.guidKey,
+      'Cached article',
+      videoUrls: ['https://example.com/video.mp4'],
+    );
+    final cached = (await db.getCachedContent(article.guidKey))!;
+    expect(cached.markdown, 'Cached article');
+    expect(cached.videoUrls, ['https://example.com/video.mp4']);
+    await db.setArticleContent(
+      article.guidKey,
+      '',
+      videoUrls: ['https://example.com/only-video.mp4'],
+    );
+    final videoOnly = (await db.getCachedContent(article.guidKey))!;
+    expect(videoOnly.markdown, isEmpty);
+    expect(videoOnly.videoUrls, ['https://example.com/only-video.mp4']);
 
     final changed = await db.saveSource(
       source.copyWith(feedUrl: 'https://example.com/other'),

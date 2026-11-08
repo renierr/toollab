@@ -43,7 +43,7 @@ class NewsDbHelper {
     );
     try {
       await db.migrate(
-        currentVersion: 2,
+        currentVersion: 3,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -109,6 +109,11 @@ class NewsDbHelper {
                 reads TEXT NOT NULL
               )
             ''');
+          }
+          if (oldVersion < 3) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(articlesTable)} ADD COLUMN video_urls TEXT',
+            );
           }
         },
       );
@@ -456,17 +461,40 @@ class NewsDbHelper {
     return rows.isEmpty ? null : rows.first['content_md'] as String?;
   }
 
+  Future<NewsCachedContent?> getCachedContent(String guidKey) async {
+    final db = await _getDb();
+    final rows = await db.query(
+      articlesTable,
+      columns: ['content_md', 'video_urls'],
+      where: 'guid_key = ?',
+      whereArgs: [guidKey],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    final videos = rows.first['video_urls'] as String?;
+    return NewsCachedContent(
+      markdown: rows.first['content_md'] as String?,
+      videoUrls: videos == null
+          ? null
+          : (jsonDecode(videos) as List).whereType<String>().toList(),
+    );
+  }
+
   Future<void> setArticleContent(
     String guidKey,
     String markdown, {
     String? imageUrl,
+    List<String>? videoUrls,
   }) async {
     final db = await _getDb();
     await db.transaction((txn) async {
-      if (markdown.isNotEmpty) {
+      if (markdown.isNotEmpty || (videoUrls?.isNotEmpty ?? false)) {
         await txn.update(
           articlesTable,
-          {'content_md': markdown},
+          {
+            'content_md': markdown,
+            if (videoUrls != null) 'video_urls': jsonEncode(videoUrls),
+          },
           where: 'guid_key = ?',
           whereArgs: [guidKey],
         );

@@ -10,6 +10,7 @@ import 'package:tool_lab/tools/news/config.dart';
 import 'package:tool_lab/tools/news/news_article.dart';
 import 'package:tool_lab/tools/news/news_catalog.dart';
 import 'package:tool_lab/tools/news/news_db_helper.dart';
+import 'package:tool_lab/tools/news/news_source.dart';
 import 'package:tool_lab/tools/news/news_state.dart';
 
 void main() {
@@ -173,4 +174,77 @@ void main() {
       );
     },
   );
+
+  test('discovers and caches videos for an older cached article', () async {
+    final db = NewsDbHelper.instance;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final source = await db.saveSource(
+      const NewsSource(
+        shortId: 'video-source',
+        title: 'Video source',
+        feedUrl: 'https://example.invalid/feed',
+        createdAt: 1,
+        updatedAt: 1,
+      ),
+    );
+    final article = NewsArticle(
+      guidKey: 'cached-video-item',
+      sourceShortId: source.shortId,
+      title: 'Video story',
+      link: 'https://example.invalid/video-story',
+      publishedAt: now,
+      fetchedAt: now,
+    );
+    await db.saveFetchedArticles(source.shortId, [article]);
+    await db.setArticleContent(article.guidKey, 'Old cached article');
+    var requests = 0;
+    final client = MockClient((request) async {
+      requests++;
+      return http.Response(
+        '<article><p>A full article with enough text to be accepted by the '
+        'reader.</p><video src="/video.mp4"></video></article>',
+        200,
+        headers: {'content-type': 'text/html'},
+      );
+    });
+    AppHttpClient.testClient = client;
+    addTearDown(() {
+      AppHttpClient.testClient = null;
+      client.close();
+    });
+    final state = NewsState();
+    addTearDown(state.dispose);
+    final extracted = await state.loadArticleBody(article);
+    expect(extracted.videoUrls, ['https://example.invalid/video.mp4']);
+    expect(
+      (await state.loadArticleBody(article)).videoUrls,
+      extracted.videoUrls,
+    );
+    expect(requests, 1);
+  });
+
+  test('keeps older cached article when video discovery fails', () async {
+    final db = NewsDbHelper.instance;
+    const article = NewsArticle(
+      guidKey: 'offline-video-item',
+      sourceShortId: 'offline-source',
+      title: 'Offline story',
+      link: 'https://example.invalid/offline',
+      publishedAt: 1,
+      fetchedAt: 1,
+    );
+    await db.saveFetchedArticles(article.sourceShortId, [article]);
+    await db.setArticleContent(article.guidKey, 'Existing cached article');
+    final client = MockClient((_) async => http.Response('', 503));
+    AppHttpClient.testClient = client;
+    addTearDown(() {
+      AppHttpClient.testClient = null;
+      client.close();
+    });
+    final state = NewsState();
+    addTearDown(state.dispose);
+    final extracted = await state.loadArticleBody(article);
+    expect(extracted.markdown, 'Existing cached article');
+    expect(extracted.videoUrls, isEmpty);
+  });
 }

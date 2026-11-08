@@ -153,6 +153,31 @@ class NewsCatalog {
         siteUrl: 'https://stadt-bremerhaven.de',
       ),
       NewsCatalogSource(
+        title: 'ComputerBase',
+        feedUrl: 'https://www.computerbase.de/rss/news.xml',
+        siteUrl: 'https://www.computerbase.de',
+      ),
+      NewsCatalogSource(
+        title: 'Golem.de',
+        feedUrl: 'https://rss.golem.de/rss.php?feed=RSS2.0',
+        siteUrl: 'https://www.golem.de',
+      ),
+      NewsCatalogSource(
+        title: 'SmartDroid',
+        feedUrl: 'https://www.smartdroid.de/feed/',
+        siteUrl: 'https://www.smartdroid.de',
+      ),
+      NewsCatalogSource(
+        title: 'mobiFlip',
+        feedUrl: 'https://www.mobiflip.de/feed/',
+        siteUrl: 'https://www.mobiflip.de',
+      ),
+      NewsCatalogSource(
+        title: 'Hackaday',
+        feedUrl: 'https://hackaday.com/blog/feed/',
+        siteUrl: 'https://hackaday.com',
+      ),
+      NewsCatalogSource(
         title: 'New York Times Technology',
         feedUrl: 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml',
         siteUrl: 'https://www.nytimes.com/section/technology',
@@ -206,6 +231,11 @@ class NewsCatalog {
         feedUrl: 'https://www.theguardian.com/science/rss',
         siteUrl: 'https://www.theguardian.com/science',
       ),
+      NewsCatalogSource(
+        title: 'scinexx',
+        feedUrl: 'https://www.scinexx.de/feed/',
+        siteUrl: 'https://www.scinexx.de',
+      ),
     ],
     'sport': [
       NewsCatalogSource(
@@ -244,6 +274,21 @@ class NewsCatalog {
         title: 'Rolling Stone',
         feedUrl: 'https://www.rollingstone.com/feed/',
         siteUrl: 'https://www.rollingstone.com',
+      ),
+      NewsCatalogSource(
+        title: 'LangweileDich.net',
+        feedUrl: 'https://www.langweiledich.net/feed/',
+        siteUrl: 'https://www.langweiledich.net',
+      ),
+      NewsCatalogSource(
+        title: 'Atlas Obscura',
+        feedUrl: 'https://www.atlasobscura.com/feeds/latest',
+        siteUrl: 'https://www.atlasobscura.com',
+      ),
+      NewsCatalogSource(
+        title: 'xkcd',
+        feedUrl: 'https://xkcd.com/rss.xml',
+        siteUrl: 'https://xkcd.com',
       ),
     ],
   };
