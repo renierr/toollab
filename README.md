@@ -152,7 +152,11 @@ native build artifacts and makes the next rhttp build slower.
 flutter run -d windows    # Windows Desktop
 flutter run -d linux      # Linux Desktop
 flutter run -d android    # Android Device or Emulator
+./run-android.sh --run    # Boot the emulator if needed, then flutter run on it
 ```
+
+`./run-android.sh` without arguments lists the tasks and options (`--boot`,
+`--avd`, `--cold`, `-y`, and flutter run arguments after `--`).
 
 ### Run Tests
 ```bash
