@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/id_helper.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'config.dart';
 import 'grocery_item.dart';
@@ -53,13 +54,7 @@ class GroceryListDbHelper {
     return _cachedDb!;
   }
 
-  String generateShortId() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rnd = Random();
-    return String.fromCharCodes(
-      Iterable.generate(8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
-    );
-  }
+  String generateShortId() => randomId(8);
 
   Future<List<GroceryItem>> getActiveItems() async {
     final db = await _getDb();

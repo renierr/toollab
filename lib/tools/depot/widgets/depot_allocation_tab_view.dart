@@ -13,7 +13,6 @@ import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../depot_region.dart';
 import '../depot_xray.dart';
-import '../models/depot_holding.dart';
 import 'depot_connect_card.dart';
 import 'depot_fund_cost_card.dart';
 import 'depot_overlap_card.dart';

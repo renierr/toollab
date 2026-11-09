@@ -177,145 +177,143 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                     ),
                     const SizedBox(height: 16),
                     if (!_mapMode) ...[
-                    ScannerHeader(state: _state),
-                    const SizedBox(height: 24),
+                      ScannerHeader(state: _state),
+                      const SizedBox(height: 24),
 
-                    CableDetectedBanner(
-                      isScanning: _state.isScanning,
-                      isWarning: isWarning,
-                    ),
+                      CableDetectedBanner(
+                        isScanning: _state.isScanning,
+                        isWarning: isWarning,
+                      ),
 
-                    Center(
-                      child: CircularGauge(
-                        value: current.deltaMagnitude,
+                      Center(
+                        child: CircularGauge(
+                          value: current.deltaMagnitude,
+                          threshold: _state.warningThreshold,
+                          isScanning: _state.isScanning,
+                          maxExpected: 160.0,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      CalibrationPanel(state: _state),
+                      const SizedBox(height: 24),
+
+                      const OscilloscopeHeader(),
+                      const SizedBox(height: 8),
+                      OscilloscopeChart(
+                        history: _state.history,
                         threshold: _state.warningThreshold,
                         isScanning: _state.isScanning,
-                        maxExpected: 160.0,
+                        maxVal: 160.0,
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 24),
 
-                    CalibrationPanel(state: _state),
-                    const SizedBox(height: 24),
-
-                    const OscilloscopeHeader(),
-                    const SizedBox(height: 8),
-                    OscilloscopeChart(
-                      history: _state.history,
-                      threshold: _state.warningThreshold,
-                      isScanning: _state.isScanning,
-                      maxVal: 160.0,
-                    ),
-                    const SizedBox(height: 24),
-
-                    ScannerControlsCard(
-                      state: _state,
-                      wakeLockActive: _wakeLockActive,
-                      onToggleWakeLock: _toggleWakeLock,
-                    ),
-                    const SizedBox(height: 24),
-
-                    SimulatorLabCard(state: _state),
-                    const SizedBox(height: 20),
-                  ],
-                  if (_mapMode) ...[
-                    // Map type selector
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ChoiceChip(
-                          label: Text(l10n.emfMapRoom),
-                          selected: _mapType == 'room',
-                          onSelected: (_) => setState(() {
-                            _mapType = 'room';
-                            _mapCols = 10;
-                            _mapRows = 8;
-                            _mapSamples.clear();
-                          }),
-                        ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: Text(l10n.emfMapWall),
-                          selected: _mapType == 'wall',
-                          onSelected: (_) => setState(() {
-                            _mapType = 'wall';
-                            _mapCols = 6;
-                            _mapRows = 10;
-                            _mapSamples.clear();
-                          }),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        _state.isCalibrated
-                            ? 'Calibrated. Current delta: ${_state.currentReading?.deltaMagnitude.toStringAsFixed(1) ?? '0.0'} uT'
-                            : 'Not calibrated. Calibrate in Scanner mode first for meaningful deviations.',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      ScannerControlsCard(
+                        state: _state,
+                        wakeLockActive: _wakeLockActive,
+                        onToggleWakeLock: _toggleWakeLock,
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'Move the phone to a spot, then tap the matching cell to record.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontStyle: FontStyle.italic,
-                            ),
+                      const SizedBox(height: 24),
+
+                      SimulatorLabCard(state: _state),
+                      const SizedBox(height: 20),
+                    ],
+                    if (_mapMode) ...[
+                      // Map type selector
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ChoiceChip(
+                            label: Text(l10n.emfMapRoom),
+                            selected: _mapType == 'room',
+                            onSelected: (_) => setState(() {
+                              _mapType = 'room';
+                              _mapCols = 10;
+                              _mapRows = 8;
+                              _mapSamples.clear();
+                            }),
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            label: Text(l10n.emfMapWall),
+                            selected: _mapType == 'wall',
+                            onSelected: (_) => setState(() {
+                              _mapType = 'wall';
+                              _mapCols = 6;
+                              _mapRows = 10;
+                              _mapSamples.clear();
+                            }),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (!_state.isScanning)
+                      const SizedBox(height: 12),
                       Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
-                          l10n.emfMapStartScanning,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          _state.isCalibrated
+                              ? 'Calibrated. Current delta: ${_state.currentReading?.deltaMagnitude.toStringAsFixed(1) ?? '0.0'} uT'
+                              : 'Not calibrated. Calibrate in Scanner mode first for meaningful deviations.',
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
-                    SizedBox(
-                      height: 320,
-                      child: EmfMapGrid(
-                        cols: _mapCols,
-                        rows: _mapRows,
-                        samples: _mapSamples,
-                        threshold: _state.warningThreshold <= 0
-                            ? 45.0
-                            : _state.warningThreshold,
-                        onTap: (x, y) {
-                          final reading = _state.currentReading;
-                          final value =
-                              reading?.deltaMagnitude ?? 0.0;
-                          setState(() {
-                            _mapSamples.removeWhere(
-                              (s) => s.x == x && s.y == y,
-                            );
-                            _mapSamples.add(
-                              EmfMapSample(x: x, y: y, value: value),
-                            );
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(l10n.emfMapSamples(_mapSamples.length)),
-                        const SizedBox(width: 16),
-                        TextButton(
-                          onPressed: _mapSamples.isEmpty
-                              ? null
-                              : () => setState(_mapSamples.clear),
-                          child: Text(l10n.emfMapClear),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'Move the phone to a spot, then tap the matching cell to record.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontStyle: FontStyle.italic),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+                      ),
+                      const SizedBox(height: 8),
+                      if (!_state.isScanning)
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            l10n.emfMapStartScanning,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      SizedBox(
+                        height: 320,
+                        child: EmfMapGrid(
+                          cols: _mapCols,
+                          rows: _mapRows,
+                          samples: _mapSamples,
+                          threshold: _state.warningThreshold <= 0
+                              ? 45.0
+                              : _state.warningThreshold,
+                          onTap: (x, y) {
+                            final reading = _state.currentReading;
+                            final value = reading?.deltaMagnitude ?? 0.0;
+                            setState(() {
+                              _mapSamples.removeWhere(
+                                (s) => s.x == x && s.y == y,
+                              );
+                              _mapSamples.add(
+                                EmfMapSample(x: x, y: y, value: value),
+                              );
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(l10n.emfMapSamples(_mapSamples.length)),
+                          const SizedBox(width: 16),
+                          TextButton(
+                            onPressed: _mapSamples.isEmpty
+                                ? null
+                                : () => setState(_mapSamples.clear),
+                            child: Text(l10n.emfMapClear),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ],
-                ],
-              ),
+                ),
               ),
             ],
           );

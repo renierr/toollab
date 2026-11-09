@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/id_helper.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/notes/note.dart';
@@ -63,13 +64,7 @@ class NotesDbHelper {
     return _cachedDb!;
   }
 
-  String generateShortId() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rnd = Random();
-    return String.fromCharCodes(
-      Iterable.generate(8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
-    );
-  }
+  String generateShortId() => randomId(8);
 
   /// Get all active (non-deleted) notes sorted by updated_at descending.
   Future<List<Note>> getActiveNotes({String query = ''}) async {

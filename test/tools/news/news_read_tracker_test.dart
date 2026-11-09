@@ -168,14 +168,13 @@ void main() {
     expect(articles.first.isRead, isTrue);
     await tester.drag(find.byType(ListView), const Offset(0, 450));
     await tester.pumpAndSettle();
-    final card = find.ancestor(
-      of: find.text('Article 0'),
-      matching: find.byType(NewsCard),
+    final title = tester.widget<Text>(
+      find.descendant(
+        of: find.byType(NewsCard),
+        matching: find.text('Article 0'),
+      ),
     );
-    final opacity = tester.widget<Opacity>(
-      find.descendant(of: card, matching: find.byType(Opacity)),
-    );
-    expect(opacity.opacity, lessThan(1));
+    expect(title.style!.color!.a, lessThan(1));
     expect(articles, hasLength(30));
   });
 

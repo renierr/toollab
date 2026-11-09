@@ -117,12 +117,12 @@ void main() {
     expect(appState.syncCalls, 1);
     await tester.pump(const Duration(seconds: 3));
     expect(appState.syncCalls, 1);
-    final opacity = tester.widget<Opacity>(
+    final title = tester.widget<Text>(
       find.descendant(
         of: find.byType(NewsCard),
-        matching: find.byType(Opacity),
+        matching: find.text('Article title'),
       ),
     );
-    expect(opacity.opacity, lessThan(1));
+    expect(title.style!.color!.a, lessThan(1));
   });
 }

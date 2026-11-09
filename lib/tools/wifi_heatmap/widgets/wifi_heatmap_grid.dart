@@ -97,22 +97,14 @@ class _HeatmapPainter extends CustomPainter {
       );
     }
     for (int r = 0; r <= rows; r++) {
-      canvas.drawLine(
-        Offset(0, r * ch),
-        Offset(size.width, r * ch),
-        gridPaint,
-      );
+      canvas.drawLine(Offset(0, r * ch), Offset(size.width, r * ch), gridPaint);
     }
 
     // Sample markers
     for (final s in samples) {
       final cx = (s.x + 0.5) * cw;
       final cy = (s.y + 0.5) * ch;
-      canvas.drawCircle(
-        Offset(cx, cy),
-        4,
-        Paint()..color = Colors.white,
-      );
+      canvas.drawCircle(Offset(cx, cy), 4, Paint()..color = Colors.white);
       canvas.drawCircle(
         Offset(cx, cy),
         4,

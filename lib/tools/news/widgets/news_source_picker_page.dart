@@ -15,6 +15,8 @@ import '../news_sync_helper.dart';
 import 'news_category_dropdown.dart';
 
 class NewsSourcePickerPage extends StatelessWidget {
+  static const double _maxWidth = 720;
+
   const NewsSourcePickerPage({super.key});
 
   @override
@@ -32,10 +34,7 @@ class NewsSourcePickerPage extends StatelessWidget {
             ],
           ),
         ),
-        body: const ReadableWidth(
-          maxWidth: 720,
-          child: TabBarView(children: [_BrowseTab(), _CustomTab()]),
-        ),
+        body: const TabBarView(children: [_BrowseTab(), _CustomTab()]),
       ),
     );
   }
@@ -103,87 +102,90 @@ class _BrowseTabState extends State<_BrowseTab> with DisposeCleanup {
       if (matching.isNotEmpty) groups[entry.key] = matching;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: TextField(
-            controller: _search,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: l10n.newsSearchSources,
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _search.text.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _search.clear();
-                        setState(() {});
-                      },
-                    ),
-              border: const OutlineInputBorder(),
-              isDense: true,
+    return ReadableScrollPadding(
+      maxWidth: NewsSourcePickerPage._maxWidth,
+      builder: (context, inset) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8) + inset,
+            child: TextField(
+              controller: _search,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: l10n.newsSearchSources,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _search.text.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _search.clear();
+                          setState(() {});
+                        },
+                      ),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
             ),
           ),
-        ),
-        SizedBox(
-          height: 42,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            children: [
-              ChoiceChip(
-                label: Text(l10n.newsCategoryAll),
-                selected: _category == null,
-                onSelected: (_) => setState(() => _category = null),
-              ),
-              for (final category in NewsCatalog.categories)
-                if (category.id != NewsCatalog.customCategory)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: ChoiceChip(
-                      label: Text(newsCategoryLabel(l10n, category.id)),
-                      selected: _category == category.id,
-                      onSelected: (_) =>
-                          setState(() => _category = category.id),
+          SizedBox(
+            height: 42,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12) + inset,
+              children: [
+                ChoiceChip(
+                  label: Text(l10n.newsCategoryAll),
+                  selected: _category == null,
+                  onSelected: (_) => setState(() => _category = null),
+                ),
+                for (final category in NewsCatalog.categories)
+                  if (category.id != NewsCatalog.customCategory)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: ChoiceChip(
+                        label: Text(newsCategoryLabel(l10n, category.id)),
+                        selected: _category == category.id,
+                        onSelected: (_) =>
+                            setState(() => _category = category.id),
+                      ),
                     ),
-                  ),
-            ],
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Expanded(
-          child: groups.isEmpty
-              ? Center(child: Text(l10n.newsNoSearchResults))
-              : ListView(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  children: [
-                    for (final entry in groups.entries) ...[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
-                        child: Text(
-                          newsCategoryLabel(l10n, entry.key).toUpperCase(),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.accentAmber,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
+          const SizedBox(height: 4),
+          Expanded(
+            child: groups.isEmpty
+                ? Center(child: Text(l10n.newsNoSearchResults))
+                : ListView(
+                    padding: const EdgeInsets.only(bottom: 24) + inset,
+                    children: [
+                      for (final entry in groups.entries) ...[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+                          child: Text(
+                            newsCategoryLabel(l10n, entry.key).toUpperCase(),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppTheme.accentAmber,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                            ),
                           ),
                         ),
-                      ),
-                      for (final source in entry.value)
-                        _CatalogTile(
-                          source: source,
-                          added: addedFeeds.contains(source.feedUrl),
-                          adding: _adding.contains(source.feedUrl),
-                          onAdd: () => _add(source, entry.key),
-                        ),
+                        for (final source in entry.value)
+                          _CatalogTile(
+                            source: source,
+                            added: addedFeeds.contains(source.feedUrl),
+                            adding: _adding.contains(source.feedUrl),
+                            onAdd: () => _add(source, entry.key),
+                          ),
+                      ],
                     ],
-                  ],
-                ),
-        ),
-      ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -257,67 +259,71 @@ class _CustomTabState extends State<_CustomTab> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return ListView(
+    return ReadableScrollPadding(
+      maxWidth: NewsSourcePickerPage._maxWidth,
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
-      children: [
-        Text(
-          l10n.newsCustomSection,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          l10n.newsCustomHint,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
-        ),
-        const SizedBox(height: 18),
-        TextField(
-          controller: _url,
-          keyboardType: TextInputType.url,
-          autocorrect: false,
-          decoration: InputDecoration(
-            labelText: l10n.newsSourceUrl,
-            hintText: l10n.newsSourceUrlHint,
-            prefixIcon: const Icon(Icons.rss_feed),
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _name,
-          decoration: InputDecoration(
-            labelText: l10n.newsCustomNameOptional,
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        NewsCategoryDropdown(
-          value: _category,
-          onChanged: (value) => setState(() => _category = value),
-        ),
-        if (_error != null) ...[
-          const SizedBox(height: 12),
+      builder: (context, padding) => ListView(
+        padding: padding,
+        children: [
           Text(
-            _error!,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.error,
+            l10n.newsCustomSection,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
           ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.newsCustomHint,
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+          ),
+          const SizedBox(height: 18),
+          TextField(
+            controller: _url,
+            keyboardType: TextInputType.url,
+            autocorrect: false,
+            decoration: InputDecoration(
+              labelText: l10n.newsSourceUrl,
+              hintText: l10n.newsSourceUrlHint,
+              prefixIcon: const Icon(Icons.rss_feed),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _name,
+            decoration: InputDecoration(
+              labelText: l10n.newsCustomNameOptional,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          NewsCategoryDropdown(
+            value: _category,
+            onChanged: (value) => setState(() => _category = value),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: _busy ? null : _add,
+            icon: _busy
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.add),
+            label: Text(_busy ? l10n.newsAdding : l10n.newsAddFeed),
+          ),
         ],
-        const SizedBox(height: 20),
-        FilledButton.icon(
-          onPressed: _busy ? null : _add,
-          icon: _busy
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.add),
-          label: Text(_busy ? l10n.newsAdding : l10n.newsAddFeed),
-        ),
-      ],
+      ),
     );
   }
 }

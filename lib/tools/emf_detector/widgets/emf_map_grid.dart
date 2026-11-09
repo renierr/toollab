@@ -94,7 +94,11 @@ class _EmfMapPainter extends CustomPainter {
     }
 
     for (int c = 0; c <= cols; c++) {
-      canvas.drawLine(Offset(c * cw, 0), Offset(c * cw, size.height), gridPaint);
+      canvas.drawLine(
+        Offset(c * cw, 0),
+        Offset(c * cw, size.height),
+        gridPaint,
+      );
     }
     for (int r = 0; r <= rows; r++) {
       canvas.drawLine(Offset(0, r * ch), Offset(size.width, r * ch), gridPaint);

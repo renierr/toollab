@@ -7,6 +7,12 @@ import '../news_article.dart';
 import '../news_source.dart';
 import '../news_time.dart';
 
+// Read cards fade through their colours; an Opacity layer per card is costly.
+const double _readAlpha = 0.64;
+
+Color _fade(Color color, bool faded) =>
+    faded ? color.withValues(alpha: color.a * _readAlpha) : color;
+
 class NewsCard extends StatelessWidget {
   final NewsArticle article;
   final NewsSource? source;
@@ -48,61 +54,60 @@ class NewsCard extends StatelessWidget {
                         : theme.colorScheme.outlineVariant,
                   ),
                 ),
-                child: Opacity(
-                  opacity: isRead ? 0.64 : 1,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: compact && hasImage
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: compact && hasImage
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _NewsThumbnail(
+                              url: article.imageUrl!,
+                              width: double.infinity,
+                              height: 140,
+                              cacheWidth:
+                                  (constraints.maxWidth *
+                                          MediaQuery.devicePixelRatioOf(
+                                            context,
+                                          ))
+                                      .round()
+                                      .clamp(1, 1200),
+                              faded: isRead,
+                            ),
+                            const SizedBox(height: 10),
+                            _NewsCardContent(
+                              article: article,
+                              source: source,
+                              compact: compact,
+                            ),
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (hasImage) ...[
                               _NewsThumbnail(
                                 url: article.imageUrl!,
-                                width: double.infinity,
-                                height: 140,
-                                cacheWidth:
-                                    (constraints.maxWidth *
-                                            MediaQuery.devicePixelRatioOf(
-                                              context,
-                                            ))
-                                        .round()
-                                        .clamp(1, 1200),
+                                width: 168,
+                                height: 168,
+                                cacheWidth: 336,
+                                faded: isRead,
                               ),
-                              const SizedBox(height: 10),
-                              _NewsCardContent(
-                                article: article,
-                                source: source,
-                                compact: compact,
-                              ),
+                              const SizedBox(width: 16),
                             ],
-                          )
-                        : Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (hasImage) ...[
-                                _NewsThumbnail(
-                                  url: article.imageUrl!,
-                                  width: 168,
-                                  height: 168,
-                                  cacheWidth: 336,
+                            Expanded(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: hasImage ? 168 : 0,
                                 ),
-                                const SizedBox(width: 16),
-                              ],
-                              Expanded(
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minHeight: hasImage ? 168 : 0,
-                                  ),
-                                  child: _NewsCardContent(
-                                    article: article,
-                                    source: source,
-                                    compact: compact,
-                                  ),
+                                child: _NewsCardContent(
+                                  article: article,
+                                  source: source,
+                                  compact: compact,
                                 ),
                               ),
-                            ],
-                          ),
-                  ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -129,7 +134,11 @@ class _NewsCardContent extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
-    final accent = theme.colorScheme.primary;
+    final faded = article.isRead;
+    final accent = _fade(theme.colorScheme.primary, faded);
+    final titleStyle = compact
+        ? theme.textTheme.titleSmall
+        : theme.textTheme.titleMedium;
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -152,7 +161,7 @@ class _NewsCardContent extends StatelessWidget {
             Text(
               newsRelativeTimeFor(l10n, locale, article.publishedAt),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.hintColor,
+                color: _fade(theme.hintColor, faded),
               ),
             ),
             if (!article.isRead)
@@ -171,16 +180,14 @@ class _NewsCardContent extends StatelessWidget {
           article.title,
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
-          style:
-              (compact
-                      ? theme.textTheme.titleSmall
-                      : theme.textTheme.titleMedium)
-                  ?.copyWith(
-                    fontWeight: article.isRead
-                        ? FontWeight.w500
-                        : FontWeight.w700,
-                    height: 1.25,
-                  ),
+          style: titleStyle?.copyWith(
+            color: _fade(
+              titleStyle.color ?? theme.colorScheme.onSurface,
+              faded,
+            ),
+            fontWeight: faded ? FontWeight.w500 : FontWeight.w700,
+            height: 1.25,
+          ),
         ),
         if (article.summary.isNotEmpty) ...[
           const SizedBox(height: 5),
@@ -189,7 +196,7 @@ class _NewsCardContent extends StatelessWidget {
             maxLines: compact ? 2 : 3,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: _fade(theme.colorScheme.onSurfaceVariant, faded),
               height: 1.35,
             ),
           ),
@@ -204,13 +211,17 @@ class _NewsThumbnail extends StatelessWidget {
   final double width;
   final double height;
   final int cacheWidth;
+  final bool faded;
 
   const _NewsThumbnail({
     required this.url,
     required this.width,
     required this.height,
     required this.cacheWidth,
+    required this.faded,
   });
+
+  static const _fadedOpacity = AlwaysStoppedAnimation<double>(_readAlpha);
 
   @override
   Widget build(BuildContext context) {
@@ -222,9 +233,10 @@ class _NewsThumbnail extends StatelessWidget {
         child: Container(
           width: width,
           height: height,
-          color: theme.colorScheme.surfaceContainerHighest,
+          color: _fade(theme.colorScheme.surfaceContainerHighest, faded),
           child: Image.network(
             url,
+            opacity: faded ? _fadedOpacity : null,
             fit: BoxFit.cover,
             alignment: Alignment.center,
             cacheWidth: cacheWidth,

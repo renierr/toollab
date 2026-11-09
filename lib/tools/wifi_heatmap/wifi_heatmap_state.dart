@@ -51,7 +51,9 @@ class WifiHeatmapState extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final canStart = await WiFiScan.instance.canStartScan(askPermissions: true);
+      final canStart = await WiFiScan.instance.canStartScan(
+        askPermissions: true,
+      );
       if (canStart != CanStartScan.yes) {
         error = _canStartMessage(canStart);
         scanning = false;
@@ -75,9 +77,7 @@ class WifiHeatmapState extends ChangeNotifier {
           .toSet();
       if (selectedSsid == null || !keys.contains(selectedSsid)) {
         if (results.isNotEmpty) {
-          final strongest = results.reduce(
-            (a, b) => a.level > b.level ? a : b,
-          );
+          final strongest = results.reduce((a, b) => a.level > b.level ? a : b);
           selectedSsid = strongest.ssid.isNotEmpty
               ? strongest.ssid
               : strongest.bssid;

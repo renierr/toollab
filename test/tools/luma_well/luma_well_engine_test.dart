@@ -450,24 +450,18 @@ void main() {
           {'mass': 1.0, 'kind': 0, 'x': 0.5, 'y': 0.0, 'drift': 0.0},
       ],
     };
-    final calm = LumaWellEngine(
-      store: _MemoryStore()..save = fieldWith(10),
-    );
+    final calm = LumaWellEngine(store: _MemoryStore()..save = fieldWith(10));
     await calm.start();
     expect(calm.crowdLevel, 0);
     expect(calm.time, 0);
     calm.advance(0.04);
     expect(calm.time, greaterThan(0));
 
-    final busy = LumaWellEngine(
-      store: _MemoryStore()..save = fieldWith(85),
-    );
+    final busy = LumaWellEngine(store: _MemoryStore()..save = fieldWith(85));
     await busy.start();
     expect(busy.crowdLevel, 2);
 
-    final packed = LumaWellEngine(
-      store: _MemoryStore()..save = fieldWith(110),
-    );
+    final packed = LumaWellEngine(store: _MemoryStore()..save = fieldWith(110));
     await packed.start();
     expect(packed.crowdLevel, 3);
   });

@@ -16,8 +16,7 @@ class WifiHeatmapPage extends StatefulWidget {
   State<WifiHeatmapPage> createState() => _WifiHeatmapPageState();
 }
 
-class _WifiHeatmapPageState extends State<WifiHeatmapPage>
-    with DisposeCleanup {
+class _WifiHeatmapPageState extends State<WifiHeatmapPage> with DisposeCleanup {
   @override
   void initState() {
     super.initState();
@@ -41,7 +40,9 @@ class _WifiHeatmapPageState extends State<WifiHeatmapPage>
         ),
         IconButton(
           icon: Icon(
-            state.showHeatmap ? Icons.grid_on_outlined : Icons.grid_off_outlined,
+            state.showHeatmap
+                ? Icons.grid_on_outlined
+                : Icons.grid_off_outlined,
           ),
           tooltip: 'Toggle heatmap',
           onPressed: () => state.toggleHeatmap(!state.showHeatmap),
@@ -132,9 +133,7 @@ class _WifiHeatmapPageState extends State<WifiHeatmapPage>
     );
   }
 
-  List<DropdownMenuItem<String>> _buildNetworkItems(
-    List<dynamic> scanned,
-  ) {
+  List<DropdownMenuItem<String>> _buildNetworkItems(List<dynamic> scanned) {
     final seen = <String>{};
     final list = <DropdownMenuItem<String>>[];
     for (final a in scanned) {

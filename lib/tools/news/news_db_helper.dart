@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/id_helper.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -134,13 +135,8 @@ class NewsDbHelper {
     return db;
   }
 
-  static String _randomId() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final rnd = Random.secure();
-    return String.fromCharCodes(
-      Iterable.generate(10, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
-    );
-  }
+  static String _randomId([int length = 10]) =>
+      randomId(length, alphabet: unambiguousAlphanumeric);
 
   static String _enabledSourcesQuery(ToolDatabaseExecutor db) =>
       'SELECT short_id FROM ${db.nameTable(sourcesTable)} '

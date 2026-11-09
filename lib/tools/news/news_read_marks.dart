@@ -4,7 +4,7 @@ part of 'news_db_helper.dart';
 extension NewsReadMarks on NewsDbHelper {
   Future<String> _readWriterId() => _writerFuture ??= () async {
     final db = await _getDb();
-    final id = '${NewsDbHelper._randomId()}${NewsDbHelper._randomId()}';
+    final id = NewsDbHelper._randomId(20);
     return db.transaction((txn) async {
       await txn.executor.rawInsert(
         'INSERT OR IGNORE INTO tool_settings (tool_id, key, value, updated_at) VALUES (?, ?, ?, ?)',
@@ -220,7 +220,7 @@ extension NewsReadMarks on NewsDbHelper {
     _dbFuture = null;
     _writerFuture = null;
     final db = await _getDb();
-    final writer = '${NewsDbHelper._randomId()}${NewsDbHelper._randomId()}';
+    final writer = NewsDbHelper._randomId(20);
     final cutoff =
         DateTime.now().millisecondsSinceEpoch - NewsDbHelper.readRetentionMs;
     await db.transaction((txn) async {

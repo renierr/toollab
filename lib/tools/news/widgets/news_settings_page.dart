@@ -96,10 +96,11 @@ class NewsSettingsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newsSettingsTitle)),
-      body: ReadableWidth(
+      body: ReadableScrollPadding(
         maxWidth: 680,
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 32),
+        padding: const EdgeInsets.only(bottom: 32),
+        builder: (context, padding) => ListView(
+          padding: padding,
           children: [
             SettingsSectionLabel(title: l10n.newsReadingSection),
             SwitchListTile(

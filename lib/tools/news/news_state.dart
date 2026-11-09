@@ -63,6 +63,8 @@ class NewsState extends ChangeNotifier {
   int _readGeneration = 0;
   int _articlesGeneration = 0;
   final Map<int, int> _pendingReads = {};
+  // Article id -> reload generation current when its read was stored.
+  final Map<int, int> _storedReads = {};
   final Set<Future<void>> _pendingReadWrites = {};
   final Queue<NewsArticle> _previewQueue = Queue();
   final Set<String> _previewAttempts = {};
@@ -198,6 +200,12 @@ class NewsState extends ChangeNotifier {
     );
     // A later reload, e.g. from a quick filter change, owns the list now.
     if (generation != _articlesGeneration) return;
+    // Only a reload started after the write has read it back from the DB.
+    _storedReads.removeWhere((id, storedAt) {
+      if (storedAt >= generation) return false;
+      _pendingReads.remove(id);
+      return true;
+    });
     for (var index = 0; index < articles.length; index++) {
       final article = articles[index];
       final pendingAt = _pendingReads[article.id];
@@ -527,7 +535,7 @@ class NewsState extends ChangeNotifier {
     } finally {
       _pendingReadWrites.remove(write);
     }
-    _pendingReads.remove(id);
+    _storedReads[id] = _articlesGeneration;
     _readGeneration++;
     notifyListeners();
   }
