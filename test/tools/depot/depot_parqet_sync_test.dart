@@ -309,7 +309,7 @@ void main() {
         full.calls.map((k) => k.period).toSet(),
         DepotPeriod.values.toSet(),
       );
-      expect(full.calls, hasLength(7));
+      expect(full.calls, hasLength(DepotPeriod.values.length));
       expect(await store.transactions(), isEmpty);
     },
   );

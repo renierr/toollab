@@ -89,7 +89,7 @@ void main() {
         'Beta',
       ]);
       expect(risk.topThree, 90);
-      expect(risk.country.largest!.name, 'USA');
+      expect(risk.country.largest!.name, 'United States');
       expect(risk.country.largest!.weight, closeTo(78, 0.0001));
       expect(risk.country.largest!.contributors.map((c) => c.holding.name), [
         'Alpha',

@@ -1259,16 +1259,10 @@ void main() {
     expect(find.text('Kursverlauf wird geladen …'), findsNothing);
     await tester.tap(find.text('Schließen'));
     await tester.pumpAndSettle();
-    expect(
-      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
-      isTrue,
-    );
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
     await tester.runAsync(() => state.setShowEuro(false));
     await tester.pumpAndSettle();
-    expect(
-      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
-      isFalse,
-    );
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
     expect(find.text(DepotFormat('de', 'USD').money(100)), findsOneWidget);
     await tester.runAsync(() async {
       expect(await store.wishlistEuroDisplay(), isFalse);

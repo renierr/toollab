@@ -12,6 +12,7 @@ import 'package:tool_lab/tools/depot/depot_format.dart';
 import 'package:tool_lab/tools/depot/depot_holding_trend_state.dart';
 import 'package:tool_lab/tools/depot/depot_logo_state.dart';
 import 'package:tool_lab/tools/depot/depot_market_search.dart';
+import 'package:tool_lab/tools/depot/depot_state.dart';
 import 'package:tool_lab/tools/depot/depot_wishlist_state.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_period.dart';
@@ -885,15 +886,18 @@ void main() {
       logos = DepotLogoState();
       await logos.ensureLoaded();
     });
+    final tabs = DepotState();
     addTearDown(trends.dispose);
     addTearDown(wishlist.dispose);
     addTearDown(logos.dispose);
+    addTearDown(tabs.dispose);
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: trends),
           ChangeNotifierProvider.value(value: wishlist),
           ChangeNotifierProvider.value(value: logos),
+          ChangeNotifierProvider.value(value: tabs),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

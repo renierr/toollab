@@ -3,8 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/depot/depot_format.dart';
+import 'package:tool_lab/tools/depot/depot_state.dart';
+import 'package:tool_lab/tools/depot/depot_wishlist_state.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_period.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_holding_details.dart';
@@ -89,19 +92,29 @@ void main() {
       fees: 0,
       taxes: 0,
     );
+    final tabs = DepotState();
+    final wishlist = DepotWishlistState();
+    addTearDown(tabs.dispose);
+    addTearDown(wishlist.dispose);
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('de'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SelectionArea(
-            child: DepotHoldingDetails(
-              holding: holding,
-              period: DepotPeriod.today,
-              format: DepotFormat('de', 'EUR'),
-              performance: null,
-              weight: 100,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: tabs),
+          ChangeNotifierProvider.value(value: wishlist),
+        ],
+        child: MaterialApp(
+          locale: const Locale('de'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SelectionArea(
+              child: DepotHoldingDetails(
+                holding: holding,
+                period: DepotPeriod.today,
+                format: DepotFormat('de', 'EUR'),
+                performance: null,
+                weight: 100,
+              ),
             ),
           ),
         ),

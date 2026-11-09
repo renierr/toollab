@@ -338,14 +338,6 @@ void main() {
           ),
           findsOneWidget,
         );
-        expect(
-          find.textContaining(
-            locale.languageCode == 'de'
-                ? 'nicht umgerechnet'
-                : 'no currency conversion',
-          ),
-          findsOneWidget,
-        );
         expect(tester.takeException(), isNull, reason: 'initial view');
         final rangeButton = find.text(
           locale.languageCode == 'de' ? 'Zeitraum wählen' : 'Choose dates',

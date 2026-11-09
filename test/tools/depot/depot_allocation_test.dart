@@ -45,6 +45,7 @@ DepotAssetProfile _profile({
 );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('breakdown', () {
     test(
       'splits a fund by its sector weights and keeps unclassified value',

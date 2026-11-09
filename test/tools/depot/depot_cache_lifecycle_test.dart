@@ -17,6 +17,7 @@ import 'package:tool_lab/tools/depot/depot_logo_state.dart';
 import 'package:tool_lab/tools/depot/depot_page.dart';
 import 'package:tool_lab/tools/depot/depot_portfolio_state.dart';
 import 'package:tool_lab/tools/depot/depot_state.dart';
+import 'package:tool_lab/tools/depot/depot_store.dart';
 import 'package:tool_lab/tools/depot/depot_wishlist_state.dart';
 
 import 'offline_test_support.dart';
@@ -75,10 +76,13 @@ class _Benchmark extends DepotBenchmarkState {
 
 void main() {
   blockDepotNetwork();
-  setUpAll(() {
+  setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;
+    // Opening (and migrating) inside the widget test's fake zone never
+    // finishes and leaves the database locked for tearDownAll.
+    await DepotStore.instance.clear();
   });
   tearDownAll(() async => DatabaseService.instance.close());
   testWidgets('leaving Depot reduces its transient caches', (tester) async {
