@@ -55,9 +55,10 @@ class _MemoListState extends State<_MemoList> {
     final library = context.watch<MemoLibraryState>();
     final clips = library.clips;
 
-    return ReadableWidth(
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+    return ReadableScrollPadding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      builder: (context, padding) => ListView.builder(
+        padding: padding,
         itemCount: clips.isEmpty ? 3 : clips.length + 2,
         itemBuilder: (context, index) {
           if (index == 0) return const SfMemoRecorderCard();

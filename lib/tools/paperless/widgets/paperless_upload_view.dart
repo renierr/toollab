@@ -99,9 +99,10 @@ class PaperlessUploadView extends StatelessWidget {
           onOpenSettings: onOpenSettings,
         ),
         Expanded(
-          child: ReadableWidth(
-            child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 16),
+          child: ReadableScrollPadding(
+            padding: const EdgeInsets.only(bottom: 16),
+            builder: (context, padding) => ListView.builder(
+              padding: padding,
               itemCount: uploads.length + (hasPending ? 1 : 0),
               itemBuilder: (context, index) {
                 if (hasPending && index == 0) {

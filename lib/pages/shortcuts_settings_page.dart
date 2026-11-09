@@ -97,10 +97,11 @@ class _ShortcutsSettingsPageState extends State<ShortcutsSettingsPage>
 
     return ToolLayout(
       title: l10n.coreShortcutsTitle,
-      child: ReadableWidth(
-        child: ListView(
+      child: ReadableScrollPadding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        builder: (context, padding) => ListView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: padding,
           children: [
             _ShortcutHint(text: l10n.coreShortcutsDirectAccessSubtitle),
             if (!isAndroid) ...[

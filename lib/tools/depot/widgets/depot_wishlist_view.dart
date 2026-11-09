@@ -40,12 +40,12 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
 
     final items = state.itemsByDayChange;
 
-    return ReadableWidth(
-      child: Column(
+    return ReadableScrollPadding(
+      builder: (context, inset) => Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(12, 4, 12, 4),
-            child: _CurrencySwitch(),
+          Padding(
+            padding: inset + const EdgeInsets.fromLTRB(12, 4, 12, 4),
+            child: const _CurrencySwitch(),
           ),
           Expanded(
             child: RefreshIndicator(
@@ -58,14 +58,19 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       if (state.isRefreshing)
-                        const SliverToBoxAdapter(
-                          child: LinearProgressIndicator(minHeight: 2),
+                        SliverPadding(
+                          padding: inset,
+                          sliver: const SliverToBoxAdapter(
+                            child: LinearProgressIndicator(minHeight: 2),
+                          ),
                         ),
                       if (items.isEmpty)
                         SliverFillRemaining(
                           hasScrollBody: false,
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(32, 16, 32, 48),
+                            padding:
+                                inset +
+                                const EdgeInsets.fromLTRB(32, 16, 32, 48),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -101,7 +106,7 @@ class _DepotWishlistViewState extends State<DepotWishlistView> {
                         )
                       else
                         SliverPadding(
-                          padding: const EdgeInsets.only(bottom: 24),
+                          padding: inset + const EdgeInsets.only(bottom: 24),
                           sliver: SliverList.separated(
                             itemCount: items.length,
                             separatorBuilder: (context, index) =>

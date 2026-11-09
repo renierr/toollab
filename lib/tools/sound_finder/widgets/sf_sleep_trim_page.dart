@@ -166,9 +166,10 @@ class _SfSleepTrimPageState extends State<SfSleepTrimPage> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.sfSleepTrimTitle)),
-      body: ReadableWidth(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      body: ReadableScrollPadding(
+        padding: const EdgeInsets.all(16),
+        builder: (context, padding) => ListView(
+          padding: padding,
           children: [
             Text(l10n.sfSleepTrimHint),
             const SizedBox(height: 12),

@@ -162,10 +162,11 @@ class _PaperlessSettingsPageState extends State<PaperlessSettingsPage>
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.paperlessSettingsTitle)),
-      body: ReadableWidth(
+      body: ReadableScrollPadding(
         maxWidth: 640,
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.only(bottom: 24),
+        builder: (context, padding) => ListView(
+          padding: padding,
           children: [
             if (state.isConfigured)
               Padding(

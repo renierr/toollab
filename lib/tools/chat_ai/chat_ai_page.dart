@@ -250,19 +250,22 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
             onDownload: state.downloadModel,
           ),
           Expanded(
-            child: ReadableWidth(
-              child: showSuggestions
-                  ? ChatSuggestions(
+            child: showSuggestions
+                ? ReadableWidth(
+                    child: ChatSuggestions(
                       onSelectSuggestion: (text) {
                         _textController.text = text;
                         _handleSend(state);
                       },
-                    )
-                  : ListView.builder(
+                    ),
+                  )
+                : ReadableScrollPadding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    builder: (context, padding) => ListView.builder(
                       controller: _scrollController,
                       itemCount:
                           state.messages.length + (state.isGenerating ? 1 : 0),
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      padding: padding,
                       itemBuilder: (context, index) {
                         if (index == state.messages.length) {
                           return const ChatThinkingBubble();
@@ -271,7 +274,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                         return ChatMessageBubble(message: message);
                       },
                     ),
-            ),
+                  ),
           ),
           ReadableWidth(
             child: ChatInputBar(

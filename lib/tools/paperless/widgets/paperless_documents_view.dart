@@ -97,11 +97,12 @@ class _PaperlessDocumentsViewState extends State<PaperlessDocumentsView>
         ],
       );
     } else {
-      body = ReadableWidth(
-        child: ListView.builder(
+      body = ReadableScrollPadding(
+        padding: const EdgeInsets.only(bottom: 16),
+        builder: (context, padding) => ListView.builder(
           controller: _scroll,
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 16),
+          padding: padding,
           itemCount: documents.length + (showFooter ? 1 : 0),
           itemBuilder: (context, index) {
             if (index == documents.length) {

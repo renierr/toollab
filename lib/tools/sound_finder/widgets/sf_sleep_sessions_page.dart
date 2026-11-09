@@ -57,9 +57,10 @@ class _SleepSessionsScaffold extends StatelessWidget {
           ? const Center(child: CircularProgressIndicator())
           : sessions.isEmpty
           ? Center(child: Text(l10n.sfSleepNoSessions))
-          : ReadableWidth(
-              child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 24),
+          : ReadableScrollPadding(
+              padding: const EdgeInsets.only(bottom: 24),
+              builder: (context, padding) => ListView.builder(
+                padding: padding,
                 itemCount: sessions.length + 1,
                 itemBuilder: (context, i) => i == 0
                     ? const SfSleepOverviewCard()

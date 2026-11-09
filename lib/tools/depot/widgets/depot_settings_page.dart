@@ -111,10 +111,11 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.depotSettingsTitle)),
-      body: ReadableWidth(
+      body: ReadableScrollPadding(
         maxWidth: 640,
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.only(bottom: 24),
+        builder: (context, padding) => ListView(
+          padding: padding,
           children: [
             ListTile(
               leading: Icon(

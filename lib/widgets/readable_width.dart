@@ -9,8 +9,8 @@ import 'responsive_layout.dart';
 /// each row into one thin strip, with the icon and the trailing value at
 /// opposite ends of the screen.
 ///
-/// Wrap the scrollable, not the rows — capping each row would leave the
-/// scrollbar and any background stripes at the far edge.
+/// For a scrollable use [ReadableScrollPadding]: wrapped here, its side
+/// margins would not scroll.
 class ReadableWidth extends StatelessWidget {
   final Widget child;
 

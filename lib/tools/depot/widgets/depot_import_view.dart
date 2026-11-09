@@ -262,9 +262,10 @@ class _DepotImportViewState extends State<DepotImportView> {
         ),
         if (state.isImporting) const LinearProgressIndicator(),
         Expanded(
-          child: ReadableWidth(
-            child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 16),
+          child: ReadableScrollPadding(
+            padding: const EdgeInsets.only(bottom: 16),
+            builder: (context, padding) => ListView.builder(
+              padding: padding,
               itemCount: state.statements.length,
               itemBuilder: (context, index) {
                 final statement = state.statements[index];

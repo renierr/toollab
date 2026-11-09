@@ -146,10 +146,11 @@ class PaperlessStatsView extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () => _refresh(state),
-      child: ReadableWidth(
-        child: ListView.separated(
+      child: ReadableScrollPadding(
+        padding: const EdgeInsets.all(16),
+        builder: (context, padding) => ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+          padding: padding,
           itemCount: children.length,
           separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (_, index) => children[index],

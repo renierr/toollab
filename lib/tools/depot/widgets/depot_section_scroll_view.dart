@@ -97,37 +97,12 @@ class _DepotSectionScrollViewState<T> extends State<DepotSectionScrollView<T>> {
         ? _active
         : sections.firstOrNull?.id;
 
-    // A Column, not a lazy list: a jump target below the fold must be built
-    // for ensureVisible to find it.
-    final content = CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        SliverPadding(
-          padding: widget.padding,
-          sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ...widget.header,
-                for (final (index, section) in sections.indexed) ...[
-                  if (index > 0 && widget.spacing > 0)
-                    SizedBox(height: widget.spacing),
-                  KeyedSubtree(key: _keyOf(section.id), child: section.child),
-                ],
-              ],
-            ),
-          ),
-        ),
-        ...widget.slivers,
-      ],
-    );
-
-    return ReadableWidth(
-      child: Column(
+    return ReadableScrollPadding(
+      builder: (context, inset) => Column(
         children: [
           if (sections.length > 1)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: inset + const EdgeInsets.symmetric(vertical: 4),
               child: DepotSectionNav<T>(
                 links: sections,
                 active: active,
@@ -139,7 +114,35 @@ class _DepotSectionScrollViewState<T> extends State<DepotSectionScrollView<T>> {
               onNotification: _onScroll,
               child: RefreshIndicator(
                 onRefresh: widget.onRefresh,
-                child: content,
+                // A Column, not a lazy list: a jump target below the fold
+                // must be built for ensureVisible to find it.
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: widget.padding.add(inset),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ...widget.header,
+                            for (final (index, section)
+                                in sections.indexed) ...[
+                              if (index > 0 && widget.spacing > 0)
+                                SizedBox(height: widget.spacing),
+                              KeyedSubtree(
+                                key: _keyOf(section.id),
+                                child: section.child,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    for (final sliver in widget.slivers)
+                      SliverPadding(padding: inset, sliver: sliver),
+                  ],
+                ),
               ),
             ),
           ),

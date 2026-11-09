@@ -159,12 +159,12 @@ class _DepotActivitiesViewState extends State<DepotActivitiesView>
       for (final year in years) DepotSectionLink(id: year, label: '$year'),
     ];
 
-    return ReadableWidth(
-      child: Column(
+    return ReadableScrollPadding(
+      builder: (context, inset) => Column(
         children: [
           if (links.length > 1)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: inset + const EdgeInsets.symmetric(vertical: 4),
               child: DepotSectionNav<int>(
                 links: links,
                 active: years.contains(_activeYear) ? _activeYear : years.first,
@@ -181,7 +181,7 @@ class _DepotActivitiesViewState extends State<DepotActivitiesView>
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                      padding: inset + const EdgeInsets.fromLTRB(12, 4, 12, 8),
                       sliver: SliverList.list(
                         children: [
                           const DepotSyncHeader(),
@@ -202,7 +202,7 @@ class _DepotActivitiesViewState extends State<DepotActivitiesView>
                     if (transactions.isEmpty)
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.all(24),
+                          padding: inset + const EdgeInsets.all(24),
                           child: Text(
                             l10n.depotActivitiesEmpty,
                             textAlign: TextAlign.center,
@@ -211,7 +211,7 @@ class _DepotActivitiesViewState extends State<DepotActivitiesView>
                         ),
                       ),
                     SliverPadding(
-                      padding: const EdgeInsets.only(bottom: 24),
+                      padding: inset + const EdgeInsets.only(bottom: 24),
                       sliver: SliverList.builder(
                         itemCount: rows.length,
                         itemBuilder: (context, index) {

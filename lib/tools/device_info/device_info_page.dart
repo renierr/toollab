@@ -418,13 +418,11 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       title: DeviceInfoTool.config.localizedName(l10n),
       child: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ReadableWidth(
-              child: ListView(
+          : ReadableScrollPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              builder: (context, padding) => ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: padding,
                 children: [
                   SystemOverviewHeader(
                     osName: _osName,

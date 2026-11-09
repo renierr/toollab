@@ -149,9 +149,10 @@ class _GpsLocationStorePageState extends State<GpsLocationStorePage>
               onLocate: state.isLocatingCurrent ? null : _locate,
               isLocating: state.isLocatingCurrent,
             )
-          : ReadableWidth(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+          : ReadableScrollPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+              builder: (context, padding) => ListView(
+                padding: padding,
                 children: [
                   if (current != null) ...[
                     CurrentLocationCard(
