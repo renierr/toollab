@@ -5604,6 +5604,7 @@
   "newsReaderSummaryLabel": "Zusammenfassung",
   "newsReaderFontSmaller": "Text verkleinern",
   "newsReaderFontLarger": "Text vergrößern",
+  "newsListTextSize": "Textgröße der Liste",
   "newsReadingSection": "Lesen",
   "newsReadOnSource": "Auf {source} lesen",
   "@newsReadOnSource": {"placeholders": {"source": {"type": "String"}}},

@@ -25408,6 +25408,12 @@ abstract class AppLocalizations {
   /// **'Increase text size'**
   String get newsReaderFontLarger;
 
+  /// No description provided for @newsListTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'List text size'**
+  String get newsListTextSize;
+
   /// No description provided for @newsReadingSection.
   ///
   /// In en, this message translates to:

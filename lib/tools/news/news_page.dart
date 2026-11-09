@@ -19,6 +19,8 @@ import 'widgets/news_reader_page.dart';
 import 'widgets/news_settings_page.dart';
 import 'widgets/news_source_filter_bar.dart';
 import 'widgets/news_source_picker_page.dart';
+import 'widgets/news_text_scale.dart';
+import 'widgets/news_text_size_sheet.dart';
 
 class NewsPage extends StatefulWidget {
   const NewsPage({super.key});
@@ -229,6 +231,11 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
               : const Icon(Icons.refresh),
         ),
         IconButton(
+          onPressed: () => NewsTextSizeSheet.show(context),
+          tooltip: l10n.newsListTextSize,
+          icon: const Icon(Icons.format_size),
+        ),
+        IconButton(
           onPressed: _openSettings,
           tooltip: l10n.commonSettings,
           icon: const Icon(Icons.settings_outlined),
@@ -248,25 +255,28 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
                 if (state.isRefreshing)
                   const LinearProgressIndicator(minHeight: 2),
                 Expanded(
-                  child: NewsList(
-                    controller: _scrollController,
-                    articles: state.articles,
-                    sourceResolver: state.sourceFor,
-                    markReadOnScroll: state.markReadOnScroll,
-                    empty: NewsEmptyView(
-                      hasSources: state.sources.isNotEmpty,
-                      hideRead: state.hideRead,
-                      onAddSources: _openPicker,
+                  child: NewsTextScale(
+                    scale: state.listFontPercent / 100,
+                    child: NewsList(
+                      controller: _scrollController,
+                      articles: state.articles,
+                      sourceResolver: state.sourceFor,
+                      markReadOnScroll: state.markReadOnScroll,
+                      empty: NewsEmptyView(
+                        hasSources: state.sources.isNotEmpty,
+                        hideRead: state.hideRead,
+                        onAddSources: _openPicker,
+                        onRefresh: _refresh,
+                        onShowAll: () =>
+                            context.read<NewsState>().setHideRead(false),
+                      ),
                       onRefresh: _refresh,
-                      onShowAll: () =>
-                          context.read<NewsState>().setHideRead(false),
+                      onOpen: _openArticle,
+                      onVisible: state.prefetchArticleImage,
+                      onSeen: (article) {
+                        if (mounted) unawaited(state.markRead(article));
+                      },
                     ),
-                    onRefresh: _refresh,
-                    onOpen: _openArticle,
-                    onVisible: state.prefetchArticleImage,
-                    onSeen: (article) {
-                      if (mounted) unawaited(state.markRead(article));
-                    },
                   ),
                 ),
               ],

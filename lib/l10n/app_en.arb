@@ -7079,6 +7079,7 @@
   "newsReaderSummaryLabel": "Summary",
   "newsReaderFontSmaller": "Decrease text size",
   "newsReaderFontLarger": "Increase text size",
+  "newsListTextSize": "List text size",
   "newsReadingSection": "Reading",
   "newsReadOnSource": "Read on {source}",
   "@newsReadOnSource": {"placeholders": {"source": {"type": "String"}}},

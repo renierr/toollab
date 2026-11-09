@@ -110,19 +110,19 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
         ),
         actions: [
           IconButton(
-            onPressed: fontPercent <= NewsState.minReaderFontPercent
+            onPressed: fontPercent <= NewsState.minFontPercent
                 ? null
                 : () => context.read<NewsState>().setReaderFontPercent(
-                    fontPercent - NewsState.readerFontStep,
+                    fontPercent - NewsState.fontStep,
                   ),
             icon: const Icon(Icons.text_decrease),
             tooltip: l10n.newsReaderFontSmaller,
           ),
           IconButton(
-            onPressed: fontPercent >= NewsState.maxReaderFontPercent
+            onPressed: fontPercent >= NewsState.maxFontPercent
                 ? null
                 : () => context.read<NewsState>().setReaderFontPercent(
-                    fontPercent + NewsState.readerFontStep,
+                    fontPercent + NewsState.fontStep,
                   ),
             icon: const Icon(Icons.text_increase),
             tooltip: l10n.newsReaderFontLarger,

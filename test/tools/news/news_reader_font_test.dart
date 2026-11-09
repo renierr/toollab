@@ -23,8 +23,8 @@ class _NewsState extends NewsState {
   @override
   Future<void> setReaderFontPercent(int value) async {
     _fontPercent = value.clamp(
-      NewsState.minReaderFontPercent,
-      NewsState.maxReaderFontPercent,
+      NewsState.minFontPercent,
+      NewsState.maxFontPercent,
     );
     notifyListeners();
   }
@@ -276,7 +276,7 @@ void main() {
       await tester.tap(find.byTooltip('Decrease text size'));
       await tester.pumpAndSettle();
       expect(state.readerFontPercent, 100);
-      await state.setReaderFontPercent(NewsState.maxReaderFontPercent);
+      await state.setReaderFontPercent(NewsState.maxFontPercent);
       await tester.pumpAndSettle();
       expect(
         tester
@@ -289,7 +289,7 @@ void main() {
             .onPressed,
         isNull,
       );
-      await state.setReaderFontPercent(NewsState.minReaderFontPercent);
+      await state.setReaderFontPercent(NewsState.minFontPercent);
       await tester.pumpAndSettle();
       expect(
         tester

@@ -30,10 +30,11 @@ class NewsState extends ChangeNotifier {
   static const String _keySeedDone = 'seed_done';
   static const String _keyLastRefresh = 'last_refresh_at';
   static const String _keyReaderFontPercent = 'reader_font_percent';
+  static const String _keyListFontPercent = 'list_font_percent';
 
-  static const int minReaderFontPercent = 80;
-  static const int maxReaderFontPercent = 200;
-  static const int readerFontStep = 10;
+  static const int minFontPercent = 80;
+  static const int maxFontPercent = 200;
+  static const int fontStep = 10;
 
   static const Duration _autoRefreshInterval = Duration(minutes: 10);
   static const int _refreshWorkers = 3;
@@ -55,7 +56,8 @@ class NewsState extends ChangeNotifier {
   int _lastRefreshAdded = 0;
   int _lastRefreshFailures = 0;
   int _readerFontPercent = 100;
-  Future<void> _readerFontSave = Future.value();
+  int _listFontPercent = 100;
+  Future<void> _fontSave = Future.value();
   Future<void>? _initialization;
   Timer? _unreadExpiryTimer;
   Completer<void>? _refreshCompletion;
@@ -94,6 +96,7 @@ class NewsState extends ChangeNotifier {
   int get readerFontPercent => _readerFontPercent;
   int get readGeneration => _readGeneration;
   double get readerFontScale => _readerFontPercent / 100;
+  int get listFontPercent => _listFontPercent;
   int get totalUnread =>
       _unreadCounts.values.fold(0, (sum, count) => sum + count);
   List<NewsSource> get enabledSources =>
@@ -139,13 +142,16 @@ class NewsState extends ChangeNotifier {
     }
     _lastRefreshAt =
         int.tryParse(await db.getSetting(_toolId, _keyLastRefresh) ?? '') ?? 0;
-    _readerFontPercent =
-        (int.tryParse(
-                  await db.getSetting(_toolId, _keyReaderFontPercent) ?? '',
-                ) ??
-                100)
-            .clamp(minReaderFontPercent, maxReaderFontPercent);
+    _readerFontPercent = _clampFont(
+      await db.getSetting(_toolId, _keyReaderFontPercent),
+    );
+    _listFontPercent = _clampFont(
+      await db.getSetting(_toolId, _keyListFontPercent),
+    );
   }
+
+  static int _clampFont(String? stored) =>
+      (int.tryParse(stored ?? '') ?? 100).clamp(minFontPercent, maxFontPercent);
 
   Future<void> _seedIfNeeded() async {
     final db = DatabaseService.instance;
@@ -284,22 +290,29 @@ class NewsState extends ChangeNotifier {
   }
 
   Future<void> setReaderFontPercent(int value) {
-    final next = value.clamp(minReaderFontPercent, maxReaderFontPercent);
-    if (next == _readerFontPercent) return _readerFontSave;
+    final next = value.clamp(minFontPercent, maxFontPercent);
+    if (next == _readerFontPercent) return _fontSave;
     _readerFontPercent = next;
+    return _saveFontPercent(_keyReaderFontPercent, next);
+  }
+
+  Future<void> setListFontPercent(int value) {
+    final next = value.clamp(minFontPercent, maxFontPercent);
+    if (next == _listFontPercent) return _fontSave;
+    _listFontPercent = next;
+    return _saveFontPercent(_keyListFontPercent, next);
+  }
+
+  Future<void> _saveFontPercent(String key, int value) {
     notifyListeners();
-    _readerFontSave = _readerFontSave.then((_) async {
+    _fontSave = _fontSave.then((_) async {
       try {
-        await DatabaseService.instance.setSetting(
-          _toolId,
-          _keyReaderFontPercent,
-          '$next',
-        );
+        await DatabaseService.instance.setSetting(_toolId, key, '$value');
       } catch (e) {
-        errorLog('[NewsState] Failed to save reader font size: $e');
+        errorLog('[NewsState] Failed to save font size $key: $e');
       }
     });
-    return _readerFontSave;
+    return _fontSave;
   }
 
   Future<void> refresh({List<NewsSource>? only}) async {

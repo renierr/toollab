@@ -14532,6 +14532,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newsReaderFontLarger => 'Text vergrößern';
 
   @override
+  String get newsListTextSize => 'Textgröße der Liste';
+
+  @override
   String get newsReadingSection => 'Lesen';
 
   @override
