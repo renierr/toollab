@@ -156,7 +156,7 @@ flutter run -d android    # Android Device or Emulator
 ```
 
 `./run-android.sh` without arguments lists the tasks and options (`--boot`,
-`--avd`, `--cold`, `-y`, and flutter run arguments after `--`).
+`--avd`, `--quick`, `-y`, and flutter run arguments after `--`).
 
 ### Run Tests
 ```bash

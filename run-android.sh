@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-AVD="" SERIAL="" ASSUME_YES=0 WANT_RUN=0 WANT_EMU=0 COLD=0
+AVD="" SERIAL="" ASSUME_YES=0 WANT_RUN=0 WANT_EMU=0 QUICK=0
 
 show_help() {
     cat <<'EOF'
@@ -25,7 +25,9 @@ Tasks:
 Options:
   --avd NAME      which emulator AVD to boot
   --serial ID     use this adb device instead (no emulator is booted)
-  --cold          cold boot (ignore the emulator's saved snapshot)
+  --quick         quick boot from the saved snapshot and save it on exit
+                  (default is a cold boot that saves nothing: snapshot
+                  restores can hang on Windows with a hardware GPU)
   -y, --yes       boot without asking
   -h, --help      show this help
 
@@ -47,7 +49,7 @@ while [ $# -gt 0 ]; do
         --boot) WANT_EMU=1; shift ;;
         --avd) AVD="${2:-}"; shift 2 ;;
         --serial) SERIAL="${2:-}"; shift 2 ;;
-        --cold) COLD=1; shift ;;
+        --quick) QUICK=1; shift ;;
         -y | --yes) ASSUME_YES=1; shift ;;
         -h | --help) show_help; exit 0 ;;
         --) WANT_RUN=1; shift; break ;;
@@ -119,7 +121,7 @@ boot_emulator() {
         esac
     fi
     local args=(-avd "$AVD")
-    [ "$COLD" = 1 ] && args+=(-no-snapshot-load)
+    [ "$QUICK" = 1 ] || args+=(-no-snapshot)
     local log="${TMPDIR:-/tmp}/toollab-emulator.log"
     echo "==> starting emulator ($AVD), log: $log"
     nohup "$EMULATOR" "${args[@]}" >"$log" 2>&1 &
