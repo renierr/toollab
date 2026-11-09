@@ -67,7 +67,7 @@ class _NewsState extends NewsState {
   @override
   Future<void> init() => Completer<void>().future;
   @override
-  Future<void> markRead(NewsArticle item) async {
+  Future<void> markRead(NewsArticle item, {bool immediate = false}) async {
     article = article.copyWith(readAt: 1);
     _readGeneration++;
     notifyListeners();

@@ -28,8 +28,15 @@ class NewsPage extends StatefulWidget {
 }
 
 class _NewsPageState extends State<NewsPage> with DisposeCleanup {
+  static const Duration _readSyncDelay = Duration(seconds: 2);
+  // Continuous scrolling keeps restarting the delay; this caps the wait.
+  static const Duration _readSyncMaxDelay = Duration(seconds: 10);
+  static const Duration _syncRetryDelay = Duration(seconds: 30);
+
   final ScrollController _scrollController = ScrollController();
   Timer? _readSyncTimer;
+  DateTime? _readSyncDeadline;
+  bool _syncWhenIdle = false;
   int _readGeneration = 0;
   AppState? _appState;
 
@@ -48,22 +55,33 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     onDispose(() {
       _scrollController.dispose();
       state.removeListener(onStateChanged);
-      if (_readSyncTimer?.isActive == true && _appState != null) {
-        unawaited(syncNewsSources(_appState!));
+      final appState = _appState;
+      if (appState != null &&
+          (_readSyncTimer?.isActive == true || state.hasUnsavedReads)) {
+        unawaited(state.flushReads().then((_) => syncNewsSources(appState)));
       }
       _readSyncTimer?.cancel();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }
 
-  void _scheduleReadSync([Duration delay = const Duration(seconds: 2)]) {
+  void _scheduleReadSync() {
+    final now = DateTime.now();
+    final deadline = _readSyncDeadline ??= now.add(_readSyncMaxDelay);
+    final untilDeadline = deadline.difference(now);
+    _startSyncTimer(
+      untilDeadline < _readSyncDelay ? untilDeadline : _readSyncDelay,
+    );
+  }
+
+  void _startSyncTimer(Duration delay) {
     _readSyncTimer?.cancel();
     _readSyncTimer = Timer(delay, () async {
       if (!mounted) return;
       if (!context.read<AppState>().syncsTool(NewsTool.config.id)) return;
       final success = await _syncSources();
       if (mounted && !success && _readSyncTimer?.isActive != true) {
-        _scheduleReadSync(const Duration(seconds: 30));
+        _startSyncTimer(_syncRetryDelay);
       }
     });
   }
@@ -79,7 +97,13 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     void onSyncChanged() {
       final finished = syncing && !appState.isSyncing;
       syncing = appState.isSyncing;
-      if (finished && mounted && !state.isLoading) unawaited(state.reload());
+      if (!finished || !mounted) return;
+      if (_syncWhenIdle) {
+        _syncWhenIdle = false;
+        unawaited(_syncOrRetry());
+      } else if (!state.isLoading) {
+        unawaited(state.reload());
+      }
     }
 
     appState.addListener(onSyncChanged);
@@ -89,7 +113,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
 
   Future<void> _syncOrRetry() async {
     if (!await _syncSources() && mounted && _readSyncTimer?.isActive != true) {
-      _scheduleReadSync(const Duration(seconds: 30));
+      _startSyncTimer(_syncRetryDelay);
     }
   }
 
@@ -97,12 +121,19 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     final appState = context.read<AppState>();
     final state = context.read<NewsState>();
     if (!appState.syncsTool(NewsTool.config.id)) return true;
+    _readSyncDeadline = null;
     try {
+      await state.flushReads();
       final sourcesBefore = {
         for (final source in state.sources) source.shortId: source.updatedAt,
       };
       final result = await appState.syncWithBackend([NewsSyncDelegate()]);
-      if (result == null) return false;
+      if (result == null) {
+        // Another sync is running and may have missed these reads.
+        if (!appState.isSyncing) return false;
+        _syncWhenIdle = true;
+        return true;
+      }
       final pulled = result['pulled'] ?? 0;
       final deleted = result['deleted'] ?? 0;
       if (!mounted || (pulled == 0 && deleted == 0)) return true;
@@ -144,8 +175,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
 
   Future<void> _openArticle(NewsArticle article) async {
     final state = context.read<NewsState>();
-    await state.markRead(article);
-    if (!mounted) return;
+    unawaited(state.markRead(article, immediate: true));
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => NewsReaderPage(

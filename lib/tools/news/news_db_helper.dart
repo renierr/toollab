@@ -503,25 +503,46 @@ class NewsDbHelper {
     });
   }
 
-  Future<void> markRead(int id, {int? readAt}) async {
+  Future<void> markRead(int id, {int? readAt}) =>
+      markReads({id: readAt ?? DateTime.now().millisecondsSinceEpoch});
+
+  /// Marks the articles keyed by id with their read time in one transaction.
+  Future<void> markReads(Map<int, int> readAtById) async {
+    if (readAtById.isEmpty) return;
     final db = await _getDb();
     final writer = await _readWriterId();
-    final time = readAt ?? DateTime.now().millisecondsSinceEpoch;
+    final ids = readAtById.keys.toList();
     await db.transaction((txn) async {
-      final rows = await txn.query(
-        articlesTable,
-        columns: ['guid_key'],
-        where: 'id = ? AND read_at IS NULL',
-        whereArgs: [id],
-      );
-      if (rows.isEmpty) return;
-      await txn.update(
-        articlesTable,
-        {'read_at': time},
-        where: 'id = ? AND read_at IS NULL',
-        whereArgs: [id],
-      );
-      await _addReads(txn, writer, [rows.first['guid_key'] as String], time);
+      final byDay = <int, Map<String, int>>{};
+      final batch = txn.batch();
+      for (var start = 0; start < ids.length; start += _chunkSize) {
+        final chunk = ids.sublist(start, min(start + _chunkSize, ids.length));
+        final rows = await txn.query(
+          articlesTable,
+          columns: ['id', 'guid_key'],
+          where:
+              'read_at IS NULL AND id IN (${List.filled(chunk.length, '?').join(',')})',
+          whereArgs: chunk,
+        );
+        for (final row in rows) {
+          final time = readAtById[row['id'] as int]!;
+          batch.update(
+            articlesTable,
+            {'read_at': time},
+            where: 'id = ?',
+            whereArgs: [row['id']],
+          );
+          byDay.putIfAbsent(
+            time ~/ _dayMs,
+            () => {},
+          )[row['guid_key'] as String] = time;
+        }
+      }
+      if (byDay.isEmpty) return;
+      await batch.commit(noResult: true);
+      for (final reads in byDay.values) {
+        await _addReadEntries(txn, writer, reads);
+      }
     });
   }
 

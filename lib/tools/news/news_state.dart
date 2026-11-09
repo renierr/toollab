@@ -38,6 +38,7 @@ class NewsState extends ChangeNotifier {
   static const Duration _autoRefreshInterval = Duration(minutes: 10);
   static const int _refreshWorkers = 3;
   static const int _previewWorkers = 2;
+  static const Duration _readFlushDelay = Duration(milliseconds: 250);
   static const int _maxQueuedPreviews = 12;
 
   List<NewsSource> _sources = [];
@@ -65,7 +66,13 @@ class NewsState extends ChangeNotifier {
   final Map<int, int> _pendingReads = {};
   // Article id -> reload generation current when its read was stored.
   final Map<int, int> _storedReads = {};
-  final Set<Future<void>> _pendingReadWrites = {};
+  // Reads shown in the UI but not yet written; flushed together.
+  final Map<int, int> _queuedReads = {};
+  final Map<int, int> _unshownReads = {};
+  bool _readsShowScheduled = false;
+  Timer? _readFlushTimer;
+  Completer<void>? _nextReadFlush;
+  Future<void> _readWrites = Future.value();
   final Queue<NewsArticle> _previewQueue = Queue();
   final Set<String> _previewAttempts = {};
   final Map<String, Future<ExtractedArticle>> _articleFetches = {};
@@ -310,7 +317,7 @@ class NewsState extends ChangeNotifier {
         .where((source) => source.enabled || only != null)
         .toList();
     if (targets.isEmpty) {
-      await _waitForReadWrites();
+      await flushReads();
       _resetReadFilterCutoff();
       await reload();
       return;
@@ -352,7 +359,7 @@ class NewsState extends ChangeNotifier {
     } finally {
       _isRefreshing = false;
       try {
-        await _waitForReadWrites();
+        await flushReads();
         _resetReadFilterCutoff();
         await reload();
       } catch (e) {
@@ -505,39 +512,90 @@ class NewsState extends ChangeNotifier {
     await reload();
   }
 
-  Future<void> markRead(NewsArticle article) async {
+  bool get hasUnsavedReads => _queuedReads.isNotEmpty;
+
+  /// Shows the read at once and stores it with the other reads of the next
+  /// [_readFlushDelay]; [immediate] stores everything queued right away.
+  /// Completes once the read is stored.
+  Future<void> markRead(NewsArticle article, {bool immediate = false}) {
     final id = article.id;
-    if (id == null || article.readAt != null || _pendingReads.containsKey(id)) {
-      return;
+    if (id != null &&
+        article.readAt == null &&
+        !_pendingReads.containsKey(id) &&
+        _articles.any((item) => item.id == id && item.readAt == null)) {
+      final readAt = _nextReadTime();
+      _pendingReads[id] = readAt;
+      _queuedReads[id] = readAt;
+      _unshownReads[id] = readAt;
+      if (!_readsShowScheduled) {
+        _readsShowScheduled = true;
+        scheduleMicrotask(_showQueuedReads);
+      }
     }
-    final current = _articles.where((item) => item.id == id).firstOrNull;
-    if (current == null || current.readAt != null) return;
-    final now = _nextReadTime();
-    _pendingReads[id] = now;
-    _articles = [
-      for (final item in _articles)
-        if (item.id == id) item.copyWith(readAt: now) else item,
-    ];
-    if (!current.isRead) {
-      final count = _unreadCounts[article.sourceShortId] ?? 0;
-      _unreadCounts[article.sourceShortId] = max(0, count - 1);
+    if (immediate) return flushReads();
+    if (_queuedReads.isEmpty) return _readWrites;
+    _readFlushTimer ??= Timer(_readFlushDelay, () => unawaited(flushReads()));
+    return (_nextReadFlush ??= Completer<void>()).future;
+  }
+
+  // Cards passing in one frame become one list update instead of one each.
+  void _showQueuedReads() {
+    _readsShowScheduled = false;
+    if (_disposed || _unshownReads.isEmpty) return;
+    final reads = Map.of(_unshownReads);
+    _unshownReads.clear();
+    final articles = [..._articles];
+    var changed = false;
+    for (var index = 0; index < articles.length; index++) {
+      final item = articles[index];
+      final readAt = reads[item.id];
+      if (readAt == null || item.readAt != null) continue;
+      articles[index] = item.copyWith(readAt: readAt);
+      changed = true;
+      if (!item.isRead) {
+        final count = _unreadCounts[item.sourceShortId] ?? 0;
+        _unreadCounts[item.sourceShortId] = max(0, count - 1);
+      }
     }
-    final write = NewsDbHelper.instance.markRead(id, readAt: now);
-    _pendingReadWrites.add(write);
+    if (!changed) return;
+    _articles = articles;
     notifyListeners();
+  }
+
+  /// Stores all queued reads; completes when every earlier write has landed.
+  Future<void> flushReads() {
+    _readFlushTimer?.cancel();
+    _readFlushTimer = null;
+    final done = _nextReadFlush;
+    _nextReadFlush = null;
+    if (_queuedReads.isNotEmpty) {
+      final reads = Map.of(_queuedReads);
+      _queuedReads.clear();
+      _readWrites = _readWrites.then((_) => _writeReads(reads));
+    }
+    if (done != null) unawaited(_readWrites.then((_) => done.complete()));
+    return _readWrites;
+  }
+
+  Future<void> _writeReads(Map<int, int> reads) async {
     try {
-      await write;
+      await NewsDbHelper.instance.markReads(reads);
     } catch (e) {
-      errorLog('[NewsState] Failed to mark article read: $e');
-      _pendingReads.remove(id);
-      await reload();
+      errorLog('[NewsState] Failed to mark articles read: $e');
+      reads.keys.forEach(_pendingReads.remove);
+      if (_disposed) return;
+      try {
+        await reload();
+      } catch (e) {
+        errorLog('[NewsState] Reload after failed read write failed: $e');
+      }
       return;
-    } finally {
-      _pendingReadWrites.remove(write);
     }
-    _storedReads[id] = _articlesGeneration;
+    for (final id in reads.keys) {
+      _storedReads[id] = _articlesGeneration;
+    }
     _readGeneration++;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   Future<void> markAllRead({String? sourceShortId}) async {
@@ -559,18 +617,6 @@ class NewsState extends ChangeNotifier {
 
   void _resetReadFilterCutoff() {
     _readFilterCutoff = max(DateTime.now().millisecondsSinceEpoch, _lastReadAt);
-  }
-
-  Future<void> _waitForReadWrites() async {
-    while (_pendingReadWrites.isNotEmpty) {
-      await Future.wait(
-        _pendingReadWrites.map((write) async {
-          try {
-            await write;
-          } catch (_) {}
-        }).toList(),
-      );
-    }
   }
 
   Future<void> clearCachedArticles() async {
@@ -719,6 +765,7 @@ class NewsState extends ChangeNotifier {
 
   @override
   void dispose() {
+    unawaited(flushReads());
     _disposed = true;
     _unreadExpiryTimer?.cancel();
     _previewQueue.clear();

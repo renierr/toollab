@@ -169,6 +169,38 @@ void main() {
     },
   );
 
+  test('reads marked together are stored in one write', () async {
+    final settings = DatabaseService.instance;
+    await settings.setSetting(NewsTool.config.id, 'seed_done', 'true');
+    await settings.setSetting(NewsTool.config.id, 'refresh_on_open', 'false');
+    final state = NewsState();
+    addTearDown(state.dispose);
+    await state.init();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.saveFetchedArticles(source.shortId, [
+      article('a', now),
+      article('b', now - 1000),
+      article('c', now - 2000),
+    ]);
+    await state.reload();
+    expect(state.totalUnread, 3);
+    final generation = state.readGeneration;
+    final writes = [for (final item in state.articles) state.markRead(item)];
+    await Future<void>.delayed(Duration.zero);
+    expect(state.totalUnread, 0);
+    expect(state.articles.every((item) => item.readAt != null), isTrue);
+    expect(state.hasUnsavedReads, isTrue);
+    await Future.wait(writes);
+    expect(state.hasUnsavedReads, isFalse);
+    expect(state.readGeneration, generation + 1);
+    expect(
+      (await db.getReadBuckets(
+        onlyPending: true,
+      )).expand((bucket) => bucket.reads.keys),
+      unorderedEquals(['a', 'b', 'c']),
+    );
+  });
+
   test(
     'unread counts update when an article ages out while News is open',
     () async {
