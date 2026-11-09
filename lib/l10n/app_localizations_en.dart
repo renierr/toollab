@@ -14303,6 +14303,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsEditSource => 'Edit source';
 
   @override
+  String newsErrorHttpStatus(String status) {
+    return 'The source answered with HTTP $status';
+  }
+
+  @override
+  String get newsErrorInvalidUrl => 'Invalid feed URL';
+
+  @override
+  String get newsErrorInvalidXml => 'The feed is not valid XML';
+
+  @override
+  String get newsErrorNoArticleBody => 'Could not find the article text';
+
+  @override
+  String get newsErrorNoEntries => 'The feed has no entries';
+
+  @override
+  String get newsErrorNotAFeed => 'Not an RSS or Atom feed';
+
+  @override
+  String get newsErrorNotHtml => 'The source is not a web page';
+
+  @override
+  String get newsErrorTooLarge => 'The response is too large';
+
+  @override
+  String get newsErrorUnreachable => 'Could not reach the source';
+
+  @override
+  String get newsOpenFailed => 'Could not open the link';
+
+  @override
+  String get newsSaveFailed => 'Could not save the source';
+
+  @override
   String get newsEmptyNoArticlesBody =>
       'Pull down or tap refresh to fetch the latest stories.';
 

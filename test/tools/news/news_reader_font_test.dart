@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/news/news_article.dart';
 import 'package:tool_lab/tools/news/news_article_service.dart';
+import 'package:tool_lab/tools/news/news_error.dart';
 import 'package:tool_lab/tools/news/news_state.dart';
 import 'package:tool_lab/tools/news/widgets/news_reader_page.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
@@ -30,7 +31,7 @@ class _NewsState extends NewsState {
 
   @override
   Future<ExtractedArticle> loadArticleBody(NewsArticle article) async {
-    if (fail) throw const ArticleExtractException('offline');
+    if (fail) throw const NewsException(NewsError.unreachable);
     return ExtractedArticle(
       markdown: 'Readable article text.',
       imageUrl: null,

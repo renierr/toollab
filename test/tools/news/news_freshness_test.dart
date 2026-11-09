@@ -71,7 +71,6 @@ void main() {
       ['fresh'],
     );
     expect(await db.getUnreadCounts(newSince: cutoff), {source.shortId: 1});
-    expect(await db.getTotalUnreadCount(newSince: cutoff), 1);
     expect(
       await db.getNextUnreadExpiry(newSince: cutoff),
       fresh.publishedAt + NewsDbHelper.newArticleWindow.inMilliseconds + 1,

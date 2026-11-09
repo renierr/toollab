@@ -1,21 +1,12 @@
-import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:html2md/html2md.dart' as html2md;
-import 'package:http/http.dart' as http;
-import 'package:tool_lab/services/app_http_client.dart';
 
 import 'news_article.dart';
-
-class ArticleExtractException implements Exception {
-  final String message;
-
-  const ArticleExtractException(this.message);
-
-  @override
-  String toString() => message;
-}
+import 'news_error.dart';
+import 'news_http.dart';
 
 class ExtractedArticle {
   final String markdown;
@@ -37,9 +28,6 @@ class ExtractedArticle {
 /// article body from the source. Extraction is best-effort: when a site blocks
 /// us or renders client-side, the reader falls back to the feed summary.
 class NewsArticleService {
-  static const String _userAgent =
-      'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 '
-      '(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36';
   static const Duration _timeout = Duration(seconds: 20);
   static const int _maxBytes = 6 * 1024 * 1024;
   static const int _maxMarkdownChars = 400000;
@@ -106,73 +94,50 @@ class NewsArticleService {
 
   static Future<ExtractedArticle> fetch(
     NewsArticle article, {
-    String? feedHtml,
     bool allowImageOnly = false,
   }) async {
-    if (article.link.isEmpty) {
-      throw const ArticleExtractException('Article has no link');
-    }
-    final uri = Uri.tryParse(article.link);
-    if (uri == null || !uri.hasScheme) {
-      throw const ArticleExtractException('Invalid article link');
-    }
-
-    final http.Response response;
-    try {
-      final client = await AppHttpClient.client;
-      response = await client
-          .get(
-            uri,
-            headers: const {
-              'User-Agent': _userAgent,
-              'Accept':
-                  'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.9,de;q=0.8',
-            },
-          )
-          .timeout(_timeout);
-    } catch (e) {
-      throw ArticleExtractException('Could not load article: $e');
-    }
-
-    if (response.statusCode >= 400) {
-      throw ArticleExtractException('Source answered ${response.statusCode}');
-    }
+    final uri = NewsHttp.parseUrl(article.link);
+    final response = await NewsHttp.get(
+      uri,
+      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      timeout: _timeout,
+      maxBytes: _maxBytes,
+    );
     final contentType = response.headers['content-type'] ?? '';
     if (contentType.isNotEmpty &&
         !contentType.contains('html') &&
         !contentType.contains('text/plain')) {
-      throw ArticleExtractException('Source is not an HTML page');
-    }
-    if (response.bodyBytes.length > _maxBytes) {
-      throw const ArticleExtractException('Article page is too large');
+      throw const NewsException(NewsError.notHtml);
     }
 
-    final html = _decodeBody(response);
-    final extracted = extract(
-      html,
-      article.link,
-      title: article.title,
-      author: article.author,
-      heroImageUrl: article.imageUrl,
-    );
-    if (extracted == null && feedHtml != null && feedHtml.isNotEmpty) {
-      final fallback = _extractFragment(feedHtml, article.link);
-      if (fallback != null) return fallback;
-    }
+    final bytes = response.bodyBytes;
+    final link = article.link;
+    final title = article.title;
+    final author = article.author;
+    final heroImageUrl = article.imageUrl;
+    // Parsing and converting a full page would stall scrolling for a frame or
+    // more, and previews run while the timeline scrolls.
+    final extracted = await Isolate.run(() {
+      final html = NewsHttp.decodeBody(bytes, contentType);
+      final article = extract(
+        html,
+        link,
+        title: title,
+        author: author,
+        heroImageUrl: heroImageUrl,
+      );
+      if (article != null || !allowImageOnly) return article;
+      final image = extractImage(html, link);
+      return image == null
+          ? null
+          : ExtractedArticle(markdown: '', imageUrl: image, title: null);
+    });
     if (extracted == null) {
-      if (allowImageOnly) {
-        final image = extractImage(html, article.link);
-        if (image != null) {
-          return ExtractedArticle(markdown: '', imageUrl: image, title: null);
-        }
-      }
-      throw const ArticleExtractException('Could not find the article body');
+      throw const NewsException(NewsError.noArticleBody);
     }
     return extracted;
   }
 
-  /// Exposed for tests and for already-downloaded pages.
   static ExtractedArticle? extract(
     String html,
     String baseUrl, {
@@ -345,23 +310,6 @@ class NewsArticleService {
       lines.add(line);
     }
     return _cleanMarkdown(lines.join('\n'));
-  }
-
-  static ExtractedArticle? _extractFragment(String html, String baseUrl) {
-    final fragment = html_parser.parseFragment(html);
-    final wrapper = dom.Element.tag('div')..nodes.addAll(fragment.nodes);
-    final baseUri = Uri.tryParse(baseUrl);
-    if (baseUri == null) return null;
-    final videoUrls = _videoUrls(wrapper, baseUri);
-    _prepareForMarkdown(wrapper, baseUri);
-    final markdown = _toMarkdown(wrapper, baseUrl);
-    if (_usableLength(markdown) < 50 && videoUrls.isEmpty) return null;
-    return ExtractedArticle(
-      markdown: markdown,
-      imageUrl: null,
-      title: null,
-      videoUrls: videoUrls,
-    );
   }
 
   static List<String> _videoUrls(dom.Element root, Uri baseUri) {
@@ -561,17 +509,5 @@ class NewsArticleService {
     final content = document.querySelector(selector)?.attributes['content'];
     if (content == null || content.trim().isEmpty) return null;
     return content.trim();
-  }
-
-  static String _decodeBody(http.Response response) {
-    final charset = RegExp(
-      r'charset\s*=\s*"?([\w-]+)',
-      caseSensitive: false,
-    ).firstMatch(response.headers['content-type'] ?? '')?.group(1);
-    final encoding = charset == null ? null : Encoding.getByName(charset);
-    if (encoding != null) {
-      return encoding.decode(response.bodyBytes);
-    }
-    return utf8.decode(response.bodyBytes, allowMalformed: true);
   }
 }

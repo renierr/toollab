@@ -43,10 +43,23 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
     _body = state.loadArticleBody(widget.article);
   }
 
+  bool get _hasLink => widget.article.link.trim().isNotEmpty;
+
   Future<void> _openOriginal() async {
-    final uri = Uri.tryParse(widget.article.link);
-    if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final l10n = AppLocalizations.of(context);
+    try {
+      final opened = await launchUrl(
+        Uri.parse(widget.article.link.trim()),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened) throw StateError('No handler for the link');
+    } catch (e) {
+      errorLog('[NewsReader] Failed to open original: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.newsOpenFailed)));
+    }
   }
 
   Future<void> _shareLink() async {
@@ -115,7 +128,7 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
             tooltip: l10n.newsReaderFontLarger,
           ),
           IconButton(
-            onPressed: _openOriginal,
+            onPressed: _hasLink ? _openOriginal : null,
             icon: const Icon(Icons.open_in_browser),
             tooltip: l10n.newsOpenInBrowser,
           ),
@@ -159,7 +172,7 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
                   _ReaderFallback(
                     article: widget.article,
                     fontScale: readerScale,
-                    onOpen: _openOriginal,
+                    onOpen: _hasLink ? _openOriginal : null,
                   )
                 else
                   MarkdownView(
@@ -176,49 +189,12 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
                   NewsVideoActions(videoUrls: extracted!.videoUrls),
                 ],
                 const SizedBox(height: 28),
-                Divider(color: theme.colorScheme.outlineVariant),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.newsSourceLabel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.hintColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                SelectableText(
-                  widget.article.link,
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    FilledButton.tonalIcon(
-                      onPressed: _openOriginal,
-                      icon: const Icon(Icons.open_in_browser, size: 18),
-                      label: Text(
-                        l10n.newsReadOnSource(
-                          widget.source?.title ?? l10n.newsUnknownSource,
-                        ),
-                      ),
-                    ),
-                    if (defaultTargetPlatform == TargetPlatform.android)
-                      FilledButton.tonalIcon(
-                        onPressed: widget.article.link.trim().isEmpty
-                            ? null
-                            : _shareLink,
-                        icon: const Icon(Icons.share_outlined, size: 18),
-                        label: Text(l10n.newsShareLink),
-                      ),
-                    FilledButton.tonalIcon(
-                      onPressed: widget.article.link.trim().isEmpty
-                          ? null
-                          : _copyLink,
-                      icon: const Icon(Icons.copy, size: 18),
-                      label: Text(l10n.newsCopyLink),
-                    ),
-                  ],
+                _ReaderLinkFooter(
+                  link: widget.article.link,
+                  sourceTitle: widget.source?.title ?? l10n.newsUnknownSource,
+                  onOpen: _hasLink ? _openOriginal : null,
+                  onShare: _hasLink ? _shareLink : null,
+                  onCopy: _hasLink ? _copyLink : null,
                 ),
               ],
             ),
@@ -332,9 +308,67 @@ class _ReaderHeader extends StatelessWidget {
   }
 }
 
+class _ReaderLinkFooter extends StatelessWidget {
+  final String link;
+  final String sourceTitle;
+  final VoidCallback? onOpen;
+  final VoidCallback? onShare;
+  final VoidCallback? onCopy;
+
+  const _ReaderLinkFooter({
+    required this.link,
+    required this.sourceTitle,
+    required this.onOpen,
+    required this.onShare,
+    required this.onCopy,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: theme.colorScheme.outlineVariant),
+        const SizedBox(height: 16),
+        Text(
+          l10n.newsSourceLabel,
+          style: theme.textTheme.labelMedium?.copyWith(color: theme.hintColor),
+        ),
+        const SizedBox(height: 4),
+        SelectableText(link, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton.tonalIcon(
+              onPressed: onOpen,
+              icon: const Icon(Icons.open_in_browser, size: 18),
+              label: Text(l10n.newsReadOnSource(sourceTitle)),
+            ),
+            if (defaultTargetPlatform == TargetPlatform.android)
+              FilledButton.tonalIcon(
+                onPressed: onShare,
+                icon: const Icon(Icons.share_outlined, size: 18),
+                label: Text(l10n.newsShareLink),
+              ),
+            FilledButton.tonalIcon(
+              onPressed: onCopy,
+              icon: const Icon(Icons.copy, size: 18),
+              label: Text(l10n.newsCopyLink),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _ReaderFallback extends StatelessWidget {
   final NewsArticle article;
-  final VoidCallback onOpen;
+  final VoidCallback? onOpen;
   final double fontScale;
 
   const _ReaderFallback({

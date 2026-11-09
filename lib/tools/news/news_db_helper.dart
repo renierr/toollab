@@ -6,8 +6,11 @@ import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
 import 'news_article.dart';
+import 'news_catalog.dart';
 import 'news_read_bucket.dart';
 import 'news_source.dart';
+
+part 'news_read_marks.dart';
 
 class NewsDbHelper {
   static const String sourcesTable = 'sources';
@@ -19,6 +22,11 @@ class NewsDbHelper {
   static const int readRetentionMs = 7 * _dayMs;
   static const Duration newArticleWindow = Duration(days: 2);
   static const String readBucketPrefix = 'read:';
+
+  /// Setting-key prefix shared with `AppState`, which clears cursors by it.
+  static const String syncCursorPrefix = 'sync_cursor_';
+  static const String _writerIdKey = 'read_writer_id';
+  static const int _chunkSize = 400;
 
   /// Read articles are disposable once they are old; unread ones are kept long
   /// enough that a reader coming back after a break still finds a timeline.
@@ -34,6 +42,7 @@ class NewsDbHelper {
       newArticleWindow.inMilliseconds;
 
   Future<ToolDatabase>? _dbFuture;
+  Future<String>? _writerFuture;
 
   Future<ToolDatabase> _getDb() => _dbFuture ??= _openDb();
 
@@ -125,13 +134,17 @@ class NewsDbHelper {
     return db;
   }
 
-  String generateShortId() {
+  static String _randomId() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rnd = Random.secure();
     return String.fromCharCodes(
       Iterable.generate(10, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))),
     );
   }
+
+  static String _enabledSourcesQuery(ToolDatabaseExecutor db) =>
+      'SELECT short_id FROM ${db.nameTable(sourcesTable)} '
+      'WHERE enabled = 1 AND deleted = 0';
 
   Future<List<NewsSource>> getSources() async {
     final db = await _getDb();
@@ -143,6 +156,7 @@ class NewsDbHelper {
     return rows.map(NewsSource.fromMap).toList();
   }
 
+  /// Includes deleted sources that still wait to sync their tombstone.
   Future<NewsSource?> getSource(String shortId) async {
     final db = await _getDb();
     final rows = await db.query(
@@ -163,6 +177,15 @@ class NewsDbHelper {
       limit: 1,
     );
     return rows.isEmpty ? null : NewsSource.fromMap(rows.first);
+  }
+
+  /// The id a new source for [feedUrl] should get. Ids are hashed from the
+  /// URL, but an edited source keeps its old id, so the hash may be taken.
+  Future<String> availableShortId(String feedUrl) async {
+    final id = NewsCatalog.shortIdForFeed(feedUrl);
+    final existing = await getSource(id);
+    if (existing == null || existing.feedUrl == feedUrl.trim()) return id;
+    return 'N${_randomId()}';
   }
 
   Future<int> getNextSortOrder() async {
@@ -292,10 +315,7 @@ class NewsDbHelper {
   }) async {
     final db = await _getDb();
     final cutoff = newSince ?? newArticleCutoff();
-    final conditions = <String>[
-      'source_short_id IN (SELECT short_id FROM ${db.nameTable(sourcesTable)} '
-          'WHERE enabled = 1 AND deleted = 0)',
-    ];
+    final conditions = ['source_short_id IN (${_enabledSourcesQuery(db)})'];
     final args = <Object?>[];
     if (sourceShortId != null) {
       conditions.add('source_short_id = ?');
@@ -326,8 +346,8 @@ class NewsDbHelper {
         'read_at',
         'fetched_at',
       ],
-      where: conditions.isEmpty ? null : conditions.join(' AND '),
-      whereArgs: args.isEmpty ? null : args,
+      where: conditions.join(' AND '),
+      whereArgs: args,
       orderBy: 'published_at DESC, id DESC',
       limit: limit,
     );
@@ -343,8 +363,7 @@ class NewsDbHelper {
       'SELECT source_short_id, COUNT(*) AS total '
       'FROM ${db.nameTable(articlesTable)} '
       'WHERE read_at IS NULL AND published_at >= ? AND source_short_id IN '
-      '(SELECT short_id FROM ${db.nameTable(sourcesTable)} '
-      'WHERE enabled = 1 AND deleted = 0) GROUP BY source_short_id',
+      '(${_enabledSourcesQuery(db)}) GROUP BY source_short_id',
       [newSince ?? newArticleCutoff()],
     );
     return {
@@ -353,25 +372,12 @@ class NewsDbHelper {
     };
   }
 
-  Future<int> getTotalUnreadCount({int? newSince}) async {
-    final db = await _getDb();
-    final rows = await db.rawQuery(
-      'SELECT COUNT(*) AS total FROM ${db.nameTable(articlesTable)} '
-      'WHERE read_at IS NULL AND published_at >= ? AND source_short_id IN '
-      '(SELECT short_id FROM ${db.nameTable(sourcesTable)} '
-      'WHERE enabled = 1 AND deleted = 0)',
-      [newSince ?? newArticleCutoff()],
-    );
-    return rows.first['total'] as int? ?? 0;
-  }
-
   Future<int?> getNextUnreadExpiry({int? newSince}) async {
     final db = await _getDb();
     final rows = await db.rawQuery(
       'SELECT MIN(published_at) AS oldest FROM ${db.nameTable(articlesTable)} '
       'WHERE read_at IS NULL AND published_at >= ? AND source_short_id IN '
-      '(SELECT short_id FROM ${db.nameTable(sourcesTable)} '
-      'WHERE enabled = 1 AND deleted = 0)',
+      '(${_enabledSourcesQuery(db)})',
       [newSince ?? newArticleCutoff()],
     );
     final oldest = rows.first['oldest'] as int?;
@@ -393,8 +399,8 @@ class NewsDbHelper {
       final marks = <String, int>{};
       final cutoff = DateTime.now().millisecondsSinceEpoch - readRetentionMs;
       final keys = articles.map((a) => a.guidKey).toList();
-      for (var start = 0; start < keys.length; start += 400) {
-        final chunk = keys.sublist(start, min(start + 400, keys.length));
+      for (var start = 0; start < keys.length; start += _chunkSize) {
+        final chunk = keys.sublist(start, min(start + _chunkSize, keys.length));
         final placeholders = List.filled(chunk.length, '?').join(',');
         final rows = await txn.query(
           articlesTable,
@@ -414,9 +420,11 @@ class NewsDbHelper {
         }
       }
 
+      // One round trip for the whole feed instead of one per entry.
+      final batch = txn.batch();
       for (final article in articles) {
         if (existing.contains(article.guidKey)) {
-          await txn.update(
+          batch.update(
             articlesTable,
             {
               'title': article.title,
@@ -433,7 +441,7 @@ class NewsDbHelper {
             whereArgs: [article.guidKey],
           );
         } else {
-          await txn.insert(
+          batch.insert(
             articlesTable,
             article
                 .copyWith(
@@ -445,20 +453,9 @@ class NewsDbHelper {
           if (article.publishedAt >= newCutoff) added++;
         }
       }
+      await batch.commit(noResult: true);
     });
     return added;
-  }
-
-  Future<String?> getArticleContent(String guidKey) async {
-    final db = await _getDb();
-    final rows = await db.query(
-      articlesTable,
-      columns: ['content_md'],
-      where: 'guid_key = ?',
-      whereArgs: [guidKey],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : rows.first['content_md'] as String?;
   }
 
   Future<NewsCachedContent?> getCachedContent(String guidKey) async {
@@ -532,26 +529,15 @@ class NewsDbHelper {
     });
   }
 
-  Future<void> markReadByGuid(String guidKey) async {
-    final db = await _getDb();
-    final rows = await db.query(
-      articlesTable,
-      columns: ['id'],
-      where: 'guid_key = ? AND read_at IS NULL',
-      whereArgs: [guidKey],
-      limit: 1,
-    );
-    if (rows.isNotEmpty) await markRead(rows.first['id'] as int);
-  }
-
   Future<void> markAllRead({String? sourceShortId, int? readAt}) async {
     final db = await _getDb();
     final writer = await _readWriterId();
     final time = readAt ?? DateTime.now().millisecondsSinceEpoch;
     await db.transaction((txn) async {
-      final where = sourceShortId == null
-          ? 'read_at IS NULL AND published_at >= ?'
-          : 'read_at IS NULL AND published_at >= ? AND source_short_id = ?';
+      final where =
+          'read_at IS NULL AND published_at >= ? '
+          'AND source_short_id IN (${_enabledSourcesQuery(txn)})'
+          '${sourceShortId == null ? '' : ' AND source_short_id = ?'}';
       final args = [newArticleCutoff(), ?sourceShortId];
       final rows = await txn.query(
         articlesTable,
@@ -575,11 +561,6 @@ class NewsDbHelper {
     });
   }
 
-  Future<void> deleteArticle(int id) async {
-    final db = await _getDb();
-    await db.delete(articlesTable, where: 'id = ?', whereArgs: [id]);
-  }
-
   Future<void> clearArticles() async {
     final db = await _getDb();
     await db.transaction((txn) async {
@@ -601,265 +582,12 @@ class NewsDbHelper {
       where: 'published_at < ?',
       whereArgs: [now - _unreadRetention.inMilliseconds],
     );
-    final overflow = await db.rawQuery(
-      'SELECT id FROM ${db.nameTable(articlesTable)} '
-      'ORDER BY published_at DESC LIMIT -1 OFFSET $_maxArticles',
+    final table = db.nameTable(articlesTable);
+    await db.rawDelete(
+      'DELETE FROM $table WHERE id IN (SELECT id FROM $table '
+      'ORDER BY published_at DESC LIMIT -1 OFFSET ?)',
+      [_maxArticles],
     );
-    if (overflow.isEmpty) return;
-    final ids = overflow.map((row) => row['id'] as int).toList();
-    await db.delete(
-      articlesTable,
-      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
-      whereArgs: ids,
-    );
-  }
-
-  Future<String>? _writerFuture;
-
-  Future<String> _readWriterId() => _writerFuture ??= () async {
-    final db = await _getDb();
-    final id = '${generateShortId()}${generateShortId()}';
-    return db.transaction((txn) async {
-      await txn.executor.rawInsert(
-        'INSERT OR IGNORE INTO tool_settings (tool_id, key, value, updated_at) VALUES (?, ?, ?, ?)',
-        [
-          NewsTool.config.id,
-          'read_writer_id',
-          id,
-          DateTime.now().millisecondsSinceEpoch,
-        ],
-      );
-      final rows = await txn.executor.query(
-        'tool_settings',
-        columns: ['value'],
-        where: 'tool_id = ? AND key = ?',
-        whereArgs: [NewsTool.config.id, 'read_writer_id'],
-      );
-      return rows.single['value'] as String;
-    });
-  }();
-
-  Future<void> _addReads(
-    ToolDatabaseExecutor txn,
-    String writer,
-    Iterable<String> keys,
-    int readAt,
-  ) => _addReadEntries(txn, writer, {for (final key in keys) key: readAt});
-
-  Future<void> _addReadEntries(
-    ToolDatabaseExecutor txn,
-    String writer,
-    Map<String, int> entries,
-  ) async {
-    if (entries.isEmpty) return;
-    final day = entries.values.first ~/ _dayMs;
-    final id = '$readBucketPrefix$writer:${day % _bucketCount}';
-    final rows = await txn.query(
-      readBucketsTable,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    final old = rows.isEmpty ? null : NewsReadBucket.fromMap(rows.first);
-    final reads = <String, int>{
-      if (old != null)
-        for (final entry in old.reads.entries)
-          if (entry.value ~/ _dayMs == day) entry.key: entry.value,
-    };
-    for (final entry in entries.entries) {
-      reads[entry.key] = entry.value;
-      await txn.rawInsert(
-        'INSERT INTO ${txn.nameTable(readMarksTable)} (guid_key, read_at) VALUES (?, ?) '
-        'ON CONFLICT(guid_key) DO UPDATE SET read_at = MAX(read_at, excluded.read_at)',
-        [entry.key, entry.value],
-      );
-    }
-    await txn.rawInsert(
-      'INSERT INTO ${txn.nameTable(readBucketsTable)} (id, updated_at, synced, reads) VALUES (?, ?, 0, ?) '
-      'ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, synced = 0, reads = excluded.reads',
-      [
-        id,
-        max(DateTime.now().millisecondsSinceEpoch, (old?.updatedAt ?? 0) + 1),
-        jsonEncode(reads),
-      ],
-    );
-  }
-
-  Future<void> prepareReadSync() async {
-    final db = await _getDb();
-    final writer = await _readWriterId();
-    final cutoff = DateTime.now().millisecondsSinceEpoch - readRetentionMs;
-    await db.transaction((txn) async {
-      await txn.delete(
-        readMarksTable,
-        where: 'read_at < ?',
-        whereArgs: [cutoff],
-      );
-      await txn.delete(
-        readBucketsTable,
-        where: 'updated_at < ?',
-        whereArgs: [cutoff],
-      );
-      final rows = await txn.rawQuery(
-        'SELECT a.guid_key, a.read_at FROM ${txn.nameTable(articlesTable)} a '
-        'LEFT JOIN ${txn.nameTable(readMarksTable)} r ON r.guid_key = a.guid_key '
-        'WHERE a.read_at >= ? AND r.guid_key IS NULL',
-        [cutoff],
-      );
-      final grouped = <int, Map<String, int>>{};
-      for (final row in rows) {
-        final time = row['read_at'] as int;
-        grouped.putIfAbsent(
-          time ~/ _dayMs,
-          () => {},
-        )[row['guid_key'] as String] = time;
-      }
-      for (final entry in grouped.entries) {
-        await _addReadEntries(txn, writer, entry.value);
-      }
-    });
-  }
-
-  Future<List<NewsReadBucket>> getReadBuckets({
-    bool onlyPending = false,
-  }) async {
-    final db = await _getDb();
-    final rows = await db.query(
-      readBucketsTable,
-      where: onlyPending ? 'synced = 0 AND updated_at >= ?' : 'updated_at >= ?',
-      whereArgs: [DateTime.now().millisecondsSinceEpoch - readRetentionMs],
-    );
-    return rows.map(NewsReadBucket.fromMap).toList();
-  }
-
-  Future<List<NewsReadBucketMeta>> getReadBucketMetadata({
-    bool onlyPending = false,
-    List<String>? ids,
-  }) async {
-    final db = await _getDb();
-    if (ids != null && ids.isEmpty) return [];
-    final cutoff = DateTime.now().millisecondsSinceEpoch - readRetentionMs;
-    final result = <NewsReadBucketMeta>[];
-    final chunks = ids == null
-        ? <List<String>?>[null]
-        : <List<String>?>[
-            for (var start = 0; start < ids.length; start += 400)
-              ids.sublist(start, min(start + 400, ids.length)),
-          ];
-    for (final chunk in chunks) {
-      final rows = await db.query(
-        readBucketsTable,
-        columns: ['id', 'updated_at'],
-        where:
-            'updated_at >= ?${onlyPending ? ' AND synced = 0' : ''}'
-            '${chunk == null ? '' : ' AND id IN (${List.filled(chunk.length, '?').join(',')})'}',
-        whereArgs: [cutoff, ...?chunk],
-      );
-      result.addAll(rows.map(NewsReadBucketMeta.fromMap));
-    }
-    return result;
-  }
-
-  Future<NewsReadBucket?> getReadBucket(String id) async {
-    final db = await _getDb();
-    final rows = await db.query(
-      readBucketsTable,
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : NewsReadBucket.fromMap(rows.first);
-  }
-
-  Future<void> savePulledReadBucket(
-    String id,
-    int updatedAt,
-    Map<String, int> reads,
-  ) async {
-    final db = await _getDb();
-    final cutoff = DateTime.now().millisecondsSinceEpoch - readRetentionMs;
-    await db.transaction((txn) async {
-      final current = await txn.query(
-        readBucketsTable,
-        columns: ['updated_at'],
-        where: 'id = ?',
-        whereArgs: [id],
-        limit: 1,
-      );
-      if (current.isNotEmpty &&
-          (current.first['updated_at'] as int) >= updatedAt) {
-        return;
-      }
-      await txn.rawInsert(
-        'INSERT INTO ${txn.nameTable(readBucketsTable)} (id, updated_at, synced, reads) VALUES (?, ?, 1, ?) '
-        'ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, synced = 1, reads = excluded.reads',
-        [id, updatedAt, jsonEncode(reads)],
-      );
-      for (final entry in reads.entries) {
-        if (entry.value < cutoff) continue;
-        await txn.rawInsert(
-          'INSERT INTO ${txn.nameTable(readMarksTable)} (guid_key, read_at) VALUES (?, ?) '
-          'ON CONFLICT(guid_key) DO UPDATE SET read_at = MAX(read_at, excluded.read_at)',
-          [entry.key, entry.value],
-        );
-        await txn.update(
-          articlesTable,
-          {'read_at': entry.value},
-          where: 'guid_key = ? AND read_at IS NULL',
-          whereArgs: [entry.key],
-        );
-      }
-    });
-  }
-
-  Future<void> markReadBucketSynced(String id, int updatedAt) async {
-    final db = await _getDb();
-    await db.update(
-      readBucketsTable,
-      {'synced': 1},
-      where: 'id = ? AND updated_at = ?',
-      whereArgs: [id, updatedAt],
-    );
-  }
-
-  Future<void> resetAfterDatabaseRestore() async {
-    _dbFuture = null;
-    _writerFuture = null;
-    final db = await _getDb();
-    final writer = '${generateShortId()}${generateShortId()}';
-    final cutoff = DateTime.now().millisecondsSinceEpoch - readRetentionMs;
-    await db.transaction((txn) async {
-      final rows = await txn.query(readBucketsTable, where: 'synced = 0');
-      final pending = rows.map(NewsReadBucket.fromMap).toList();
-      await txn.delete(readBucketsTable, where: 'synced = 0');
-      await txn.executor.rawInsert(
-        'INSERT INTO tool_settings (tool_id, key, value, updated_at) VALUES (?, ?, ?, ?) '
-        'ON CONFLICT(tool_id, key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at',
-        [
-          NewsTool.config.id,
-          'read_writer_id',
-          writer,
-          DateTime.now().millisecondsSinceEpoch,
-        ],
-      );
-      await txn.executor.delete(
-        'tool_settings',
-        where: 'tool_id = ? AND key LIKE ?',
-        whereArgs: [NewsTool.config.id, 'sync_cursor_%'],
-      );
-      final byDay = <int, Map<String, int>>{};
-      for (final bucket in pending) {
-        for (final entry in bucket.reads.entries) {
-          if (entry.value >= cutoff) {
-            byDay.putIfAbsent(entry.value ~/ _dayMs, () => {})[entry.key] =
-                entry.value;
-          }
-        }
-      }
-      for (final reads in byDay.values) {
-        await _addReadEntries(txn, writer, reads);
-      }
-    });
   }
 
   Future<List<NewsSource>> getSyncRecords() async {
@@ -868,27 +596,18 @@ class NewsDbHelper {
     return rows.map(NewsSource.fromMap).toList();
   }
 
-  Future<NewsSource?> getSourceForSync(String shortId) async {
-    final db = await _getDb();
-    final rows = await db.query(
-      sourcesTable,
-      where: 'short_id = ?',
-      whereArgs: [shortId],
-      limit: 1,
-    );
-    return rows.isEmpty ? null : NewsSource.fromMap(rows.first);
-  }
-
   Future<void> savePulledSource(
     NewsSource source, {
     required bool deleted,
   }) async {
     final db = await _getDb();
+    final existing = await getSource(source.shortId);
     if (deleted) {
+      // A newer local edit wins and is pushed back on the next sync.
+      if (existing != null && existing.updatedAt > source.updatedAt) return;
       await hardDeleteSource(source.shortId);
       return;
     }
-    final existing = await getSourceForSync(source.shortId);
     if (existing != null && existing.updatedAt >= source.updatedAt) return;
     if (existing == null) {
       await db.insert(

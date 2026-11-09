@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:xml/xml.dart';
 
 import 'news_article.dart';
+import 'news_error.dart';
 
 class ParsedFeedItem {
   final String guidKey;
@@ -60,15 +61,6 @@ class ParsedFeed {
   });
 }
 
-class FeedParseException implements Exception {
-  final String message;
-
-  const FeedParseException(this.message);
-
-  @override
-  String toString() => message;
-}
-
 /// Parses RSS 2.0, RSS 1.0 (RDF) and Atom 1.0 without a platform channel.
 class NewsFeedParser {
   static const int _maxItems = 80;
@@ -97,8 +89,8 @@ class NewsFeedParser {
     final XmlDocument document;
     try {
       document = XmlDocument.parse(body);
-    } catch (e) {
-      throw FeedParseException('Invalid XML: $e');
+    } catch (_) {
+      throw const NewsException(NewsError.invalidXml);
     }
 
     final root = document.rootElement;
@@ -125,7 +117,7 @@ class NewsFeedParser {
     } else {
       final channel = _firstChild(root, const ['channel']);
       if (channel == null) {
-        throw const FeedParseException('Not an RSS or Atom feed');
+        throw const NewsException(NewsError.notAFeed);
       }
       itemElements = channel
           .findElements('item', namespaceUri: '*')
@@ -136,7 +128,7 @@ class NewsFeedParser {
     }
 
     if (itemElements.isEmpty) {
-      throw const FeedParseException('Feed has no entries');
+      throw const NewsException(NewsError.noEntries);
     }
 
     final items = <ParsedFeedItem>[];
@@ -153,7 +145,7 @@ class NewsFeedParser {
     }
 
     if (items.isEmpty) {
-      throw const FeedParseException('Feed has no usable entries');
+      throw const NewsException(NewsError.noEntries);
     }
 
     return ParsedFeed(

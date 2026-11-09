@@ -25186,6 +25186,72 @@ abstract class AppLocalizations {
   /// **'Edit source'**
   String get newsEditSource;
 
+  /// No description provided for @newsErrorHttpStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'The source answered with HTTP {status}'**
+  String newsErrorHttpStatus(String status);
+
+  /// No description provided for @newsErrorInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid feed URL'**
+  String get newsErrorInvalidUrl;
+
+  /// No description provided for @newsErrorInvalidXml.
+  ///
+  /// In en, this message translates to:
+  /// **'The feed is not valid XML'**
+  String get newsErrorInvalidXml;
+
+  /// No description provided for @newsErrorNoArticleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find the article text'**
+  String get newsErrorNoArticleBody;
+
+  /// No description provided for @newsErrorNoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'The feed has no entries'**
+  String get newsErrorNoEntries;
+
+  /// No description provided for @newsErrorNotAFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not an RSS or Atom feed'**
+  String get newsErrorNotAFeed;
+
+  /// No description provided for @newsErrorNotHtml.
+  ///
+  /// In en, this message translates to:
+  /// **'The source is not a web page'**
+  String get newsErrorNotHtml;
+
+  /// No description provided for @newsErrorTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The response is too large'**
+  String get newsErrorTooLarge;
+
+  /// No description provided for @newsErrorUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the source'**
+  String get newsErrorUnreachable;
+
+  /// No description provided for @newsOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link'**
+  String get newsOpenFailed;
+
+  /// No description provided for @newsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the source'**
+  String get newsSaveFailed;
+
   /// No description provided for @newsEmptyNoArticlesBody.
   ///
   /// In en, this message translates to:

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -11,6 +12,8 @@ import 'news_article.dart';
 import 'news_article_service.dart';
 import 'news_catalog.dart';
 import 'news_db_helper.dart';
+import 'news_error.dart';
+import 'news_feed_parser.dart';
 import 'news_feed_service.dart';
 import 'news_source.dart';
 
@@ -58,6 +61,7 @@ class NewsState extends ChangeNotifier {
   int _readFilterCutoff = DateTime.now().millisecondsSinceEpoch;
   int _lastReadAt = 0;
   int _readGeneration = 0;
+  int _articlesGeneration = 0;
   final Map<int, int> _pendingReads = {};
   final Set<Future<void>> _pendingReadWrites = {};
   final Queue<NewsArticle> _previewQueue = Queue();
@@ -178,30 +182,35 @@ class NewsState extends ChangeNotifier {
   }
 
   Future<void> _reloadArticles() async {
+    final generation = ++_articlesGeneration;
     final cutoff = NewsDbHelper.newArticleCutoff();
-    _articles = await NewsDbHelper.instance.getArticles(
+    final articles = await NewsDbHelper.instance.getArticles(
       sourceShortId: _selectedSourceId,
       unreadOnly: _hideRead,
       readAfter: _readFilterCutoff,
       newSince: cutoff,
     );
-    _unreadCounts = await NewsDbHelper.instance.getUnreadCounts(
+    final unreadCounts = await NewsDbHelper.instance.getUnreadCounts(
       newSince: cutoff,
     );
-    for (var index = 0; index < _articles.length; index++) {
-      final article = _articles[index];
-      final pendingAt = _pendingReads[article.id];
-      if (pendingAt != null && article.readAt == null) {
-        _articles[index] = article.copyWith(readAt: pendingAt);
-        if (!article.isRead) {
-          final count = _unreadCounts[article.sourceShortId] ?? 0;
-          _unreadCounts[article.sourceShortId] = max(0, count - 1);
-        }
-      }
-    }
     final expiry = await NewsDbHelper.instance.getNextUnreadExpiry(
       newSince: cutoff,
     );
+    // A later reload, e.g. from a quick filter change, owns the list now.
+    if (generation != _articlesGeneration) return;
+    for (var index = 0; index < articles.length; index++) {
+      final article = articles[index];
+      final pendingAt = _pendingReads[article.id];
+      if (pendingAt != null && article.readAt == null) {
+        articles[index] = article.copyWith(readAt: pendingAt);
+        if (!article.isRead) {
+          final count = unreadCounts[article.sourceShortId] ?? 0;
+          unreadCounts[article.sourceShortId] = max(0, count - 1);
+        }
+      }
+    }
+    _articles = articles;
+    _unreadCounts = unreadCounts;
     _unreadExpiryTimer?.cancel();
     if (expiry != null && !_disposed) {
       final delay = max(1, expiry - DateTime.now().millisecondsSinceEpoch);
@@ -305,55 +314,15 @@ class NewsState extends ChangeNotifier {
 
     var added = 0;
     var failures = 0;
-    var cursor = 0;
+    final pending = Queue.of(targets);
 
     Future<void> worker() async {
-      while (true) {
-        final index = cursor++;
-        if (index >= targets.length) return;
-        final source = targets[index];
-        try {
-          final result = await NewsFeedService.fetch(source);
-          final current = await NewsDbHelper.instance.getSource(source.shortId);
-          if (current == null ||
-              current.deleted ||
-              current.feedUrl != source.feedUrl) {
-            continue;
-          }
-          if (result.notModified) {
-            await NewsDbHelper.instance.updateFetchState(
-              source.shortId,
-              keepValidators: true,
-            );
-            continue;
-          }
-          final feed = result.feed;
-          if (feed == null) continue;
-          final fetchedAt = DateTime.now().millisecondsSinceEpoch;
-          added += await NewsDbHelper.instance.saveFetchedArticles(
-            source.shortId,
-            feed.items
-                .map(
-                  (item) => item.toArticle(
-                    sourceShortId: source.shortId,
-                    fetchedAt: fetchedAt,
-                  ),
-                )
-                .toList(),
-          );
-          await NewsDbHelper.instance.updateFetchState(
-            source.shortId,
-            etag: result.etag,
-            lastModified: result.lastModified,
-          );
-        } catch (e) {
+      while (pending.isNotEmpty) {
+        final result = await _refreshSource(pending.removeFirst());
+        if (result == null) {
           failures++;
-          debugLog('[NewsState] Feed failed for ${source.feedUrl}: $e');
-          await NewsDbHelper.instance.updateFetchState(
-            source.shortId,
-            keepValidators: true,
-            error: _describeError(e),
-          );
+        } else {
+          added += result;
         }
       }
     }
@@ -378,15 +347,62 @@ class NewsState extends ChangeNotifier {
         await _waitForReadWrites();
         _resetReadFilterCutoff();
         await reload();
+      } catch (e) {
+        errorLog('[NewsState] Reload after refresh failed: $e');
+        if (!_disposed) notifyListeners();
       } finally {
         completion.complete();
       }
     }
   }
 
-  static String _describeError(Object error) {
-    if (error is NewsFeedException) return error.message;
-    return error.toString();
+  /// Returns the number of new articles, or null when the feed failed.
+  Future<int?> _refreshSource(NewsSource source) async {
+    final db = NewsDbHelper.instance;
+    try {
+      final result = await NewsFeedService.fetch(source);
+      final current = await db.getSource(source.shortId);
+      if (current == null ||
+          current.deleted ||
+          current.feedUrl != source.feedUrl) {
+        return 0;
+      }
+      final feed = result.feed;
+      if (result.notModified || feed == null) {
+        await db.updateFetchState(source.shortId, keepValidators: true);
+        return 0;
+      }
+      final added = await db.saveFetchedArticles(
+        source.shortId,
+        _articlesOf(feed, source.shortId),
+      );
+      await db.updateFetchState(
+        source.shortId,
+        etag: result.etag,
+        lastModified: result.lastModified,
+      );
+      return added;
+    } catch (e) {
+      debugLog('[NewsState] Feed failed for ${source.feedUrl}: $e');
+      try {
+        await db.updateFetchState(
+          source.shortId,
+          keepValidators: true,
+          error: e is NewsException ? e.code : '$e',
+        );
+      } catch (e) {
+        errorLog('[NewsState] Failed to store feed error: $e');
+      }
+      return null;
+    }
+  }
+
+  static List<NewsArticle> _articlesOf(ParsedFeed feed, String shortId) {
+    final fetchedAt = DateTime.now().millisecondsSinceEpoch;
+    return [
+      for (final item in feed.items)
+        item.toArticle(sourceShortId: shortId, fetchedAt: fetchedAt),
+    ];
   }
 
   Future<NewsSource> addCatalogSource(
@@ -405,7 +421,9 @@ class NewsState extends ChangeNotifier {
     final now = DateTime.now().millisecondsSinceEpoch;
     final saved = await NewsDbHelper.instance.saveSource(
       NewsSource(
-        shortId: NewsCatalog.shortIdForFeed(catalogSource.feedUrl),
+        shortId: await NewsDbHelper.instance.availableShortId(
+          catalogSource.feedUrl,
+        ),
         title: catalogSource.title,
         feedUrl: catalogSource.feedUrl,
         siteUrl: catalogSource.siteUrl,
@@ -429,9 +447,9 @@ class NewsState extends ChangeNotifier {
     final existing = await NewsDbHelper.instance.getSourceByFeedUrl(normalized);
     if (existing != null) throw const NewsSourceExistsException();
 
-    final feed = await NewsFeedService.probe(normalized);
+    final shortId = await NewsDbHelper.instance.availableShortId(normalized);
+    final feed = await NewsFeedService.probe(normalized, shortId: shortId);
     final now = DateTime.now().millisecondsSinceEpoch;
-    final shortId = NewsCatalog.shortIdForFeed(normalized);
     final saved = await NewsDbHelper.instance.saveSource(
       NewsSource(
         shortId: shortId,
@@ -448,15 +466,9 @@ class NewsState extends ChangeNotifier {
       ),
     );
 
-    final fetchedAt = DateTime.now().millisecondsSinceEpoch;
     await NewsDbHelper.instance.saveFetchedArticles(
       shortId,
-      feed.items
-          .map(
-            (item) =>
-                item.toArticle(sourceShortId: shortId, fetchedAt: fetchedAt),
-          )
-          .toList(),
+      _articlesOf(feed, shortId),
     );
     await reload();
     return saved;
@@ -564,18 +576,26 @@ class NewsState extends ChangeNotifier {
     final cached = await NewsDbHelper.instance.getCachedContent(
       article.guidKey,
     );
-    if (cached?.markdown != null) {
-      final current = _articles
-          .where((item) => item.guidKey == article.guidKey)
-          .firstOrNull;
+    final markdown = cached?.markdown;
+    if (cached != null && markdown != null) {
+      final heroImageUrl =
+          _articles
+              .where((item) => item.guidKey == article.guidKey)
+              .firstOrNull
+              ?.imageUrl ??
+          article.imageUrl;
+      final title = article.title;
+      final author = article.author;
       final saved = ExtractedArticle(
-        markdown: NewsArticleService.cleanCachedMarkdown(
-          cached!.markdown!,
-          title: article.title,
-          author: article.author,
-          heroImageUrl: current?.imageUrl ?? article.imageUrl,
+        markdown: await Isolate.run(
+          () => NewsArticleService.cleanCachedMarkdown(
+            markdown,
+            title: title,
+            author: author,
+            heroImageUrl: heroImageUrl,
+          ),
         ),
-        imageUrl: current?.imageUrl ?? article.imageUrl,
+        imageUrl: heroImageUrl,
         title: null,
         videoUrls: cached.videoUrls ?? const [],
       );
@@ -591,8 +611,9 @@ class NewsState extends ChangeNotifier {
       }
     }
     final extracted = await _fetchArticle(article);
+    // Joined an image preview that already found no body on the same page.
     if (extracted.markdown.isEmpty && extracted.videoUrls.isEmpty) {
-      return _fetchArticle(article);
+      throw const NewsException(NewsError.noArticleBody);
     }
     return extracted;
   }

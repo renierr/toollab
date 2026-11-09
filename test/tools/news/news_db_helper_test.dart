@@ -55,7 +55,10 @@ void main() {
       0,
     );
     expect((await db.getArticles()).single.isRead, isTrue);
-    expect(await db.getArticleContent(article.guidKey), 'Cached article');
+    expect(
+      (await db.getCachedContent(article.guidKey))!.markdown,
+      'Cached article',
+    );
     expect((await db.getCachedContent(article.guidKey))!.videoUrls, isNull);
     await db.setArticleContent(
       article.guidKey,

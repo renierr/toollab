@@ -90,7 +90,7 @@ class NewsSourceTile extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  source.lastError!,
+                  newsErrorText(l10n, source.lastError!),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(

@@ -9,10 +9,10 @@ import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../news_catalog.dart';
-import '../news_feed_service.dart';
 import '../news_l10n.dart';
 import '../news_state.dart';
 import '../news_sync_helper.dart';
+import 'news_category_dropdown.dart';
 
 class NewsSourcePickerPage extends StatelessWidget {
   const NewsSourcePickerPage({super.key});
@@ -218,15 +218,9 @@ class _CustomTabState extends State<_CustomTab> with DisposeCleanup {
     final state = context.read<NewsState>();
     final appState = context.read<AppState>();
     final url = _url.text.trim();
-    if (url.isEmpty) {
-      setState(() => _error = l10n.newsSourceRequired);
-      return;
-    }
-    final uri = Uri.tryParse(url);
-    if (uri == null ||
-        (!uri.isScheme('http') && !uri.isScheme('https')) ||
-        uri.host.isEmpty) {
-      setState(() => _error = l10n.newsSourceInvalidUrl);
+    final invalid = newsFeedUrlError(l10n, url);
+    if (invalid != null) {
+      setState(() => _error = invalid);
       return;
     }
     setState(() {
@@ -248,13 +242,11 @@ class _CustomTabState extends State<_CustomTab> with DisposeCleanup {
       ).showSnackBar(SnackBar(content: Text(l10n.newsSourceAdded)));
     } on NewsSourceExistsException {
       if (mounted) setState(() => _error = l10n.newsSourceExists);
-    } on NewsFeedException catch (e) {
-      if (mounted) {
-        setState(() => _error = l10n.newsSourceInvalidDetail(e.message));
-      }
     } catch (e) {
       if (mounted) {
-        setState(() => _error = l10n.newsSourceInvalidDetail('$e'));
+        setState(
+          () => _error = l10n.newsSourceInvalidDetail(newsErrorText(l10n, e)),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -300,22 +292,9 @@ class _CustomTabState extends State<_CustomTab> with DisposeCleanup {
           ),
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          initialValue: _category,
-          decoration: InputDecoration(
-            labelText: l10n.newsSourceCategory,
-            border: const OutlineInputBorder(),
-          ),
-          items: [
-            for (final category in NewsCatalog.categories)
-              DropdownMenuItem(
-                value: category.id,
-                child: Text(newsCategoryLabel(l10n, category.id)),
-              ),
-          ],
-          onChanged: (value) {
-            if (value != null) setState(() => _category = value);
-          },
+        NewsCategoryDropdown(
+          value: _category,
+          onChanged: (value) => setState(() => _category = value),
         ),
         if (_error != null) ...[
           const SizedBox(height: 12),

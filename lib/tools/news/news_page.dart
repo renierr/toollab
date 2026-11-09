@@ -84,6 +84,10 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
 
     appState.addListener(onSyncChanged);
     onDispose(() => appState.removeListener(onSyncChanged));
+    await _syncOrRetry();
+  }
+
+  Future<void> _syncOrRetry() async {
     if (!await _syncSources() && mounted && _readSyncTimer?.isActive != true) {
       _scheduleReadSync(const Duration(seconds: 30));
     }
@@ -152,9 +156,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     );
     if (!mounted) return;
     _readSyncTimer?.cancel();
-    if (!await _syncSources() && mounted && _readSyncTimer?.isActive != true) {
-      _scheduleReadSync(const Duration(seconds: 30));
-    }
+    await _syncOrRetry();
   }
 
   Future<void> _openSettings() async {
@@ -178,7 +180,10 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
       title: NewsTool.config.localizedName(l10n),
       actions: [
         IconButton(
-          onPressed: () => state.setHideRead(!state.hideRead),
+          onPressed: () {
+            final state = context.read<NewsState>();
+            state.setHideRead(!state.hideRead);
+          },
           tooltip: state.hideRead ? l10n.newsShowAll : l10n.newsUnreadOnly,
           icon: Icon(state.hideRead ? Icons.filter_alt : Icons.filter_alt_off),
         ),
@@ -223,7 +228,8 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
                       hideRead: state.hideRead,
                       onAddSources: _openPicker,
                       onRefresh: _refresh,
-                      onShowAll: () => state.setHideRead(false),
+                      onShowAll: () =>
+                          context.read<NewsState>().setHideRead(false),
                     ),
                     onRefresh: _refresh,
                     onOpen: _openArticle,

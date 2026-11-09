@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/tools/news/news_catalog.dart';
+import 'package:tool_lab/tools/news/news_error.dart';
 import 'package:tool_lab/tools/news/news_feed_parser.dart';
 
 void main() {
@@ -110,7 +111,13 @@ void main() {
           sourceShortId: 'SRC',
           feedUrl: 'https://example.com',
         ),
-        throwsA(isA<FeedParseException>()),
+        throwsA(
+          isA<NewsException>().having(
+            (e) => e.error,
+            'error',
+            NewsError.notAFeed,
+          ),
+        ),
       );
     });
   });
