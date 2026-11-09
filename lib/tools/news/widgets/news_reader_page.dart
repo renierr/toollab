@@ -121,17 +121,18 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
           ),
         ],
       ),
-      body: ReadableWidth(
-        maxWidth: 760,
-        child: FutureBuilder<ExtractedArticle>(
-          future: _body,
-          builder: (context, snapshot) {
-            final extracted = snapshot.data;
-            final loading = snapshot.connectionState != ConnectionState.done;
-            final failed = snapshot.hasError && !loading;
+      body: FutureBuilder<ExtractedArticle>(
+        future: _body,
+        builder: (context, snapshot) {
+          final extracted = snapshot.data;
+          final loading = snapshot.connectionState != ConnectionState.done;
+          final failed = snapshot.hasError && !loading;
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+          return ReadableScrollPadding(
+            maxWidth: 760,
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+            builder: (context, padding) => ListView(
+              padding: padding,
               children: [
                 _ReaderHeader(
                   article: widget.article,
@@ -220,9 +221,9 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
                   ],
                 ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }

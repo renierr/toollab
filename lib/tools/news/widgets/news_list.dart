@@ -1,8 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollCacheExtent, ScrollDirection;
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
@@ -39,28 +40,28 @@ class NewsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ReadableWidth(
-      maxWidth: 900,
-      child: RefreshIndicator(
-        onRefresh: onRefresh,
-        child: articles.isEmpty
-            ? ListView(
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: articles.isEmpty
+          ? ReadableScrollPadding(
+              padding: const EdgeInsets.all(24),
+              builder: (context, padding) => ListView(
                 controller: controller,
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(24),
+                padding: padding,
                 children: [empty],
-              )
-            : _TimelineList(
-                controller: controller,
-                articles: articles,
-                sourceResolver: sourceResolver,
-                markReadOnScroll: markReadOnScroll,
-                onOpen: onOpen,
-                onSeen: onSeen,
-                onVisible: onVisible,
-                onRefresh: onRefresh,
               ),
-      ),
+            )
+          : _TimelineList(
+              controller: controller,
+              articles: articles,
+              sourceResolver: sourceResolver,
+              markReadOnScroll: markReadOnScroll,
+              onOpen: onOpen,
+              onSeen: onSeen,
+              onVisible: onVisible,
+              onRefresh: onRefresh,
+            ),
     );
   }
 }
@@ -91,38 +92,27 @@ class _TimelineList extends StatefulWidget {
 }
 
 class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
-  static const _endPause = Duration(seconds: 1);
+  // Same arm distance as RefreshIndicator's pull from the top.
+  static const double _pullViewportFraction = 0.25;
+  static const Duration _wheelRelease = Duration(milliseconds: 350);
+
   late ScrollController _controller;
-  final ValueNotifier<int> _reachedEnd = ValueNotifier(0);
+  final ValueNotifier<int> _pulledPastEnd = ValueNotifier(0);
   final ValueNotifier<double> _bottomPull = ValueNotifier(0);
-  Timer? _endTimer;
-  bool _scrollingDown = false;
-  bool _startedAtBottom = false;
-  static const double _refreshDragDistance = 80;
+  double _pullDistance = 0;
+  bool _dragStartedAtBottom = false;
+  bool _wheelPullSpent = false;
+  Timer? _wheelReleaseTimer;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller ?? ScrollController();
     onDispose(() {
-      _endTimer?.cancel();
+      _wheelReleaseTimer?.cancel();
       if (widget.controller == null) _controller.dispose();
-      _reachedEnd.dispose();
+      _pulledPastEnd.dispose();
       _bottomPull.dispose();
-    });
-  }
-
-  void _scheduleEndCheck() {
-    _endTimer?.cancel();
-    if (!widget.markReadOnScroll) return;
-    _endTimer = Timer(_endPause, () {
-      if (!mounted || !widget.markReadOnScroll || !_controller.hasClients) {
-        return;
-      }
-      final position = _controller.position;
-      if (position.extentAfter <= 1 && !position.isScrollingNotifier.value) {
-        _reachedEnd.value++;
-      }
     });
   }
 
@@ -133,76 +123,84 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
       if (oldWidget.controller == null) _controller.dispose();
       _controller = widget.controller ?? ScrollController();
     }
-    if (!widget.markReadOnScroll) _endTimer?.cancel();
+  }
+
+  void _addPull(double delta, double viewportExtent) {
+    _pullDistance = (_pullDistance + delta).clamp(0, double.infinity);
+    _bottomPull.value =
+        (_pullDistance / (viewportExtent * _pullViewportFraction)).clamp(0, 1);
+  }
+
+  void _resetPull() {
+    _pullDistance = 0;
+    _bottomPull.value = 0;
+  }
+
+  void _completeBottomPull() {
+    _resetPull();
+    _pulledPastEnd.value++;
+    // Let the trackers' post-frame read marks land before the refresh reloads.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(widget.onRefresh());
+    });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   void _onPointerSignal(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent) return;
-    _endTimer?.cancel();
-    if (event.scrollDelta.dy > 0 &&
-        _controller.hasClients &&
-        _controller.position.extentAfter <= 1) {
-      _scheduleEndCheck();
+    if (event is! PointerScrollEvent || !_controller.hasClients) return;
+    final position = _controller.position;
+    final dy = event.scrollDelta.dy;
+    if (dy <= 0 || position.extentAfter > 1) {
+      _wheelReleaseTimer?.cancel();
+      _wheelPullSpent = false;
+      _resetPull();
+      return;
+    }
+    // A wheel has no drag end, so a pause counts as letting go.
+    _wheelReleaseTimer?.cancel();
+    _wheelReleaseTimer = Timer(_wheelRelease, () {
+      _wheelPullSpent = false;
+      if (mounted) _resetPull();
+    });
+    if (_wheelPullSpent) return;
+    _addPull(dy, position.viewportDimension);
+    if (_bottomPull.value >= 1) {
+      _wheelPullSpent = true;
+      _completeBottomPull();
     }
   }
 
   bool _onScrollNotification(ScrollNotification notification) {
     if (notification.depth != 0) return false;
-    if (notification is ScrollStartNotification) {
-      _bottomPull.value = 0;
-      _startedAtBottom =
-          notification.dragDetails != null &&
-          notification.metrics.maxScrollExtent > 0 &&
-          notification.metrics.extentAfter <= 1;
-    } else if (notification is UserScrollNotification) {
-      if (notification.direction == ScrollDirection.reverse) {
-        _scrollingDown = true;
-      } else if (notification.direction == ScrollDirection.forward) {
-        _scrollingDown = false;
-      }
-    } else if (notification is ScrollUpdateNotification) {
-      _endTimer?.cancel();
-      if (_startedAtBottom &&
-          notification.dragDetails != null &&
-          notification.metrics.pixels > notification.metrics.maxScrollExtent) {
-        _bottomPull.value =
-            ((notification.metrics.pixels -
-                        notification.metrics.maxScrollExtent) /
-                    _refreshDragDistance)
-                .clamp(0, 1);
-      } else if (_startedAtBottom &&
-          notification.dragDetails != null &&
-          (notification.scrollDelta ?? 0) < 0 &&
-          notification.metrics.extentAfter > 0) {
-        _bottomPull.value = 0;
-      }
-      if (notification.dragDetails != null &&
-          (notification.scrollDelta ?? 0) > 0) {
-        _scrollingDown = true;
-      }
-    } else if (notification is OverscrollNotification) {
-      _endTimer?.cancel();
-      if (notification.dragDetails != null && notification.overscroll > 0) {
-        _scrollingDown = true;
-        if (_startedAtBottom) {
-          _bottomPull.value =
-              (_bottomPull.value +
-                      notification.overscroll / _refreshDragDistance)
-                  .clamp(0, 1);
+    final metrics = notification.metrics;
+    switch (notification) {
+      case ScrollStartNotification(:final dragDetails):
+        _resetPull();
+        _dragStartedAtBottom = dragDetails != null && metrics.extentAfter <= 1;
+      case OverscrollNotification(:final dragDetails, :final overscroll)
+          when dragDetails != null && _dragStartedAtBottom:
+        _addPull(overscroll, metrics.viewportDimension);
+      case ScrollUpdateNotification(:final dragDetails, :final scrollDelta)
+          when dragDetails != null && _dragStartedAtBottom:
+        if (metrics.pixels > metrics.maxScrollExtent) {
+          // Bouncing physics overshoot instead of reporting overscroll.
+          _pullDistance = 0;
+          _addPull(
+            metrics.pixels - metrics.maxScrollExtent,
+            metrics.viewportDimension,
+          );
+        } else if ((scrollDelta ?? 0) < 0) {
+          _addPull(scrollDelta!, metrics.viewportDimension);
         }
-      }
-    } else if (notification is ScrollEndNotification) {
-      if (_bottomPull.value >= 1) {
-        _bottomPull.value = 0;
-        _scrollingDown = false;
-        unawaited(widget.onRefresh());
-        return false;
-      }
-      _bottomPull.value = 0;
-      if (_scrollingDown && notification.metrics.extentAfter <= 1) {
-        _scheduleEndCheck();
-      }
-      _scrollingDown = false;
+      case ScrollEndNotification():
+        if (_bottomPull.value >= 1) {
+          _completeBottomPull();
+        } else {
+          _resetPull();
+        }
+        _dragStartedAtBottom = false;
+      default:
+        break;
     }
     return false;
   }
@@ -232,61 +230,75 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
         children: [
           Listener(
             onPointerSignal: _onPointerSignal,
-            child: ListView.builder(
-              controller: _controller,
-              physics: const AlwaysScrollableScrollPhysics(),
+            child: ReadableScrollPadding(
               padding: const EdgeInsets.only(top: 4, bottom: 28),
-              scrollCacheExtent: const ScrollCacheExtent.pixels(500),
-              itemCount: entries.length,
-              itemBuilder: (context, index) {
-                final entry = entries[index];
-                final article = entry.article;
-                if (article == null) {
-                  return _DateHeader(label: entry.header ?? '');
-                }
-                return NewsReadTracker(
-                  key: ValueKey(article.guidKey),
-                  article: article,
-                  enabled: widget.markReadOnScroll,
-                  reachedEnd: _reachedEnd,
-                  onSeen: () => widget.onSeen(article),
-                  onVisible: () => widget.onVisible?.call(article),
-                  child: NewsCard(
+              builder: (context, padding) => ListView.builder(
+                controller: _controller,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: padding,
+                scrollCacheExtent: const ScrollCacheExtent.pixels(500),
+                itemCount: entries.length,
+                itemBuilder: (context, index) {
+                  final entry = entries[index];
+                  final article = entry.article;
+                  if (article == null) {
+                    return _DateHeader(label: entry.header ?? '');
+                  }
+                  return NewsReadTracker(
+                    key: ValueKey(article.guidKey),
                     article: article,
-                    source: widget.sourceResolver(article.sourceShortId),
-                    onTap: () => widget.onOpen(article),
-                  ),
-                );
-              },
+                    enabled: widget.markReadOnScroll,
+                    reachedEnd: _pulledPastEnd,
+                    onSeen: () => widget.onSeen(article),
+                    onVisible: () => widget.onVisible?.call(article),
+                    child: NewsCard(
+                      article: article,
+                      source: widget.sourceResolver(article.sourceShortId),
+                      onTap: () => widget.onOpen(article),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           Positioned(
             bottom: 12,
             left: 0,
             right: 0,
-            child: IgnorePointer(
-              child: Center(
-                child: ValueListenableBuilder<double>(
-                  valueListenable: _bottomPull,
-                  builder: (context, progress, _) => progress == 0
-                      ? const SizedBox.shrink()
-                      : Material(
-                          elevation: 3,
-                          shape: const CircleBorder(),
-                          color: Theme.of(context).colorScheme.surface,
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: SizedBox.square(
-                              dimension: 24,
-                              child: CircularProgressIndicator(value: progress),
-                            ),
-                          ),
-                        ),
-                ),
-              ),
-            ),
+            child: _BottomPullIndicator(progress: _bottomPull),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BottomPullIndicator extends StatelessWidget {
+  final ValueListenable<double> progress;
+
+  const _BottomPullIndicator({required this.progress});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Center(
+        child: ValueListenableBuilder<double>(
+          valueListenable: progress,
+          builder: (context, value, _) => value == 0
+              ? const SizedBox.shrink()
+              : Material(
+                  elevation: 3,
+                  shape: const CircleBorder(),
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: SizedBox.square(
+                      dimension: 24,
+                      child: CircularProgressIndicator(value: value),
+                    ),
+                  ),
+                ),
+        ),
       ),
     );
   }

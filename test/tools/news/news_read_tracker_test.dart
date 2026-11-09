@@ -179,10 +179,11 @@ void main() {
     expect(articles, hasLength(30));
   });
 
-  testWidgets('marks the last visible articles after reaching the end', (
+  testWidgets('pulling past the end marks the last visible articles', (
     tester,
   ) async {
     final seen = <int>[];
+    var refreshes = 0;
     final articles = [
       for (var index = 0; index < 12; index++)
         NewsArticle(
@@ -205,7 +206,7 @@ void main() {
             sourceResolver: (_) => null,
             markReadOnScroll: true,
             empty: const SizedBox.shrink(),
-            onRefresh: () async {},
+            onRefresh: () async => refreshes++,
             onOpen: (_) {},
             onSeen: (article) => seen.add(article.id!),
           ),
@@ -213,13 +214,20 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.pump(const Duration(seconds: 2));
-    expect(seen, isEmpty);
     await tester.drag(find.byType(ListView), const Offset(0, -5000));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 2));
-    await tester.pump();
+    expect(seen, isNot(contains(11)));
+    expect(refreshes, 0);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -60));
+    await tester.pumpAndSettle();
+    expect(seen, isNot(contains(11)));
+
+    await tester.drag(find.byType(ListView), const Offset(0, -250));
+    await tester.pumpAndSettle();
     expect(seen, contains(11));
+    expect(refreshes, 1);
     final viewport = tester.getRect(find.byType(ListView));
     final visible = tester
         .widgetList<NewsReadTracker>(find.byType(NewsReadTracker))
@@ -232,7 +240,7 @@ void main() {
     expect(seen.toSet(), hasLength(seen.length));
   });
 
-  testWidgets('a short timeline waits for a deliberate scroll to its end', (
+  testWidgets('a short timeline waits for a deliberate pull past its end', (
     tester,
   ) async {
     final seen = <int>[];
@@ -266,17 +274,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 2));
     expect(seen, isEmpty);
-    await tester.drag(find.byType(ListView), const Offset(0, -100));
+    await tester.drag(find.byType(ListView), const Offset(0, -60));
     await tester.pumpAndSettle();
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pump();
+    expect(seen, isEmpty);
+    await tester.drag(find.byType(ListView), const Offset(0, -250));
+    await tester.pumpAndSettle();
     expect(seen, [1]);
   });
 
-  testWidgets('a mouse wheel can mark the last card at the end', (
-    tester,
-  ) async {
+  testWidgets('a mouse wheel past the end marks the last card', (tester) async {
     final seen = <int>[];
+    var refreshes = 0;
     final articles = [
       for (var index = 0; index < 12; index++)
         NewsArticle(
@@ -299,7 +307,7 @@ void main() {
             sourceResolver: (_) => null,
             markReadOnScroll: true,
             empty: const SizedBox.shrink(),
-            onRefresh: () async {},
+            onRefresh: () async => refreshes++,
             onOpen: (_) {},
             onSeen: (article) => seen.add(article.id!),
           ),
@@ -307,16 +315,27 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.sendEventToBinding(
+    Future<void> scrollWheel(double dy) => tester.sendEventToBinding(
       PointerScrollEvent(
         position: tester.getCenter(find.byType(ListView)),
-        scrollDelta: const Offset(0, 5000),
+        scrollDelta: Offset(0, dy),
       ),
     );
+
+    await scrollWheel(5000);
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 2));
+    expect(seen, isNot(contains(11)));
+
+    await scrollWheel(100);
+    await tester.pump();
+    expect(seen, isNot(contains(11)));
+    await scrollWheel(100);
+    await tester.pump();
     await tester.pump();
     expect(seen, contains(11));
+    expect(refreshes, 1);
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(
@@ -362,11 +381,11 @@ void main() {
         await tester.sendEventToBinding(
           PointerScrollEvent(
             position: tester.getCenter(find.byType(ListView)),
-            scrollDelta: const Offset(0, 100),
+            scrollDelta: const Offset(0, 250),
           ),
         );
-        await tester.pump(const Duration(seconds: 2));
         await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
       }
 
       await scrollWheel();

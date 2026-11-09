@@ -32,6 +32,11 @@ const Map<String, int> _adaptiveForegroundSizes = {
   'xxxhdpi': 432,
 };
 
+// Tools whose glyph is too light for the white tool background.
+const Map<String, String> _backgroundColorOverrides = {
+  'news': 'ic_launcher_background',
+};
+
 void main(List<String> args) async {
   final sourceDir = Directory('assets/logo/standalone');
   if (!await sourceDir.exists()) {
@@ -94,9 +99,11 @@ void main(List<String> args) async {
     final adaptiveIcon = File(
       p.join(adaptiveIconDir.path, '$resourceName.xml'),
     );
+    final background =
+        _backgroundColorOverrides[toolId] ?? 'ic_tool_launcher_background';
     await adaptiveIcon.writeAsString('''<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-  <background android:drawable="@color/ic_tool_launcher_background" />
+  <background android:drawable="@color/$background" />
   <foreground>
     <inset
         android:drawable="@drawable/${resourceName}_foreground"
