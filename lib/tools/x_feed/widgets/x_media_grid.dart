@@ -180,7 +180,11 @@ class _MediaTile extends StatelessWidget {
       ),
     );
     if (!focusable) return tile;
-    return FocusOutline(borderRadius: BorderRadius.circular(10), child: tile);
+    return FocusOutline(
+      borderRadius: BorderRadius.circular(10),
+      glow: false,
+      child: tile,
+    );
   }
 
   static String _duration(int? ms) {

@@ -206,6 +206,7 @@ class _XPostCardState extends State<XPostCard> {
       onKeyEvent: _onKey,
       child: FocusOutline(
         borderRadius: BorderRadius.circular(12),
+        glow: false,
         onTap: _open,
         onLongPress: _menu,
         child: Material(

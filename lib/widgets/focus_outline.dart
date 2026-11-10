@@ -29,6 +29,10 @@ class FocusOutline extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
+  /// Soft halo outside the border. Turn it off where the content must stay
+  /// completely untinted.
+  final bool glow;
+
   const FocusOutline({
     super.key,
     required this.child,
@@ -36,6 +40,7 @@ class FocusOutline extends StatefulWidget {
     this.width = 3,
     this.onTap,
     this.onLongPress,
+    this.glow = true,
   });
 
   @override
@@ -156,12 +161,13 @@ class _FocusOutlineState extends State<FocusOutline> {
             color: _showRing ? AppTheme.accentBlue : Colors.transparent,
             width: widget.width,
           ),
-          boxShadow: _showRing
+          boxShadow: _showRing && widget.glow
               ? [
                   BoxShadow(
                     color: AppTheme.accentBlue.withValues(alpha: 0.45),
                     blurRadius: 14,
                     spreadRadius: 1,
+                    blurStyle: BlurStyle.outer,
                   ),
                 ]
               : null,

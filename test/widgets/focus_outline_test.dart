@@ -44,6 +44,45 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(decoration().border!.top.color, AppTheme.accentBlue);
+    // Outer-only blur keeps the halo off the child's content.
+    expect(decoration().boxShadow!.single.blurStyle, BlurStyle.outer);
+  });
+
+  testWidgets('glow false leaves only the border ring', (tester) async {
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+    addTearDown(
+      () => FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.automatic,
+    );
+
+    final node = FocusNode();
+    addTearDown(node.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FocusOutline(
+            glow: false,
+            child: Focus(
+              focusNode: node,
+              child: const SizedBox(width: 100, height: 100),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    node.requestFocus();
+    await tester.pumpAndSettle();
+
+    final decoration =
+        tester
+                .widget<AnimatedContainer>(find.byType(AnimatedContainer))
+                .foregroundDecoration!
+            as BoxDecoration;
+    expect(decoration.border!.top.color, AppTheme.accentBlue);
+    expect(decoration.boxShadow, isNull);
   });
 
   testWidgets('only the innermost nested outline lights up', (tester) async {
