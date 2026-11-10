@@ -18,9 +18,10 @@ import 'x_quoted_post.dart';
 import 'x_rich_text.dart';
 import 'x_search_page.dart';
 
-/// One post in a list. On a TV the whole card is a single focus stop: OK opens
-/// the thread, holding OK opens [XPostMenu], Play starts the first video.
-class XPostCard extends StatelessWidget {
+/// One post in a list. On a TV the card is a focus stop: OK opens the thread,
+/// holding OK opens [XPostMenu]. Down moves into the post's media, where each
+/// tile is its own focus stop and OK plays it.
+class XPostCard extends StatefulWidget {
   final XPost post;
   final bool tvMode;
 
@@ -36,24 +37,83 @@ class XPostCard extends StatelessWidget {
     this.autofocus = false,
   });
 
-  void _open(BuildContext context) {
-    if (!focal) unawaited(XNavigation.openPost(context, post));
+  @override
+  State<XPostCard> createState() => _XPostCardState();
+}
+
+class _XPostCardState extends State<XPostCard> {
+  final FocusNode _cardNode = FocusNode(debugLabel: 'XPostCard');
+  late List<FocusNode> _mediaNodes = _createMediaNodes();
+
+  List<FocusNode> _createMediaNodes() => [
+    for (var i = 0; i < widget.post.media.length.clamp(0, 4); i++)
+      FocusNode(debugLabel: 'XPostMedia$i'),
+  ];
+
+  @override
+  void didUpdateWidget(covariant XPostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.post != widget.post) {
+      for (final node in _mediaNodes) {
+        node.dispose();
+      }
+      _mediaNodes = _createMediaNodes();
+    }
   }
 
-  void _menu(BuildContext context) => unawaited(XPostMenu.show(context, post));
+  @override
+  void dispose() {
+    _cardNode.dispose();
+    for (final node in _mediaNodes) {
+      node.dispose();
+    }
+    super.dispose();
+  }
 
-  KeyEventResult _onKey(BuildContext context, KeyEvent event) {
+  void _open() {
+    if (!widget.focal) unawaited(XNavigation.openPost(context, widget.post));
+  }
+
+  void _menu() => unawaited(XPostMenu.show(context, widget.post));
+
+  void _focusFirstMedia() {
+    final target = _mediaNodes.first;
+    target.requestFocus();
+    final context = target.context;
+    if (context == null || !context.mounted) return;
+    Scrollable.ensureVisible(
+      context,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+    );
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
+    if (widget.tvMode && _mediaNodes.isNotEmpty) {
+      if (key == LogicalKeyboardKey.arrowDown && _cardNode.hasPrimaryFocus) {
+        _focusFirstMedia();
+        return KeyEventResult.handled;
+      }
+      if (key == LogicalKeyboardKey.arrowUp) {
+        // The top row is tile 0 and tile 1 in every grid layout.
+        for (var i = 0; i < _mediaNodes.length && i < 2; i++) {
+          if (_mediaNodes[i].hasPrimaryFocus) {
+            _cardNode.requestFocus();
+            return KeyEventResult.handled;
+          }
+        }
+      }
+    }
     if (key == LogicalKeyboardKey.mediaPlayPause ||
         key == LogicalKeyboardKey.mediaPlay) {
-      final index = post.allMedia.indexWhere((m) => m.isPlayable);
+      final index = widget.post.allMedia.indexWhere((m) => m.isPlayable);
       if (index < 0) return KeyEventResult.ignored;
-      unawaited(XMediaActions.openMedia(context, post, index));
+      unawaited(XMediaActions.openMedia(context, widget.post, index));
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.contextMenu) {
-      _menu(context);
+      _menu();
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
@@ -66,6 +126,7 @@ class XPostCard extends StatelessWidget {
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
+    final post = widget.post;
     final reposter = post.repostedBy;
     final replyTo = post.replyToScreenName;
     final card = post.card;
@@ -74,8 +135,8 @@ class XPostCard extends StatelessWidget {
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        XPostHeader(post: post, fullTime: focal),
-        if (replyTo != null && !focal)
+        XPostHeader(post: post, fullTime: widget.focal),
+        if (replyTo != null && !widget.focal)
           Text(l10n.xFeedReplyingTo(replyTo), style: muted),
         if (post.text.isNotEmpty)
           Padding(
@@ -83,7 +144,7 @@ class XPostCard extends StatelessWidget {
             child: XRichText(
               text: post.text,
               links: post.links,
-              style: focal
+              style: widget.focal
                   ? theme.textTheme.titleMedium
                   : theme.textTheme.bodyLarge,
               onLink: (url) => XMediaActions.openUrl(context, Uri.parse(url)),
@@ -96,49 +157,66 @@ class XPostCard extends StatelessWidget {
             padding: const EdgeInsets.only(top: 10),
             child: XMediaGrid(
               media: post.media,
-              maxHeight: focal ? 640 : 420,
+              maxHeight: widget.focal ? 640 : 420,
+              focusable: widget.tvMode,
+              focusNodes: _mediaNodes,
               onOpen: (i) => XMediaActions.openMedia(context, post, i),
             ),
           ),
         if (quoted != null)
           Padding(
             padding: const EdgeInsets.only(top: 10),
-            child: XQuotedPost(
-              post: quoted,
-              onTap: () => XNavigation.openPost(context, quoted),
-              onOpenMedia: (i) =>
-                  XMediaActions.openMedia(context, post, post.media.length + i),
+            child: ExcludeFocus(
+              excluding: widget.tvMode,
+              child: XQuotedPost(
+                post: quoted,
+                onTap: () => XNavigation.openPost(context, quoted),
+                onOpenMedia: (i) => XMediaActions.openMedia(
+                  context,
+                  post,
+                  post.media.length + i,
+                ),
+              ),
             ),
           ),
         if (card != null && post.media.isEmpty && quoted == null)
           Padding(
             padding: const EdgeInsets.only(top: 10),
-            child: XLinkCardView(
-              card: card,
-              onTap: () => XMediaActions.openUrl(context, Uri.parse(card.url)),
+            child: ExcludeFocus(
+              excluding: widget.tvMode,
+              child: XLinkCardView(
+                card: card,
+                onTap: () =>
+                    XMediaActions.openUrl(context, Uri.parse(card.url)),
+              ),
             ),
           ),
         Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: XPostActions(post: post, onReply: () => _open(context)),
+          child: ExcludeFocus(
+            excluding: widget.tvMode,
+            child: XPostActions(post: post, onReply: () => _open()),
+          ),
         ),
       ],
     );
 
     return Focus(
       canRequestFocus: false,
-      onKeyEvent: (_, event) => _onKey(context, event),
+      onKeyEvent: _onKey,
       child: FocusOutline(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _open(context),
-        onLongPress: () => _menu(context),
+        onTap: _open,
+        onLongPress: _menu,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            autofocus: autofocus,
+            autofocus: widget.autofocus,
+            focusNode: _cardNode,
+            focusColor: Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            onTap: focal ? null : () => _open(context),
-            onLongPress: () => _menu(context),
+            onTap: widget.focal ? null : _open,
+            onLongPress: _menu,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
               child: Column(
@@ -162,22 +240,19 @@ class XPostCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ExcludeFocus(
-                    excluding: tvMode,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () => XNavigation.openUser(
-                            context,
-                            post.author.screenName,
-                          ),
-                          child: XAvatar(url: post.author.avatarUrl),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        onTap: () => XNavigation.openUser(
+                          context,
+                          post.author.screenName,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(child: body),
-                      ],
-                    ),
+                        child: XAvatar(url: post.author.avatarUrl),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: body),
+                    ],
                   ),
                 ],
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/focus_outline.dart';
 
 import '../models/x_media.dart';
 
@@ -11,18 +12,31 @@ class XMediaGrid extends StatelessWidget {
   /// Taller previews for the focused post of a thread.
   final double maxHeight;
 
+  /// On a TV each tile is its own focus stop, so a remote can reach a video.
+  final bool focusable;
+  final List<FocusNode>? focusNodes;
+
   const XMediaGrid({
     super.key,
     required this.media,
     required this.onOpen,
     this.maxHeight = 420,
+    this.focusable = false,
+    this.focusNodes,
   });
 
   @override
   Widget build(BuildContext context) {
     if (media.isEmpty) return const SizedBox.shrink();
     final shown = media.take(4).toList();
-    Widget tile(int i) => _MediaTile(media: shown[i], onTap: () => onOpen(i));
+    Widget tile(int i) => _MediaTile(
+      media: shown[i],
+      onTap: () => onOpen(i),
+      focusable: focusable,
+      focusNode: focusNodes != null && i < focusNodes!.length
+          ? focusNodes![i]
+          : null,
+    );
 
     final Widget grid;
     if (shown.length == 1) {
@@ -99,16 +113,25 @@ class XMediaGrid extends StatelessWidget {
 class _MediaTile extends StatelessWidget {
   final XMedia media;
   final VoidCallback onTap;
+  final bool focusable;
+  final FocusNode? focusNode;
 
-  const _MediaTile({required this.media, required this.onTap});
+  const _MediaTile({
+    required this.media,
+    required this.onTap,
+    this.focusable = false,
+    this.focusNode,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    return Material(
+    final tile = Material(
       color: scheme.surfaceContainerHighest,
       child: InkWell(
+        focusNode: focusNode,
+        focusColor: Colors.transparent,
         onTap: onTap,
         child: Stack(
           fit: StackFit.expand,
@@ -156,6 +179,8 @@ class _MediaTile extends StatelessWidget {
         ),
       ),
     );
+    if (!focusable) return tile;
+    return FocusOutline(borderRadius: BorderRadius.circular(10), child: tile);
   }
 
   static String _duration(int? ms) {

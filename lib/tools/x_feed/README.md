@@ -13,7 +13,7 @@ on x.com never reaches this UI at all.
 | Never autoplay | Nothing plays until it is opened |
 | Video buttons (copy link, download mp4) | Post menu and player: share, save, copy video link |
 | Copy image | Post menu and photo viewer: image bytes go to the clipboard |
-| Keyboard: arrows, Space, F | D-pad moves post to post, OK opens, Play starts the video, long OK opens the menu |
+| Keyboard: arrows, Space, F | D-pad moves post to post; Down enters a post's media, OK opens or plays, Play starts the video, long OK opens the menu |
 
 ## How it talks to X
 
@@ -71,8 +71,11 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
 
 ## TV
 
-- Each post is a single focus stop (its inner controls are excluded from traversal);
-  OK opens the thread, holding OK or the menu key opens `XPostMenu` with every action.
+- Each post is a focus stop; its inner controls are excluded from traversal, except the
+  media. OK opens the thread, holding OK or the menu key opens `XPostMenu` with every
+  action, and Down moves into the post's media.
+- Each media tile is its own focus stop: arrows move between tiles, OK plays the video
+  or opens the photo, and Up on the top row returns to the post.
 - The rail sits beside the feed whenever there is room, so it is reachable with left.
 - Without a browser, links fail with a message instead of opening.
 

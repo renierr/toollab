@@ -46,6 +46,50 @@ void main() {
     expect(decoration().border!.top.color, AppTheme.accentBlue);
   });
 
+  testWidgets('only the innermost nested outline lights up', (tester) async {
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+    addTearDown(
+      () => FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.automatic,
+    );
+
+    final node = FocusNode();
+    addTearDown(node.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FocusOutline(
+            child: FocusOutline(
+              child: Focus(
+                focusNode: node,
+                child: const SizedBox(width: 100, height: 100),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Color ringColor(int index) {
+      final decoration =
+          tester
+                  .widget<AnimatedContainer>(
+                    find.byType(AnimatedContainer).at(index),
+                  )
+                  .foregroundDecoration!
+              as BoxDecoration;
+      return decoration.border!.top.color;
+    }
+
+    node.requestFocus();
+    await tester.pumpAndSettle();
+
+    expect(ringColor(0), Colors.transparent);
+    expect(ringColor(1), AppTheme.accentBlue);
+  });
+
   testWidgets('short and long press on remote select trigger callbacks', (
     tester,
   ) async {

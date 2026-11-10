@@ -68,6 +68,14 @@ class _FocusOutlineState extends State<FocusOutline> {
       KeyboardNavigation.active.value &&
       FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
 
+  /// Nested outlines keep only the innermost ring lit, so a card around a
+  /// focusable media tile does not show both rings at once.
+  bool get _ownsPrimaryFocus {
+    final context = FocusManager.instance.primaryFocus?.context;
+    if (context == null || !context.mounted) return false;
+    return context.findAncestorWidgetOfExactType<FocusOutline>() == widget;
+  }
+
   static bool _isActivationKey(LogicalKeyboardKey key) =>
       key == LogicalKeyboardKey.select ||
       key == LogicalKeyboardKey.enter ||
@@ -82,7 +90,9 @@ class _FocusOutlineState extends State<FocusOutline> {
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (widget.onLongPress == null || !_isActivationKey(event.logicalKey)) {
+    if (widget.onLongPress == null ||
+        !_ownsPrimaryFocus ||
+        !_isActivationKey(event.logicalKey)) {
       return KeyEventResult.ignored;
     }
     if (event is KeyDownEvent) {
@@ -118,7 +128,7 @@ class _FocusOutlineState extends State<FocusOutline> {
   }
 
   void _syncHighlightMode() {
-    final showRing = _focused && _isKeyboardFocus();
+    final showRing = _focused && _isKeyboardFocus() && _ownsPrimaryFocus;
     if (showRing == _showRing) return;
     setState(() => _showRing = showRing);
   }
@@ -127,7 +137,7 @@ class _FocusOutlineState extends State<FocusOutline> {
     if (focused == _focused) return;
     if (!focused) _cancelLongPressTimer();
     _focused = focused;
-    _showRing = focused && _isKeyboardFocus();
+    _showRing = focused && _isKeyboardFocus() && _ownsPrimaryFocus;
     setState(() {});
   }
 
