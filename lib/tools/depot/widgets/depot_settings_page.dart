@@ -6,12 +6,14 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/background_task_tile.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
+import 'package:tool_lab/widgets/web_login/web_login.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../depot_background_sync.dart';
@@ -75,6 +77,16 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
     final connected = await context.read<DepotPortfolioState>().connect(
       clientId: _clientId.text,
       responseHtml: html,
+      inApp: WebLogin.isSupported
+          ? (authorize) => WebLogin.captureRedirect(
+              context,
+              url: authorize,
+              callbackPrefix: ParqetAuth.redirectUri,
+              title: l10n.depotLoginInAppTitle,
+            )
+          : null,
+      // A TV has no browser to hand the login to.
+      preferInApp: context.read<AppState>().tvMode,
     );
     if (!mounted) return;
     await _loadScopes();

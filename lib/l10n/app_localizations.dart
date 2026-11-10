@@ -20339,6 +20339,12 @@ abstract class AppLocalizations {
   /// **'Parqet connected'**
   String get depotLoginBrowserTitle;
 
+  /// No description provided for @depotLoginInAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with Parqet'**
+  String get depotLoginInAppTitle;
+
   /// No description provided for @depotLoginBrowserBody.
   ///
   /// In en, this message translates to:
@@ -25635,6 +25641,564 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yesterday'**
   String get newsYesterday;
+
+  /// No description provided for @webLoginReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get webLoginReload;
+
+  /// No description provided for @videoPlayerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This video could not be played'**
+  String get videoPlayerFailed;
+
+  /// No description provided for @videoPlayerPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get videoPlayerPlay;
+
+  /// No description provided for @videoPlayerPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get videoPlayerPause;
+
+  /// No description provided for @videoPlayerMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get videoPlayerMute;
+
+  /// No description provided for @videoPlayerUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get videoPlayerUnmute;
+
+  /// No description provided for @videoPlayerBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back {seconds} s'**
+  String videoPlayerBack(int seconds);
+
+  /// No description provided for @videoPlayerForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward {seconds} s'**
+  String videoPlayerForward(int seconds);
+
+  /// No description provided for @toolNameXFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'X Feed'**
+  String get toolNameXFeed;
+
+  /// No description provided for @toolDescXFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your X timeline without ads, with native video playback and sharing'**
+  String get toolDescXFeed;
+
+  /// No description provided for @xFeedForYou.
+  ///
+  /// In en, this message translates to:
+  /// **'For you'**
+  String get xFeedForYou;
+
+  /// No description provided for @xFeedFollowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get xFeedFollowing;
+
+  /// No description provided for @xFeedBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmarks'**
+  String get xFeedBookmarks;
+
+  /// No description provided for @xFeedBookmarksEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookmarks yet'**
+  String get xFeedBookmarksEmpty;
+
+  /// No description provided for @xFeedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet'**
+  String get xFeedEmpty;
+
+  /// No description provided for @xFeedRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get xFeedRefresh;
+
+  /// No description provided for @xFeedMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get xFeedMoreActions;
+
+  /// No description provided for @xFeedPostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get xFeedPostTitle;
+
+  /// No description provided for @xFeedPosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get xFeedPosts;
+
+  /// No description provided for @xFeedMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Media'**
+  String get xFeedMedia;
+
+  /// No description provided for @xFeedNow.
+  ///
+  /// In en, this message translates to:
+  /// **'now'**
+  String get xFeedNow;
+
+  /// No description provided for @xFeedMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m'**
+  String xFeedMinutesShort(int minutes);
+
+  /// No description provided for @xFeedHoursShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h'**
+  String xFeedHoursShort(int hours);
+
+  /// No description provided for @xFeedGifBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'GIF'**
+  String get xFeedGifBadge;
+
+  /// No description provided for @xFeedReplyingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Replying to @{handle}'**
+  String xFeedReplyingTo(String handle);
+
+  /// No description provided for @xFeedReposted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reposted'**
+  String xFeedReposted(String name);
+
+  /// No description provided for @xFeedFollowingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} following'**
+  String xFeedFollowingCount(String count);
+
+  /// No description provided for @xFeedFollowersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} followers'**
+  String xFeedFollowersCount(String count);
+
+  /// No description provided for @xFeedReplies.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies'**
+  String get xFeedReplies;
+
+  /// No description provided for @xFeedRepost.
+  ///
+  /// In en, this message translates to:
+  /// **'Repost'**
+  String get xFeedRepost;
+
+  /// No description provided for @xFeedUndoRepost.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo repost'**
+  String get xFeedUndoRepost;
+
+  /// No description provided for @xFeedLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Like'**
+  String get xFeedLike;
+
+  /// No description provided for @xFeedUnlike.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlike'**
+  String get xFeedUnlike;
+
+  /// No description provided for @xFeedBookmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark'**
+  String get xFeedBookmark;
+
+  /// No description provided for @xFeedRemoveBookmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove bookmark'**
+  String get xFeedRemoveBookmark;
+
+  /// No description provided for @xFeedActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'X did not accept that action'**
+  String get xFeedActionFailed;
+
+  /// No description provided for @xFeedPlayMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Play video'**
+  String get xFeedPlayMedia;
+
+  /// No description provided for @xFeedViewImage.
+  ///
+  /// In en, this message translates to:
+  /// **'View image'**
+  String get xFeedViewImage;
+
+  /// No description provided for @xFeedShareMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Share media'**
+  String get xFeedShareMedia;
+
+  /// No description provided for @xFeedSaveMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Save media'**
+  String get xFeedSaveMedia;
+
+  /// No description provided for @xFeedCopyImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy image'**
+  String get xFeedCopyImage;
+
+  /// No description provided for @xFeedCopyMediaLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy video link'**
+  String get xFeedCopyMediaLink;
+
+  /// No description provided for @xFeedShareLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link'**
+  String get xFeedShareLink;
+
+  /// No description provided for @xFeedCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get xFeedCopyLink;
+
+  /// No description provided for @xFeedLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get xFeedLinkCopied;
+
+  /// No description provided for @xFeedOpenInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser'**
+  String get xFeedOpenInBrowser;
+
+  /// No description provided for @xFeedOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'No app can open this link'**
+  String get xFeedOpenFailed;
+
+  /// No description provided for @xFeedViewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile of @{handle}'**
+  String xFeedViewProfile(String handle);
+
+  /// No description provided for @xFeedDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get xFeedDownloading;
+
+  /// No description provided for @xFeedDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed'**
+  String get xFeedDownloadFailed;
+
+  /// No description provided for @xFeedSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search X'**
+  String get xFeedSearchHint;
+
+  /// No description provided for @xFeedSearchTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Top'**
+  String get xFeedSearchTop;
+
+  /// No description provided for @xFeedSearchLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest'**
+  String get xFeedSearchLatest;
+
+  /// No description provided for @xFeedSearchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get xFeedSearchEmpty;
+
+  /// No description provided for @xFeedErrorUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'X rejected the session. Log in again.'**
+  String get xFeedErrorUnauthorized;
+
+  /// No description provided for @xFeedErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'X is rate limiting requests. Try again in a few minutes.'**
+  String get xFeedErrorRateLimited;
+
+  /// No description provided for @xFeedErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach X. Check the connection.'**
+  String get xFeedErrorNetwork;
+
+  /// No description provided for @xFeedErrorUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'X changed its web API. Refresh the API data in settings, or try again later.'**
+  String get xFeedErrorUnsupported;
+
+  /// No description provided for @xFeedErrorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'X answered with an error'**
+  String get xFeedErrorServer;
+
+  /// No description provided for @xFeedLoginIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to your X account to see your timeline'**
+  String get xFeedLoginIntro;
+
+  /// No description provided for @xFeedLoginPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'The session stays on this device in secure storage. The app talks to x.com directly, like a browser would.'**
+  String get xFeedLoginPrivacy;
+
+  /// No description provided for @xFeedSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your X session has ended. Log in again.'**
+  String get xFeedSessionExpired;
+
+  /// No description provided for @xFeedLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in to X'**
+  String get xFeedLoginTitle;
+
+  /// No description provided for @xFeedLogIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get xFeedLogIn;
+
+  /// No description provided for @xFeedLogInAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in again'**
+  String get xFeedLogInAgain;
+
+  /// No description provided for @xFeedLogInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens x.com\'s own login page inside the app'**
+  String get xFeedLogInSubtitle;
+
+  /// No description provided for @xFeedLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged in'**
+  String get xFeedLoggedIn;
+
+  /// No description provided for @xFeedLoggedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged in as @{handle}'**
+  String xFeedLoggedInAs(String handle);
+
+  /// No description provided for @xFeedLogOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get xFeedLogOut;
+
+  /// No description provided for @xFeedLogOutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the X session from this device.'**
+  String get xFeedLogOutBody;
+
+  /// No description provided for @xFeedPasteSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter session cookies'**
+  String get xFeedPasteSessionTitle;
+
+  /// No description provided for @xFeedPasteSessionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy auth_token and ct0 from a logged-in browser'**
+  String get xFeedPasteSessionSubtitle;
+
+  /// No description provided for @xFeedPasteSessionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'In a browser where you are logged in to x.com, open the developer tools, go to Application (Storage) › Cookies › https://x.com and copy the values of auth_token and ct0.'**
+  String get xFeedPasteSessionHint;
+
+  /// No description provided for @xFeedPairReceiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in from your phone'**
+  String get xFeedPairReceiveTitle;
+
+  /// No description provided for @xFeedPairReceiveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a code here and scan it with ToolLab on a logged-in phone'**
+  String get xFeedPairReceiveSubtitle;
+
+  /// No description provided for @xFeedPairReceiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On your phone, open ToolLab › X Feed › Settings › Send login to a TV, then scan this code. Both devices must be on the same network.'**
+  String get xFeedPairReceiveHint;
+
+  /// No description provided for @xFeedPairNoNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no network address to receive the login on.'**
+  String get xFeedPairNoNetwork;
+
+  /// No description provided for @xFeedPairFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start receiving the login'**
+  String get xFeedPairFailed;
+
+  /// No description provided for @xFeedPairSendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send login to a TV'**
+  String get xFeedPairSendTitle;
+
+  /// No description provided for @xFeedPairSendSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code a TV shows under Log in from your phone'**
+  String get xFeedPairSendSubtitle;
+
+  /// No description provided for @xFeedPairSendHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the code on the TV. The login is sent encrypted over your local network.'**
+  String get xFeedPairSendHint;
+
+  /// No description provided for @xFeedPairSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Login sent to the TV'**
+  String get xFeedPairSent;
+
+  /// No description provided for @xFeedPairSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The TV could not be reached. Check that both devices are on the same network.'**
+  String get xFeedPairSendFailed;
+
+  /// No description provided for @xFeedSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'X Feed settings'**
+  String get xFeedSettingsTitle;
+
+  /// No description provided for @xFeedAccountSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get xFeedAccountSection;
+
+  /// No description provided for @xFeedFeedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get xFeedFeedSection;
+
+  /// No description provided for @xFeedStartTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with'**
+  String get xFeedStartTab;
+
+  /// No description provided for @xFeedHideReposts.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide reposts'**
+  String get xFeedHideReposts;
+
+  /// No description provided for @xFeedHideReplies.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide replies'**
+  String get xFeedHideReplies;
+
+  /// No description provided for @xFeedAdvancedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get xFeedAdvancedSection;
+
+  /// No description provided for @xFeedApiRefreshHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The app reads X\'s query ids and feature flags from x.com and refreshes them every few hours or when a request is rejected.'**
+  String get xFeedApiRefreshHint;
+
+  /// No description provided for @xFeedApiRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh API data now'**
+  String get xFeedApiRefresh;
+
+  /// No description provided for @xFeedApiRefreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'API data refreshed'**
+  String get xFeedApiRefreshed;
 }
 
 class _AppLocalizationsDelegate

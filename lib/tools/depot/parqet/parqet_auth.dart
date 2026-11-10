@@ -127,18 +127,90 @@ class ParqetAuth {
     }
   }
 
-  /// Opens the Parqet consent page in the browser and waits for its redirect
-  /// on the loopback port. [responseHtml] is what the browser tab shows after.
+  /// Opens the Parqet consent page and waits for its redirect. The browser
+  /// redirects to the loopback port and [responseHtml] is what its tab shows
+  /// after. [inApp] opens the page inside the app instead and returns the
+  /// redirect it intercepted, or null when closed: used first when
+  /// [preferInApp] (a TV), and whenever no browser opens.
   static Future<void> login({
     required String clientId,
     required String responseHtml,
+    Future<Uri?> Function(Uri authorize)? inApp,
+    bool preferInApp = false,
   }) async {
     final verifier = _randomUrlSafe(48);
     final state = _randomUrlSafe(16);
     final challenge = base64UrlEncode(
       sha256.convert(ascii.encode(verifier)).bytes,
     ).replaceAll('=', '');
+    final authorize = _authorizeUri.replace(
+      queryParameters: {
+        'response_type': 'code',
+        'client_id': clientId,
+        'redirect_uri': redirectUri,
+        'scope': scope,
+        'state': state,
+        'code_challenge': challenge,
+        'code_challenge_method': 'S256',
+      },
+    );
 
+    final callback = inApp != null && preferInApp
+        ? await _loginInApp(inApp, authorize)
+        : await _loginInBrowser(authorize, responseHtml, inApp);
+
+    final error = callback.queryParameters['error'];
+    if (error == 'invalid_scope') {
+      throw const ParqetException(
+        ParqetErrorKind.scopeNotAllowed,
+        'invalid_scope',
+      );
+    }
+    if (error != null) throw ParqetException(ParqetErrorKind.denied, error);
+    if (callback.queryParameters['state'] != state) {
+      throw const ParqetException(
+        ParqetErrorKind.invalidResponse,
+        'State mismatch',
+      );
+    }
+    final code = callback.queryParameters['code'];
+    if (code == null || code.isEmpty) {
+      throw const ParqetException(
+        ParqetErrorKind.invalidResponse,
+        'No authorization code',
+      );
+    }
+
+    final tokens = await _tokenRequest({
+      'grant_type': 'authorization_code',
+      'code': code,
+      'redirect_uri': redirectUri,
+      'client_id': clientId,
+      'code_verifier': verifier,
+    });
+    _grantGeneration++;
+    await _saveTokens(tokens);
+    // A login that does not name its scopes leaves the stored grant
+    // unknown rather than showing the scopes that were merely requested.
+    if (tokens.scope == null) await _storage.delete(key: _scopeKey);
+  }
+
+  static Future<Uri> _loginInApp(
+    Future<Uri?> Function(Uri authorize) inApp,
+    Uri authorize,
+  ) async {
+    final callback = await inApp(authorize);
+    if (callback == null) {
+      throw const ParqetException(ParqetErrorKind.denied, 'Login closed');
+    }
+    return callback;
+  }
+
+  static Future<Uri> _loginInBrowser(
+    Uri authorize,
+    String responseHtml,
+    Future<Uri?> Function(Uri authorize)? inApp,
+  ) async {
     final HttpServer server;
     try {
       server = await HttpServer.bind(
@@ -150,65 +222,27 @@ class ParqetAuth {
     }
 
     try {
-      final authorize = _authorizeUri.replace(
-        queryParameters: {
-          'response_type': 'code',
-          'client_id': clientId,
-          'redirect_uri': redirectUri,
-          'scope': scope,
-          'state': state,
-          'code_challenge': challenge,
-          'code_challenge_method': 'S256',
-        },
-      );
-      if (!await launchUrl(authorize, mode: LaunchMode.externalApplication)) {
+      var launched = false;
+      try {
+        launched = await launchUrl(
+          authorize,
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (e) {
+        debugLog('[ParqetAuth] No browser: $e');
+      }
+      if (!launched) {
+        if (inApp != null) return await _loginInApp(inApp, authorize);
         throw const ParqetException(
           ParqetErrorKind.network,
           'Could not open the browser',
         );
       }
-
-      final Uri callback;
       try {
-        callback = await _awaitCallback(server, responseHtml);
+        return await _awaitCallback(server, responseHtml);
       } on TimeoutException {
         throw const ParqetException(ParqetErrorKind.timeout);
       }
-
-      final error = callback.queryParameters['error'];
-      if (error == 'invalid_scope') {
-        throw const ParqetException(
-          ParqetErrorKind.scopeNotAllowed,
-          'invalid_scope',
-        );
-      }
-      if (error != null) throw ParqetException(ParqetErrorKind.denied, error);
-      if (callback.queryParameters['state'] != state) {
-        throw const ParqetException(
-          ParqetErrorKind.invalidResponse,
-          'State mismatch',
-        );
-      }
-      final code = callback.queryParameters['code'];
-      if (code == null || code.isEmpty) {
-        throw const ParqetException(
-          ParqetErrorKind.invalidResponse,
-          'No authorization code',
-        );
-      }
-
-      final tokens = await _tokenRequest({
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': redirectUri,
-        'client_id': clientId,
-        'code_verifier': verifier,
-      });
-      _grantGeneration++;
-      await _saveTokens(tokens);
-      // A login that does not name its scopes leaves the stored grant
-      // unknown rather than showing the scopes that were merely requested.
-      if (tokens.scope == null) await _storage.delete(key: _scopeKey);
     } finally {
       await server.close(force: true);
     }

@@ -52,6 +52,7 @@ open class MainActivity : FlutterFragmentActivity() {
         private var systemAudioPlayerHelper: SystemAudioPlayerHelper? = null
         private var wakeLockHelper: WakeLockHelper? = null
         private var multicastLock: WifiManager.MulticastLock? = null
+        private var webViewDataSeparated = false
 
         const val EXTRA_FROM_NOTIFICATION = "de.renier.tool_lab.fromNotification"
         private const val FILE_PICKER_REQUEST_CODE = 7412
@@ -75,12 +76,27 @@ open class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        separateWebViewDataPerProcess()
         super.onCreate(savedInstanceState)
         resolveLaunchRoute(intent)
         retainedEngine?.takeIf { it.dartExecutor.isExecutingDart }?.let {
             pushLaunchRoute(it.dartExecutor.binaryMessenger)
         }
         SharingHelper.handleIntent(this, intent, null)
+    }
+
+    // Two processes sharing one WebView data dir crash; isolated tools each get
+    // their own. Must run before the process creates its first WebView.
+    private fun separateWebViewDataPerProcess() {
+        if (webViewDataSeparated || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return
+        webViewDataSeparated = true
+        val process = android.app.Application.getProcessName()
+        if (process == packageName) return
+        try {
+            android.webkit.WebView.setDataDirectorySuffix(process.substringAfterLast(':'))
+        } catch (e: IllegalStateException) {
+            android.util.Log.w("MainActivity", "WebView already initialized: ${e.message}")
+        }
     }
 
     override fun createFlutterFragment(): FlutterFragment =
@@ -648,3 +664,4 @@ class DriftBloomActivity : MainActivity()
 class DepotActivity : MainActivity()
 class NewsActivity : MainActivity()
 class TotpAuthActivity : MainActivity()
+class XFeedActivity : MainActivity()

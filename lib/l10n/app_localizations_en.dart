@@ -11398,6 +11398,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotLoginBrowserTitle => 'Parqet connected';
 
   @override
+  String get depotLoginInAppTitle => 'Connect with Parqet';
+
+  @override
   String get depotLoginBrowserBody =>
       'You can close this tab and return to ToolLab.';
 
@@ -14552,4 +14555,317 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newsYesterday => 'Yesterday';
+
+  @override
+  String get webLoginReload => 'Reload';
+
+  @override
+  String get videoPlayerFailed => 'This video could not be played';
+
+  @override
+  String get videoPlayerPlay => 'Play';
+
+  @override
+  String get videoPlayerPause => 'Pause';
+
+  @override
+  String get videoPlayerMute => 'Mute';
+
+  @override
+  String get videoPlayerUnmute => 'Unmute';
+
+  @override
+  String videoPlayerBack(int seconds) {
+    return 'Back $seconds s';
+  }
+
+  @override
+  String videoPlayerForward(int seconds) {
+    return 'Forward $seconds s';
+  }
+
+  @override
+  String get toolNameXFeed => 'X Feed';
+
+  @override
+  String get toolDescXFeed =>
+      'Your X timeline without ads, with native video playback and sharing';
+
+  @override
+  String get xFeedForYou => 'For you';
+
+  @override
+  String get xFeedFollowing => 'Following';
+
+  @override
+  String get xFeedBookmarks => 'Bookmarks';
+
+  @override
+  String get xFeedBookmarksEmpty => 'No bookmarks yet';
+
+  @override
+  String get xFeedEmpty => 'Nothing here yet';
+
+  @override
+  String get xFeedRefresh => 'Refresh';
+
+  @override
+  String get xFeedMoreActions => 'More actions';
+
+  @override
+  String get xFeedPostTitle => 'Post';
+
+  @override
+  String get xFeedPosts => 'Posts';
+
+  @override
+  String get xFeedMedia => 'Media';
+
+  @override
+  String get xFeedNow => 'now';
+
+  @override
+  String xFeedMinutesShort(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String xFeedHoursShort(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String get xFeedGifBadge => 'GIF';
+
+  @override
+  String xFeedReplyingTo(String handle) {
+    return 'Replying to @$handle';
+  }
+
+  @override
+  String xFeedReposted(String name) {
+    return '$name reposted';
+  }
+
+  @override
+  String xFeedFollowingCount(String count) {
+    return '$count following';
+  }
+
+  @override
+  String xFeedFollowersCount(String count) {
+    return '$count followers';
+  }
+
+  @override
+  String get xFeedReplies => 'Replies';
+
+  @override
+  String get xFeedRepost => 'Repost';
+
+  @override
+  String get xFeedUndoRepost => 'Undo repost';
+
+  @override
+  String get xFeedLike => 'Like';
+
+  @override
+  String get xFeedUnlike => 'Unlike';
+
+  @override
+  String get xFeedBookmark => 'Bookmark';
+
+  @override
+  String get xFeedRemoveBookmark => 'Remove bookmark';
+
+  @override
+  String get xFeedActionFailed => 'X did not accept that action';
+
+  @override
+  String get xFeedPlayMedia => 'Play video';
+
+  @override
+  String get xFeedViewImage => 'View image';
+
+  @override
+  String get xFeedShareMedia => 'Share media';
+
+  @override
+  String get xFeedSaveMedia => 'Save media';
+
+  @override
+  String get xFeedCopyImage => 'Copy image';
+
+  @override
+  String get xFeedCopyMediaLink => 'Copy video link';
+
+  @override
+  String get xFeedShareLink => 'Share link';
+
+  @override
+  String get xFeedCopyLink => 'Copy link';
+
+  @override
+  String get xFeedLinkCopied => 'Link copied';
+
+  @override
+  String get xFeedOpenInBrowser => 'Open in browser';
+
+  @override
+  String get xFeedOpenFailed => 'No app can open this link';
+
+  @override
+  String xFeedViewProfile(String handle) {
+    return 'Profile of @$handle';
+  }
+
+  @override
+  String get xFeedDownloading => 'Downloading…';
+
+  @override
+  String get xFeedDownloadFailed => 'Download failed';
+
+  @override
+  String get xFeedSearchHint => 'Search X';
+
+  @override
+  String get xFeedSearchTop => 'Top';
+
+  @override
+  String get xFeedSearchLatest => 'Latest';
+
+  @override
+  String get xFeedSearchEmpty => 'No results';
+
+  @override
+  String get xFeedErrorUnauthorized => 'X rejected the session. Log in again.';
+
+  @override
+  String get xFeedErrorRateLimited =>
+      'X is rate limiting requests. Try again in a few minutes.';
+
+  @override
+  String get xFeedErrorNetwork => 'Could not reach X. Check the connection.';
+
+  @override
+  String get xFeedErrorUnsupported =>
+      'X changed its web API. Refresh the API data in settings, or try again later.';
+
+  @override
+  String get xFeedErrorServer => 'X answered with an error';
+
+  @override
+  String get xFeedLoginIntro => 'Log in to your X account to see your timeline';
+
+  @override
+  String get xFeedLoginPrivacy =>
+      'The session stays on this device in secure storage. The app talks to x.com directly, like a browser would.';
+
+  @override
+  String get xFeedSessionExpired => 'Your X session has ended. Log in again.';
+
+  @override
+  String get xFeedLoginTitle => 'Log in to X';
+
+  @override
+  String get xFeedLogIn => 'Log in';
+
+  @override
+  String get xFeedLogInAgain => 'Log in again';
+
+  @override
+  String get xFeedLogInSubtitle =>
+      'Opens x.com\'s own login page inside the app';
+
+  @override
+  String get xFeedLoggedIn => 'Logged in';
+
+  @override
+  String xFeedLoggedInAs(String handle) {
+    return 'Logged in as @$handle';
+  }
+
+  @override
+  String get xFeedLogOut => 'Log out';
+
+  @override
+  String get xFeedLogOutBody => 'Removes the X session from this device.';
+
+  @override
+  String get xFeedPasteSessionTitle => 'Enter session cookies';
+
+  @override
+  String get xFeedPasteSessionSubtitle =>
+      'Copy auth_token and ct0 from a logged-in browser';
+
+  @override
+  String get xFeedPasteSessionHint =>
+      'In a browser where you are logged in to x.com, open the developer tools, go to Application (Storage) › Cookies › https://x.com and copy the values of auth_token and ct0.';
+
+  @override
+  String get xFeedPairReceiveTitle => 'Log in from your phone';
+
+  @override
+  String get xFeedPairReceiveSubtitle =>
+      'Show a code here and scan it with ToolLab on a logged-in phone';
+
+  @override
+  String get xFeedPairReceiveHint =>
+      'On your phone, open ToolLab › X Feed › Settings › Send login to a TV, then scan this code. Both devices must be on the same network.';
+
+  @override
+  String get xFeedPairNoNetwork =>
+      'This device has no network address to receive the login on.';
+
+  @override
+  String get xFeedPairFailed => 'Could not start receiving the login';
+
+  @override
+  String get xFeedPairSendTitle => 'Send login to a TV';
+
+  @override
+  String get xFeedPairSendSubtitle =>
+      'Scan the code a TV shows under Log in from your phone';
+
+  @override
+  String get xFeedPairSendHint =>
+      'Point the camera at the code on the TV. The login is sent encrypted over your local network.';
+
+  @override
+  String get xFeedPairSent => 'Login sent to the TV';
+
+  @override
+  String get xFeedPairSendFailed =>
+      'The TV could not be reached. Check that both devices are on the same network.';
+
+  @override
+  String get xFeedSettingsTitle => 'X Feed settings';
+
+  @override
+  String get xFeedAccountSection => 'Account';
+
+  @override
+  String get xFeedFeedSection => 'Feed';
+
+  @override
+  String get xFeedStartTab => 'Start with';
+
+  @override
+  String get xFeedHideReposts => 'Hide reposts';
+
+  @override
+  String get xFeedHideReplies => 'Hide replies';
+
+  @override
+  String get xFeedAdvancedSection => 'Advanced';
+
+  @override
+  String get xFeedApiRefreshHint =>
+      'The app reads X\'s query ids and feature flags from x.com and refreshes them every few hours or when a request is rejected.';
+
+  @override
+  String get xFeedApiRefresh => 'Refresh API data now';
+
+  @override
+  String get xFeedApiRefreshed => 'API data refreshed';
 }

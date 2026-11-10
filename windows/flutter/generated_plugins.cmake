@@ -5,11 +5,14 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   battery_plus
   desktop_drop
+  desktop_webview_window
   file_selector_windows
   flutter_classic_bluetooth
   flutter_onnxruntime
   flutter_secure_storage_windows
   geolocator_windows
+  media_kit_libs_windows_video
+  media_kit_video
   pasteboard
   record_windows
   share_plus

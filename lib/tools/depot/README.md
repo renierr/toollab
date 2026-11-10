@@ -56,6 +56,11 @@ enabling write in the console.
 If port 47615 is busy (another login still waiting), the login fails with a "port busy"
 error: finish or cancel the other login and retry.
 
+**In-app login.** In TV mode, and whenever no browser opens (Android TV has none), the
+consent page opens inside the app instead (`WebLogin`). The redirect to the loopback URL
+is intercepted before it loads, so no listener runs and cleartext stays blocked. Sign-in
+providers that refuse embedded WebViews (Google) do not work there; use e-mail and password.
+
 ## How sync works
 
 `DepotParqetSync.run` is shared by the open tool, pull-to-refresh and the hourly

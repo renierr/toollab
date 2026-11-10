@@ -514,9 +514,12 @@ class DepotPortfolioState extends ChangeNotifier {
   }
 
   /// Runs the browser login; [responseHtml] is shown in the tab it returns to.
+  /// See [ParqetAuth.login] for [inApp] and [preferInApp].
   Future<bool> connect({
     required String clientId,
     required String responseHtml,
+    Future<Uri?> Function(Uri authorize)? inApp,
+    bool preferInApp = false,
   }) async {
     final id = clientId.trim();
     if (id.isEmpty || _isConnecting) return false;
@@ -526,7 +529,12 @@ class DepotPortfolioState extends ChangeNotifier {
     try {
       await _store.setClientId(id);
       _clientId = id;
-      await ParqetAuth.login(clientId: id, responseHtml: responseHtml);
+      await ParqetAuth.login(
+        clientId: id,
+        responseHtml: responseHtml,
+        inApp: inApp,
+        preferInApp: preferInApp,
+      );
       _isConnected = true;
     } on ParqetException catch (e) {
       errorLog('[DepotPortfolioState] Login failed: $e');

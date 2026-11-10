@@ -88,6 +88,13 @@ dependencies:
   wifi_scan: ^0.5.0
   cryptography: ^2.9.0
   cryptography_flutter: ^2.3.4
+  webview_flutter: 4.14.1
+  video_player: 2.14.1
+  media_kit: 1.2.6
+  media_kit_video: 2.0.1
+  media_kit_libs_windows_video: 1.0.11
+  media_kit_libs_linux: 1.2.1
+  desktop_webview_window: 0.4.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

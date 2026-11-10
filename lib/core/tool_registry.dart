@@ -47,6 +47,7 @@ import 'package:tool_lab/tools/totp_auth/config.dart';
 import 'package:tool_lab/tools/wifi_heatmap/config.dart';
 import 'package:tool_lab/tools/sudoku/config.dart';
 import 'package:tool_lab/tools/news/config.dart';
+import 'package:tool_lab/tools/x_feed/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -118,5 +119,6 @@ class ToolRegistry {
     TotpAuthTool.config,
     SudokuTool.config,
     NewsTool.config,
+    XFeedTool.config,
   ];
 }
