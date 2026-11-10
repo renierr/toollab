@@ -108,6 +108,14 @@ class XPostMenu extends StatelessWidget {
               onTap: () =>
                   run((c) => XMediaActions.saveMedia(c, post, media[i])),
             ),
+            if (media[i].videoUrl case final video?)
+              ListTile(
+                leading: const Icon(Icons.link),
+                title: Text(mediaLabel(l10n.xFeedCopyMediaLink, i)),
+                onTap: () => run(
+                  (c) => XMediaActions.copyText(c, video, l10n.xFeedLinkCopied),
+                ),
+              ),
             if (media[i].type == XMediaType.photo)
               ListTile(
                 leading: const Icon(Icons.copy_all_outlined),

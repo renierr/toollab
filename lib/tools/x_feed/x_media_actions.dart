@@ -93,17 +93,16 @@ class XMediaActions {
         duration: const Duration(seconds: 30),
       ),
     );
-    HttpClient? client;
+    final client = await AppHttpClient.createStreamingClient();
     try {
       final path = await scope.createFile(fileName(post, media));
-      client = await AppHttpClient.createIoClient();
-      final request = await client.getUrl(Uri.parse(url));
-      final response = await request.close();
-      if (response.statusCode != 200) {
-        throw HttpException('HTTP ${response.statusCode}');
-      }
+      final response = await client.getStream(url);
       final sink = File(path).openWrite();
-      await response.pipe(sink);
+      try {
+        await sink.addStream(response.body);
+      } finally {
+        await sink.close();
+      }
       messenger?.hideCurrentSnackBar();
       return path;
     } catch (e) {
@@ -113,7 +112,7 @@ class XMediaActions {
         ..showSnackBar(SnackBar(content: Text(l10n.xFeedDownloadFailed)));
       return null;
     } finally {
-      client?.close();
+      client.dispose();
     }
   }
 
