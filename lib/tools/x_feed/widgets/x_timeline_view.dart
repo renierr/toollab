@@ -56,6 +56,9 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   final Map<String, _PostRowState> _rows = {};
   List<XPost> _shown = const [];
   bool _tvMode = false;
+  int _navigationSequence = 0;
+  int _alignmentSequence = 0;
+  bool _aligningPost = false;
   Timer? _seenTimer;
   late int _refreshCount = widget.controller.refreshCount;
 
@@ -110,6 +113,34 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
         ?.findAncestorStateOfType<_PostRowState>();
     if (row == null) return KeyEventResult.ignored;
     final key = event.logicalKey;
+    final sequence = ++_navigationSequence;
+    if (key == LogicalKeyboardKey.arrowUp && _aligningPost) {
+      _aligningPost = false;
+      if (_scroll.hasClients) _scroll.jumpTo(_scroll.offset);
+    }
+    if (key == LogicalKeyboardKey.arrowDown) {
+      final previousId = row.widget.postId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || sequence != _navigationSequence) return;
+        final next = FocusManager.instance.primaryFocus?.context
+            ?.findAncestorStateOfType<_PostRowState>();
+        if (next == null || next == row || !next.cardHasPrimaryFocus) return;
+        final from = _shown.indexWhere((post) => post.id == previousId);
+        final to = _shown.indexWhere((post) => post.id == next.widget.postId);
+        if (from < 0 || to <= from) return;
+        _aligningPost = true;
+        final alignment = ++_alignmentSequence;
+        unawaited(
+          Scrollable.ensureVisible(
+            next.context,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          ).whenComplete(() {
+            if (alignment == _alignmentSequence) _aligningPost = false;
+          }),
+        );
+      });
+    }
     if (!XKeys.plain) return KeyEventResult.ignored;
     if (key == LogicalKeyboardKey.keyR) {
       if (event is KeyDownEvent && !widget.controller.isLoading) {
@@ -366,7 +397,7 @@ class _PostRowState extends State<_PostRow> {
   }
 
   /// Focuses the card itself, the outermost focus stop of the row.
-  void focusPost() {
+  FocusNode? get _cardNode {
     FocusNode? card;
     var cardDepth = 0;
     for (final node in _node.descendants) {
@@ -377,8 +408,12 @@ class _PostRowState extends State<_PostRow> {
         cardDepth = depth;
       }
     }
-    card?.requestFocus();
+    return card;
   }
+
+  bool get cardHasPrimaryFocus => _cardNode?.hasPrimaryFocus ?? false;
+
+  void focusPost() => _cardNode?.requestFocus();
 
   @override
   Widget build(BuildContext context) {

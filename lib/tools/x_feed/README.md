@@ -95,6 +95,8 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
   photo), and Down moves into the post's media. The first post takes focus.
 - Each media tile is its own focus stop: arrows move between tiles, OK plays the video
   or opens the photo, and Up on the top row returns to the post.
+- Moving Down to a later post aligns its top with the feed viewport when possible.
+  Moving Up keeps the normal scrolling behavior for reading tall posts.
 - Without TV mode, left/right jump to the previous / next post and scroll it to the top.
   In TV mode they stay with the rail and the media tiles.
 - Letter keys (`XKeys`, ignored with Ctrl / Alt / Meta held or while typing):
