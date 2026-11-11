@@ -10,6 +10,7 @@ import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../models/x_post.dart';
 import '../x_feed_state.dart';
+import '../x_keys.dart';
 import '../x_timeline_controller.dart';
 import 'x_error_view.dart';
 import 'x_post_card.dart';
@@ -101,30 +102,32 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     });
   }
 
-  /// R reloads the list. Left / right step to the previous / next post on a
-  /// keyboard; a TV keeps them for the rail and the media tiles.
+  /// R reloads, Home goes to the first post, J / K and (keyboard only) right /
+  /// left step post to post; a TV keeps the arrows for the rail and media.
   KeyEventResult _onListKey(FocusNode node, KeyEvent event) {
     if (event is KeyUpEvent) return KeyEventResult.ignored;
     final row = FocusManager.instance.primaryFocus?.context
         ?.findAncestorStateOfType<_PostRowState>();
     if (row == null) return KeyEventResult.ignored;
     final key = event.logicalKey;
+    if (!XKeys.plain) return KeyEventResult.ignored;
     if (key == LogicalKeyboardKey.keyR) {
-      final keyboard = HardwareKeyboard.instance;
-      if (keyboard.isControlPressed ||
-          keyboard.isAltPressed ||
-          keyboard.isMetaPressed) {
-        return KeyEventResult.ignored;
-      }
       if (event is KeyDownEvent && !widget.controller.isLoading) {
         unawaited(_refreshIndicator.currentState?.show());
       }
       return KeyEventResult.handled;
     }
-    if (_tvMode) return KeyEventResult.ignored;
-    final delta = key == LogicalKeyboardKey.arrowRight
+    if (key == LogicalKeyboardKey.home) {
+      unawaited(_toFirst());
+      return KeyEventResult.handled;
+    }
+    final arrows = !_tvMode;
+    final delta =
+        key == LogicalKeyboardKey.keyJ ||
+            arrows && key == LogicalKeyboardKey.arrowRight
         ? 1
-        : key == LogicalKeyboardKey.arrowLeft
+        : key == LogicalKeyboardKey.keyK ||
+              arrows && key == LogicalKeyboardKey.arrowLeft
         ? -1
         : 0;
     if (delta == 0) return KeyEventResult.ignored;
@@ -135,6 +138,13 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
       unawaited(_stepTo(_shown[target].id, delta));
     }
     return KeyEventResult.handled;
+  }
+
+  Future<void> _toFirst() async {
+    if (!_scroll.hasClients || _shown.isEmpty) return;
+    _scroll.jumpTo(_scroll.position.minScrollExtent);
+    await WidgetsBinding.instance.endOfFrame;
+    if (mounted && _shown.isNotEmpty) _rows[_shown.first.id]?.focusPost();
   }
 
   Future<void> _stepTo(String postId, int direction) async {

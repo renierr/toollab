@@ -7,6 +7,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../models/x_media.dart';
 import '../models/x_post.dart';
+import '../x_keys.dart';
 import '../x_media_actions.dart';
 
 /// Swipe (or left/right on a remote) through a post's photos, pinch to zoom.
@@ -79,7 +80,8 @@ class _XPhotoViewerPageState extends State<XPhotoViewerPage>
       _go(1);
       return KeyEventResult.handled;
     }
-    if (event.logicalKey == LogicalKeyboardKey.escape) {
+    if (event.logicalKey == LogicalKeyboardKey.escape ||
+        XKeys.isBack(event.logicalKey)) {
       unawaited(Navigator.of(context).maybePop());
       return KeyEventResult.handled;
     }

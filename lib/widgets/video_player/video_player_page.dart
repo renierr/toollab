@@ -23,8 +23,8 @@ class VideoPlayerAction {
 }
 
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
-/// Space / Play toggles playback, left/right seek 5 s while playing, Esc
-/// closes, any other key brings the controls back.
+/// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
+/// 10 s, M mutes, Esc / Backspace close, any other key shows the controls.
 class VideoPlayerPage extends StatefulWidget {
   final Uri source;
   final String? title;
@@ -157,15 +157,23 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       unawaited(_backend.pause());
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.mediaFastForward) {
+    if (key == LogicalKeyboardKey.mediaFastForward ||
+        key == LogicalKeyboardKey.keyL) {
       unawaited(_seekBy(_seekStep));
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.mediaRewind) {
+    if (key == LogicalKeyboardKey.mediaRewind ||
+        key == LogicalKeyboardKey.keyJ) {
       unawaited(_seekBy(-_seekStep));
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.escape) {
+    if (key == LogicalKeyboardKey.keyM && event is KeyDownEvent) {
+      unawaited(_backend.setVolume(_backend.state.value.volume > 0 ? 0 : 1));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.escape ||
+        key == LogicalKeyboardKey.backspace ||
+        key == LogicalKeyboardKey.browserBack) {
       unawaited(Navigator.of(context).maybePop());
       return KeyEventResult.handled;
     }

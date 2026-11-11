@@ -13,7 +13,7 @@ on x.com never reaches this UI at all.
 | Never autoplay | Nothing plays until it is opened |
 | Video buttons (copy link, download mp4) | Post menu and player: share, save, copy video link |
 | Copy image | Post menu and photo viewer: image bytes go to the clipboard |
-| Keyboard: arrows, Space, F | Left/right (keyboard) or up/down step post to post; Down enters a post's media, Space or Play opens it, OK opens the thread, long OK opens the menu, R reloads |
+| Keyboard: arrows, Space, F | Left/right (keyboard) or up/down step post to post; Down enters a post's media, Space or Play opens it, OK opens the thread, long OK opens the menu; letter keys below |
 
 ## How it talks to X
 
@@ -81,7 +81,7 @@ Playback streams the URL and starts while it buffers; only share and save downlo
 whole file. GIFs are mp4s and loop. The controls stay hidden until the user taps, moves
 the mouse or presses a key, and come up by themselves only at the end or on an error.
 Keyboard and remote: Space (and OK while the controls are hidden)
-toggles, left/right seek 5 s while playing or while the controls are hidden, Esc closes,
+toggles, left/right seek 5 s while playing or while the controls are hidden, Esc or Backspace closes,
 any other key shows the controls. The photo viewer also closes on Esc.
 
 Share and save stream the file into the tool's `TempFileScope` first, then use
@@ -97,7 +97,22 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
   or opens the photo, and Up on the top row returns to the post.
 - Without TV mode, left/right jump to the previous / next post and scroll it to the top.
   In TV mode they stay with the rail and the media tiles.
-- R reloads the list a focused post belongs to, like pull-to-refresh.
+- Letter keys (`XKeys`, ignored with Ctrl / Alt / Meta held or while typing):
+
+  | Where | Key | Action |
+  |---|---|---|
+  | List | J / K | Next / previous post (also in TV mode) |
+  | List | Home | First post |
+  | List | R | Reload, like pull-to-refresh |
+  | Post | L / B | Like / bookmark |
+  | Post | U | Author's profile |
+  | Feed | 1 – 4 | For you, Following, Bookmarks, Search; focus returns to where it was |
+  | Feed | / | Search field |
+  | Thread, profile, search page, photo viewer, player | Backspace | Back |
+  | Player | K / J / L / M | Play-pause / back 10 s / forward 10 s / mute |
+
+  `XBackKey` wraps each pushed page in its own focus scope, so Backspace arrives even
+  before anything inside has taken the focus.
 - **Settings → Post text size** scales all text inside posts on top of the system text
   scale; stored in the tool's settings.
 - The rail sits beside the feed whenever there is room, so it is reachable with left.

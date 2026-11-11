@@ -8,6 +8,7 @@ import 'package:tool_lab/widgets/focus_outline.dart';
 
 import '../models/x_post.dart';
 import '../x_feed_state.dart';
+import '../x_keys.dart';
 import '../x_media_actions.dart';
 import '../x_navigation.dart';
 import 'x_avatar.dart';
@@ -129,7 +130,29 @@ class _XPostCardState extends State<XPostCard> {
       _menu();
       return KeyEventResult.handled;
     }
+    if (!XKeys.plain) return KeyEventResult.ignored;
+    final state = context.read<XFeedState>();
+    if (key == LogicalKeyboardKey.keyL) {
+      unawaited(_engage(() => state.toggleLike(widget.post)));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyB) {
+      unawaited(_engage(() => state.toggleBookmark(widget.post)));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyU) {
+      unawaited(XNavigation.openUser(context, widget.post.author.screenName));
+      return KeyEventResult.handled;
+    }
     return KeyEventResult.ignored;
+  }
+
+  Future<void> _engage(Future<bool> Function() action) async {
+    final failed = AppLocalizations.of(context).xFeedActionFailed;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (!await action()) {
+      messenger?.showSnackBar(SnackBar(content: Text(failed)));
+    }
   }
 
   @override
