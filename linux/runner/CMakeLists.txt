@@ -20,6 +20,9 @@ apply_standard_settings(${BINARY_NAME})
 add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 
 # Add dependency libraries. Add any application-specific dependencies here.
+# LuaJIT must resolve the system unwinder before Flutter's exported copy.
+target_link_options(${BINARY_NAME} PRIVATE
+  "SHELL:-Wl,--no-as-needed -Wl,-l:libgcc_s.so.1 -Wl,--as-needed")
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 
