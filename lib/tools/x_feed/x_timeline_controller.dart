@@ -21,9 +21,13 @@ class XTimelineController extends ChangeNotifier {
   bool _loaded = false;
   XApiException? _error;
   int _generation = 0;
+  int _refreshes = 0;
   bool _disposed = false;
 
   List<XPost> get posts => _posts;
+
+  /// Bumps each time a refresh replaces the posts.
+  int get refreshCount => _refreshes;
   bool get isLoading => _loading;
   bool get isLoadingMore => _loadingMore;
   bool get endReached => _endReached;
@@ -46,6 +50,7 @@ class XTimelineController extends ChangeNotifier {
       _cursor = page.bottomCursor;
       _endReached = page.bottomCursor == null || page.posts.isEmpty;
       _loaded = true;
+      _refreshes++;
     } on XApiException catch (e) {
       if (generation != _generation) return;
       _fail(e);

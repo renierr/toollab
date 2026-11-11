@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -21,6 +23,10 @@ class XFeedState extends ChangeNotifier {
   static const String _hideRepostsKey = 'hide_reposts';
   static const String _hideRepliesKey = 'hide_replies';
   static const String _startTabKey = 'start_tab';
+  static const String _seenKey = 'seen_pending';
+
+  /// Keeps the GET query string of a home request well under URL limits.
+  static const int _seenBatchLimit = 100;
 
   XSessionStatus _status = XSessionStatus.unknown;
   bool _sessionExpired = false;
@@ -39,11 +45,17 @@ class XFeedState extends ChangeNotifier {
   /// Downloads for sharing and saving.
   final TempFileScope tempScope = TempFileManager.createScope();
 
+  /// Posts seen since the last home request, oldest first. They ride along
+  /// with the next home timeline request, so X gets them in one batch.
+  final LinkedHashSet<String> _seenPending = LinkedHashSet();
+  final Set<String> _seenSent = {};
+  Timer? _seenSave;
+
   late final XTimelineController forYou = _timeline(
-    (cursor) => _requireApi().homeTimeline(following: false, cursor: cursor),
+    (cursor) => _homeTimeline(following: false, cursor: cursor),
   );
   late final XTimelineController following = _timeline(
-    (cursor) => _requireApi().homeTimeline(following: true, cursor: cursor),
+    (cursor) => _homeTimeline(following: true, cursor: cursor),
   );
   late final XTimelineController bookmarks = _timeline(
     (cursor) => _requireApi().bookmarks(cursor: cursor),
@@ -92,6 +104,7 @@ class XFeedState extends ChangeNotifier {
       orElse: () => XFeedTab.forYou,
     );
     _tab = _startTab == XFeedTab.search ? XFeedTab.forYou : _startTab;
+    _restoreSeen(await db.getSetting(id, _seenKey));
 
     final session = await XSessionStore.read();
     if (session == null) {
@@ -103,6 +116,71 @@ class XFeedState extends ChangeNotifier {
       unawaited(_refreshScreenName());
     }
     _notify();
+  }
+
+  Future<XTimelinePage> _homeTimeline({
+    required bool following,
+    String? cursor,
+  }) async {
+    final seen = _seenPending.toList();
+    final page = await _requireApi().homeTimeline(
+      following: following,
+      cursor: cursor,
+      seenPostIds: seen,
+    );
+    if (seen.isNotEmpty) {
+      _seenPending.removeAll(seen);
+      _seenSent.addAll(seen);
+      _scheduleSeenSave();
+    }
+    return page;
+  }
+
+  /// Buffers posts that were on screen; nothing is sent until the next home
+  /// timeline request.
+  void markSeen(Iterable<String> postIds) {
+    var changed = false;
+    for (final id in postIds) {
+      if (_seenSent.contains(id) || !_seenPending.add(id)) continue;
+      changed = true;
+      if (_seenPending.length > _seenBatchLimit) {
+        _seenPending.remove(_seenPending.first);
+      }
+    }
+    if (changed) _scheduleSeenSave();
+  }
+
+  void _restoreSeen(String? stored) {
+    if (stored == null) return;
+    try {
+      final ids = jsonDecode(stored);
+      if (ids is List) markSeen(ids.whereType<String>());
+    } on FormatException catch (e) {
+      errorLog('[XFeedState] Dropping unreadable seen buffer: $e');
+    }
+  }
+
+  void _clearSeen() {
+    _seenPending.clear();
+    _seenSent.clear();
+    _saveSeen();
+  }
+
+  void _scheduleSeenSave() {
+    _seenSave?.cancel();
+    _seenSave = Timer(const Duration(seconds: 2), _saveSeen);
+  }
+
+  void _saveSeen() {
+    _seenSave?.cancel();
+    _seenSave = null;
+    unawaited(
+      DatabaseService.instance.setSetting(
+        XFeedTool.config.id,
+        _seenKey,
+        jsonEncode(_seenPending.toList()),
+      ),
+    );
   }
 
   void _useSession(XSession session) {
@@ -131,6 +209,7 @@ class XFeedState extends ChangeNotifier {
     _sessionExpired = false;
     _screenName = null;
     _engagement.clear();
+    _clearSeen();
     for (final t in [forYou, following, bookmarks]) {
       t.reset();
     }
@@ -147,6 +226,7 @@ class XFeedState extends ChangeNotifier {
     _sessionExpired = false;
     _screenName = null;
     _engagement.clear();
+    _clearSeen();
     for (final t in [forYou, following, bookmarks]) {
       t.reset();
     }
@@ -275,6 +355,7 @@ class XFeedState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    if (_seenSave != null) _saveSeen();
     forYou.dispose();
     following.dispose();
     bookmarks.dispose();

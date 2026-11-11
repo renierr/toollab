@@ -15,9 +15,17 @@ class NativeVideoBackend implements VideoBackend {
 
   @override
   Future<void> open(Uri source, {required bool loop}) async {
+    // A SurfaceView lets Android scale the decoder output itself; the texture
+    // path draws it shrunk into a corner on some Android TV decoders.
     final controller = source.isScheme('file')
-        ? VideoPlayerController.file(File.fromUri(source))
-        : VideoPlayerController.networkUrl(source);
+        ? VideoPlayerController.file(
+            File.fromUri(source),
+            viewType: VideoViewType.platformView,
+          )
+        : VideoPlayerController.networkUrl(
+            source,
+            viewType: VideoViewType.platformView,
+          );
     _controller = controller;
     controller.addListener(_sync);
     try {

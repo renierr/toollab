@@ -273,9 +273,12 @@ class XApi {
     return _decode(res.body)['screen_name'] as String?;
   }
 
+  /// [seenPostIds] tells X which posts were already on screen, as the web
+  /// app does, so the ranking stops serving them again.
   Future<XTimelinePage> homeTimeline({
     required bool following,
     String? cursor,
+    List<String> seenPostIds = const [],
   }) async {
     final json =
         await _graphql(following ? 'HomeLatestTimeline' : 'HomeTimeline', {
@@ -285,6 +288,7 @@ class XApi {
           'latestControlAvailable': true,
           'requestContext': cursor == null ? 'launch' : null,
           'withCommunity': true,
+          'seenTweetIds': seenPostIds,
         });
     return XTimelineParser.parse(json);
   }

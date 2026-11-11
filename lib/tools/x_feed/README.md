@@ -41,6 +41,18 @@ session expired and the shell asks for a new login.
 
 **Settings → Advanced → Refresh API data now** drops the cache.
 
+## Seen posts
+
+X's web app reports which posts were on screen through the `seenTweetIds` variable of its
+home timeline requests, and the For you ranking stops serving those again. Without it the
+same posts keep coming back after a refresh.
+
+A post on For you or Following counts as seen when at least half of it stays on screen
+for a second after scrolling settles (`XTimelineView`). `XFeedState` buffers the ids — up
+to 100, oldest dropped — and sends the whole batch with the next home request, refresh or
+next page. Sent ids are not sent again this session. The pending buffer is kept in the
+tool's settings so ids seen right before the app closes go out on the next launch.
+
 ## Login
 
 The session never leaves the device except when the user sends it to a TV. It lives in
@@ -63,6 +75,8 @@ secure storage (`XSessionStore`); logging out deletes it and the WebView cookies
 
 `VideoPlayerPage` (shared, `lib/widgets/video_player/`) plays the best mp4 variant:
 ExoPlayer via `video_player` on Android, libmpv via `media_kit` on Windows and Linux.
+Android renders into a platform `SurfaceView`, not a texture: on some Android TV decoders
+the texture path draws the video shrunk into a corner instead of filling the frame.
 GIFs are mp4s and loop. Remote: OK/Space toggles, left/right seek 10 s while the controls
 are hidden, any other key shows them.
 

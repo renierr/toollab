@@ -130,14 +130,17 @@ class _TabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.read<XFeedState>();
+    final home = tab == XFeedTab.forYou || tab == XFeedTab.following;
     // Hidden tabs must not take part in D-pad traversal.
     return ExcludeFocus(
       excluding: !active,
       child: tab == XFeedTab.search
           ? const XSearchView()
           : XTimelineView(
-              controller: context.read<XFeedState>().controllerFor(tab),
-              applyFilters: tab != XFeedTab.bookmarks,
+              controller: state.controllerFor(tab),
+              applyFilters: home,
+              onSeen: home ? state.markSeen : null,
               emptyMessage: tab == XFeedTab.bookmarks
                   ? AppLocalizations.of(context).xFeedBookmarksEmpty
                   : null,
