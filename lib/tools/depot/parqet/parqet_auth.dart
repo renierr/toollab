@@ -31,6 +31,37 @@ class ParqetTokens {
       DateTime.now().isAfter(expiresAt.subtract(const Duration(minutes: 1)));
 }
 
+/// One authorize request, kept while the login itself happens elsewhere: the
+/// phone only sees the public [challenge], the verifier never leaves here.
+class ParqetLoginRequest {
+  final String clientId;
+  final String state;
+  final String challenge;
+  final String _verifier;
+
+  const ParqetLoginRequest._(
+    this.clientId,
+    this.state,
+    this.challenge,
+    this._verifier,
+  );
+
+  Uri get authorizeUri => ParqetAuth.authorizeUri(
+    clientId: clientId,
+    state: state,
+    challenge: challenge,
+  );
+
+  /// Checks the redirect this login produced and exchanges its code.
+  Future<ParqetTokens> complete(Uri callback, {String? clientId}) =>
+      ParqetAuth._exchange(
+        clientId: clientId ?? this.clientId,
+        state: state,
+        verifier: _verifier,
+        callback: callback,
+      );
+}
+
 /// OAuth 2.0 authorization code flow with PKCE against Parqet Connect, as a
 /// public client: there is no secret, only the integration's client id.
 class ParqetAuth {
@@ -138,27 +169,72 @@ class ParqetAuth {
     Future<Uri?> Function(Uri authorize)? inApp,
     bool preferInApp = false,
   }) async {
+    final request = beginLogin(clientId: clientId);
+    final callback = inApp != null && preferInApp
+        ? await _loginInApp(inApp, request.authorizeUri)
+        : await _loginInBrowser(request.authorizeUri, responseHtml, inApp);
+    await adoptTokens(await request.complete(callback));
+  }
+
+  /// Builds the authorize request; complete it with the redirect, whether it
+  /// came back here or from a phone that logged in for this device.
+  static ParqetLoginRequest beginLogin({required String clientId}) {
     final verifier = _randomUrlSafe(48);
     final state = _randomUrlSafe(16);
     final challenge = base64UrlEncode(
       sha256.convert(ascii.encode(verifier)).bytes,
     ).replaceAll('=', '');
-    final authorize = _authorizeUri.replace(
-      queryParameters: {
-        'response_type': 'code',
-        'client_id': clientId,
-        'redirect_uri': redirectUri,
-        'scope': scope,
-        'state': state,
-        'code_challenge': challenge,
-        'code_challenge_method': 'S256',
-      },
-    );
+    return ParqetLoginRequest._(clientId, state, challenge, verifier);
+  }
 
-    final callback = inApp != null && preferInApp
-        ? await _loginInApp(inApp, authorize)
-        : await _loginInBrowser(authorize, responseHtml, inApp);
+  static Uri authorizeUri({
+    required String clientId,
+    required String state,
+    required String challenge,
+  }) => _authorizeUri.replace(
+    queryParameters: {
+      'response_type': 'code',
+      'client_id': clientId,
+      'redirect_uri': redirectUri,
+      'scope': scope,
+      'state': state,
+      'code_challenge': challenge,
+      'code_challenge_method': 'S256',
+    },
+  );
 
+  /// Stores a completed login as this device's grant.
+  static Future<void> adoptTokens(ParqetTokens tokens) async {
+    _grantGeneration++;
+    await _saveTokens(tokens);
+    // A login that does not name its scopes leaves the stored grant
+    // unknown rather than showing the scopes that were merely requested.
+    if (tokens.scope == null) await _storage.delete(key: _scopeKey);
+  }
+
+  static Future<ParqetTokens> _exchange({
+    required String clientId,
+    required String state,
+    required String verifier,
+    required Uri callback,
+  }) async {
+    final target = Uri.parse(redirectUri);
+    if (callback.path != target.path ||
+        ((callback.hasScheme || callback.hasAuthority) &&
+            (callback.scheme != target.scheme ||
+                callback.host != target.host ||
+                callback.port != target.port))) {
+      throw const ParqetException(
+        ParqetErrorKind.invalidResponse,
+        'Invalid redirect',
+      );
+    }
+    if (callback.queryParameters['state'] != state) {
+      throw const ParqetException(
+        ParqetErrorKind.invalidResponse,
+        'State mismatch',
+      );
+    }
     final error = callback.queryParameters['error'];
     if (error == 'invalid_scope') {
       throw const ParqetException(
@@ -167,12 +243,6 @@ class ParqetAuth {
       );
     }
     if (error != null) throw ParqetException(ParqetErrorKind.denied, error);
-    if (callback.queryParameters['state'] != state) {
-      throw const ParqetException(
-        ParqetErrorKind.invalidResponse,
-        'State mismatch',
-      );
-    }
     final code = callback.queryParameters['code'];
     if (code == null || code.isEmpty) {
       throw const ParqetException(
@@ -181,18 +251,13 @@ class ParqetAuth {
       );
     }
 
-    final tokens = await _tokenRequest({
+    return _tokenRequest({
       'grant_type': 'authorization_code',
       'code': code,
       'redirect_uri': redirectUri,
       'client_id': clientId,
       'code_verifier': verifier,
     });
-    _grantGeneration++;
-    await _saveTokens(tokens);
-    // A login that does not name its scopes leaves the stored grant
-    // unknown rather than showing the scopes that were merely requested.
-    if (tokens.scope == null) await _storage.delete(key: _scopeKey);
   }
 
   static Future<Uri> _loginInApp(

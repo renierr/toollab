@@ -11405,6 +11405,49 @@ class AppLocalizationsEn extends AppLocalizations {
       'You can close this tab and return to ToolLab.';
 
   @override
+  String get depotSettingsClientIdRequired =>
+      'Enter the integration\'s client ID first.';
+
+  @override
+  String get depotParqetPairClientTitle => 'Enter your Parqet client ID';
+
+  @override
+  String get depotParqetPairReceive => 'Log in from your phone';
+
+  @override
+  String get depotParqetPairReceiveHint =>
+      'On your phone, open ToolLab › Depot › Parqet connection › Send login to a TV, then scan this code. Both devices must be on the same network.';
+
+  @override
+  String get depotParqetPairNoNetwork =>
+      'This device has no network address to receive the login on.';
+
+  @override
+  String get depotParqetPairFailed =>
+      'The phone\'s login could not be completed. Close this and try again.';
+
+  @override
+  String get depotParqetPairSendTitle => 'Send login to a TV';
+
+  @override
+  String get depotParqetPairSendSubtitle =>
+      'Scan the code a TV shows under Log in from your phone';
+
+  @override
+  String get depotParqetPairSendHint =>
+      'Scan the code on the TV, then enter your Parqet integration\'s client ID and sign in. The response is encrypted over your local network.';
+
+  @override
+  String get depotParqetPairInvalidCode => 'This is not a Parqet login code.';
+
+  @override
+  String get depotParqetPairSent => 'Login sent to the TV';
+
+  @override
+  String get depotParqetPairSendFailed =>
+      'The TV could not be reached. Check that both devices are on the same network.';
+
+  @override
   String get depotKpiValue => 'Value';
 
   @override

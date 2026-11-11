@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,14 +20,18 @@ import 'package:url_launcher/url_launcher.dart';
 import '../depot_background_sync.dart';
 import '../depot_portfolio_state.dart';
 import '../parqet/parqet_auth.dart';
+import '../parqet/parqet_pairing.dart';
 import 'depot_allocation_settings.dart';
 import 'depot_clear_data_tile.dart';
 import 'depot_data_export_tile.dart';
 import 'depot_details_link_settings.dart';
 import 'depot_dividend_settings.dart';
 import 'depot_logo_settings.dart';
+import 'depot_pair_client_id_dialog.dart';
 import 'depot_sync_error_card.dart';
 import 'depot_tax_settings.dart';
+import 'pair_receive_dialog.dart';
+import 'pair_send_page.dart';
 
 /// Pushed with a `MaterialPageRoute`, so a plain `Scaffold` instead of
 /// `ToolLayout`, whose back button needs a GoRouter state.
@@ -93,6 +98,70 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
     if (connected && mounted) Navigator.of(context).pop();
   }
 
+  /// A TV cannot log in itself, so it can show a code a phone scans instead.
+  Future<void> _connectFromPhone() async {
+    final l10n = AppLocalizations.of(context);
+    final request = ParqetAuth.beginLogin(clientId: '');
+    final result =
+        await PairReceiveDialog.show<({String clientId, ParqetTokens tokens})>(
+          context,
+          protocol: ParqetPairing.protocol,
+          fields: ParqetPairing.fields(request),
+          title: l10n.depotParqetPairReceive,
+          hint: l10n.depotParqetPairReceiveHint,
+          noNetwork: l10n.depotParqetPairNoNetwork,
+          failed: l10n.depotParqetPairFailed,
+          onReceived: (data) => ParqetPairing.complete(request, data),
+        );
+    if (result == null || !mounted) return;
+    final connected = await context
+        .read<DepotPortfolioState>()
+        .connectWithTokens(clientId: result.clientId, tokens: result.tokens);
+    if (!mounted) return;
+    await _loadScopes();
+    if (connected && mounted) Navigator.of(context).pop();
+  }
+
+  /// The phone half: scan a TV's code, finish Parqet's login here and send
+  /// the redirect back.
+  Future<void> _sendToTv() async {
+    final l10n = AppLocalizations.of(context);
+    await PairSendPage.open(
+      context,
+      protocol: ParqetPairing.protocol,
+      title: l10n.depotParqetPairSendTitle,
+      hint: l10n.depotParqetPairSendHint,
+      invalidCode: l10n.depotParqetPairInvalidCode,
+      sent: l10n.depotParqetPairSent,
+      failed: l10n.depotParqetPairSendFailed,
+      accentColor: AppTheme.accentGreen,
+      onScan: (pageContext, code) async {
+        final fields = ParqetPairing.read(code);
+        final clientId = await DepotPairClientIdDialog.show(
+          pageContext,
+          _clientId.text.trim(),
+        );
+        if (clientId == null || !pageContext.mounted) {
+          return PairSendOutcome.cancelled;
+        }
+        final callback = await WebLogin.captureRedirect(
+          pageContext,
+          url: ParqetAuth.authorizeUri(
+            clientId: clientId,
+            state: fields.state,
+            challenge: fields.challenge,
+          ),
+          callbackPrefix: ParqetAuth.redirectUri,
+          title: l10n.depotLoginInAppTitle,
+        );
+        if (callback == null) return PairSendOutcome.cancelled;
+        return await ParqetPairing.send(code, callback, clientId)
+            ? PairSendOutcome.sent
+            : PairSendOutcome.failed;
+      },
+    );
+  }
+
   Future<void> _disconnect() async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmActionDialog.show(
@@ -119,7 +188,52 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = context.watch<DepotPortfolioState>();
+    final tvMode = context.watch<AppState>().tvMode;
     final error = state.error;
+
+    // A TV has no browser and remote typing is painful, so pairing leads there.
+    final Widget? pairButton = Platform.isAndroid
+        ? (tvMode
+              ? FilledButton.icon(
+                  onPressed: state.isConnecting ? null : _connectFromPhone,
+                  icon: const Icon(Icons.qr_code_2),
+                  label: Text(l10n.depotParqetPairReceive),
+                )
+              : OutlinedButton.icon(
+                  onPressed: state.isConnecting ? null : _connectFromPhone,
+                  icon: const Icon(Icons.qr_code_2),
+                  label: Text(l10n.depotParqetPairReceive),
+                ))
+        : null;
+    final webButton = tvMode
+        ? OutlinedButton.icon(
+            onPressed: state.isConnecting ? null : _connect,
+            icon: const Icon(Icons.login_outlined),
+            label: Text(
+              state.isConnecting
+                  ? l10n.depotSettingsConnecting
+                  : state.isConnected
+                  ? l10n.depotSettingsReconnect
+                  : l10n.depotSettingsConnect,
+            ),
+          )
+        : FilledButton.icon(
+            onPressed: state.isConnecting ? null : _connect,
+            icon: state.isConnecting
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.login_outlined),
+            label: Text(
+              state.isConnecting
+                  ? l10n.depotSettingsConnecting
+                  : state.isConnected
+                  ? l10n.depotSettingsReconnect
+                  : l10n.depotSettingsConnect,
+            ),
+          );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.depotSettingsTitle)),
@@ -202,7 +316,11 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
                 child: DepotSyncErrorCard(
                   error: error,
                   onRetry: state.isConnected ? state.sync : null,
-                  onReconnect: error.needsLogin ? _connect : null,
+                  onReconnect: error.needsLogin
+                      ? (tvMode && Platform.isAndroid
+                            ? _connectFromPhone
+                            : _connect)
+                      : null,
                 ),
               ),
             Padding(
@@ -212,23 +330,11 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
                 runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  FilledButton.icon(
-                    onPressed: state.isConnecting ? null : _connect,
-                    icon: state.isConnecting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.login_outlined),
-                    label: Text(
-                      state.isConnecting
-                          ? l10n.depotSettingsConnecting
-                          : state.isConnected
-                          ? l10n.depotSettingsReconnect
-                          : l10n.depotSettingsConnect,
-                    ),
-                  ),
+                  for (final button
+                      in tvMode
+                          ? [pairButton, webButton]
+                          : [webButton, pairButton])
+                    ?button,
                   if (state.isConnected)
                     OutlinedButton.icon(
                       onPressed: state.isConnecting ? null : _disconnect,
@@ -238,6 +344,13 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
                 ],
               ),
             ),
+            if (Platform.isAndroid && !tvMode)
+              ListTile(
+                leading: const Icon(Icons.tv),
+                title: Text(l10n.depotParqetPairSendTitle),
+                subtitle: Text(l10n.depotParqetPairSendSubtitle),
+                onTap: _sendToTv,
+              ),
             const DepotLogoSettings(),
             const DepotDetailsLinkSettings(),
             const DepotAllocationSettings(),

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/widgets/qr_scanner/qr_camera_scanner.dart';
+import 'package:tool_lab/widgets/pairing_scanner_content.dart';
 
 import '../api/x_session.dart';
 import '../x_pairing.dart';
@@ -63,22 +63,12 @@ class _XPairSendPageState extends State<XPairSendPage> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.xFeedPairSendTitle)),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(l10n.xFeedPairSendHint, textAlign: TextAlign.center),
-          ),
-          Expanded(
-            child: _sending
-                ? const Center(child: CircularProgressIndicator())
-                : QrCameraScanner(
-                    key: ValueKey(_scanGeneration),
-                    accentColor: AppTheme.accentBlue,
-                    onDetected: (text) => unawaited(_onDetected(text)),
-                  ),
-          ),
-        ],
+      body: PairingScannerContent(
+        hint: l10n.xFeedPairSendHint,
+        sending: _sending,
+        scanGeneration: _scanGeneration,
+        accentColor: AppTheme.accentBlue,
+        onDetected: (text) => unawaited(_onDetected(text)),
       ),
     );
   }

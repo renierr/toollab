@@ -6,6 +6,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/qr_codec.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/pairing_qr_content.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../api/x_session.dart';
@@ -57,7 +58,6 @@ class _XPairReceiveDialogState extends State<XPairReceiveDialog>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final qr = _qr;
     final receiver = _receiver;
 
@@ -69,24 +69,11 @@ class _XPairReceiveDialogState extends State<XPairReceiveDialog>
     } else if (receiver.hosts.isEmpty) {
       body = Text(l10n.xFeedPairNoNetwork);
     } else {
-      body = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(l10n.xFeedPairReceiveHint, textAlign: TextAlign.center),
-          const SizedBox(height: 16),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 280, maxHeight: 280),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.memory(qr, filterQuality: FilterQuality.none),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            receiver.hosts.map((h) => '$h:${receiver.port}').join('  '),
-            style: theme.textTheme.bodySmall,
-          ),
-        ],
+      body = PairingQrContent(
+        hint: l10n.xFeedPairReceiveHint,
+        qr: qr,
+        hosts: receiver.hosts,
+        port: receiver.port,
       );
     }
 

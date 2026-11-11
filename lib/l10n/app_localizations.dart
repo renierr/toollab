@@ -20351,6 +20351,78 @@ abstract class AppLocalizations {
   /// **'You can close this tab and return to ToolLab.'**
   String get depotLoginBrowserBody;
 
+  /// No description provided for @depotSettingsClientIdRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the integration\'s client ID first.'**
+  String get depotSettingsClientIdRequired;
+
+  /// No description provided for @depotParqetPairClientTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your Parqet client ID'**
+  String get depotParqetPairClientTitle;
+
+  /// No description provided for @depotParqetPairReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in from your phone'**
+  String get depotParqetPairReceive;
+
+  /// No description provided for @depotParqetPairReceiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On your phone, open ToolLab › Depot › Parqet connection › Send login to a TV, then scan this code. Both devices must be on the same network.'**
+  String get depotParqetPairReceiveHint;
+
+  /// No description provided for @depotParqetPairNoNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no network address to receive the login on.'**
+  String get depotParqetPairNoNetwork;
+
+  /// No description provided for @depotParqetPairFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone\'s login could not be completed. Close this and try again.'**
+  String get depotParqetPairFailed;
+
+  /// No description provided for @depotParqetPairSendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send login to a TV'**
+  String get depotParqetPairSendTitle;
+
+  /// No description provided for @depotParqetPairSendSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code a TV shows under Log in from your phone'**
+  String get depotParqetPairSendSubtitle;
+
+  /// No description provided for @depotParqetPairSendHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code on the TV, then enter your Parqet integration\'s client ID and sign in. The response is encrypted over your local network.'**
+  String get depotParqetPairSendHint;
+
+  /// No description provided for @depotParqetPairInvalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a Parqet login code.'**
+  String get depotParqetPairInvalidCode;
+
+  /// No description provided for @depotParqetPairSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Login sent to the TV'**
+  String get depotParqetPairSent;
+
+  /// No description provided for @depotParqetPairSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The TV could not be reached. Check that both devices are on the same network.'**
+  String get depotParqetPairSendFailed;
+
   /// No description provided for @depotKpiValue.
   ///
   /// In en, this message translates to:

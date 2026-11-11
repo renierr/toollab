@@ -11489,6 +11489,49 @@ class AppLocalizationsDe extends AppLocalizations {
       'Du kannst diesen Tab schließen und zu ToolLab zurückkehren.';
 
   @override
+  String get depotSettingsClientIdRequired =>
+      'Zuerst die Client-ID der Integration eingeben.';
+
+  @override
+  String get depotParqetPairClientTitle => 'Parqet-Client-ID eingeben';
+
+  @override
+  String get depotParqetPairReceive => 'Am Telefon anmelden';
+
+  @override
+  String get depotParqetPairReceiveHint =>
+      'Öffne auf deinem Telefon ToolLab › Depot › Parqet-Verbindung › Anmeldung an einen Fernseher senden und scanne diesen Code. Beide Geräte müssen im selben Netzwerk sein.';
+
+  @override
+  String get depotParqetPairNoNetwork =>
+      'Dieses Gerät hat keine Netzwerkadresse, um die Anmeldung zu empfangen.';
+
+  @override
+  String get depotParqetPairFailed =>
+      'Die Anmeldung des Telefons konnte nicht abgeschlossen werden. Schließe dies und versuche es erneut.';
+
+  @override
+  String get depotParqetPairSendTitle => 'Anmeldung an einen Fernseher senden';
+
+  @override
+  String get depotParqetPairSendSubtitle =>
+      'Scanne den Code, den ein Fernseher unter Am Telefon anmelden anzeigt';
+
+  @override
+  String get depotParqetPairSendHint =>
+      'Scanne den Code am Fernseher, gib die Client-ID deiner Parqet-Integration ein und melde dich an. Die Antwort wird verschlüsselt über dein lokales Netzwerk gesendet.';
+
+  @override
+  String get depotParqetPairInvalidCode => 'Das ist kein Parqet-Anmeldecode.';
+
+  @override
+  String get depotParqetPairSent => 'Anmeldung an den Fernseher gesendet';
+
+  @override
+  String get depotParqetPairSendFailed =>
+      'Der Fernseher war nicht erreichbar. Prüfe, ob beide Geräte im selben Netzwerk sind.';
+
+  @override
   String get depotKpiValue => 'Wert';
 
   @override

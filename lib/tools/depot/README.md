@@ -61,6 +61,13 @@ consent page opens inside the app instead (`WebLogin`). The redirect to the loop
 is intercepted before it loads, so no listener runs and cleartext stays blocked. Sign-in
 providers that refuse embedded WebViews (Google) do not work there; use e-mail and password.
 
+**Log in from your phone (Android TV).** Remote controls cannot fill the consent page, so
+the TV can show a QR code instead: **Settings → Parqet connection → Log in from your phone**.
+On an Android phone with ToolLab, open **Settings → Parqet connection → Send login to a TV**,
+scan the code, enter the integration's client ID and finish Parqet's login there. The TV publishes only its public PKCE challenge; the
+phone returns the redirect over the LAN encrypted with a one-time key from the code, and the
+TV exchanges it and stores the tokens itself. Both devices must be on the same network.
+
 ## How sync works
 
 `DepotParqetSync.run` is shared by the open tool, pull-to-refresh and the hourly

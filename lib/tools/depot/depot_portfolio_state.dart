@@ -547,6 +547,34 @@ class DepotPortfolioState extends ChangeNotifier {
     return _isConnected;
   }
 
+  /// Adopts a grant a phone obtained for this client id, then syncs like any
+  /// other login. The exchange itself happened on the TV, in
+  /// [ParqetLoginRequest.complete], so only the finished grant arrives here.
+  Future<bool> connectWithTokens({
+    required String clientId,
+    required ParqetTokens tokens,
+  }) async {
+    final id = clientId.trim();
+    if (id.isEmpty || _isConnecting) return false;
+    _isConnecting = true;
+    _error = null;
+    _notify();
+    try {
+      await _store.setClientId(id);
+      _clientId = id;
+      await ParqetAuth.adoptTokens(tokens);
+      _isConnected = true;
+    } on ParqetException catch (e) {
+      errorLog('[DepotPortfolioState] Login from phone failed: $e');
+      _error = e;
+    } finally {
+      _isConnecting = false;
+      _notify();
+    }
+    if (_isConnected) await sync();
+    return _isConnected;
+  }
+
   /// Synced data stays on the device as an offline copy.
   Future<void> disconnect() async {
     await ParqetAuth.clearTokens();
