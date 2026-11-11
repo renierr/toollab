@@ -12,12 +12,12 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_secure_storage_windows
   geolocator_windows
   media_kit_libs_windows_video
-  media_kit_video
   pasteboard
   record_windows
-  share_plus
   universal_ble
   url_launcher_windows
+  share_plus
+  media_kit_video
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
