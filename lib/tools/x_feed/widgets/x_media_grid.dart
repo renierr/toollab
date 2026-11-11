@@ -12,8 +12,8 @@ class XMediaGrid extends StatelessWidget {
   /// Taller previews for the focused post of a thread.
   final double maxHeight;
 
-  /// On a TV each tile is its own focus stop, so a remote can reach a video.
-  final bool focusable;
+  /// With nodes each tile is its own outlined focus stop, so a keyboard or
+  /// remote can reach a video.
   final List<FocusNode>? focusNodes;
 
   const XMediaGrid({
@@ -21,7 +21,6 @@ class XMediaGrid extends StatelessWidget {
     required this.media,
     required this.onOpen,
     this.maxHeight = 420,
-    this.focusable = false,
     this.focusNodes,
   });
 
@@ -32,7 +31,6 @@ class XMediaGrid extends StatelessWidget {
     Widget tile(int i) => _MediaTile(
       media: shown[i],
       onTap: () => onOpen(i),
-      focusable: focusable,
       focusNode: focusNodes != null && i < focusNodes!.length
           ? focusNodes![i]
           : null,
@@ -113,15 +111,9 @@ class XMediaGrid extends StatelessWidget {
 class _MediaTile extends StatelessWidget {
   final XMedia media;
   final VoidCallback onTap;
-  final bool focusable;
   final FocusNode? focusNode;
 
-  const _MediaTile({
-    required this.media,
-    required this.onTap,
-    this.focusable = false,
-    this.focusNode,
-  });
+  const _MediaTile({required this.media, required this.onTap, this.focusNode});
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +171,7 @@ class _MediaTile extends StatelessWidget {
         ),
       ),
     );
-    if (!focusable) return tile;
+    if (focusNode == null) return tile;
     return FocusOutline(
       borderRadius: BorderRadius.circular(10),
       glow: false,

@@ -10,12 +10,14 @@ class ToolCard extends StatelessWidget {
   final ToolModel tool;
   final VoidCallback onTap;
   final bool compact;
+  final bool autofocus;
 
   const ToolCard({
     super.key,
     required this.tool,
     required this.onTap,
     this.compact = false,
+    this.autofocus = false,
   });
 
   @override
@@ -27,6 +29,7 @@ class ToolCard extends StatelessWidget {
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
+          autofocus: autofocus,
           onTap: onTap,
           child: LayoutBuilder(
             builder: (context, constraints) {

@@ -8,6 +8,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/section_header.dart';
 import 'package:tool_lab/pages/overview/settings_dialog.dart';
+import 'overview_search_field.dart';
 import 'section_grid.dart';
 
 class OverviewPage extends StatefulWidget {
@@ -101,6 +102,14 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
         : tools.where((t) => appState.isFavorite(t.id)).toList();
 
     final showFavorites = favoriteTools.isNotEmpty;
+    final tvMode = appState.tvMode;
+    final firstOpenSectionId = showFavorites
+        ? null
+        : orderedSections
+              .where((e) => !_collapsedSections.contains(e.key.id))
+              .firstOrNull
+              ?.key
+              .id;
 
     return Scaffold(
       appBar: PreferredSize(
@@ -133,30 +142,10 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: TextField(
+                    child: OverviewSearchField(
                       controller: _searchController,
-                      onChanged: (value) => appState.setSearchQuery(value),
-                      decoration: InputDecoration(
-                        hintText: l10n.coreOverviewSearchHint,
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  appState.setSearchQuery('');
-                                },
-                              )
-                            : null,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                      onChanged: appState.setSearchQuery,
+                      keyboardOnActivate: tvMode,
                     ),
                   ),
                 ),
@@ -188,6 +177,7 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
                       sectionTools: favoriteTools,
                       crossAxisCount: crossAxisCount,
                       compact: compact,
+                      autofocusFirst: tvMode,
                       childAspectRatio: _childAspectRatio(
                         compact,
                         constraints.maxWidth,
@@ -227,6 +217,8 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
                               sectionTools: sectionTools,
                               crossAxisCount: crossAxisCount,
                               compact: compact,
+                              autofocusFirst:
+                                  tvMode && section.id == firstOpenSectionId,
                               childAspectRatio: _childAspectRatio(
                                 compact,
                                 constraints.maxWidth,

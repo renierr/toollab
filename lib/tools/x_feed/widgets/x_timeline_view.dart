@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
+import '../models/x_post.dart';
 import '../x_feed_state.dart';
 import '../x_timeline_controller.dart';
 import 'x_error_view.dart';
@@ -49,7 +51,9 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     canRequestFocus: false,
     skipTraversal: true,
   );
-  final Map<String, BuildContext> _rows = {};
+  final Map<String, _PostRowState> _rows = {};
+  List<XPost> _shown = const [];
+  bool _tvMode = false;
   Timer? _seenTimer;
   late int _refreshCount = widget.controller.refreshCount;
 
@@ -91,14 +95,59 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     if (_scroll.hasClients) _scroll.jumpTo(0);
     if (!_listFocus.hasFocus) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      for (final node in _listFocus.descendants) {
-        if (node.canRequestFocus && !node.skipTraversal) {
-          node.requestFocus();
-          return;
-        }
-      }
+      if (!mounted || _shown.isEmpty) return;
+      _rows[_shown.first.id]?.focusPost();
     });
+  }
+
+  /// Left / right step to the previous / next post on a keyboard. A TV keeps
+  /// them for the rail and the media tiles.
+  KeyEventResult _onListKey(FocusNode node, KeyEvent event) {
+    if (_tvMode || event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    final delta = key == LogicalKeyboardKey.arrowRight
+        ? 1
+        : key == LogicalKeyboardKey.arrowLeft
+        ? -1
+        : 0;
+    if (delta == 0) return KeyEventResult.ignored;
+    final row = FocusManager.instance.primaryFocus?.context
+        ?.findAncestorStateOfType<_PostRowState>();
+    if (row == null) return KeyEventResult.ignored;
+    final index = _shown.indexWhere((p) => p.id == row.widget.postId);
+    if (index < 0) return KeyEventResult.ignored;
+    final target = index + delta;
+    if (target >= 0 && target < _shown.length) {
+      unawaited(_stepTo(_shown[target].id, delta));
+    }
+    return KeyEventResult.handled;
+  }
+
+  Future<void> _stepTo(String postId, int direction) async {
+    // A tall post can push its neighbour past the built range; scroll toward
+    // it until the list has built it.
+    for (var attempt = 0; attempt < 4; attempt++) {
+      final row = _rows[postId];
+      if (row != null && row.mounted) {
+        row.focusPost();
+        await Scrollable.ensureVisible(
+          row.context,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+        return;
+      }
+      if (!_scroll.hasClients) return;
+      final position = _scroll.position;
+      _scroll.jumpTo(
+        (position.pixels + direction * position.viewportDimension).clamp(
+          position.minScrollExtent,
+          position.maxScrollExtent,
+        ),
+      );
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+    }
   }
 
   bool _onScroll(ScrollNotification notification) {
@@ -130,7 +179,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     final seen = <String>[];
     for (final MapEntry(key: id, value: row) in _rows.entries) {
       if (!row.mounted) continue;
-      final box = row.findRenderObject();
+      final box = row.context.findRenderObject();
       if (box is! RenderBox || !box.attached || !box.hasSize) continue;
       final rect = MatrixUtils.transformRect(
         box.getTransformTo(viewport),
@@ -147,7 +196,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final tvMode = context.select<AppState, bool>((s) => s.tvMode);
+    _tvMode = context.select<AppState, bool>((s) => s.tvMode);
     final state = context.watch<XFeedState>();
     final controller = widget.controller;
 
@@ -157,6 +206,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
         final posts = widget.applyFilters
             ? state.filtered(controller.posts)
             : controller.posts;
+        _shown = posts;
         final header = widget.header;
         final error = controller.error;
 
@@ -195,6 +245,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
             onNotification: _onScroll,
             child: Focus(
               focusNode: _listFocus,
+              onKeyEvent: _onListKey,
               child: ReadableScrollPadding(
                 maxWidth: _maxWidth,
                 builder: (context, padding) => ListView.builder(
@@ -220,8 +271,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
                       rows: _rows,
                       child: XPostCard(
                         post: post,
-                        tvMode: tvMode,
-                        autofocus: tvMode && i == 0,
+                        autofocus: i == 0,
                         focal: post.id == widget.focalPostId,
                       ),
                     );
@@ -240,7 +290,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
 /// are on screen.
 class _PostRow extends StatefulWidget {
   final String postId;
-  final Map<String, BuildContext> rows;
+  final Map<String, _PostRowState> rows;
   final Widget child;
 
   const _PostRow({
@@ -255,10 +305,16 @@ class _PostRow extends StatefulWidget {
 }
 
 class _PostRowState extends State<_PostRow> {
+  final FocusNode _node = FocusNode(
+    debugLabel: 'XTimelineRow',
+    canRequestFocus: false,
+    skipTraversal: true,
+  );
+
   @override
   void initState() {
     super.initState();
-    widget.rows[widget.postId] = context;
+    widget.rows[widget.postId] = this;
   }
 
   @override
@@ -266,32 +322,51 @@ class _PostRowState extends State<_PostRow> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.postId != widget.postId) {
       _unregister(oldWidget.postId);
-      widget.rows[widget.postId] = context;
+      widget.rows[widget.postId] = this;
     }
   }
 
   @override
   void dispose() {
     _unregister(widget.postId);
+    _node.dispose();
     super.dispose();
   }
 
   void _unregister(String id) {
-    if (widget.rows[id] == context) widget.rows.remove(id);
+    if (widget.rows[id] == this) widget.rows.remove(id);
+  }
+
+  /// Focuses the card itself, the outermost focus stop of the row.
+  void focusPost() {
+    FocusNode? card;
+    var cardDepth = 0;
+    for (final node in _node.descendants) {
+      if (!node.canRequestFocus || node.skipTraversal) continue;
+      final depth = node.ancestors.length;
+      if (card == null || depth < cardDepth) {
+        card = node;
+        cardDepth = depth;
+      }
+    }
+    card?.requestFocus();
   }
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 0.5,
+    return Focus(
+      focusNode: _node,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 0.5,
+            ),
           ),
         ),
+        child: widget.child,
       ),
-      child: widget.child,
     );
   }
 }

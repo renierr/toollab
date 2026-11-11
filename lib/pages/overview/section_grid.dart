@@ -11,12 +11,16 @@ class SectionGrid extends StatelessWidget {
   final bool compact;
   final double childAspectRatio;
 
+  /// Gives the first card initial focus, so a remote starts on the tools.
+  final bool autofocusFirst;
+
   const SectionGrid({
     super.key,
     required this.sectionTools,
     required this.crossAxisCount,
     required this.compact,
     required this.childAspectRatio,
+    this.autofocusFirst = false,
   });
 
   @override
@@ -35,6 +39,7 @@ class SectionGrid extends StatelessWidget {
           return ToolCard(
             tool: tool,
             compact: compact,
+            autofocus: autofocusFirst && index == 0,
             onTap: () {
               context.read<AppState>().recordToolUsage(tool.id);
               context.push(tool.route);

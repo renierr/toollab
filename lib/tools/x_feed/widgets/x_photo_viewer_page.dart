@@ -79,6 +79,10 @@ class _XPhotoViewerPageState extends State<XPhotoViewerPage>
       _go(1);
       return KeyEventResult.handled;
     }
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      unawaited(Navigator.of(context).maybePop());
+      return KeyEventResult.handled;
+    }
     return KeyEventResult.ignored;
   }
 

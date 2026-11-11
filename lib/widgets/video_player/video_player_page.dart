@@ -23,8 +23,8 @@ class VideoPlayerAction {
 }
 
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
-/// OK / Space / Play toggles playback, left/right seek while the controls are
-/// hidden, any other key brings the controls back.
+/// Space / Play toggles playback, left/right seek 5 s while playing, Esc
+/// closes, any other key brings the controls back.
 class VideoPlayerPage extends StatefulWidget {
   final Uri source;
   final String? title;
@@ -65,6 +65,7 @@ class VideoPlayerPage extends StatefulWidget {
 class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   static const Duration _hideDelay = Duration(seconds: 3);
   static const Duration _seekStep = Duration(seconds: 10);
+  static const Duration _arrowSeekStep = Duration(seconds: 5);
 
   late final VideoBackend _backend = VideoBackend.create();
   final FocusNode _keyFocus = FocusNode(debugLabel: 'VideoPlayerKeys');
@@ -162,18 +163,26 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       unawaited(_seekBy(-_seekStep));
       return KeyEventResult.handled;
     }
+    if (key == LogicalKeyboardKey.escape) {
+      unawaited(Navigator.of(context).maybePop());
+      return KeyEventResult.handled;
+    }
+    // While playing, or with the controls hidden, arrows seek; a paused
+    // player leaves them to move between the controls.
+    final seeks = !_controlsVisible || _backend.state.value.playing;
+    if (seeks && key == LogicalKeyboardKey.arrowLeft) {
+      unawaited(_seekBy(-_arrowSeekStep));
+      if (_controlsVisible) _scheduleHide();
+      return KeyEventResult.handled;
+    }
+    if (seeks && key == LogicalKeyboardKey.arrowRight) {
+      unawaited(_seekBy(_arrowSeekStep));
+      if (_controlsVisible) _scheduleHide();
+      return KeyEventResult.handled;
+    }
     if (_controlsVisible) {
       _scheduleHide();
       return KeyEventResult.ignored;
-    }
-    // Controls hidden: the remote drives playback directly.
-    if (key == LogicalKeyboardKey.arrowLeft) {
-      unawaited(_seekBy(-_seekStep));
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.arrowRight) {
-      unawaited(_seekBy(_seekStep));
-      return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.select ||
         key == LogicalKeyboardKey.enter ||
@@ -181,9 +190,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       unawaited(_togglePlay());
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.escape || key == LogicalKeyboardKey.goBack) {
-      return KeyEventResult.ignored;
-    }
+    if (key == LogicalKeyboardKey.goBack) return KeyEventResult.ignored;
     _showControls();
     return KeyEventResult.handled;
   }

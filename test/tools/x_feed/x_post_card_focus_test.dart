@@ -60,11 +60,7 @@ void main() {
                   const SizedBox(height: 40),
                   RepaintBoundary(
                     key: boundary,
-                    child: const XPostCard(
-                      post: post,
-                      tvMode: true,
-                      autofocus: true,
-                    ),
+                    child: const XPostCard(post: post, autofocus: true),
                   ),
                 ],
               ),

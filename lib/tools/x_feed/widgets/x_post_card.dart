@@ -18,12 +18,11 @@ import 'x_quoted_post.dart';
 import 'x_rich_text.dart';
 import 'x_search_page.dart';
 
-/// One post in a list. On a TV the card is a focus stop: OK opens the thread,
-/// holding OK opens [XPostMenu]. Down moves into the post's media, where each
-/// tile is its own focus stop and OK plays it.
+/// One post in a list and one keyboard / remote focus stop: OK opens the
+/// thread, holding OK opens [XPostMenu], Space opens the media. Down moves into
+/// the post's media, where each tile is its own focus stop and OK plays it.
 class XPostCard extends StatefulWidget {
   final XPost post;
-  final bool tvMode;
 
   /// The thread's own post: larger text, full timestamp, no tap-through.
   final bool focal;
@@ -32,7 +31,6 @@ class XPostCard extends StatefulWidget {
   const XPostCard({
     super.key,
     required this.post,
-    required this.tvMode,
     this.focal = false,
     this.autofocus = false,
   });
@@ -90,7 +88,7 @@ class _XPostCardState extends State<XPostCard> {
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
-    if (widget.tvMode && _mediaNodes.isNotEmpty) {
+    if (_mediaNodes.isNotEmpty) {
       if (key == LogicalKeyboardKey.arrowDown && _cardNode.hasPrimaryFocus) {
         _focusFirstMedia();
         return KeyEventResult.handled;
@@ -104,6 +102,19 @@ class _XPostCardState extends State<XPostCard> {
           }
         }
       }
+    }
+    if (key == LogicalKeyboardKey.space && _cardNode.hasPrimaryFocus) {
+      final media = widget.post.allMedia;
+      if (media.isEmpty) return KeyEventResult.ignored;
+      final playable = media.indexWhere((m) => m.isPlayable);
+      unawaited(
+        XMediaActions.openMedia(
+          context,
+          widget.post,
+          playable < 0 ? 0 : playable,
+        ),
+      );
+      return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.mediaPlayPause ||
         key == LogicalKeyboardKey.mediaPlay) {
@@ -158,7 +169,6 @@ class _XPostCardState extends State<XPostCard> {
             child: XMediaGrid(
               media: post.media,
               maxHeight: widget.focal ? 640 : 420,
-              focusable: widget.tvMode,
               focusNodes: _mediaNodes,
               onOpen: (i) => XMediaActions.openMedia(context, post, i),
             ),
@@ -167,7 +177,6 @@ class _XPostCardState extends State<XPostCard> {
           Padding(
             padding: const EdgeInsets.only(top: 10),
             child: ExcludeFocus(
-              excluding: widget.tvMode,
               child: XQuotedPost(
                 post: quoted,
                 onTap: () => XNavigation.openPost(context, quoted),
@@ -183,7 +192,6 @@ class _XPostCardState extends State<XPostCard> {
           Padding(
             padding: const EdgeInsets.only(top: 10),
             child: ExcludeFocus(
-              excluding: widget.tvMode,
               child: XLinkCardView(
                 card: card,
                 onTap: () =>
@@ -194,7 +202,6 @@ class _XPostCardState extends State<XPostCard> {
         Padding(
           padding: const EdgeInsets.only(top: 4),
           child: ExcludeFocus(
-            excluding: widget.tvMode,
             child: XPostActions(post: post, onReply: () => _open()),
           ),
         ),

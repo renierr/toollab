@@ -13,7 +13,7 @@ on x.com never reaches this UI at all.
 | Never autoplay | Nothing plays until it is opened |
 | Video buttons (copy link, download mp4) | Post menu and player: share, save, copy video link |
 | Copy image | Post menu and photo viewer: image bytes go to the clipboard |
-| Keyboard: arrows, Space, F | D-pad moves post to post; Down enters a post's media, OK opens or plays, Play starts the video, long OK opens the menu |
+| Keyboard: arrows, Space, F | Left/right (keyboard) or up/down step post to post; Down enters a post's media, Space or Play opens it, OK opens the thread, long OK opens the menu |
 
 ## How it talks to X
 
@@ -77,19 +77,23 @@ secure storage (`XSessionStore`); logging out deletes it and the WebView cookies
 ExoPlayer via `video_player` on Android, libmpv via `media_kit` on Windows and Linux.
 Android renders into a platform `SurfaceView`, not a texture: on some Android TV decoders
 the texture path draws the video shrunk into a corner instead of filling the frame.
-GIFs are mp4s and loop. Remote: OK/Space toggles, left/right seek 10 s while the controls
-are hidden, any other key shows them.
+GIFs are mp4s and loop. Keyboard and remote: Space (and OK while the controls are hidden)
+toggles, left/right seek 5 s while playing or while the controls are hidden, Esc closes,
+any other key shows the controls. The photo viewer also closes on Esc.
 
 Share and save stream the file into the tool's `TempFileScope` first, then use
 `FileSaveHelper.showShareChooser` / `saveFileFromPath`.
 
-## TV
+## Keyboard and TV
 
-- Each post is a focus stop; its inner controls are excluded from traversal, except the
-  media. OK opens the thread, holding OK or the menu key opens `XPostMenu` with every
-  action, and Down moves into the post's media.
+- Each post is a focus stop on every platform; its inner controls are excluded from
+  traversal, except the media, and stay clickable. OK opens the thread, holding OK or the
+  menu key opens `XPostMenu` with every action, Space opens the post's video (or first
+  photo), and Down moves into the post's media. The first post takes focus.
 - Each media tile is its own focus stop: arrows move between tiles, OK plays the video
   or opens the photo, and Up on the top row returns to the post.
+- Without TV mode, left/right jump to the previous / next post and scroll it to the top.
+  In TV mode they stay with the rail and the media tiles.
 - The rail sits beside the feed whenever there is room, so it is reachable with left.
 - Without a browser, links fail with a message instead of opening.
 
