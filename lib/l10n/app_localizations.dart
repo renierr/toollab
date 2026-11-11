@@ -26176,6 +26176,18 @@ abstract class AppLocalizations {
   /// **'Hide replies'**
   String get xFeedHideReplies;
 
+  /// No description provided for @xFeedTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Post text size'**
+  String get xFeedTextSize;
+
+  /// No description provided for @xFeedTextSizePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String xFeedTextSizePercent(int percent);
+
   /// No description provided for @xFeedAdvancedSection.
   ///
   /// In en, this message translates to:

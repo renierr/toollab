@@ -7225,6 +7225,15 @@
   "xFeedStartTab": "Start with",
   "xFeedHideReposts": "Hide reposts",
   "xFeedHideReplies": "Hide replies",
+  "xFeedTextSize": "Post text size",
+  "xFeedTextSizePercent": "{percent}%",
+  "@xFeedTextSizePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "xFeedAdvancedSection": "Advanced",
   "xFeedApiRefreshHint": "The app reads X's query ids and feature flags from x.com and refreshes them every few hours or when a request is rejected.",
   "xFeedApiRefresh": "Refresh API data now",

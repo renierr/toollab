@@ -127,6 +127,25 @@ class XSettingsPage extends StatelessWidget {
                 ],
               ),
             ),
+            ListTile(
+              leading: const Icon(Icons.format_size),
+              title: Text(l10n.xFeedTextSize),
+              trailing: DropdownButton<double>(
+                value: state.textScale,
+                onChanged: (scale) {
+                  if (scale != null) state.setTextScale(scale);
+                },
+                items: [
+                  for (final scale in XFeedState.textScales)
+                    DropdownMenuItem(
+                      value: scale,
+                      child: Text(
+                        l10n.xFeedTextSizePercent((scale * 100).round()),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             SwitchListTile(
               secondary: const Icon(Icons.repeat),
               title: Text(l10n.xFeedHideReposts),

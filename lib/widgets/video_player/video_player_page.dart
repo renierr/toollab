@@ -72,7 +72,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   final FocusNode _playFocus = FocusNode(debugLabel: 'VideoPlayerPlay');
   final ScreenOnRequest _screenOn = ScreenOnRequest();
   Timer? _hideTimer;
-  bool _controlsVisible = true;
+  bool _controlsVisible = false;
 
   @override
   void initState() {
@@ -87,13 +87,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       _keyFocus.dispose();
       _playFocus.dispose();
     });
-    _scheduleHide();
   }
 
+  /// Controls appear on interaction only, plus at the end and on an error.
   void _onState() {
     final state = _backend.state.value;
     if (Platform.isAndroid) _screenOn.set(state.playing);
-    if (!state.playing && !_controlsVisible) _showControls();
+    if ((state.completed || state.error != null) && !_controlsVisible) {
+      _showControls();
+    }
   }
 
   void _scheduleHide() {

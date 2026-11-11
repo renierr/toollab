@@ -14857,6 +14857,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get xFeedHideReplies => 'Hide replies';
 
   @override
+  String get xFeedTextSize => 'Post text size';
+
+  @override
+  String xFeedTextSizePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
   String get xFeedAdvancedSection => 'Advanced';
 
   @override

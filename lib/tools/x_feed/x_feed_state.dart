@@ -24,6 +24,9 @@ class XFeedState extends ChangeNotifier {
   static const String _hideRepliesKey = 'hide_replies';
   static const String _startTabKey = 'start_tab';
   static const String _seenKey = 'seen_pending';
+  static const String _textScaleKey = 'text_scale';
+
+  static const List<double> textScales = [0.9, 1.0, 1.15, 1.3, 1.5, 1.75, 2.0];
 
   /// Keeps the GET query string of a home request well under URL limits.
   static const int _seenBatchLimit = 100;
@@ -37,6 +40,7 @@ class XFeedState extends ChangeNotifier {
 
   bool _hideReposts = false;
   bool _hideReplies = false;
+  double _textScale = 1.0;
   XFeedTab _startTab = XFeedTab.forYou;
   XFeedTab _tab = XFeedTab.forYou;
 
@@ -66,6 +70,9 @@ class XFeedState extends ChangeNotifier {
   String? get screenName => _screenName;
   bool get hideReposts => _hideReposts;
   bool get hideReplies => _hideReplies;
+
+  /// Multiplies the system text scale inside posts.
+  double get textScale => _textScale;
   XFeedTab get startTab => _startTab;
   XFeedTab get tab => _tab;
 
@@ -98,6 +105,12 @@ class XFeedState extends ChangeNotifier {
     final id = XFeedTool.config.id;
     _hideReposts = await db.getSetting(id, _hideRepostsKey) == 'true';
     _hideReplies = await db.getSetting(id, _hideRepliesKey) == 'true';
+    final textScale = double.tryParse(
+      await db.getSetting(id, _textScaleKey) ?? '',
+    );
+    if (textScale != null && textScales.contains(textScale)) {
+      _textScale = textScale;
+    }
     final startTab = await db.getSetting(id, _startTabKey);
     _startTab = XFeedTab.values.firstWhere(
       (t) => t.name == startTab,
@@ -275,6 +288,16 @@ class XFeedState extends ChangeNotifier {
     await DatabaseService.instance.setSetting(
       XFeedTool.config.id,
       _hideRepliesKey,
+      '$value',
+    );
+  }
+
+  Future<void> setTextScale(double value) async {
+    _textScale = value;
+    _notify();
+    await DatabaseService.instance.setSetting(
+      XFeedTool.config.id,
+      _textScaleKey,
       '$value',
     );
   }

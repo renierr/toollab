@@ -13,7 +13,7 @@ on x.com never reaches this UI at all.
 | Never autoplay | Nothing plays until it is opened |
 | Video buttons (copy link, download mp4) | Post menu and player: share, save, copy video link |
 | Copy image | Post menu and photo viewer: image bytes go to the clipboard |
-| Keyboard: arrows, Space, F | Left/right (keyboard) or up/down step post to post; Down enters a post's media, Space or Play opens it, OK opens the thread, long OK opens the menu |
+| Keyboard: arrows, Space, F | Left/right (keyboard) or up/down step post to post; Down enters a post's media, Space or Play opens it, OK opens the thread, long OK opens the menu, R reloads |
 
 ## How it talks to X
 
@@ -77,7 +77,10 @@ secure storage (`XSessionStore`); logging out deletes it and the WebView cookies
 ExoPlayer via `video_player` on Android, libmpv via `media_kit` on Windows and Linux.
 Android renders into a platform `SurfaceView`, not a texture: on some Android TV decoders
 the texture path draws the video shrunk into a corner instead of filling the frame.
-GIFs are mp4s and loop. Keyboard and remote: Space (and OK while the controls are hidden)
+Playback streams the URL and starts while it buffers; only share and save download the
+whole file. GIFs are mp4s and loop. The controls stay hidden until the user taps, moves
+the mouse or presses a key, and come up by themselves only at the end or on an error.
+Keyboard and remote: Space (and OK while the controls are hidden)
 toggles, left/right seek 5 s while playing or while the controls are hidden, Esc closes,
 any other key shows the controls. The photo viewer also closes on Esc.
 
@@ -94,6 +97,9 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
   or opens the photo, and Up on the top row returns to the post.
 - Without TV mode, left/right jump to the previous / next post and scroll it to the top.
   In TV mode they stay with the rail and the media tiles.
+- R reloads the list a focused post belongs to, like pull-to-refresh.
+- **Settings → Post text size** scales all text inside posts on top of the system text
+  scale; stored in the tool's settings.
 - The rail sits beside the feed whenever there is room, so it is reachable with left.
 - Without a browser, links fail with a message instead of opening.
 

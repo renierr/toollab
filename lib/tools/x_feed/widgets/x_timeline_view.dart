@@ -51,6 +51,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     canRequestFocus: false,
     skipTraversal: true,
   );
+  final GlobalKey<RefreshIndicatorState> _refreshIndicator = GlobalKey();
   final Map<String, _PostRowState> _rows = {};
   List<XPost> _shown = const [];
   bool _tvMode = false;
@@ -90,9 +91,9 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     _scheduleSeenCheck();
   }
 
-  /// A refresh brings new posts at the top, so start reading there.
+  /// A refresh rebuilds the list at the top (keyed by [_refreshCount]); the
+  /// first new post takes over the focus.
   void _showTop() {
-    if (_scroll.hasClients) _scroll.jumpTo(0);
     if (!_listFocus.hasFocus) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _shown.isEmpty) return;
@@ -100,20 +101,33 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     });
   }
 
-  /// Left / right step to the previous / next post on a keyboard. A TV keeps
-  /// them for the rail and the media tiles.
+  /// R reloads the list. Left / right step to the previous / next post on a
+  /// keyboard; a TV keeps them for the rail and the media tiles.
   KeyEventResult _onListKey(FocusNode node, KeyEvent event) {
-    if (_tvMode || event is KeyUpEvent) return KeyEventResult.ignored;
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final row = FocusManager.instance.primaryFocus?.context
+        ?.findAncestorStateOfType<_PostRowState>();
+    if (row == null) return KeyEventResult.ignored;
     final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.keyR) {
+      final keyboard = HardwareKeyboard.instance;
+      if (keyboard.isControlPressed ||
+          keyboard.isAltPressed ||
+          keyboard.isMetaPressed) {
+        return KeyEventResult.ignored;
+      }
+      if (event is KeyDownEvent && !widget.controller.isLoading) {
+        unawaited(_refreshIndicator.currentState?.show());
+      }
+      return KeyEventResult.handled;
+    }
+    if (_tvMode) return KeyEventResult.ignored;
     final delta = key == LogicalKeyboardKey.arrowRight
         ? 1
         : key == LogicalKeyboardKey.arrowLeft
         ? -1
         : 0;
     if (delta == 0) return KeyEventResult.ignored;
-    final row = FocusManager.instance.primaryFocus?.context
-        ?.findAncestorStateOfType<_PostRowState>();
-    if (row == null) return KeyEventResult.ignored;
     final index = _shown.indexWhere((p) => p.id == row.widget.postId);
     if (index < 0) return KeyEventResult.ignored;
     final target = index + delta;
@@ -240,6 +254,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
 
         final offset = header == null ? 0 : 1;
         return RefreshIndicator(
+          key: _refreshIndicator,
           onRefresh: controller.refresh,
           child: NotificationListener<ScrollNotification>(
             onNotification: _onScroll,
@@ -248,7 +263,10 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
               onKeyEvent: _onListKey,
               child: ReadableScrollPadding(
                 maxWidth: _maxWidth,
+                // Jumping the old list to 0 lands below the top: its stale
+                // child offsets correct the position once the new posts lay out.
                 builder: (context, padding) => ListView.builder(
+                  key: ValueKey(_refreshCount),
                   controller: _scroll,
                   padding: padding,
                   itemCount: posts.length + offset + 1,

@@ -5740,6 +5740,8 @@
   "xFeedStartTab": "Starten mit",
   "xFeedHideReposts": "Reposts ausblenden",
   "xFeedHideReplies": "Antworten ausblenden",
+  "xFeedTextSize": "Schriftgröße der Beiträge",
+  "xFeedTextSizePercent": "{percent} %",
   "xFeedAdvancedSection": "Erweitert",
   "xFeedApiRefreshHint": "Die App liest die Query-IDs und Feature-Flags von X aus x.com und aktualisiert sie alle paar Stunden oder wenn eine Anfrage abgelehnt wird.",
   "xFeedApiRefresh": "API-Daten jetzt aktualisieren",

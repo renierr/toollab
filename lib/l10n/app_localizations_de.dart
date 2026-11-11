@@ -14972,6 +14972,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get xFeedHideReplies => 'Antworten ausblenden';
 
   @override
+  String get xFeedTextSize => 'Schriftgröße der Beiträge';
+
+  @override
+  String xFeedTextSizePercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
   String get xFeedAdvancedSection => 'Erweitert';
 
   @override

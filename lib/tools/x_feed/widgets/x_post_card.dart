@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/focus_outline.dart';
 
 import '../models/x_post.dart';
+import '../x_feed_state.dart';
 import '../x_media_actions.dart';
 import '../x_navigation.dart';
 import 'x_avatar.dart';
@@ -208,7 +210,7 @@ class _XPostCardState extends State<XPostCard> {
       ],
     );
 
-    return Focus(
+    final Widget content = Focus(
       canRequestFocus: false,
       onKeyEvent: _onKey,
       child: FocusOutline(
@@ -268,6 +270,16 @@ class _XPostCardState extends State<XPostCard> {
           ),
         ),
       ),
+    );
+
+    final textScale = context.select<XFeedState, double>((s) => s.textScale);
+    if (textScale == 1.0) return content;
+    final media = MediaQuery.of(context);
+    return MediaQuery(
+      data: media.copyWith(
+        textScaler: TextScaler.linear(media.textScaler.scale(1) * textScale),
+      ),
+      child: content,
     );
   }
 }
