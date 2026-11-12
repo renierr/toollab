@@ -146,6 +146,25 @@ class XSettingsPage extends StatelessWidget {
                 ],
               ),
             ),
+            ListTile(
+              leading: const Icon(Icons.translate),
+              title: Text(l10n.xFeedTranslateTo),
+              trailing: DropdownButton<String?>(
+                value: state.translateTo,
+                onChanged: state.setTranslateTo,
+                items: [
+                  DropdownMenuItem(child: Text(l10n.xFeedTranslateToApp)),
+                  DropdownMenuItem(
+                    value: 'en',
+                    child: Text(l10n.settingsLanguageEnglish),
+                  ),
+                  DropdownMenuItem(
+                    value: 'de',
+                    child: Text(l10n.settingsLanguageGerman),
+                  ),
+                ],
+              ),
+            ),
             SwitchListTile(
               secondary: const Icon(Icons.repeat),
               title: Text(l10n.xFeedHideReposts),

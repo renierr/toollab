@@ -25978,6 +25978,42 @@ abstract class AppLocalizations {
   /// **'Share link'**
   String get xFeedShareLink;
 
+  /// No description provided for @xFeedTranslateTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate posts to'**
+  String get xFeedTranslateTo;
+
+  /// No description provided for @xFeedTranslateToApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App language'**
+  String get xFeedTranslateToApp;
+
+  /// No description provided for @xFeedTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate post'**
+  String get xFeedTranslate;
+
+  /// No description provided for @xFeedShowOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Show original'**
+  String get xFeedShowOriginal;
+
+  /// No description provided for @xFeedTranslatedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated from {language}'**
+  String xFeedTranslatedFrom(String language);
+
+  /// No description provided for @xFeedTranslationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No translation available'**
+  String get xFeedTranslationUnavailable;
+
   /// No description provided for @xFeedCopyLink.
   ///
   /// In en, this message translates to:

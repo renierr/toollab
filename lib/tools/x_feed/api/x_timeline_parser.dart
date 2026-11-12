@@ -168,6 +168,8 @@ class XTimelineParser {
           replies: inner.replies,
           quotes: inner.quotes,
           views: inner.views,
+          lang: inner.lang,
+          translatable: inner.translatable,
         );
       }
     }
@@ -190,6 +192,8 @@ class XTimelineParser {
       replies: _int(legacy['reply_count']),
       quotes: _int(legacy['quote_count']),
       views: int.tryParse('${_path(result, ['views', 'count']) ?? ''}'),
+      lang: legacy['lang'] as String?,
+      translatable: _translatable(result, legacy['lang'] as String?),
       engagement: XEngagement(
         liked: legacy['favorited'] == true,
         reposted: legacy['retweeted'] == true,
@@ -199,6 +203,25 @@ class XTimelineParser {
       ),
     );
   }
+
+  /// X's own flag; without it, any real language tag counts.
+  static bool _translatable(Map result, String? lang) {
+    final flag = result['is_translatable'];
+    if (flag is bool) return flag;
+    return lang != null && !_untranslatableLangs.contains(lang);
+  }
+
+  // X's tags for undetermined, no text, media/hashtag/cashtag/mention-only.
+  static const Set<String> _untranslatableLangs = {
+    'und',
+    'zxx',
+    'qme',
+    'qam',
+    'qct',
+    'qht',
+    'qst',
+    'art',
+  };
 
   static int _int(Object? value) => (value as num?)?.toInt() ?? 0;
 
@@ -273,6 +296,15 @@ class XTimelineParser {
       }
     }
 
+    return _expandLinks(text, urls, hasMedia);
+  }
+
+  /// Swaps each t.co wrapper for its display URL; a trailing media t.co goes.
+  static (String, List<XLink>) _expandLinks(
+    String text,
+    List urls,
+    bool hasMedia,
+  ) {
     final links = <XLink>[];
     for (final u in urls) {
       if (u is! Map) continue;
@@ -287,6 +319,38 @@ class XTimelineParser {
       text = text.replaceAll(RegExp(r'\s*https://t\.co/\w+\s*$'), '');
     }
     return (_unescape(text).trim(), links);
+  }
+
+  /// The Grok translation inside a `TweetResultByRestId` / `TweetDetail`
+  /// result, or the `translation` object of the strato `translateTweet` column.
+  static XTranslation? parseTranslation(
+    Object? json, {
+    required bool hasMedia,
+  }) {
+    if (json is! Map) return null;
+    final text = json['translation'];
+    if (text is! String || text.trim().isEmpty) return null;
+    final urls = _path(json, ['entities', 'urls']) as List? ?? const [];
+    final (expanded, links) = _expandLinks(text, urls, hasMedia);
+    return XTranslation(
+      text: expanded,
+      links: links,
+      sourceLanguage:
+          (json['source_language'] ?? json['sourceLanguage']) as String?,
+    );
+  }
+
+  static XTranslation? parseGrokTranslation(
+    Object? json, {
+    required bool hasMedia,
+  }) {
+    var result = _path(json, ['data', 'tweetResult', 'result']);
+    if (result is Map && result['__typename'] == 'TweetWithVisibilityResults') {
+      result = result['tweet'];
+    }
+    final grok = _path(result, ['grok_translated_post_with_availability']);
+    if (grok is! Map || grok['is_available'] != true) return null;
+    return parseTranslation(grok['data'], hasMedia: hasMedia);
   }
 
   static String _unescape(String text) {

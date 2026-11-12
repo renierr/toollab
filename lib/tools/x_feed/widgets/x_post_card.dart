@@ -11,6 +11,7 @@ import '../x_feed_state.dart';
 import '../x_keys.dart';
 import '../x_media_actions.dart';
 import '../x_navigation.dart';
+import '../x_translation_actions.dart';
 import 'x_avatar.dart';
 import 'x_link_card.dart';
 import 'x_media_grid.dart';
@@ -20,6 +21,7 @@ import 'x_post_menu.dart';
 import 'x_quoted_post.dart';
 import 'x_rich_text.dart';
 import 'x_search_page.dart';
+import 'x_translation_bar.dart';
 
 /// One post in a list and one keyboard / remote focus stop: OK opens the
 /// thread, holding OK opens [XPostMenu], Space opens the media. Down moves into
@@ -140,6 +142,10 @@ class _XPostCardState extends State<XPostCard> {
       unawaited(_engage(() => state.toggleBookmark(widget.post)));
       return KeyEventResult.handled;
     }
+    if (key == LogicalKeyboardKey.keyT && widget.post.canTranslate) {
+      unawaited(XTranslationActions.toggle(context, widget.post));
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.keyU) {
       unawaited(XNavigation.openUser(context, widget.post.author.screenName));
       return KeyEventResult.handled;
@@ -167,6 +173,12 @@ class _XPostCardState extends State<XPostCard> {
     final replyTo = post.replyToScreenName;
     final card = post.card;
     final quoted = post.quoted;
+    final language = XTranslationActions.targetLanguage(context);
+    final translation = post.canTranslate
+        ? context.select<XFeedState, XTranslation?>(
+            (s) => s.shownTranslation(post.id, language),
+          )
+        : null;
 
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,8 +190,8 @@ class _XPostCardState extends State<XPostCard> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: XRichText(
-              text: post.text,
-              links: post.links,
+              text: translation?.text ?? post.text,
+              links: translation?.links ?? post.links,
               style: widget.focal
                   ? theme.textTheme.titleMedium
                   : theme.textTheme.bodyLarge,
@@ -187,6 +199,10 @@ class _XPostCardState extends State<XPostCard> {
               onMention: (name) => XNavigation.openUser(context, name),
               onHashtag: (tag) => XSearchPage.open(context, tag),
             ),
+          ),
+        if (post.canTranslate)
+          ExcludeFocus(
+            child: XTranslationBar(post: post, translation: translation),
           ),
         if (post.media.isNotEmpty)
           Padding(

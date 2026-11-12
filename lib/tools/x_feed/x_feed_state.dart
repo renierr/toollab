@@ -25,6 +25,9 @@ class XFeedState extends ChangeNotifier {
   static const String _startTabKey = 'start_tab';
   static const String _seenKey = 'seen_pending';
   static const String _textScaleKey = 'text_scale';
+  static const String _translateToKey = 'translate_to';
+
+  static const List<String> translationLanguages = ['en', 'de'];
 
   static const List<double> textScales = [0.9, 1.0, 1.15, 1.3, 1.5, 1.75, 2.0];
 
@@ -41,10 +44,16 @@ class XFeedState extends ChangeNotifier {
   bool _hideReposts = false;
   bool _hideReplies = false;
   double _textScale = 1.0;
+  String? _translateTo;
   XFeedTab _startTab = XFeedTab.forYou;
   XFeedTab _tab = XFeedTab.forYou;
 
   final Map<String, XEngagement> _engagement = {};
+
+  /// Fetched translations by `postId/language`; shown only while toggled on.
+  final Map<String, XTranslation> _translations = {};
+  final Set<String> _translationShown = {};
+  final Set<String> _translating = {};
 
   /// Downloads for sharing and saving.
   final TempFileScope tempScope = TempFileManager.createScope();
@@ -74,6 +83,9 @@ class XFeedState extends ChangeNotifier {
   /// Multiplies the system text scale inside posts.
   double get textScale => _textScale;
   XFeedTab get startTab => _startTab;
+
+  /// Target language of translations; null follows the app's language.
+  String? get translateTo => _translateTo;
   XFeedTab get tab => _tab;
 
   XSession? get session => _api?.session;
@@ -111,6 +123,8 @@ class XFeedState extends ChangeNotifier {
     if (textScale != null && textScales.contains(textScale)) {
       _textScale = textScale;
     }
+    final translateTo = await db.getSetting(id, _translateToKey);
+    if (translationLanguages.contains(translateTo)) _translateTo = translateTo;
     final startTab = await db.getSetting(id, _startTabKey);
     _startTab = XFeedTab.values.firstWhere(
       (t) => t.name == startTab,
@@ -222,6 +236,7 @@ class XFeedState extends ChangeNotifier {
     _sessionExpired = false;
     _screenName = null;
     _engagement.clear();
+    _clearTranslations();
     _clearSeen();
     for (final t in [forYou, following, bookmarks]) {
       t.reset();
@@ -239,6 +254,7 @@ class XFeedState extends ChangeNotifier {
     _sessionExpired = false;
     _screenName = null;
     _engagement.clear();
+    _clearTranslations();
     _clearSeen();
     for (final t in [forYou, following, bookmarks]) {
       t.reset();
@@ -299,6 +315,62 @@ class XFeedState extends ChangeNotifier {
       XFeedTool.config.id,
       _textScaleKey,
       '$value',
+    );
+  }
+
+  void _clearTranslations() {
+    _translations.clear();
+    _translationShown.clear();
+    _translating.clear();
+  }
+
+  /// The translation into [language] while the user has it switched on.
+  XTranslation? shownTranslation(String postId, String language) {
+    final key = '$postId/$language';
+    return _translationShown.contains(key) ? _translations[key] : null;
+  }
+
+  bool isTranslating(String postId, String language) =>
+      _translating.contains('$postId/$language');
+
+  /// Switches [post] between its original text and a translation into
+  /// [language], fetching it on first use. False when X has none to give.
+  Future<bool> toggleTranslation(XPost post, String language) async {
+    final key = '${post.id}/$language';
+    if (_translationShown.remove(key)) {
+      _notify();
+      return true;
+    }
+    if (_translations.containsKey(key)) {
+      _translationShown.add(key);
+      _notify();
+      return true;
+    }
+    if (!_translating.add(key)) return true;
+    _notify();
+    try {
+      final translation = await _requireApi().translatePost(post, language);
+      if (translation == null) return false;
+      _translations[key] = translation;
+      _translationShown.add(key);
+      return true;
+    } on XApiException catch (e) {
+      errorLog('[XFeedState] Translating ${post.id} failed: $e');
+      _onApiError(e);
+      return false;
+    } finally {
+      _translating.remove(key);
+      _notify();
+    }
+  }
+
+  Future<void> setTranslateTo(String? language) async {
+    _translateTo = language;
+    _notify();
+    await DatabaseService.instance.setSetting(
+      XFeedTool.config.id,
+      _translateToKey,
+      language ?? '',
     );
   }
 

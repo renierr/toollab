@@ -53,6 +53,20 @@ to 100, oldest dropped — and sends the whole batch with the next home request,
 next page. Sent ids are not sent again this session. The pending buffer is kept in the
 tool's settings so ids seen right before the app closes go out on the next launch.
 
+## Translation
+
+Posts X marks `is_translatable` whose `lang` is neither `en` nor `de` get x.com's
+"Translate post" link under the text, a menu entry and the T key. Nothing is translated
+until asked. The target is **Settings → Translate posts to** (app language, English or
+German; stored in the tool's settings).
+
+`XApi.translatePost` does what x.com does: it refetches the post with
+`TweetResultByRestId`, `X-Twitter-Client-Language` set to the target and the feature
+`responsive_web_grok_show_grok_translated_post` on, and reads
+`grok_translated_post_with_availability.data.translation`. When X has no Grok
+translation it asks the older strato column `.../translation/service/translateTweet`.
+Translations are cached in `XFeedState` for the session; "Show original" only hides one.
+
 ## Login
 
 The session never leaves the device except when the user sends it to a TV. It lives in
@@ -108,6 +122,7 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
   | List | R | Reload, like pull-to-refresh |
   | Post | L / B | Like / bookmark |
   | Post | U | Author's profile |
+  | Post | T | Translate / show original |
   | Feed | 1 – 4 | For you, Following, Bookmarks, Search; focus returns to where it was |
   | Feed | / | Search field |
   | Thread, profile, search page, photo viewer, player | Backspace | Back |

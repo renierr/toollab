@@ -48,6 +48,18 @@ class XEngagement {
   );
 }
 
+class XTranslation {
+  final String text;
+  final List<XLink> links;
+  final String? sourceLanguage;
+
+  const XTranslation({
+    required this.text,
+    required this.links,
+    this.sourceLanguage,
+  });
+}
+
 class XPost {
   final String id;
   final XUser author;
@@ -64,6 +76,10 @@ class XPost {
   final int? views;
   final XEngagement engagement;
 
+  /// X's language tag for the text, e.g. `fr`; `und` or null when unknown.
+  final String? lang;
+  final bool translatable;
+
   const XPost({
     required this.id,
     required this.author,
@@ -79,12 +95,18 @@ class XPost {
     this.replies = 0,
     this.quotes = 0,
     this.views,
+    this.lang,
+    this.translatable = false,
   });
 
   String get url => 'https://x.com/${author.screenName}/status/$id';
 
   bool get isRepost => repostedBy != null;
   bool get isReply => replyToScreenName != null;
+
+  /// English and German posts are never offered for translation.
+  bool get canTranslate =>
+      translatable && text.isNotEmpty && lang != 'en' && lang != 'de';
 
   List<XMedia> get allMedia => [...media, ...?quoted?.media];
 }

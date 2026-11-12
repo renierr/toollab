@@ -81,14 +81,19 @@ class XApi {
     await _ensureConfig(force: true);
   }
 
-  Map<String, String> _headers(XWebConfig? config, String method, String path) {
+  Map<String, String> _headers(
+    XWebConfig? config,
+    String method,
+    String path, {
+    String language = 'en',
+  }) {
     final headers = {
       'Authorization': 'Bearer $_bearer',
       'X-Csrf-Token': _session.csrfToken,
       'Cookie': _session.cookieHeader,
       'X-Twitter-Auth-Type': 'OAuth2Session',
       'X-Twitter-Active-User': 'yes',
-      'X-Twitter-Client-Language': 'en',
+      'X-Twitter-Client-Language': language,
       'User-Agent': XWebConfig.userAgent,
       'Content-Type': 'application/json',
       'Accept': '*/*',
@@ -137,6 +142,8 @@ class XApi {
     Map<String, Object?> variables, {
     bool post = false,
     Map<String, bool> fieldToggles = const {},
+    Map<String, bool> featureOverrides = const {},
+    String language = 'en',
     bool retried = false,
   }) async {
     final config = await _ensureConfig();
@@ -149,6 +156,8 @@ class XApi {
           variables,
           post: post,
           fieldToggles: fieldToggles,
+          featureOverrides: featureOverrides,
+          language: language,
           retried: true,
         );
       }
@@ -163,14 +172,18 @@ class XApi {
     final toggles = {
       for (final name in op.fieldToggles) name: fieldToggles[name] ?? false,
     };
-    final features = config.featuresFor(op);
+    final features = {
+      ...config.featuresFor(op),
+      for (final e in featureOverrides.entries)
+        if (op.features.contains(e.key)) e.key: e.value,
+    };
 
     final http.Response res;
     if (post) {
       res = await _send(
         'POST',
         Uri.https('x.com', path),
-        _headers(config, 'POST', path),
+        _headers(config, 'POST', path, language: language),
         body: jsonEncode({
           'variables': cleanVariables,
           if (features.isNotEmpty) 'features': features,
@@ -184,7 +197,11 @@ class XApi {
         if (features.isNotEmpty) 'features': jsonEncode(features),
         if (toggles.isNotEmpty) 'fieldToggles': jsonEncode(toggles),
       });
-      res = await _send('GET', uri, _headers(config, 'GET', path));
+      res = await _send(
+        'GET',
+        uri,
+        _headers(config, 'GET', path, language: language),
+      );
     }
 
     switch (res.statusCode) {
@@ -203,6 +220,8 @@ class XApi {
             variables,
             post: post,
             fieldToggles: fieldToggles,
+            featureOverrides: featureOverrides,
+            language: language,
             retried: true,
           );
         }
@@ -222,6 +241,8 @@ class XApi {
             variables,
             post: post,
             fieldToggles: fieldToggles,
+            featureOverrides: featureOverrides,
+            language: language,
             retried: true,
           );
         }
@@ -389,4 +410,74 @@ class XApi {
     {'tweet_id': postId},
     post: true,
   );
+
+  /// Translates into [language] the way x.com does: the Grok translation X
+  /// attaches to a post fetched in the reader's client language, else the
+  /// older `translateTweet` strato column. Null when X has none.
+  Future<XTranslation?> translatePost(XPost post, String language) async {
+    final hasMedia = post.media.isNotEmpty;
+    try {
+      final json = await _graphql(
+        'TweetResultByRestId',
+        {
+          'tweetId': post.id,
+          'includePromotedContent': false,
+          'withBirdwatchNotes': false,
+          'withVoice': true,
+          'withCommunity': true,
+        },
+        featureOverrides: const {
+          'responsive_web_grok_show_grok_translated_post': true,
+          'graphql_is_translatable_rweb_tweet_is_translatable_enabled': true,
+        },
+        language: language,
+      );
+      final grok = XTimelineParser.parseGrokTranslation(
+        json,
+        hasMedia: hasMedia,
+      );
+      if (grok != null) return grok;
+    } on XApiException catch (e) {
+      if (e.kind == XApiErrorKind.unauthorized ||
+          e.kind == XApiErrorKind.rateLimited) {
+        rethrow;
+      }
+      debugLog('[XApi] Grok translation of ${post.id} failed: $e');
+    }
+    return _stratoTranslation(post.id, language, hasMedia: hasMedia);
+  }
+
+  Future<XTranslation?> _stratoTranslation(
+    String postId,
+    String language, {
+    required bool hasMedia,
+  }) async {
+    final path =
+        '/i/api/1.1/strato/column/None/tweetId=$postId,destinationLanguage=None,'
+        'translationSource=Some(X),feature=None,timeout=None,onlyCached=None'
+        '/translation/service/translateTweet';
+    final config = await _ensureConfig();
+    final res = await _send(
+      'GET',
+      Uri.https('x.com', path),
+      _headers(config, 'GET', path, language: language),
+    );
+    switch (res.statusCode) {
+      case 200:
+        return XTimelineParser.parseTranslation(
+          _decode(res.body),
+          hasMedia: hasMedia,
+        );
+      case 401:
+        throw const XApiException(XApiErrorKind.unauthorized);
+      case 429:
+        throw const XApiException(XApiErrorKind.rateLimited);
+      default:
+        // A 403 here is a refused translation, not an expired session.
+        throw XApiException(
+          XApiErrorKind.server,
+          'HTTP ${res.statusCode}: ${_bodyMessage(res.body)}',
+        );
+    }
+  }
 }

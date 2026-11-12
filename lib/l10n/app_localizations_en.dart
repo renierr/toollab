@@ -14749,6 +14749,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get xFeedShareLink => 'Share link';
 
   @override
+  String get xFeedTranslateTo => 'Translate posts to';
+
+  @override
+  String get xFeedTranslateToApp => 'App language';
+
+  @override
+  String get xFeedTranslate => 'Translate post';
+
+  @override
+  String get xFeedShowOriginal => 'Show original';
+
+  @override
+  String xFeedTranslatedFrom(String language) {
+    return 'Translated from $language';
+  }
+
+  @override
+  String get xFeedTranslationUnavailable => 'No translation available';
+
+  @override
   String get xFeedCopyLink => 'Copy link';
 
   @override

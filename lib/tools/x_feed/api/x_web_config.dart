@@ -65,6 +65,7 @@ class XWebConfig {
     'HomeTimeline',
     'HomeLatestTimeline',
     'TweetDetail',
+    'TweetResultByRestId',
     'UserByScreenName',
     'UserTweets',
     'UserMedia',
