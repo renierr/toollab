@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:tool_lab/helpers/tool_vault_crypto.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -27,6 +28,9 @@ void main() {
   var failAfterWrite = false;
 
   setUpAll(() {
+    // The real counts make each test spend half a minute in key derivation.
+    ToolVaultCrypto.setIterationsForTesting(1000);
+    TotpCrypto.setIterationsForTesting(1000);
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;
@@ -106,7 +110,11 @@ void main() {
     AppHttpClient.testClient = null;
     client.close();
   });
-  tearDownAll(() async => DatabaseService.instance.close());
+  tearDownAll(() async {
+    ToolVaultCrypto.setIterationsForTesting(null);
+    TotpCrypto.setIterationsForTesting(null);
+    await DatabaseService.instance.close();
+  });
 
   Future<void> sync() async {
     await SyncService.sync(
@@ -216,24 +224,23 @@ void main() {
     },
   );
 
+  // Since b9e433a8 a password change works without sync; it must not touch
+  // the backend copy then.
   test(
-    'disabled tool sync blocks password rotation before any changes',
+    'disabled tool sync changes the password locally without the backend',
     () async {
       await state.addAccount(account('Server', 'JBSWY3DPEHPK3PXP'));
       await sync();
       final before = jsonEncode(server);
       await appState.setToolSyncEnabled(TotpAuthTool.config.id, false);
-      await expectLater(
-        state.changePassword(
-          appState,
-          'old shared password',
-          'new shared password',
-        ),
-        throwsStateError,
+      await state.changePassword(
+        appState,
+        'old shared password',
+        'new shared password',
       );
       expect(jsonEncode(server), before);
       expect(state.rotationPending, isFalse);
-      expect(state.syncPassword, 'old shared password');
+      expect(state.syncPassword, 'new shared password');
     },
   );
 

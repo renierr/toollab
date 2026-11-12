@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:tool_lab/helpers/tool_vault_crypto.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
@@ -23,6 +24,8 @@ void main() {
   var replaceSessionDuringPull = false;
 
   setUpAll(() {
+    ToolVaultCrypto.setIterationsForTesting(1000);
+    TotpCrypto.setIterationsForTesting(1000);
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;

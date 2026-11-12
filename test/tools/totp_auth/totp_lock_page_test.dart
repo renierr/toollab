@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:tool_lab/tools/totp_auth/totp_crypto.dart';
+import 'package:tool_lab/helpers/tool_vault_crypto.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -15,6 +17,8 @@ import 'package:tool_lab/tools/totp_auth/totp_auth_state.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() {
+    ToolVaultCrypto.setIterationsForTesting(1000);
+    TotpCrypto.setIterationsForTesting(1000);
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;

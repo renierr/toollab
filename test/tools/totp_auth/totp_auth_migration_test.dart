@@ -1,6 +1,8 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:tool_lab/tools/totp_auth/totp_crypto.dart';
+import 'package:tool_lab/helpers/tool_vault_crypto.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/totp_auth/config.dart';
 import 'package:tool_lab/tools/totp_auth/totp_auth_state.dart';
@@ -20,6 +22,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
+    ToolVaultCrypto.setIterationsForTesting(1000);
+    TotpCrypto.setIterationsForTesting(1000);
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;

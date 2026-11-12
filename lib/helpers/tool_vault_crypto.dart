@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart';
 
 class ToolVaultCleanupPending implements Exception {}
 
@@ -9,11 +10,16 @@ class ToolVaultCrypto {
   ToolVaultCrypto._();
 
   static const int _iterations = 600000;
-  static final _kdf = Pbkdf2(
-    macAlgorithm: Hmac.sha256(),
-    iterations: _iterations,
-    bits: 256,
-  );
+  static Pbkdf2 _kdf = _pbkdf2(_iterations);
+
+  static Pbkdf2 _pbkdf2(int iterations) =>
+      Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: iterations, bits: 256);
+
+  /// Pure-Dart PBKDF2 takes seconds per key; tests that only check the flow
+  /// lower it. Null restores the real count.
+  @visibleForTesting
+  static void setIterationsForTesting(int? iterations) =>
+      _kdf = _pbkdf2(iterations ?? _iterations);
   static final _cipher = AesGcm.with256bits();
   static final _random = Random.secure();
 

@@ -1,19 +1,25 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart';
 
 class TotpCrypto {
   /// Secure-storage key shared by the settings dialog and the sync delegate.
   static const syncPasswordKey = 'totp_sync_password';
   static const syncCheckRecordId = '__tool_lab_password_check__';
 
-  static final _pbkdf2 = Pbkdf2(
-    macAlgorithm: Hmac.sha256(),
-    iterations: 100000,
-    bits: 256,
-  );
+  static const int _iterations = 100000;
+  static Pbkdf2 _pbkdf2 = _kdf(_iterations);
+
+  static Pbkdf2 _kdf(int iterations) =>
+      Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: iterations, bits: 256);
+
+  /// Lowers the sync payload KDF for tests that only check the flow; null
+  /// restores the real count.
+  @visibleForTesting
+  static void setIterationsForTesting(int? iterations) =>
+      _pbkdf2 = _kdf(iterations ?? _iterations);
   static final _aes = AesGcm.with256bits();
 
   /// 2FAS derives its AES key with PBKDF2-SHA256 and 10,000 iterations.
