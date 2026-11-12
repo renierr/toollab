@@ -36,6 +36,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
   static const Duration _syncRetryDelay = Duration(seconds: 30);
 
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _actionsFocus = FocusNode(debugLabel: 'NewsActions');
   Timer? _readSyncTimer;
   DateTime? _readSyncDeadline;
   bool _syncWhenIdle = false;
@@ -56,6 +57,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     state.addListener(onStateChanged);
     onDispose(() {
       _scrollController.dispose();
+      _actionsFocus.dispose();
       state.removeListener(onStateChanged);
       final appState = _appState;
       if (appState != null &&
@@ -212,6 +214,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
       title: NewsTool.config.localizedName(l10n),
       actions: [
         IconButton(
+          focusNode: _actionsFocus,
           onPressed: () {
             final state = context.read<NewsState>();
             state.setHideRead(!state.hideRead);
@@ -271,6 +274,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
                             context.read<NewsState>().setHideRead(false),
                       ),
                       onRefresh: _refresh,
+                      onRight: _actionsFocus.requestFocus,
                       onOpen: _openArticle,
                       onVisible: state.prefetchArticleImage,
                       onSeen: (article) {

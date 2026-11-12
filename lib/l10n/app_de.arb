@@ -5601,6 +5601,7 @@
   "newsHideReadSubtitle": "Beschränkt die Timeline auf ungelesene Beiträge",
   "newsMarkAllRead": "Alle als gelesen markieren",
   "newsMarkAllReadDone": "Alle Artikel als gelesen markiert",
+  "newsMarkReadAndRefresh": "Als gelesen markieren und aktualisieren",
   "newsMarkReadOnScroll": "Beim Scrollen als gelesen markieren",
   "newsMarkReadOnScrollSubtitle": "Artikel, an denen du vorbeiscrollst, werden als gelesen markiert",
   "newsNoSearchResults": "Keine passenden Quellen",

@@ -14417,6 +14417,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsMarkAllReadDone => 'All articles marked as read';
 
   @override
+  String get newsMarkReadAndRefresh => 'Mark as read and refresh';
+
+  @override
   String get newsMarkReadOnScroll => 'Mark as read while scrolling';
 
   @override

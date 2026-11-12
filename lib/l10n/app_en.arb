@@ -7071,6 +7071,7 @@
   "newsHideReadSubtitle": "Keep the timeline to unread stories",
   "newsMarkAllRead": "Mark all as read",
   "newsMarkAllReadDone": "All articles marked as read",
+  "newsMarkReadAndRefresh": "Mark as read and refresh",
   "newsMarkReadOnScroll": "Mark as read while scrolling",
   "newsMarkReadOnScrollSubtitle": "Articles you scroll past are marked as read",
   "newsNoSearchResults": "No matching sources",

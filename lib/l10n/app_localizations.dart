@@ -25390,6 +25390,12 @@ abstract class AppLocalizations {
   /// **'All articles marked as read'**
   String get newsMarkAllReadDone;
 
+  /// No description provided for @newsMarkReadAndRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read and refresh'**
+  String get newsMarkReadAndRefresh;
+
   /// No description provided for @newsMarkReadOnScroll.
   ///
   /// In en, this message translates to:

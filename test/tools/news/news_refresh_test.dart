@@ -87,7 +87,7 @@ void main() {
     controller.jumpTo(controller.position.maxScrollExtent);
     await tester.pumpAndSettle();
     state.refreshCompletion = Completer<void>();
-    await tester.tap(find.byIcon(Icons.refresh));
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.refresh));
     await tester.pump();
     expect(controller.offset, greaterThan(0));
     state.refreshCompletion!.complete();
