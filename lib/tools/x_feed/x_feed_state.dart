@@ -29,10 +29,10 @@ class XFeedState extends ChangeNotifier {
 
   static const List<String> translationLanguages = ['en', 'de'];
 
-  static const List<double> textScales = [0.9, 1.0, 1.15, 1.3, 1.5, 1.75, 2.0];
+  /// Only bounds the memory of what was already sent; pending ids never drop.
+  static const int _seenSentMemory = 5000;
 
-  /// Keeps the GET query string of a home request well under URL limits.
-  static const int _seenBatchLimit = 100;
+  static const List<double> textScales = [0.9, 1.0, 1.15, 1.3, 1.5, 1.75, 2.0];
 
   XSessionStatus _status = XSessionStatus.unknown;
   bool _sessionExpired = false;
@@ -58,10 +58,15 @@ class XFeedState extends ChangeNotifier {
   /// Downloads for sharing and saving.
   final TempFileScope tempScope = TempFileManager.createScope();
 
-  /// Posts seen since the last home request, oldest first. They ride along
-  /// with the next home timeline request, so X gets them in one batch.
+  /// Posts seen since the last home request, oldest first. Like x.com, the
+  /// whole set rides along with the next home request and is then cleared.
   final LinkedHashSet<String> _seenPending = LinkedHashSet();
-  final Set<String> _seenSent = {};
+
+  /// Ids X already got this session, so a post seen again is not resent.
+  final LinkedHashSet<String> _seenSent = LinkedHashSet();
+
+  /// Ids riding on a home request still in flight, so a parallel one skips them.
+  final Set<String> _seenInFlight = {};
   Timer? _seenSave;
 
   late final XTimelineController forYou = _timeline(
@@ -149,30 +154,39 @@ class XFeedState extends ChangeNotifier {
     required bool following,
     String? cursor,
   }) async {
-    final seen = _seenPending.toList();
-    final page = await _requireApi().homeTimeline(
-      following: following,
-      cursor: cursor,
-      seenPostIds: seen,
-    );
+    final seen = [
+      for (final id in _seenPending)
+        if (!_seenInFlight.contains(id)) id,
+    ];
+    _seenInFlight.addAll(seen);
+    final XTimelinePage page;
+    try {
+      page = await _requireApi().homeTimeline(
+        following: following,
+        cursor: cursor,
+        seenPostIds: seen,
+      );
+    } finally {
+      // On failure the ids stay pending for the next request.
+      _seenInFlight.removeAll(seen);
+    }
     if (seen.isNotEmpty) {
       _seenPending.removeAll(seen);
       _seenSent.addAll(seen);
+      while (_seenSent.length > _seenSentMemory) {
+        _seenSent.remove(_seenSent.first);
+      }
       _scheduleSeenSave();
     }
     return page;
   }
 
-  /// Buffers posts that were on screen; nothing is sent until the next home
-  /// timeline request.
+  /// Buffers posts that were on screen or opened; nothing is sent until the
+  /// next home timeline request, and nothing is dropped before that.
   void markSeen(Iterable<String> postIds) {
     var changed = false;
     for (final id in postIds) {
-      if (_seenSent.contains(id) || !_seenPending.add(id)) continue;
-      changed = true;
-      if (_seenPending.length > _seenBatchLimit) {
-        _seenPending.remove(_seenPending.first);
-      }
+      if (!_seenSent.contains(id) && _seenPending.add(id)) changed = true;
     }
     if (changed) _scheduleSeenSave();
   }

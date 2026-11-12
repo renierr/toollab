@@ -47,11 +47,15 @@ X's web app reports which posts were on screen through the `seenTweetIds` variab
 home timeline requests, and the For you ranking stops serving those again. Without it the
 same posts keep coming back after a refresh.
 
-A post on For you or Following counts as seen when at least half of it stays on screen
-for a second after scrolling settles (`XTimelineView`). `XFeedState` buffers the ids — up
-to 100, oldest dropped — and sends the whole batch with the next home request, refresh or
-next page. Sent ids are not sent again this session. The pending buffer is kept in the
-tool's settings so ids seen right before the app closes go out on the next launch.
+A post counts as seen when at least half of it stays on screen on For you or Following
+for a second after scrolling settles (`XTimelineView`), or when it is opened from anywhere
+(`XNavigation.openPost`). `XFeedState` buffers the ids and sends the whole buffer with the
+next home request — launch, refresh or next page — then clears what was sent; a failed
+request keeps them for the next one. Nothing is dropped, and like x.com a request with
+seen ids is a POST, so the batch size is not bound by URL length. Unlike x.com, ids already
+sent this session (the last 5000) are not sent again, so each batch holds only new ones.
+No request is ever made just for seen ids. The buffer is kept in the tool's settings so ids seen right
+before the app closes go out on the next launch.
 
 ## Translation
 

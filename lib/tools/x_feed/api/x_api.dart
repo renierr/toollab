@@ -295,7 +295,8 @@ class XApi {
   }
 
   /// [seenPostIds] tells X which posts were already on screen, as the web
-  /// app does, so the ranking stops serving them again.
+  /// app does, so the ranking stops serving them again. Like x.com, a request
+  /// carrying them is a POST, so their number is not bound by URL length.
   Future<XTimelinePage> homeTimeline({
     required bool following,
     String? cursor,
@@ -309,8 +310,8 @@ class XApi {
           'latestControlAvailable': true,
           'requestContext': cursor == null ? 'launch' : null,
           'withCommunity': true,
-          'seenTweetIds': seenPostIds,
-        });
+          'seenTweetIds': seenPostIds.isEmpty ? null : seenPostIds,
+        }, post: seenPostIds.isNotEmpty);
     return XTimelineParser.parse(json);
   }
 
