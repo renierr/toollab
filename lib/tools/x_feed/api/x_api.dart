@@ -301,10 +301,11 @@ class XApi {
     required bool following,
     String? cursor,
     List<String> seenPostIds = const [],
+    int count = 20,
   }) async {
     final json =
         await _graphql(following ? 'HomeLatestTimeline' : 'HomeTimeline', {
-          'count': 20,
+          'count': count,
           'cursor': cursor,
           'includePromotedContent': false,
           'latestControlAvailable': true,

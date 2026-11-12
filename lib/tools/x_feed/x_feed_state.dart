@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -153,6 +154,7 @@ class XFeedState extends ChangeNotifier {
   Future<XTimelinePage> _homeTimeline({
     required bool following,
     String? cursor,
+    int count = 20,
   }) async {
     final seen = [
       for (final id in _seenPending)
@@ -165,6 +167,7 @@ class XFeedState extends ChangeNotifier {
         following: following,
         cursor: cursor,
         seenPostIds: seen,
+        count: count,
       );
     } finally {
       // On failure the ids stay pending for the next request.
@@ -189,6 +192,34 @@ class XFeedState extends ChangeNotifier {
       if (!_seenSent.contains(id) && _seenPending.add(id)) changed = true;
     }
     if (changed) _scheduleSeenSave();
+  }
+
+  /// Stores the pending seen ids now instead of after the save delay, for
+  /// when the app is backgrounded and may be killed.
+  void persistSeen() {
+    if (_seenSave != null) _saveSeen();
+  }
+
+  /// The tool closed: pending seen ids are stored, then delivered with one
+  /// small home request, and the feeds, translations, downloads and decoded
+  /// images are let go. Login, settings and the API config stay.
+  Future<void> release() async {
+    _saveSeen();
+    for (final t in [forYou, following, bookmarks]) {
+      t.reset();
+    }
+    _engagement.clear();
+    _clearTranslations();
+    PaintingBinding.instance.imageCache.clear();
+    await tempScope.cleanTracked();
+    if (_seenPending.isEmpty || _api == null || _sessionExpired) return;
+    try {
+      // X takes seen ids only on a home request; the posts are thrown away.
+      await _homeTimeline(following: false, count: 1);
+      _saveSeen();
+    } on XApiException catch (e) {
+      debugLog('[XFeedState] Seen ids stay for the next launch: $e');
+    }
   }
 
   void _restoreSeen(String? stored) {

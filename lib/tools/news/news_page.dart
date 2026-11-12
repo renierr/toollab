@@ -55,16 +55,24 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     }
 
     state.addListener(onStateChanged);
+    // Backgrounded apps may be killed before the read flush delay ends.
+    final lifecycle = AppLifecycleListener(
+      onHide: () => unawaited(state.flushReads()),
+    );
     onDispose(() {
+      lifecycle.dispose();
       _scrollController.dispose();
       _actionsFocus.dispose();
       state.removeListener(onStateChanged);
       final appState = _appState;
-      if (appState != null &&
-          (_readSyncTimer?.isActive == true || state.hasUnsavedReads)) {
-        unawaited(state.flushReads().then((_) => syncNewsSources(appState)));
+      final syncReads =
+          _readSyncTimer?.isActive == true || state.hasUnsavedReads;
+      final flushed = state.flushReads();
+      if (appState != null && syncReads) {
+        unawaited(flushed.then((_) => syncNewsSources(appState)));
       }
       _readSyncTimer?.cancel();
+      state.reduceCache();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }

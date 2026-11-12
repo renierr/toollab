@@ -48,6 +48,10 @@ class DepotPortfolioState extends ChangeNotifier {
   Future<void>? _loading;
   bool _isLoaded = false;
   bool _disposed = false;
+
+  /// The tool closed while a load or sync was writing; drop the data once
+  /// it ends.
+  bool _reduceWhenIdle = false;
   String _clientId = '';
   bool _isConnected = false;
   bool _isSyncing = false;
@@ -301,7 +305,58 @@ class DepotPortfolioState extends ChangeNotifier {
 
   String? get _portfolioId => _scope == DepotStore.allScope ? null : _scope;
 
-  Future<void> ensureLoaded() => _loading ??= _load();
+  Future<void> ensureLoaded() {
+    _reduceWhenIdle = false;
+    return _loading ??= _load();
+  }
+
+  /// Lets go of the loaded portfolio when the tool closes; the next open reads
+  /// it back from the database. Filters, scope and period stay.
+  void reduceCache() {
+    if (_loading == null) return;
+    if (isSyncing || !_isLoaded) {
+      _reduceWhenIdle = true;
+      return;
+    }
+    _reduceWhenIdle = false;
+    // Discards reads still in flight.
+    _scopeLoad++;
+    _periodLoad++;
+    _loading = null;
+    _isLoaded = false;
+    _portfolios = const [];
+    _summary = null;
+    _chart = const [];
+    _maxChart = const [];
+    _rangeChange = null;
+    _holdings = const [];
+    _holdingOrder = const {};
+    _holdingPerformance = const {};
+    _ytdPerformance = const {};
+    _transactions = const [];
+    _yearReports = const [];
+    _visibleHoldings = const [];
+    _movers = const [];
+    _gainMovers = const [];
+    _salesSource = null;
+    _salesHoldings = const {};
+    _plansSource = null;
+    _plansDay = null;
+    _savingsPlans = DepotSavingsPlans.empty;
+    _returnsChart = null;
+    _returnsTransactions = null;
+    _drawdowns = DepotDrawdowns.empty;
+    _monthlyReturns = DepotMonthlyReturns.empty;
+    _visibleTransactions = const [];
+    _groupedActivitiesSource = null;
+    _activityGroups = null;
+    _activityRows = null;
+    _activityRowsScope = null;
+  }
+
+  void _reduceIfIdle() {
+    if (_reduceWhenIdle && !isSyncing && _isLoaded) reduceCache();
+  }
 
   Future<void> _load() async {
     try {
@@ -320,6 +375,7 @@ class DepotPortfolioState extends ChangeNotifier {
     }
     _isLoaded = true;
     _notify();
+    _reduceIfIdle();
   }
 
   Future<void> _reload() async {
@@ -396,6 +452,7 @@ class DepotPortfolioState extends ChangeNotifier {
         _periodRefreshes.remove(period);
       }
       _notify();
+      _reduceIfIdle();
     }
   }
 
@@ -490,6 +547,7 @@ class DepotPortfolioState extends ChangeNotifier {
       _notify();
     }
     if (completed) await _refreshSelectedPeriodIfStale();
+    _reduceIfIdle();
   }
 
   /// Waits for a sync already running elsewhere instead of duplicating it;

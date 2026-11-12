@@ -26,7 +26,12 @@ class _XFeedPageState extends State<XFeedPage> with DisposeCleanup {
     super.initState();
     final state = context.read<XFeedState>();
     unawaited(state.init());
-    onDispose(() => unawaited(state.tempScope.cleanTracked()));
+    final lifecycle = AppLifecycleListener(onHide: state.persistSeen);
+    onDispose(() {
+      lifecycle.dispose();
+      // After the tree is unlocked: release notifies the feed's listeners.
+      unawaited(Future.microtask(state.release));
+    });
   }
 
   Future<void> _refresh() async {

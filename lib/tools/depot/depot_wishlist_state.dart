@@ -139,9 +139,15 @@ class DepotWishlistState extends ChangeNotifier {
       _items.any((item) => item.symbol == result.symbol && item.isin == null);
   bool isAdding(String symbol) => _pending.contains(symbol);
 
+  /// A null [callback] (the tool closing) still runs a sync that was waiting
+  /// on its debounce, so a last edit is not left unsynced.
   void setSyncCallback(Future<bool> Function()? callback) {
+    final previous = _syncWishlist;
+    final pending = _syncDebounce?.isActive ?? false;
     _syncWishlist = callback;
-    if (callback == null) _syncDebounce?.cancel();
+    if (callback != null) return;
+    _syncDebounce?.cancel();
+    if (pending && previous != null) unawaited(previous());
   }
 
   void _scheduleSync() {

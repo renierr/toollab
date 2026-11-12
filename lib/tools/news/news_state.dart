@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
@@ -59,6 +60,10 @@ class NewsState extends ChangeNotifier {
   int _listFontPercent = 100;
   Future<void> _fontSave = Future.value();
   Future<void>? _initialization;
+
+  /// The tool closed while articles were loading or refreshing; drop them
+  /// once that ends.
+  bool _reduceWhenIdle = false;
   Timer? _unreadExpiryTimer;
   Completer<void>? _refreshCompletion;
   int _readFilterCutoff = DateTime.now().millisecondsSinceEpoch;
@@ -106,7 +111,37 @@ class NewsState extends ChangeNotifier {
 
   String sourceTitle(String shortId) => _sourceMap[shortId]?.title ?? shortId;
 
-  Future<void> init() => _initialization ??= _doInit();
+  Future<void> init() {
+    _reduceWhenIdle = false;
+    return _initialization ??= _doInit();
+  }
+
+  /// Lets go of the loaded articles and stops background previews when the
+  /// tool closes; the next open initializes again. Settings and read marks
+  /// are already stored.
+  void reduceCache() {
+    if (_initialization == null) return;
+    if (_isLoading || _isRefreshing) {
+      _reduceWhenIdle = true;
+      return;
+    }
+    _reduceWhenIdle = false;
+    _unreadExpiryTimer?.cancel();
+    _unreadExpiryTimer = null;
+    _previewQueue.clear();
+    _previewAttempts.clear();
+    _sources = [];
+    _sourceMap = {};
+    _articles = [];
+    _unreadCounts = {};
+    _isLoading = true;
+    _initialization = null;
+    PaintingBinding.instance.imageCache.clear();
+  }
+
+  void _reduceIfIdle() {
+    if (_reduceWhenIdle && !_isLoading && !_isRefreshing) reduceCache();
+  }
 
   Future<void> _doInit() async {
     try {
@@ -121,6 +156,7 @@ class NewsState extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+    _reduceIfIdle();
   }
 
   bool get _shouldAutoRefresh {
@@ -380,6 +416,7 @@ class NewsState extends ChangeNotifier {
         if (!_disposed) notifyListeners();
       } finally {
         completion.complete();
+        _reduceIfIdle();
       }
     }
   }

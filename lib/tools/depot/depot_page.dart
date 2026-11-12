@@ -66,6 +66,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     final logos = context.read<DepotLogoState>();
     final allocation = context.read<DepotAllocationState>();
     final benchmark = context.read<DepotBenchmarkState>();
+    final portfolioState = context.read<DepotPortfolioState>();
     logos.ensureLoaded();
     // Cached dividend data only; the holding details read it.
     dividends.ensureLoaded();
@@ -76,9 +77,9 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
       logos.reduceCache();
       allocation.reduceCache();
       benchmark.reduceCache();
+      portfolioState.reduceCache();
     });
 
-    final portfolioState = context.read<DepotPortfolioState>();
     final appState = context.read<AppState>();
     Future<bool> syncWishlist() async {
       if (!appState.syncEnabled ||
