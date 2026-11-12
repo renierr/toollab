@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "win32_window.h"
+#include "window_placement.h"
 
 struct MediaControlsContext;
 
@@ -27,6 +28,11 @@ class FlutterWindow : public Win32Window {
  private:
   void RegisterMediaControlsHandler(
       flutter::BinaryMessenger* messenger);
+
+  void TrackPlacement(HWND hwnd);
+
+  // Last restore frame and maximized state, saved when the window goes away.
+  WindowPlacement placement_ = {};
 
   // The project to run.
   flutter::DartProject project_;

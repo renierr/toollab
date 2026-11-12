@@ -2,8 +2,14 @@
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
 
+#include <optional>
+
 #include "flutter_window.h"
 #include "utils.h"
+#include "window_placement.h"
+
+bool CreateWindowFromSavedPlacement(FlutterWindow& window);
+bool CreateCenteredWindow(FlutterWindow& window);
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
@@ -31,6 +37,28 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);
 
   FlutterWindow window(project);
+  if (!CreateWindowFromSavedPlacement(window) &&
+      !CreateCenteredWindow(window)) {
+    return EXIT_FAILURE;
+  }
+  window.SetQuitOnClose(true);
+
+  ::MSG msg;
+  while (::GetMessage(&msg, nullptr, 0, 0)) {
+    ::TranslateMessage(&msg);
+    ::DispatchMessage(&msg);
+  }
+
+  ::CoUninitialize();
+  return EXIT_SUCCESS;
+}
+
+bool CreateWindowFromSavedPlacement(FlutterWindow& window) {
+  const std::optional<WindowPlacement> saved = LoadWindowPlacement();
+  return saved && window.Create(L"ToolLab", saved->frame, saved->maximized);
+}
+
+bool CreateCenteredWindow(FlutterWindow& window) {
   Win32Window::Size size(1280, 720);
   HMONITOR primary = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY);
   UINT dpi = FlutterDesktopGetDpiForMonitor(primary);
@@ -59,17 +87,5 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       originY < 0 ? 0u : static_cast<unsigned int>(originY));
 
   Win32Window::Size clampedSize(windowWidth, windowHeight);
-  if (!window.Create(L"ToolLab", origin, clampedSize)) {
-    return EXIT_FAILURE;
-  }
-  window.SetQuitOnClose(true);
-
-  ::MSG msg;
-  while (::GetMessage(&msg, nullptr, 0, 0)) {
-    ::TranslateMessage(&msg);
-    ::DispatchMessage(&msg);
-  }
-
-  ::CoUninitialize();
-  return EXIT_SUCCESS;
+  return window.Create(L"ToolLab", origin, clampedSize);
 }

@@ -272,6 +272,8 @@ bool FlutterWindow::OnCreate() {
 
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  GetWindowRect(GetHandle(), &placement_.frame);
+
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -302,10 +304,37 @@ void FlutterWindow::OnDestroy() {
   Win32Window::OnDestroy();
 }
 
+void FlutterWindow::TrackPlacement(HWND hwnd) {
+  // Fullscreen video drops the caption; its monitor-sized frame is no
+  // placement to restore.
+  if (IsIconic(hwnd) ||
+      !(GetWindowLongPtr(hwnd, GWL_STYLE) & WS_CAPTION)) {
+    return;
+  }
+  placement_.maximized = IsZoomed(hwnd);
+  if (!placement_.maximized) {
+    GetWindowRect(hwnd, &placement_.frame);
+  }
+}
+
 LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  switch (message) {
+    case WM_WINDOWPOSCHANGED:
+      TrackPlacement(hwnd);
+      break;
+    case WM_ENDSESSION:
+      if (wparam) {
+        SaveWindowPlacement(placement_);
+      }
+      break;
+    case WM_DESTROY:
+      SaveWindowPlacement(placement_);
+      break;
+  }
+
   // Give Flutter, including plugins, an opportunity to handle window messages.
   if (flutter_controller_) {
     std::optional<LRESULT> result =

@@ -7,9 +7,113 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  GdkWindowState window_state;
+  gint window_width;
+  gint window_height;
+  gboolean window_maximized;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+static constexpr gint kDefaultWidth = 1280;
+static constexpr gint kDefaultHeight = 720;
+static constexpr gint kMinExtent = 200;
+static constexpr char kWindowGroup[] = "window";
+
+// Sizes a compositor imposes (maximized, fullscreen, tiled e.g. by Hyprland)
+// are not the user's floating size and must not overwrite it.
+static constexpr GdkWindowState kImposedSizeStates = static_cast<GdkWindowState>(
+    GDK_WINDOW_STATE_MAXIMIZED | GDK_WINDOW_STATE_FULLSCREEN |
+    GDK_WINDOW_STATE_TILED | GDK_WINDOW_STATE_TOP_TILED |
+    GDK_WINDOW_STATE_RIGHT_TILED | GDK_WINDOW_STATE_BOTTOM_TILED |
+    GDK_WINDOW_STATE_LEFT_TILED);
+
+static gchar* window_state_path() {
+  return g_build_filename(g_get_user_config_dir(), APPLICATION_ID,
+                          "window-state.ini", nullptr);
+}
+
+static gboolean fits_any_monitor(GdkDisplay* display, gint width, gint height) {
+  for (gint i = 0; i < gdk_display_get_n_monitors(display); i++) {
+    GdkRectangle area;
+    gdk_monitor_get_workarea(gdk_display_get_monitor(display, i), &area);
+    if (width <= area.width && height <= area.height) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+// Falls back to the default size when nothing is saved or it no longer fits.
+static void load_window_state(MyApplication* self, GtkWindow* window) {
+  self->window_width = kDefaultWidth;
+  self->window_height = kDefaultHeight;
+  self->window_maximized = FALSE;
+
+  g_autoptr(GKeyFile) file = g_key_file_new();
+  g_autofree gchar* path = window_state_path();
+  if (!g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, nullptr)) {
+    return;
+  }
+  g_autoptr(GError) error = nullptr;
+  const gint width = g_key_file_get_integer(file, kWindowGroup, "width", &error);
+  if (error) return;
+  const gint height =
+      g_key_file_get_integer(file, kWindowGroup, "height", &error);
+  if (error) return;
+  const gboolean maximized =
+      g_key_file_get_boolean(file, kWindowGroup, "maximized", &error);
+  if (error) return;
+
+  if (width < kMinExtent || height < kMinExtent ||
+      !fits_any_monitor(gtk_widget_get_display(GTK_WIDGET(window)), width,
+                        height)) {
+    return;
+  }
+  self->window_width = width;
+  self->window_height = height;
+  self->window_maximized = maximized;
+}
+
+static void save_window_state(MyApplication* self) {
+  if (self->window_width == 0) {
+    return;
+  }
+  g_autoptr(GKeyFile) file = g_key_file_new();
+  g_key_file_set_integer(file, kWindowGroup, "width", self->window_width);
+  g_key_file_set_integer(file, kWindowGroup, "height", self->window_height);
+  g_key_file_set_boolean(file, kWindowGroup, "maximized",
+                         self->window_maximized);
+
+  g_autofree gchar* path = window_state_path();
+  g_autofree gchar* dir = g_path_get_dirname(path);
+  g_autoptr(GError) error = nullptr;
+  if (g_mkdir_with_parents(dir, 0700) != 0 ||
+      !g_key_file_save_to_file(file, path, &error)) {
+    g_warning("Failed to save window state to %s", path);
+  }
+}
+
+static gboolean window_state_event_cb(GtkWidget* widget,
+                                      GdkEventWindowState* event,
+                                      MyApplication* self) {
+  self->window_state = event->new_window_state;
+  if (!(event->new_window_state & GDK_WINDOW_STATE_FULLSCREEN)) {
+    self->window_maximized =
+        (event->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) != 0;
+  }
+  return FALSE;
+}
+
+static void size_allocate_cb(GtkWidget* widget,
+                             GdkRectangle* allocation,
+                             MyApplication* self) {
+  if (self->window_state & kImposedSizeStates) {
+    return;
+  }
+  gtk_window_get_size(GTK_WINDOW(widget), &self->window_width,
+                      &self->window_height);
+}
 
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
@@ -27,8 +131,18 @@ static void my_application_activate(GApplication* application) {
   // tiling window managers can control chrome entirely.
   gtk_window_set_title(window, "ToolLab");
 
-  gtk_window_set_default_size(window, 1280, 720);
+  // Wayland gives clients no say over position, and a tiling compositor
+  // overrides the size too; there this only matters once a window floats.
+  load_window_state(self, window);
+  gtk_window_set_default_size(window, self->window_width, self->window_height);
   gtk_window_set_position(window, GTK_WIN_POS_CENTER);
+  if (self->window_maximized) {
+    gtk_window_maximize(window);
+  }
+  g_signal_connect(window, "window-state-event",
+                   G_CALLBACK(window_state_event_cb), self);
+  g_signal_connect(window, "size-allocate", G_CALLBACK(size_allocate_cb),
+                   self);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
@@ -86,9 +200,7 @@ static void my_application_startup(GApplication* application) {
 
 // Implements GApplication::shutdown.
 static void my_application_shutdown(GApplication* application) {
-  // MyApplication* self = MY_APPLICATION(object);
-
-  // Perform any actions required at application shutdown.
+  save_window_state(MY_APPLICATION(application));
 
   G_APPLICATION_CLASS(my_application_parent_class)->shutdown(application);
 }
