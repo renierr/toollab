@@ -5,6 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/helpers/tool_vault_crypto.dart';
 
 void main() {
+  // The real count only slows the flow these tests check.
+  setUpAll(() => ToolVaultCrypto.setIterationsForTesting(1000));
+
   test(
     'password wraps a random key and records authenticate their context',
     () async {

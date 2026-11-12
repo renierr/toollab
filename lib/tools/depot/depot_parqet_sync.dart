@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
@@ -21,7 +23,13 @@ class DepotParqetSync {
   static const _activityOverlap = Duration(days: 3);
 
   /// Parqet has no documented RPS budget, so request starts are spaced out.
-  static const _requestGap = Duration(milliseconds: 200);
+  static const _defaultRequestGap = Duration(milliseconds: 200);
+  static Duration _requestGap = _defaultRequestGap;
+
+  /// Tests against a fake API need no spacing; null restores it.
+  @visibleForTesting
+  static void setRequestGapForTesting(Duration? gap) =>
+      _requestGap = gap ?? _defaultRequestGap;
   static const _retryBase = Duration(seconds: 1);
   static const _retryMax = Duration(seconds: 30);
   static final _random = Random();

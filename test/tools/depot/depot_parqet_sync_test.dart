@@ -146,6 +146,7 @@ void main() {
   final store = DepotStore.instance;
 
   setUpAll(() {
+    DepotParqetSync.setRequestGapForTesting(Duration.zero);
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
     DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;
@@ -163,6 +164,7 @@ void main() {
     });
   });
   tearDownAll(() async {
+    DepotParqetSync.setRequestGapForTesting(null);
     await DatabaseService.instance.close();
   });
 

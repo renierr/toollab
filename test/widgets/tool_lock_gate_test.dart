@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tool_lab/helpers/tool_vault_crypto.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/tool_lock_controller.dart';
 import 'package:tool_lab/widgets/tool_lock_gate.dart';
@@ -30,6 +31,9 @@ class _SetupController extends _Controller {
 }
 
 void main() {
+  // The real count only slows the flow these tests check.
+  setUpAll(() => ToolVaultCrypto.setIterationsForTesting(1000));
+
   testWidgets('password fields can be revealed independently', (tester) async {
     final controller = _SetupController();
     addTearDown(controller.dispose);
