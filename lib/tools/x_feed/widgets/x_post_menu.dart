@@ -99,11 +99,7 @@ class XPostMenu extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.translate),
               title: Text(
-                state.shownTranslation(
-                          post.id,
-                          XTranslationActions.targetLanguage(context),
-                        ) ==
-                        null
+                state.translator.shownOf(post) == null
                     ? l10n.xFeedTranslate
                     : l10n.xFeedShowOriginal,
               ),

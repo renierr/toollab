@@ -14755,6 +14755,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get xFeedTranslateToApp => 'App language';
 
   @override
+  String get xFeedAutoTranslate => 'Translate automatically';
+
+  @override
+  String get xFeedAutoTranslateSubtitle =>
+      'Posts in other languages than English and German, one at a time as they come into view';
+
+  @override
   String get xFeedTranslate => 'Translate post';
 
   @override

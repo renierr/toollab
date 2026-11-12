@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 
 import '../depot_holding_trend_state.dart';
 import '../depot_portfolio_state.dart';
@@ -25,7 +26,8 @@ class DepotHoldingTrendView extends StatefulWidget {
   State<DepotHoldingTrendView> createState() => _DepotHoldingTrendViewState();
 }
 
-class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView> {
+class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView>
+    with DisposeCleanup {
   ScrollPosition? _position;
   bool _scheduled = false;
   Timer? _timer;
@@ -35,6 +37,10 @@ class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView> {
     super.initState();
     _timer = Timer.periodic(const Duration(minutes: 5), (_) {
       if (mounted && _visible()) _ensure();
+    });
+    onDispose(() {
+      _position?.removeListener(_schedule);
+      _timer?.cancel();
     });
   }
 
@@ -87,13 +93,6 @@ class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView> {
     final top = viewport.getOffsetToReveal(box, 0).offset;
     return top < position.pixels + position.viewportDimension &&
         top + (box.size.height > 0 ? box.size.height : 1) > position.pixels;
-  }
-
-  @override
-  void dispose() {
-    _position?.removeListener(_schedule);
-    _timer?.cancel();
-    super.dispose();
   }
 
   @override

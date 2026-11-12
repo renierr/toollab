@@ -58,7 +58,7 @@ class _TotpAuthPageState extends State<TotpAuthPage>
   void initState() {
     super.initState();
 
-    final totpState = context.read<TotpAuthState>();
+    final totpState = context.read<TotpAuthState>()..startTicker();
     void onLockChanged() {
       final unlocked = totpState.lockController.unlocked;
       if (unlocked && !_wasUnlocked) _lastActivity = DateTime.now();

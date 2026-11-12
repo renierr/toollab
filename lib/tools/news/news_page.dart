@@ -72,7 +72,6 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
         unawaited(flushed.then((_) => syncNewsSources(appState)));
       }
       _readSyncTimer?.cancel();
-      state.reduceCache();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }

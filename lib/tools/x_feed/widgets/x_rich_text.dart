@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 
 import '../models/x_post.dart';
 
@@ -28,13 +29,13 @@ class XRichText extends StatefulWidget {
   State<XRichText> createState() => _XRichTextState();
 }
 
-class _XRichTextState extends State<XRichText> {
+class _XRichTextState extends State<XRichText> with DisposeCleanup {
   final List<TapGestureRecognizer> _recognizers = [];
 
   @override
-  void dispose() {
-    _disposeRecognizers();
-    super.dispose();
+  void initState() {
+    super.initState();
+    onDispose(_disposeRecognizers);
   }
 
   void _disposeRecognizers() {

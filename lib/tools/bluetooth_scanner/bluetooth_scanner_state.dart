@@ -60,6 +60,8 @@ class BluetoothScannerState extends ChangeNotifier {
   StreamSubscription<AvailabilityState>? _availabilitySubscription;
   String? _error;
   int _deviceCount = 0;
+  bool _historyReleased = false;
+  Future<void>? _releasing;
 
   final _btPlugin = FlutterClassicBluetooth();
   StreamSubscription<BtcDevice>? _discoverySubscription;
@@ -276,6 +278,27 @@ class BluetoothScannerState extends ChangeNotifier {
     } else {
       _collapsedCategories.add(category);
     }
+    notifyListeners();
+  }
+
+  /// Stops the scan first so a late sighting cannot persist a partial history.
+  Future<void> release() => _releasing = _release();
+
+  Future<void> _release() async {
+    await _stopScanInternal();
+    await _persistHistory();
+    _devices.clear();
+    _history.clear();
+    _deviceCount = 0;
+    _historyReleased = true;
+    notifyListeners();
+  }
+
+  Future<void> reloadIfReleased() async {
+    await _releasing;
+    if (!_historyReleased) return;
+    _historyReleased = false;
+    await _loadHistory();
     notifyListeners();
   }
 

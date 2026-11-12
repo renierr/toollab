@@ -53,10 +53,14 @@ class XTranslation {
   final List<XLink> links;
   final String? sourceLanguage;
 
+  /// The language it was translated into, when X says so.
+  final String? language;
+
   const XTranslation({
     required this.text,
     required this.links,
     this.sourceLanguage,
+    this.language,
   });
 }
 
@@ -80,6 +84,9 @@ class XPost {
   final String? lang;
   final bool translatable;
 
+  /// The Grok translation X sometimes sends along, in the client language.
+  final XTranslation? inlineTranslation;
+
   const XPost({
     required this.id,
     required this.author,
@@ -97,6 +104,7 @@ class XPost {
     this.views,
     this.lang,
     this.translatable = false,
+    this.inlineTranslation,
   });
 
   String get url => 'https://x.com/${author.screenName}/status/$id';
@@ -104,9 +112,13 @@ class XPost {
   bool get isRepost => repostedBy != null;
   bool get isReply => replyToScreenName != null;
 
-  /// English and German posts are never offered for translation.
+  /// English and German posts are never offered for translation. X's flag
+  /// alone misses some posts it did send a translation for.
   bool get canTranslate =>
-      translatable && text.isNotEmpty && lang != 'en' && lang != 'de';
+      (translatable || inlineTranslation != null) &&
+      text.isNotEmpty &&
+      lang != 'en' &&
+      lang != 'de';
 
   List<XMedia> get allMedia => [...media, ...?quoted?.media];
 }

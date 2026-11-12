@@ -38,6 +38,9 @@ class XApi {
 
   XApi(this._session, {this.onSessionChanged});
 
+  /// Sent as the reader's language; X attaches Grok translations into it.
+  String clientLanguage = 'en';
+
   /// The public token of the x.com web app itself, the same for every user.
   static const String _bearer =
       'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D'
@@ -85,7 +88,7 @@ class XApi {
     XWebConfig? config,
     String method,
     String path, {
-    String language = 'en',
+    String? language,
   }) {
     final headers = {
       'Authorization': 'Bearer $_bearer',
@@ -93,7 +96,7 @@ class XApi {
       'Cookie': _session.cookieHeader,
       'X-Twitter-Auth-Type': 'OAuth2Session',
       'X-Twitter-Active-User': 'yes',
-      'X-Twitter-Client-Language': language,
+      'X-Twitter-Client-Language': language ?? clientLanguage,
       'User-Agent': XWebConfig.userAgent,
       'Content-Type': 'application/json',
       'Accept': '*/*',
@@ -143,7 +146,7 @@ class XApi {
     bool post = false,
     Map<String, bool> fieldToggles = const {},
     Map<String, bool> featureOverrides = const {},
-    String language = 'en',
+    String? language,
     bool retried = false,
   }) async {
     final config = await _ensureConfig();

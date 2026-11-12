@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/testing.dart';
 import 'package:tool_lab/services/app_http_client.dart';
+import 'package:tool_lab/tools/depot/depot_state.dart';
 
 void blockDepotNetwork() {
   final attempts = <String>[];
@@ -28,6 +29,18 @@ void blockDepotNetwork() {
     HttpOverrides.global = previous;
     client.close();
   });
+}
+
+// Loads in real time: a read left hanging in the fake zone keeps sqflite's
+// lock-warning timer pending after the test.
+Future<DepotState> loadedDepotState(WidgetTester tester) async {
+  final state = (await tester.runAsync(() async {
+    final state = DepotState();
+    await state.loaded;
+    return state;
+  }))!;
+  addTearDown(state.dispose);
+  return state;
 }
 
 class _OfflineHttpOverrides extends HttpOverrides {

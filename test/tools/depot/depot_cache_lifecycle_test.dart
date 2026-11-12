@@ -61,8 +61,14 @@ class _Allocation extends DepotAllocationState {
 }
 
 class _Portfolio extends DepotPortfolioState {
+  int reductions = 0;
   @override
   Future<void> syncIfStale() async {}
+  @override
+  void reduceCache() {
+    reductions++;
+    super.reduceCache();
+  }
 }
 
 class _Benchmark extends DepotBenchmarkState {
@@ -87,12 +93,6 @@ void main() {
   tearDownAll(() async => DatabaseService.instance.close());
   testWidgets('leaving Depot reduces its transient caches', (tester) async {
     FlutterSecureStorage.setMockInitialValues({});
-    final appState = await tester.runAsync(() async {
-      final settings = await SettingsService.init();
-      final state = AppState(settings);
-      await state.reloadFromDatabase();
-      return state;
-    });
     final trends = _Trends();
     final wishlist = _Wishlist();
     final dividends = _Dividends();
@@ -100,8 +100,17 @@ void main() {
     final allocation = _Allocation();
     final benchmark = _Benchmark();
     final portfolio = _Portfolio();
+    final appState = await tester.runAsync(() async {
+      final settings = await SettingsService.init();
+      final state = AppState(settings);
+      await state.reloadFromDatabase();
+      // The page's reads then reuse these instead of hanging in the fake zone.
+      await dividends.ensureLoaded();
+      await portfolio.ensureLoaded();
+      return state;
+    });
     final imports = DepotImportState();
-    final tabs = DepotState();
+    final tabs = await loadedDepotState(tester);
     final router = GoRouter(
       initialLocation: '/depot',
       routes: [
@@ -146,6 +155,8 @@ void main() {
     expect(logos.reductions, 1);
     expect(allocation.reductions, 1);
     expect(benchmark.reductions, 1);
+    expect(portfolio.reductions, 1);
+    expect(portfolio.isLoaded, isFalse);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     router.dispose();
@@ -157,7 +168,31 @@ void main() {
     benchmark.dispose();
     portfolio.dispose();
     imports.dispose();
-    tabs.dispose();
     appState.dispose();
   });
+
+  test(
+    'closing Depot runs a debounced wishlist sync instead of dropping it',
+    () async {
+      final wishlist = DepotWishlistState();
+      addTearDown(wishlist.dispose);
+      var syncs = 0;
+      Future<bool> sync() async {
+        syncs++;
+        return true;
+      }
+
+      wishlist.setSyncCallback(sync);
+      wishlist.setSyncCallback(null);
+      expect(syncs, 0);
+
+      wishlist.setSyncCallback(sync);
+      wishlist.requestSync();
+      wishlist.setSyncCallback(null);
+      expect(syncs, 1);
+
+      await Future<void>.delayed(const Duration(milliseconds: 1100));
+      expect(syncs, 1);
+    },
+  );
 }

@@ -13,8 +13,26 @@ import 'widgets/compass_info_dialog.dart';
 import 'widgets/compass_level_indicator.dart';
 import 'widgets/interference_panel.dart';
 
-class CompassPage extends StatelessWidget {
+class CompassPage extends StatefulWidget {
   const CompassPage({super.key});
+
+  @override
+  State<CompassPage> createState() => _CompassPageState();
+}
+
+class _CompassPageState extends State<CompassPage> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<CompassState>().start();
+  }
+
+  @override
+  Widget build(BuildContext context) => const _CompassView();
+}
+
+class _CompassView extends StatelessWidget {
+  const _CompassView();
 
   @override
   Widget build(BuildContext context) {

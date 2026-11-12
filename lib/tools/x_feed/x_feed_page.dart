@@ -27,11 +27,15 @@ class _XFeedPageState extends State<XFeedPage> with DisposeCleanup {
     final state = context.read<XFeedState>();
     unawaited(state.init());
     final lifecycle = AppLifecycleListener(onHide: state.persistSeen);
-    onDispose(() {
-      lifecycle.dispose();
-      // After the tree is unlocked: release notifies the feed's listeners.
-      unawaited(Future.microtask(state.release));
-    });
+    onDispose(lifecycle.dispose);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    context.read<XFeedState>().translator.setAppLanguage(
+      Localizations.localeOf(context).languageCode,
+    );
   }
 
   Future<void> _refresh() async {

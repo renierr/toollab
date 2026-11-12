@@ -363,7 +363,7 @@ class _PostRow extends StatefulWidget {
   State<_PostRow> createState() => _PostRowState();
 }
 
-class _PostRowState extends State<_PostRow> {
+class _PostRowState extends State<_PostRow> with DisposeCleanup {
   final FocusNode _node = FocusNode(
     debugLabel: 'XTimelineRow',
     canRequestFocus: false,
@@ -374,6 +374,10 @@ class _PostRowState extends State<_PostRow> {
   void initState() {
     super.initState();
     widget.rows[widget.postId] = this;
+    onDispose(() {
+      _unregister(widget.postId);
+      _node.dispose();
+    });
   }
 
   @override
@@ -383,13 +387,6 @@ class _PostRowState extends State<_PostRow> {
       _unregister(oldWidget.postId);
       widget.rows[widget.postId] = this;
     }
-  }
-
-  @override
-  void dispose() {
-    _unregister(widget.postId);
-    _node.dispose();
-    super.dispose();
   }
 
   void _unregister(String id) {

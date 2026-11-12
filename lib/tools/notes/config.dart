@@ -25,6 +25,7 @@ class NotesTool {
     fileExtensions: ['md', 'txt', 'markdown'],
     createPage: (sd) => NotesPage(sharedFile: sd?.firstFile),
     syncDelegateFactory: NotesSyncDelegate.new,
+    onClose: (context) => context.read<NotesState>().release(),
     stateProviders: () => [
       ChangeNotifierProvider<NotesState>(create: (_) => NotesState()),
     ],

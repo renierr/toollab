@@ -23,6 +23,7 @@ class SignaturesTool {
     fileExtensions: ['png', 'svg'],
     createPage: (_) => const SignaturesPage(),
     syncDelegateFactory: SignaturesSyncDelegate.new,
+    onClose: (context) => context.read<SignaturesState>().release(),
     stateProviders: () => [
       ChangeNotifierProvider<SignaturesState>(create: (_) => SignaturesState()),
     ],

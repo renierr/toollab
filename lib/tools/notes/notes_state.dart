@@ -73,6 +73,15 @@ class NotesState extends ChangeNotifier {
     }
   }
 
+  /// Drops the notes on close; the page reloads them on open.
+  void release() {
+    _allNotes = [];
+    _notes = [];
+    _thread = NoteThread.empty;
+    _query = '';
+    notifyListeners();
+  }
+
   void _applyQuery() {
     final needle = _query.trim().toLowerCase();
     _notes = needle.isEmpty

@@ -47,6 +47,7 @@ class _SignaturesPageState extends State<SignaturesPage>
     _tempScope = TempFileManager.createScope();
     onDispose(_tabController.dispose);
     onDispose(() => _tempScope.cleanTracked());
+    context.read<SignaturesState>().reloadIfReleased();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final appState = context.read<AppState>();

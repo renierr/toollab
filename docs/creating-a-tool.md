@@ -165,6 +165,20 @@ stateProviders: () => [
 ],
 ```
 
+### Releasing State on Close
+
+Tool states live for the whole app run — they are not disposed when the tool closes. If the
+state holds data only the open tool needs (lists, caches, images, running sensors), add
+`onClose` to the config and let the state drop it there; the next open must load it again
+(reset the "loaded" flag), and anything still working in the background must be left alone:
+
+```dart
+onClose: (context) => context.read<MyNewToolState>().release(),
+```
+
+`ToolRouteScope` (`lib/core/tool_route_scope.dart`) calls it once the tool's last route
+leaves the stack; sub-pages, dialogs and sheets on top of the tool do not count.
+
 ### Accessing in Pages
 
 Pages read from their own provider instead of `AppState`:
@@ -218,6 +232,7 @@ class MyNewTool {
     createPage: (sf) => const MyNewToolPage(),  // route auto-wired
     syncDelegateFactory: MyNewToolSyncDelegate.new,  // if sync needed
     backgroundTasks: () => [MyNewToolBackground.task],  // if it runs on a schedule
+    onClose: (context) => context.read<MyNewToolState>().release(),  // drop what only the open tool needs
     stateProviders: () => [                // if tool needs state management
       ChangeNotifierProvider<MyNewToolState>(
         create: (_) => MyNewToolState(),

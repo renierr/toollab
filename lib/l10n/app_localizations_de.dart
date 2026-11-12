@@ -14867,6 +14867,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get xFeedTranslateToApp => 'App-Sprache';
 
   @override
+  String get xFeedAutoTranslate => 'Automatisch übersetzen';
+
+  @override
+  String get xFeedAutoTranslateSubtitle =>
+      'Posts, die weder auf Englisch noch auf Deutsch sind, einzeln, sobald sie ins Bild kommen';
+
+  @override
   String get xFeedTranslate => 'Post übersetzen';
 
   @override

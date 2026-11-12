@@ -21,6 +21,7 @@ class BluetoothScannerTool {
     nameL10n: (l10n) => l10n.toolNameBluetoothScanner,
     descriptionL10n: (l10n) => l10n.toolDescBluetoothScanner,
     createPage: (_) => const BluetoothScannerPage(),
+    onClose: (context) => context.read<BluetoothScannerState>().release(),
     stateProviders: () => [
       ChangeNotifierProvider<BluetoothScannerState>(
         create: (_) => BluetoothScannerState(),

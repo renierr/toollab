@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -44,7 +45,7 @@ class XPostCard extends StatefulWidget {
   State<XPostCard> createState() => _XPostCardState();
 }
 
-class _XPostCardState extends State<XPostCard> {
+class _XPostCardState extends State<XPostCard> with DisposeCleanup {
   final FocusNode _cardNode = FocusNode(debugLabel: 'XPostCard');
   late List<FocusNode> _mediaNodes = _createMediaNodes();
 
@@ -54,23 +55,36 @@ class _XPostCardState extends State<XPostCard> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    onDispose(() {
+      _cardNode.dispose();
+      for (final node in _mediaNodes) {
+        node.dispose();
+      }
+    });
+    _requestTranslation();
+  }
+
+  /// Cards are built as they near the viewport, so automatic translations
+  /// are fetched for what is about to be read, not the whole feed.
+  void _requestTranslation() {
+    if (!widget.post.canTranslate) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<XFeedState>().translator.request(widget.post);
+    });
+  }
+
+  @override
   void didUpdateWidget(covariant XPostCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.post != widget.post) {
+      _requestTranslation();
       for (final node in _mediaNodes) {
         node.dispose();
       }
       _mediaNodes = _createMediaNodes();
     }
-  }
-
-  @override
-  void dispose() {
-    _cardNode.dispose();
-    for (final node in _mediaNodes) {
-      node.dispose();
-    }
-    super.dispose();
   }
 
   void _open() {
@@ -173,10 +187,9 @@ class _XPostCardState extends State<XPostCard> {
     final replyTo = post.replyToScreenName;
     final card = post.card;
     final quoted = post.quoted;
-    final language = XTranslationActions.targetLanguage(context);
     final translation = post.canTranslate
         ? context.select<XFeedState, XTranslation?>(
-            (s) => s.shownTranslation(post.id, language),
+            (s) => s.translator.shownOf(post),
           )
         : null;
 

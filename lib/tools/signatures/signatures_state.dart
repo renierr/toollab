@@ -35,6 +35,7 @@ class SignaturesState extends ChangeNotifier {
   Size _contentSize = const Size(300, 150);
 
   List<SignatureRecord> _saved = [];
+  bool _savedReleased = false;
   bool _isDrawing = false;
 
   SignaturesState() {
@@ -237,8 +238,20 @@ class SignaturesState extends ChangeNotifier {
 
   // ---- Persistence ----
   Future<void> refreshSaved() async {
+    _savedReleased = false;
     _saved = await _db.getActiveRecords();
     notifyListeners();
+  }
+
+  /// Drops the saved previews on close; the canvas stays as drawn.
+  void release() {
+    _saved = [];
+    _savedReleased = true;
+    notifyListeners();
+  }
+
+  Future<void> reloadIfReleased() async {
+    if (_savedReleased) await refreshSaved();
   }
 
   /// Saves the current canvas as a new (or updated) signature record.

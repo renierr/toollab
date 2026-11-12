@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
@@ -27,7 +28,8 @@ class DepotActivityEditDialog extends StatefulWidget {
       _DepotActivityEditDialogState();
 }
 
-class _DepotActivityEditDialogState extends State<DepotActivityEditDialog> {
+class _DepotActivityEditDialogState extends State<DepotActivityEditDialog>
+    with DisposeCleanup {
   final _formKey = GlobalKey<FormState>();
   late DepotActivityType _type;
   late final TextEditingController _date;
@@ -52,23 +54,20 @@ class _DepotActivityEditDialogState extends State<DepotActivityEditDialog> {
     _amount = TextEditingController(text: DepotLabels.number(a.amount, 2));
     _tax = TextEditingController(text: DepotLabels.number(a.tax, 2));
     _fee = TextEditingController(text: DepotLabels.number(a.fee, 2));
-  }
-
-  @override
-  void dispose() {
-    for (final controller in [
-      _date,
-      _isin,
-      _name,
-      _shares,
-      _price,
-      _amount,
-      _tax,
-      _fee,
-    ]) {
-      controller.dispose();
-    }
-    super.dispose();
+    onDispose(() {
+      for (final controller in [
+        _date,
+        _isin,
+        _name,
+        _shares,
+        _price,
+        _amount,
+        _tax,
+        _fee,
+      ]) {
+        controller.dispose();
+      }
+    });
   }
 
   void _submit() {

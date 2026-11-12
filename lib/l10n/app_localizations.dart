@@ -25990,6 +25990,18 @@ abstract class AppLocalizations {
   /// **'App language'**
   String get xFeedTranslateToApp;
 
+  /// No description provided for @xFeedAutoTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate automatically'**
+  String get xFeedAutoTranslate;
+
+  /// No description provided for @xFeedAutoTranslateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Posts in other languages than English and German, one at a time as they come into view'**
+  String get xFeedAutoTranslateSubtitle;
+
   /// No description provided for @xFeedTranslate.
   ///
   /// In en, this message translates to:

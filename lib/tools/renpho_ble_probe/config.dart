@@ -23,6 +23,7 @@ class RenphoBleProbeTool {
     descriptionL10n: (l10n) => l10n.toolDescRenphoScale,
     createPage: (_) => const RenphoBleProbePage(),
     syncDelegateFactory: RenphoSyncDelegate.new,
+    onClose: (context) => context.read<RenphoBleProbeState>().release(),
     stateProviders: () => [
       ChangeNotifierProvider<RenphoBleProbeState>(
         create: (_) => RenphoBleProbeState(),

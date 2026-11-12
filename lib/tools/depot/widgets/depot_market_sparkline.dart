@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/sparkline.dart';
@@ -27,7 +28,8 @@ class DepotMarketSparkline extends StatefulWidget {
   State<DepotMarketSparkline> createState() => _DepotMarketSparklineState();
 }
 
-class _DepotMarketSparklineState extends State<DepotMarketSparkline> {
+class _DepotMarketSparklineState extends State<DepotMarketSparkline>
+    with DisposeCleanup {
   late final Timer _timer;
 
   @override
@@ -36,12 +38,7 @@ class _DepotMarketSparklineState extends State<DepotMarketSparkline> {
     _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (mounted) setState(() {});
     });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
+    onDispose(_timer.cancel);
   }
 
   @override

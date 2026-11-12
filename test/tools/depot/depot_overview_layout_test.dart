@@ -134,13 +134,12 @@ void main() {
         final benchmark = DepotBenchmarkState();
         final logo = DepotLogoState();
         final trend = DepotHoldingTrendState();
-        final tabs = DepotState();
+        final tabs = await loadedDepotState(tester);
         addTearDown(portfolio.dispose);
         addTearDown(allocation.dispose);
         addTearDown(benchmark.dispose);
         addTearDown(logo.dispose);
         addTearDown(trend.dispose);
-        addTearDown(tabs.dispose);
         await tester.pumpWidget(
           MultiProvider(
             providers: [

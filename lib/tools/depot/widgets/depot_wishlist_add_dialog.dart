@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
@@ -24,14 +25,15 @@ class DepotWishlistAddDialog extends StatefulWidget {
   State<DepotWishlistAddDialog> createState() => _DepotWishlistAddDialogState();
 }
 
-class _DepotWishlistAddDialogState extends State<DepotWishlistAddDialog> {
+class _DepotWishlistAddDialogState extends State<DepotWishlistAddDialog>
+    with DisposeCleanup {
   late final DepotWishlistState _state = context.read<DepotWishlistState>();
   final _controller = TextEditingController();
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    onDispose(_controller.dispose);
   }
 
   Future<void> _add(DepotWishlistSearchResult result) async {

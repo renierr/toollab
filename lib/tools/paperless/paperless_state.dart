@@ -195,6 +195,14 @@ class PaperlessState extends ChangeNotifier {
     _notify();
   }
 
+  /// Drops server data on close; login, filter and uploads stay.
+  void release() {
+    final options = _uploadOptions;
+    _resetServerData();
+    _uploadOptions = options;
+    _notify();
+  }
+
   void _resetServerData() {
     _connection++;
     _documentsRequest++;

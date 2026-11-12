@@ -40,11 +40,7 @@ class CompassState extends ChangeNotifier {
 
   CompassState() {
     _isHardwareSupported = _checkHardwareSupport();
-    if (!_isHardwareSupported) {
-      _useSimulation = true;
-    } else {
-      _startSensorStreams();
-    }
+    if (!_isHardwareSupported) _useSimulation = true;
   }
 
   // Getters
@@ -102,6 +98,15 @@ class CompassState extends ChangeNotifier {
     _simHeading = (_simHeading + deltaDegrees + 360) % 360;
     notifyListeners();
   }
+
+  /// Starts the sensors when the page opens; a no-op in simulation.
+  void start() {
+    if (!_isHardwareSupported || _useSimulation || _accelSub != null) return;
+    _startSensorStreams();
+  }
+
+  /// Stops the sensors once the tool is closed.
+  void release() => _stopSensorStreams();
 
   bool _checkHardwareSupport() {
     if (kIsWeb) return false;

@@ -19,9 +19,10 @@ class DepotState extends ChangeNotifier {
     for (final kind in DepotDetailsLinkKind.values) kind: kind.defaultTemplate,
   };
   bool _disposed = false;
+  late final Future<void> loaded;
 
   DepotState() {
-    _loadDetailsUrlTemplates();
+    loaded = _loadDetailsUrlTemplates();
   }
 
   DepotTab get tab => _tab;

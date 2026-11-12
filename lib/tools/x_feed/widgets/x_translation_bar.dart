@@ -20,9 +20,8 @@ class XTranslationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final language = XTranslationActions.targetLanguage(context);
     final busy = context.select<XFeedState, bool>(
-      (s) => s.isTranslating(post.id, language),
+      (s) => s.translator.isLoading(post),
     );
     final link = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.primary,

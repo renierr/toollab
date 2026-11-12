@@ -73,10 +73,20 @@ class TotpAuthState extends ChangeNotifier {
     await lockController.initialize();
     lockController.addListener(_onLockChanged);
     if (lockController.unlocked) await _load();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+    notifyListeners();
+  }
+
+  /// Ticks the code countdown while the page is open.
+  void startTicker() {
+    _ticker ??= Timer.periodic(const Duration(seconds: 1), (_) {
       if (_accounts.isNotEmpty) notifyListeners();
     });
-    notifyListeners();
+  }
+
+  /// Accounts stay loaded: sync and the maintenance page read them.
+  void release() {
+    _ticker?.cancel();
+    _ticker = null;
   }
 
   static Future<void> migrateDb() async {

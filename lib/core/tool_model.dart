@@ -56,6 +56,12 @@ class ToolModel {
   /// `BackgroundTaskService`, which owns the scheduling and the execution.
   final List<BackgroundTask> Function()? backgroundTasks;
 
+  /// Runs when the last open route of the tool leaves the stack, to let go of
+  /// what only the open tool needs (`context.read<MyState>().release()`).
+  /// [context] sits above every route; the state decides what is safe to drop
+  /// while background work is still running.
+  final void Function(BuildContext context)? onClose;
+
   /// Optional localized overrides. When set, [localizedName] /
   /// [localizedDescription] use them; otherwise the raw [name] /
   /// [description] are returned. Declared inline in each tool's `config.dart`.
@@ -78,6 +84,7 @@ class ToolModel {
     this.stateProviders,
     this.overlayBuilder,
     this.backgroundTasks,
+    this.onClose,
     this.nameL10n,
     this.descriptionL10n,
     this.androidProcessIsolated = false,

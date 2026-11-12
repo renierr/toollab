@@ -23,6 +23,7 @@ class _BluetoothScannerPageState extends State<BluetoothScannerPage>
   @override
   void initState() {
     super.initState();
+    context.read<BluetoothScannerState>().reloadIfReleased();
     onDispose(() {
       _state?.stopScan();
     });

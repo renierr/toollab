@@ -24,6 +24,7 @@ class NewsTool {
     androidProcessIsolated: true,
     createPage: (_) => const NewsPage(),
     syncDelegateFactory: NewsSyncDelegate.new,
+    onClose: (context) => context.read<NewsState>().reduceCache(),
     stateProviders: () => [
       ChangeNotifierProvider<NewsState>(create: (_) => NewsState()),
     ],

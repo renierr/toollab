@@ -20,6 +20,7 @@ class CompassTool {
     nameL10n: (l10n) => l10n.toolNameCompass,
     descriptionL10n: (l10n) => l10n.toolDescCompass,
     createPage: (_) => const CompassPage(),
+    onClose: (context) => context.read<CompassState>().release(),
     stateProviders: () => [
       ChangeNotifierProvider<CompassState>(create: (_) => CompassState()),
     ],

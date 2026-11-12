@@ -170,6 +170,7 @@ class XTimelineParser {
           views: inner.views,
           lang: inner.lang,
           translatable: inner.translatable,
+          inlineTranslation: inner.inlineTranslation,
         );
       }
     }
@@ -194,6 +195,7 @@ class XTimelineParser {
       views: int.tryParse('${_path(result, ['views', 'count']) ?? ''}'),
       lang: legacy['lang'] as String?,
       translatable: _translatable(result, legacy['lang'] as String?),
+      inlineTranslation: _grokTranslation(result, media.isNotEmpty),
       engagement: XEngagement(
         liked: legacy['favorited'] == true,
         reposted: legacy['retweeted'] == true,
@@ -337,6 +339,9 @@ class XTimelineParser {
       links: links,
       sourceLanguage:
           (json['source_language'] ?? json['sourceLanguage']) as String?,
+      language:
+          (json['destination_language'] ?? json['destinationLanguage'])
+              as String?,
     );
   }
 
@@ -348,7 +353,11 @@ class XTimelineParser {
     if (result is Map && result['__typename'] == 'TweetWithVisibilityResults') {
       result = result['tweet'];
     }
-    final grok = _path(result, ['grok_translated_post_with_availability']);
+    return result is Map ? _grokTranslation(result, hasMedia) : null;
+  }
+
+  static XTranslation? _grokTranslation(Map result, bool hasMedia) {
+    final grok = result['grok_translated_post_with_availability'];
     if (grok is! Map || grok['is_available'] != true) return null;
     return parseTranslation(grok['data'], hasMedia: hasMedia);
   }

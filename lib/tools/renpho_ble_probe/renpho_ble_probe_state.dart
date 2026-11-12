@@ -316,6 +316,19 @@ class RenphoBleProbeState extends ChangeNotifier {
     }
   }
 
+  /// Drops history on close; skipped while a scan is still saving or syncing.
+  void release() {
+    if (busy || _scanning || _syncing) return;
+    _loaded = false;
+    _latest = null;
+    _previous = null;
+    _week = const [];
+    _months = const [];
+    _monthRows.clear();
+    _monthOrder.clear();
+    notifyListeners();
+  }
+
   List<RenphoHistoryMonth> _monthIndex(List<int> timestamps) {
     final counts = <String, RenphoHistoryMonth>{};
     for (final value in timestamps) {

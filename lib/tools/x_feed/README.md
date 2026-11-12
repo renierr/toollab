@@ -59,17 +59,27 @@ before the app closes go out on the next launch.
 
 ## Translation
 
-Posts X marks `is_translatable` whose `lang` is neither `en` nor `de` get x.com's
-"Translate post" link under the text, a menu entry and the T key. Nothing is translated
-until asked. The target is **Settings → Translate posts to** (app language, English or
-German; stored in the tool's settings).
+Posts whose `lang` is neither `en` nor `de` and that X marks `is_translatable`, or that
+came with a translation, get x.com's "Translate post" link under the text, a menu entry and
+the T key. The target is **Settings → Translate posts to** (app language, English or
+German). `XTranslator` holds the translations, which ones are shown and the fetch queue.
 
-`XApi.translatePost` does what x.com does: it refetches the post with
-`TweetResultByRestId`, `X-Twitter-Client-Language` set to the target and the feature
-`responsive_web_grok_show_grok_translated_post` on, and reads
-`grok_translated_post_with_availability.data.translation`. When X has no Grok
-translation it asks the older strato column `.../translation/service/translateTweet`.
-Translations are cached in `XFeedState` for the session; "Show original" only hides one.
+Every request sends the target as `X-Twitter-Client-Language`, the way x.com sends the
+reader's language, and X then attaches a Grok translation to some posts
+(`grok_translated_post_with_availability`, parsed into `XPost.inlineTranslation`). Those
+show at once without a request. X's `is_translatable` misses some of them, so a post that
+came with a translation counts as translatable on its own.
+
+For the others, `XApi.translatePost` does what x.com does on demand: it refetches the post
+with `TweetResultByRestId` in the target language with
+`responsive_web_grok_show_grok_translated_post` on, and falls back to the older strato
+column `.../translation/service/translateTweet` (untested so far).
+
+**Settings → Translate automatically** shows translations without asking. Ones X sent
+along cost nothing; missing ones are fetched as post cards are built near the viewport,
+one request at a time, each post once, and fetching stops for the session after a 429.
+"Show original" hides a translation for that post. Everything is dropped when the tool
+closes.
 
 ## Login
 

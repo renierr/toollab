@@ -7192,6 +7192,8 @@
   "xFeedShareLink": "Share link",
   "xFeedTranslateTo": "Translate posts to",
   "xFeedTranslateToApp": "App language",
+  "xFeedAutoTranslate": "Translate automatically",
+  "xFeedAutoTranslateSubtitle": "Posts in other languages than English and German, one at a time as they come into view",
   "xFeedTranslate": "Translate post",
   "xFeedShowOriginal": "Show original",
   "xFeedTranslatedFrom": "Translated from {language}",

@@ -150,8 +150,8 @@ class XSettingsPage extends StatelessWidget {
               leading: const Icon(Icons.translate),
               title: Text(l10n.xFeedTranslateTo),
               trailing: DropdownButton<String?>(
-                value: state.translateTo,
-                onChanged: state.setTranslateTo,
+                value: state.translator.translateTo,
+                onChanged: state.translator.setTranslateTo,
                 items: [
                   DropdownMenuItem(child: Text(l10n.xFeedTranslateToApp)),
                   DropdownMenuItem(
@@ -164,6 +164,13 @@ class XSettingsPage extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.g_translate),
+              title: Text(l10n.xFeedAutoTranslate),
+              subtitle: Text(l10n.xFeedAutoTranslateSubtitle),
+              value: state.translator.auto,
+              onChanged: state.translator.setAuto,
             ),
             SwitchListTile(
               secondary: const Icon(Icons.repeat),

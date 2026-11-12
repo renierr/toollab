@@ -9,6 +9,7 @@ import 'package:tool_lab/constants.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/core/tool_route_scope.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/pages/overview/overview_page.dart';
 import 'package:tool_lab/pages/sync_settings_page.dart';
@@ -103,7 +104,12 @@ final _router = GoRouter(
 
 Widget _pageForTool(String id, Object? extra) {
   final tool = ToolRegistry.all.where((t) => t.id == id).firstOrNull;
-  if (tool != null) return tool.createPage(extra as SharedData?);
+  if (tool != null) {
+    return ToolRouteScope(
+      tool: tool,
+      child: tool.createPage(extra as SharedData?),
+    );
+  }
   return const OverviewPage();
 }
 

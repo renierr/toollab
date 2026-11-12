@@ -43,6 +43,7 @@ class PaperlessTool {
     shareTarget: const ShareTargetConfig(accept: uploadMimeTypes),
     fileExtensions: uploadExtensions,
     createPage: (sd) => PaperlessPage(sharedData: sd),
+    onClose: (context) => context.read<PaperlessState>().release(),
     stateProviders: () => [
       ChangeNotifierProvider<PaperlessState>(create: (_) => PaperlessState()),
     ],

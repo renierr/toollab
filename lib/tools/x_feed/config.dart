@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
@@ -22,6 +24,7 @@ class XFeedTool {
     descriptionL10n: (l10n) => l10n.toolDescXFeed,
     androidProcessIsolated: true,
     createPage: (_) => const XFeedPage(),
+    onClose: (context) => unawaited(context.read<XFeedState>().release()),
     stateProviders: () => [
       ChangeNotifierProvider<XFeedState>(create: (_) => XFeedState()),
     ],
