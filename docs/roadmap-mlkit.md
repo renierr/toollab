@@ -59,12 +59,9 @@ No further work on the chat_ai tool. Voice input, read-aloud, thinking mode and 
 
 ## Phase 5: New Tools
 
-| Tool | APIs | Devices |
-|---|---|---|
-| Offline translator (text, camera OCR, voice, read aloud) | Translation, Language ID, Text Recognition, Speech/TTS | Translation on all devices; voice only with Nano |
-| Dictation / transcription with timestamps and summary | Speech Recognition (word timing), Summarization | Nano |
-| Fitness rep counter (squats, push-ups), handoff to health_dashboard | Pose Detection | All |
-| Semantic search across notes / Paperless | Embeddings (alpha) | Nano |
+- **Offline translator (new tool):** text, camera OCR and voice input, read aloud. Translation, Language ID, Text Recognition; Translation on all Android devices.
+- **Memo transcript (sound_finder / Audio Lab recorder) — done:** memos are transcribed offline with Whisper (`whisper_ggml`, model Base or Small picked on first use, changeable and removable in the recorder settings). WAV and FLAC are converted to 16 kHz mono in Dart (FLAC through flutter_soloud's libFLAC), split into chunks of at most 30 s at quiet spots (Whisper pads every window to 30 s) and transcribed chunk by chunk, so a cancel stops after the running chunk. The transcript with timestamps lives next to the audio as `<file>.transcript.json`; it can be summarized (Gemini Nano, offline extract otherwise), copied, shared or turned into a note. New memos record as FLAC by default.
+- Dropped: fitness rep counter (Pose Detection), semantic search (Embeddings).
 
 ## APK Size
 

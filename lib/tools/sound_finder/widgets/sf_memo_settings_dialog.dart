@@ -7,7 +7,9 @@ import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../memo/memo_recorder.dart';
 import '../memo/memo_settings.dart';
+import '../memo/memo_transcriber.dart';
 import '../sf_format.dart';
+import 'sf_memo_model_dialog.dart';
 import 'sf_mic_selector.dart';
 
 /// Capture options of the memo recorder. Changes apply to the next memo.
@@ -129,6 +131,8 @@ class SfMemoSettingsDialog extends StatelessWidget {
               value: s.autoGain,
               onChanged: (v) => update(s.copyWith(autoGain: v)),
             ),
+            const SizedBox(height: 8),
+            const _TranscriptionSection(),
           ],
         ),
       ),
@@ -185,6 +189,65 @@ class _DropdownRow<T> extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TranscriptionSection extends StatelessWidget {
+  const _TranscriptionSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final transcriber = context.watch<MemoTranscriber>();
+    final model = transcriber.model;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.sfTranscriptSection, style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text(
+          model == null
+              ? l10n.sfTranscriptNoModel
+              : l10n.sfTranscriptModelInstalled(
+                  model.modelName,
+                  MemoTranscriber.sizeMb(model),
+                ),
+          style: theme.textTheme.bodySmall,
+        ),
+        const SizedBox(height: 8),
+        const SfTranscriptLanguageField(),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 8,
+          children: [
+            TextButton.icon(
+              onPressed: () => SfMemoModelDialog.show(context),
+              icon: const Icon(Icons.download_outlined, size: 18),
+              label: Text(
+                model == null
+                    ? l10n.sfTranscriptChooseModel
+                    : l10n.sfTranscriptChangeModel,
+              ),
+            ),
+            if (model != null)
+              TextButton.icon(
+                onPressed: transcriber.removeModel,
+                icon: Icon(
+                  Icons.delete_outline,
+                  size: 18,
+                  color: theme.colorScheme.error,
+                ),
+                label: Text(
+                  l10n.sfTranscriptRemoveModel,
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -38,7 +38,7 @@ typedef _ErrorDecoder = Void Function(Pointer<Void>, Int32, Pointer<Void>);
 class SleepFlacCodec {
   SleepFlacCodec._();
 
-  static DynamicLibrary _library() {
+  static DynamicLibrary library() {
     final name = Platform.isAndroid
         ? 'libFLAC.so'
         : Platform.isWindows
@@ -56,7 +56,7 @@ class SleepFlacCodec {
   }
 
   static Uint8List encode(Int16List samples, int sampleRate) {
-    final lib = _library();
+    final lib = library();
     final create = lib
         .lookupFunction<Pointer<Void> Function(), Pointer<Void> Function()>(
           'FLAC__stream_encoder_new',
@@ -177,7 +177,7 @@ class SleepFlacCodec {
   }
 
   static WavAudioData decode(Uint8List bytes) {
-    final lib = _library();
+    final lib = library();
     final create = lib
         .lookupFunction<Pointer<Void> Function(), Pointer<Void> Function()>(
           'FLAC__stream_decoder_new',

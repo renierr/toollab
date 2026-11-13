@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../helpers/wav_utils.dart';
 import 'memo_clip.dart';
 import 'memo_settings.dart';
+import 'memo_transcript.dart';
 
 /// Files of the memo recorder. Every write bumps [revision] so open lists
 /// reload, including saves made while the recordings page was closed.
@@ -69,6 +70,7 @@ class MemoStore {
     if (stem.isEmpty || stem == clip.name) return null;
     final target = await _uniquePath(await dir(), stem, clip.extension);
     final renamed = await File(clip.path).rename(target);
+    await MemoTranscript.move(clip.path, renamed.path);
     _bump();
     return renamed.path;
   }
@@ -76,6 +78,7 @@ class MemoStore {
   static Future<void> delete(MemoClip clip) async {
     final f = File(clip.path);
     if (await f.exists()) await f.delete();
+    await MemoTranscript.delete(clip.path);
     _peakCache.remove(clip.path);
     _bump();
   }
@@ -99,6 +102,8 @@ class MemoStore {
       ),
     );
     if (!ok) return null;
+    // Timestamps no longer match the cut audio.
+    if (!asCopy) await MemoTranscript.delete(target);
     _peakCache.remove(target);
     _bump();
     return target;

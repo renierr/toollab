@@ -15161,4 +15161,148 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groceryReceiptFromFile => 'Receipt from file';
+
+  @override
+  String get sfTranscribe => 'Transcribe';
+
+  @override
+  String get sfShowTranscript => 'Show transcript';
+
+  @override
+  String get sfTranscriptTitle => 'Transcript';
+
+  @override
+  String get sfTranscribingHint =>
+      'Runs offline on this device and keeps going when you close this sheet.';
+
+  @override
+  String get sfTranscriptNotification => 'Transcribing memo';
+
+  @override
+  String get sfTranscriptEmpty => 'No speech recognized.';
+
+  @override
+  String sfTranscriptFailed(String error) {
+    return 'Transcription failed: $error';
+  }
+
+  @override
+  String get sfTranscriptSection => 'Transcription';
+
+  @override
+  String get sfTranscriptModelTitle => 'Speech recognition model';
+
+  @override
+  String get sfTranscriptModelHint =>
+      'Memos are transcribed offline with Whisper. The model downloads once and stays on this device.';
+
+  @override
+  String get sfTranscriptModelBase => 'Base';
+
+  @override
+  String sfTranscriptModelBaseHint(int size) {
+    return '$size MB · faster';
+  }
+
+  @override
+  String get sfTranscriptModelSmall => 'Small (recommended)';
+
+  @override
+  String sfTranscriptModelSmallHint(int size) {
+    return '$size MB · more accurate';
+  }
+
+  @override
+  String get sfTranscriptLanguage => 'Language';
+
+  @override
+  String get sfTranscriptLanguageAuto => 'Detect automatically';
+
+  @override
+  String get sfTranscriptLanguageDe => 'German';
+
+  @override
+  String get sfTranscriptLanguageEn => 'English';
+
+  @override
+  String get sfTranscriptDownload => 'Download';
+
+  @override
+  String get sfTranscriptDownloading => 'Downloading…';
+
+  @override
+  String sfTranscriptDownloadingPercent(int percent) {
+    return 'Downloading… $percent %';
+  }
+
+  @override
+  String get sfTranscriptDownloadFailed =>
+      'Download failed. Check the connection and try again.';
+
+  @override
+  String get sfTranscriptNoModel => 'No model downloaded yet.';
+
+  @override
+  String sfTranscriptModelInstalled(String model, int size) {
+    return 'Model: $model ($size MB)';
+  }
+
+  @override
+  String get sfTranscriptChooseModel => 'Choose model';
+
+  @override
+  String get sfTranscriptChangeModel => 'Change model';
+
+  @override
+  String get sfTranscriptRemoveModel => 'Remove model';
+
+  @override
+  String get sfTranscriptSummary => 'Summary';
+
+  @override
+  String get sfTranscriptSummarize => 'Summarize';
+
+  @override
+  String get sfTranscriptAsNote => 'As note';
+
+  @override
+  String get sfTranscriptRetranscribe => 'Transcribe again';
+
+  @override
+  String get sfTranscriptDelete => 'Delete transcript';
+
+  @override
+  String get sfTranscriptCancel => 'Cancel transcription';
+
+  @override
+  String sfTranscriptCancelling(String time) {
+    return 'Stopping after the current section, about $time more.';
+  }
+
+  @override
+  String get sfTranscriptPreparing => 'Preparing audio…';
+
+  @override
+  String sfTranscriptChunk(int current, int total) {
+    return 'Section $current of $total';
+  }
+
+  @override
+  String sfTranscriptRemaining(String time) {
+    return 'about $time left';
+  }
+
+  @override
+  String sfTranscriptSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String sfTranscriptMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get sfTranscriptCancellingUnknown =>
+      'Stopping after the current section. This can take a few minutes.';
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'memo_settings.dart';
+import 'memo_transcript.dart';
 
 /// A stored memo on disk with the stream facts read from its header.
 class MemoClip {
@@ -13,6 +14,7 @@ class MemoClip {
   final Duration duration;
   final int sampleRate;
   final int channels;
+  final bool hasTranscript;
 
   const MemoClip({
     required this.path,
@@ -23,6 +25,7 @@ class MemoClip {
     required this.duration,
     required this.sampleRate,
     required this.channels,
+    this.hasTranscript = false,
   });
 
   MemoFormat? get format => MemoFormat.fromExtension(extension);
@@ -62,6 +65,7 @@ class MemoClip {
       duration: info?.duration ?? Duration.zero,
       sampleRate: info?.sampleRate ?? 0,
       channels: info?.channels ?? 0,
+      hasTranscript: await File(MemoTranscript.sidecarPath(file.path)).exists(),
     );
   }
 }

@@ -27,6 +27,7 @@ list(APPEND FLUTTER_FFI_PLUGIN_LIST
   flutter_zxing
   jni
   rhttp
+  whisper_ggml
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

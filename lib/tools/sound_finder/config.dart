@@ -5,6 +5,7 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'memo/memo_recorder.dart';
+import 'memo/memo_transcriber.dart';
 import 'sleep_sync_delegate.dart';
 import 'sound_finder_page.dart';
 import 'sound_finder_state.dart';
@@ -24,6 +25,9 @@ class SoundFinderTool {
     descriptionL10n: (l10n) => l10n.toolDescAudioLab,
     stateProviders: () => [
       ChangeNotifierProvider<MemoRecorder>(create: (_) => MemoRecorder()),
+      ChangeNotifierProvider<MemoTranscriber>(
+        create: (_) => MemoTranscriber()..init(),
+      ),
       ChangeNotifierProvider<SoundFinderState>(
         create: (context) {
           final appState = context.read<AppState>();

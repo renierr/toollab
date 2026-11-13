@@ -26685,6 +26685,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Receipt from file'**
   String get groceryReceiptFromFile;
+
+  /// No description provided for @sfTranscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe'**
+  String get sfTranscribe;
+
+  /// No description provided for @sfShowTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'Show transcript'**
+  String get sfShowTranscript;
+
+  /// No description provided for @sfTranscriptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcript'**
+  String get sfTranscriptTitle;
+
+  /// No description provided for @sfTranscribingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs offline on this device and keeps going when you close this sheet.'**
+  String get sfTranscribingHint;
+
+  /// No description provided for @sfTranscriptNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing memo'**
+  String get sfTranscriptNotification;
+
+  /// No description provided for @sfTranscriptEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech recognized.'**
+  String get sfTranscriptEmpty;
+
+  /// No description provided for @sfTranscriptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription failed: {error}'**
+  String sfTranscriptFailed(String error);
+
+  /// No description provided for @sfTranscriptSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription'**
+  String get sfTranscriptSection;
+
+  /// No description provided for @sfTranscriptModelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition model'**
+  String get sfTranscriptModelTitle;
+
+  /// No description provided for @sfTranscriptModelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Memos are transcribed offline with Whisper. The model downloads once and stays on this device.'**
+  String get sfTranscriptModelHint;
+
+  /// No description provided for @sfTranscriptModelBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Base'**
+  String get sfTranscriptModelBase;
+
+  /// No description provided for @sfTranscriptModelBaseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} MB · faster'**
+  String sfTranscriptModelBaseHint(int size);
+
+  /// No description provided for @sfTranscriptModelSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small (recommended)'**
+  String get sfTranscriptModelSmall;
+
+  /// No description provided for @sfTranscriptModelSmallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} MB · more accurate'**
+  String sfTranscriptModelSmallHint(int size);
+
+  /// No description provided for @sfTranscriptLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get sfTranscriptLanguage;
+
+  /// No description provided for @sfTranscriptLanguageAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect automatically'**
+  String get sfTranscriptLanguageAuto;
+
+  /// No description provided for @sfTranscriptLanguageDe.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get sfTranscriptLanguageDe;
+
+  /// No description provided for @sfTranscriptLanguageEn.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get sfTranscriptLanguageEn;
+
+  /// No description provided for @sfTranscriptDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get sfTranscriptDownload;
+
+  /// No description provided for @sfTranscriptDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
+  String get sfTranscriptDownloading;
+
+  /// No description provided for @sfTranscriptDownloadingPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading… {percent} %'**
+  String sfTranscriptDownloadingPercent(int percent);
+
+  /// No description provided for @sfTranscriptDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed. Check the connection and try again.'**
+  String get sfTranscriptDownloadFailed;
+
+  /// No description provided for @sfTranscriptNoModel.
+  ///
+  /// In en, this message translates to:
+  /// **'No model downloaded yet.'**
+  String get sfTranscriptNoModel;
+
+  /// No description provided for @sfTranscriptModelInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Model: {model} ({size} MB)'**
+  String sfTranscriptModelInstalled(String model, int size);
+
+  /// No description provided for @sfTranscriptChooseModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose model'**
+  String get sfTranscriptChooseModel;
+
+  /// No description provided for @sfTranscriptChangeModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Change model'**
+  String get sfTranscriptChangeModel;
+
+  /// No description provided for @sfTranscriptRemoveModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove model'**
+  String get sfTranscriptRemoveModel;
+
+  /// No description provided for @sfTranscriptSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get sfTranscriptSummary;
+
+  /// No description provided for @sfTranscriptSummarize.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize'**
+  String get sfTranscriptSummarize;
+
+  /// No description provided for @sfTranscriptAsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'As note'**
+  String get sfTranscriptAsNote;
+
+  /// No description provided for @sfTranscriptRetranscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe again'**
+  String get sfTranscriptRetranscribe;
+
+  /// No description provided for @sfTranscriptDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete transcript'**
+  String get sfTranscriptDelete;
+
+  /// No description provided for @sfTranscriptCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel transcription'**
+  String get sfTranscriptCancel;
+
+  /// No description provided for @sfTranscriptCancelling.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping after the current section, about {time} more.'**
+  String sfTranscriptCancelling(String time);
+
+  /// No description provided for @sfTranscriptPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing audio…'**
+  String get sfTranscriptPreparing;
+
+  /// No description provided for @sfTranscriptChunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Section {current} of {total}'**
+  String sfTranscriptChunk(int current, int total);
+
+  /// No description provided for @sfTranscriptRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'about {time} left'**
+  String sfTranscriptRemaining(String time);
+
+  /// No description provided for @sfTranscriptSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String sfTranscriptSeconds(int seconds);
+
+  /// No description provided for @sfTranscriptMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String sfTranscriptMinutes(int minutes);
+
+  /// No description provided for @sfTranscriptCancellingUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping after the current section. This can take a few minutes.'**
+  String get sfTranscriptCancellingUnknown;
 }
 
 class _AppLocalizationsDelegate

@@ -69,7 +69,7 @@ class MemoSettings {
   final double playbackSpeed;
 
   const MemoSettings({
-    this.format = MemoFormat.wav,
+    this.format = MemoFormat.flac,
     this.sampleRate = 48000,
     this.channels = 1,
     this.source = MemoMicSource.standard,
@@ -119,7 +119,8 @@ class MemoSettings {
     final source = await get(_kSource);
     return MemoSettings(
       format:
-          MemoFormat.fromExtension(await get(_kFormat) ?? '') ?? MemoFormat.wav,
+          MemoFormat.fromExtension(await get(_kFormat) ?? '') ??
+          MemoFormat.flac,
       sampleRate: sampleRates.contains(rate) ? rate! : 48000,
       channels: channels == 2 ? 2 : 1,
       source: MemoMicSource.values.firstWhere(

@@ -10,11 +10,13 @@ import '../memo/memo_clip.dart';
 import '../memo/memo_library_state.dart';
 import '../memo/memo_player.dart';
 import '../memo/memo_recorder.dart';
+import '../memo/memo_transcriber.dart';
 import '../sf_format.dart';
+import 'sf_memo_transcript_sheet.dart';
 import 'sf_memo_trim_dialog.dart';
 import 'sf_memo_waveform.dart';
 
-enum _ClipAction { rename, share, save, trim, normalize, delete }
+enum _ClipAction { transcript, rename, share, save, trim, normalize, delete }
 
 class SfMemoClipTile extends StatelessWidget {
   final MemoClip clip;
@@ -36,6 +38,12 @@ class SfMemoClipTile extends StatelessWidget {
     }
 
     switch (action) {
+      case _ClipAction.transcript:
+        await SfMemoTranscriptSheet.show(
+          context,
+          clip: clip,
+          player: context.read<MemoPlayer>(),
+        );
       case _ClipAction.rename:
         final name = await showDialog<String>(
           context: context,
@@ -100,6 +108,11 @@ class SfMemoClipTile extends StatelessWidget {
     final bool current = player.isCurrent(clip.path);
     final bool playing = player.isPlaying(clip.path);
     final bool busy = library.isBusy(clip.path);
+    final double? transcribing = context.select<MemoTranscriber, double?>(
+      (t) => t.isTranscribing(clip.path)
+          ? t.progress(clip.path)?.fraction ?? 0
+          : null,
+    );
     final localizations = MaterialLocalizations.of(context);
     final String when =
         '${localizations.formatShortDate(clip.modified)} '
@@ -156,6 +169,20 @@ class SfMemoClipTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (transcribing != null || clip.hasTranscript)
+                  IconButton(
+                    tooltip: l10n.sfShowTranscript,
+                    onPressed: () => _onAction(context, _ClipAction.transcript),
+                    icon: transcribing != null
+                        ? SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              value: transcribing == 0 ? null : transcribing,
+                            ),
+                          )
+                        : const Icon(Icons.subject),
+                  ),
                 if (busy)
                   const Padding(
                     padding: EdgeInsets.all(12),
@@ -168,6 +195,13 @@ class SfMemoClipTile extends StatelessWidget {
                   PopupMenuButton<_ClipAction>(
                     onSelected: (a) => _onAction(context, a),
                     itemBuilder: (_) => [
+                      _item(
+                        _ClipAction.transcript,
+                        Icons.record_voice_over_outlined,
+                        clip.hasTranscript
+                            ? l10n.sfShowTranscript
+                            : l10n.sfTranscribe,
+                      ),
                       _item(
                         _ClipAction.rename,
                         Icons.edit_outlined,
