@@ -31,12 +31,18 @@ class HealthMetricSpec {
   /// records against each other costs the most and finds nothing.
   final bool dense;
 
+  /// One device cannot record two of these at once, so a writer's overlapping
+  /// rows are a double count (see `HealthOverlap`). Not hydration: two drinks
+  /// logged at the same minute are two drinks.
+  final bool exclusive;
+
   const HealthMetricSpec({
     required this.key,
     required this.unit,
     required this.aggregation,
     required this.shape,
     this.dense = false,
+    this.exclusive = false,
   });
 }
 
@@ -192,36 +198,42 @@ class HealthMetrics {
       unit: 'count',
       aggregation: HealthAggregation.total,
       shape: HealthMetricShape.interval,
+      exclusive: true,
     ),
     HealthMetricSpec(
       key: distance,
       unit: 'km',
       aggregation: HealthAggregation.total,
       shape: HealthMetricShape.interval,
+      exclusive: true,
     ),
     HealthMetricSpec(
       key: activeEnergy,
       unit: 'kcal',
       aggregation: HealthAggregation.total,
       shape: HealthMetricShape.interval,
+      exclusive: true,
     ),
     HealthMetricSpec(
       key: totalEnergy,
       unit: 'kcal',
       aggregation: HealthAggregation.total,
       shape: HealthMetricShape.interval,
+      exclusive: true,
     ),
     HealthMetricSpec(
       key: floors,
       unit: 'count',
       aggregation: HealthAggregation.total,
       shape: HealthMetricShape.interval,
+      exclusive: true,
     ),
     HealthMetricSpec(
       key: elevationGained,
       unit: 'm',
       aggregation: HealthAggregation.total,
       shape: HealthMetricShape.interval,
+      exclusive: true,
     ),
     HealthMetricSpec(
       key: hydration,
@@ -234,6 +246,7 @@ class HealthMetrics {
       unit: 'count',
       aggregation: HealthAggregation.total,
       shape: HealthMetricShape.interval,
+      exclusive: true,
     ),
   ];
 

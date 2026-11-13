@@ -192,7 +192,7 @@ sync always had to do, since `synchronize()` accepts no origin filter.
 ## Duplicates
 
 A republisher writes other apps' data into the local store, so a device with
-both a direct writer and a republisher sees most measurements twice. Four
+both a direct writer and a republisher sees most measurements twice. Five
 mechanisms, in the order they apply:
 
 1. **Don't read it.** A deselected writer becomes a `dataOrigins` filter, so
@@ -213,6 +213,16 @@ mechanisms, in the order they apply:
 4. **Priority decides session mirrors.** A session already stored for the same
    kind and exact range by another writer is a mirror; the better-ranked writer
    keeps the slot, and ties keep the first writer.
+5. **One writer's overlaps count once.** A watch can store the same run twice -
+   a re-upload with bounds shifted by seconds, or a whole-workout record on top
+   of its per-minute buckets. For metrics one device cannot record twice at once
+   (`exclusive` in the catalog: steps, distance, energy, floors, elevation,
+   wheelchair pushes - not hydration), a row more than half covered by that
+   writer's earlier rows is skipped by the daily rollup and the session totals
+   (`HealthOverlap`). A same-app session of the same activity overlapping by 70%
+   of the longer one is hidden when sessions are read; the longer copy stays.
+   Both are read-time decisions: the stored rows and the sync chunks keep
+   exactly what Health Connect has.
 
 Choosing the day's winner **per day** rather than globally is what keeps a
 republisher useful. On a day no other writer covered, it wins by default and its

@@ -25,7 +25,7 @@ class HealthSchema {
   /// and priority. Version 3 adds device-independent session identity and the
   /// backend sync manifest. Version 4 adds what reading a chunk out of the dense
   /// tables needs, and the marker for a chunk this device declines to carry.
-  static const version = 5;
+  static const version = 6;
 
   static const metric = 'health_metric';
   static const app = 'health_app';

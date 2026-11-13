@@ -10,6 +10,7 @@ import '../config.dart';
 import 'health_chunk_codec.dart';
 import 'health_metric_catalog.dart';
 import 'health_models.dart';
+import 'health_overlap.dart';
 import 'health_rows.dart';
 import 'health_schema.dart';
 
@@ -58,6 +59,7 @@ class HealthStore {
       HealthDashboardTool.config.id,
     );
     await _dropPreTypedSchema(database);
+    var recount = false;
     await database.migrate(
       currentVersion: HealthSchema.version,
       onMigrate: (txn, oldVersion, newVersion) async {
@@ -69,10 +71,13 @@ class HealthStore {
         if (oldVersion < 3) await HealthSchema.migrateToV3(txn);
         if (oldVersion < 4) await HealthSchema.migrateToV4(txn);
         if (oldVersion < 5) await HealthSchema.migrateToV5(txn);
+        // v6 changed no table, only how same-writer overlaps are counted.
+        if (oldVersion < 6) recount = true;
       },
     );
     _database = database;
     await _loadDimensions(database);
+    if (recount) await rebuildDaily();
     return database;
   }
 
@@ -332,7 +337,10 @@ class HealthStore {
             'app': appId,
             'origin': row.origin,
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
-          (touched[metricId] ??= <int>{}).add(dayKey(row.t0));
+          // A row reaching into the next day can cover rows counted there.
+          (touched[metricId] ??= <int>{})
+            ..add(dayKey(row.t0))
+            ..add(dayKey(max(row.t0, row.t1 - 1)));
         }
       }
       for (final record in records) {
@@ -630,6 +638,7 @@ class HealthStore {
       if (spec != null) shapes[entry.value] = spec.shape;
     }
     final prioCase = _prioOrderSql();
+    final exclusive = _exclusiveMetricIds();
     final batch = db.batch();
     var queued = 0;
     for (final entry in touched.entries) {
@@ -640,13 +649,22 @@ class HealthStore {
       for (final day in entry.value) {
         final (start, end) = dayBounds(day);
         final rows = await db.rawQuery(
-          'SELECT $_dailyWinnerColumns FROM $table '
+          'SELECT app, $_dailyWinnerColumns FROM $table '
           'WHERE metric = ? AND $column >= ? AND $column < ?'
           '${_excludeDisabled()} '
           'GROUP BY app ORDER BY $prioCase ASC, n DESC, app ASC LIMIT 1',
           [metricId, start, end],
         );
-        final row = rows.isEmpty ? const <String, Object?>{} : rows.single;
+        var row = rows.isEmpty ? const <String, Object?>{} : rows.single;
+        if (rows.isNotEmpty && exclusive.contains(metricId)) {
+          row = await _distinctDaily(
+            db,
+            metricId,
+            (row['app'] as num).toInt(),
+            start,
+            end,
+          );
+        }
         final n = (row['n'] as num?)?.toInt() ?? 0;
         if (n == 0) {
           batch.delete(
@@ -669,6 +687,89 @@ class HealthStore {
       }
     }
     if (queued > 0) await batch.commit(noResult: true);
+  }
+
+  Set<int> _exclusiveMetricIds() => {
+    for (final entry in _metricIds.entries)
+      if (HealthMetrics.spec(entry.key)?.exclusive ?? false) entry.value,
+  };
+
+  static HealthSpan _span(Map<String, Object?> row) => (
+    t0: row['t0'] as int,
+    t1: row['t1'] as int,
+    v: (row['v'] as num).toDouble(),
+  );
+
+  static Map<String, Object?> _rollup(List<double> values) {
+    if (values.isEmpty) return const {'n': 0};
+    final total = values.fold(0.0, (a, b) => a + b);
+    return {
+      'total': total,
+      'avg': total / values.length,
+      'lo': values.reduce(min),
+      'hi': values.reduce(max),
+      'n': values.length,
+    };
+  }
+
+  /// One writer's day of an exclusive metric with its overlapping rows counted
+  /// once. Reads a day back so a row started yesterday can cover today's.
+  Future<Map<String, Object?>> _distinctDaily(
+    ToolDatabaseExecutor db,
+    int metricId,
+    int app,
+    int start,
+    int end,
+  ) async {
+    final rows = await db.query(
+      HealthSchema.interval,
+      columns: ['t0', 't1', 'v'],
+      where: 'metric = ? AND app = ? AND t0 >= ? AND t0 < ?',
+      whereArgs: [metricId, app, start - HealthOverlap.lookbackMillis, end],
+    );
+    return _rollup([
+      for (final row in HealthOverlap.distinct(rows.map(_span)))
+        if (row.t0 >= start) row.v,
+    ]);
+  }
+
+  /// [rebuildDaily]'s counterpart of [_distinctDaily]: one sweep per winning
+  /// writer over its whole range, read in month windows.
+  Future<void> _distinctWinners(
+    ToolDatabaseExecutor db,
+    int metricId,
+    Map<int, Map<String, Object?>> winners,
+  ) async {
+    const window = 30 * Duration.millisecondsPerDay;
+    final daysByApp = <int, Set<int>>{};
+    for (final win in winners.entries) {
+      (daysByApp[(win.value['app'] as num).toInt()] ??= {}).add(win.key);
+    }
+    for (final MapEntry(key: app, value: days) in daysByApp.entries) {
+      final values = <int, List<double>>{};
+      final sweep = Sweep();
+      final last = dayBounds(days.reduce(max)).$2;
+      var from = days.reduce(min) - HealthOverlap.lookbackMillis;
+      while (from < last) {
+        final to = min(from + window, last);
+        final rows = await db.query(
+          HealthSchema.interval,
+          columns: ['t0', 't1', 'v'],
+          where: 'metric = ? AND app = ? AND t0 >= ? AND t0 < ?',
+          whereArgs: [metricId, app, from, to],
+        );
+        final spans = rows.map(_span).toList()..sort(HealthOverlap.compare);
+        for (final row in spans) {
+          if (!sweep.keeps(row)) continue;
+          final day = dayKey(row.t0);
+          if (days.contains(day)) (values[day] ??= []).add(row.v);
+        }
+        from = to;
+      }
+      for (final day in days) {
+        winners[day] = {'app': app, ..._rollup(values[day] ?? const [])};
+      }
+    }
   }
 
   /// Fills the denormalised summary columns on sessions from the fact tables.
@@ -723,6 +824,69 @@ class HealthStore {
       'WHERE ${where.join(' AND ')}',
       args,
     );
+    await _distinctSessionTotals(db, where.join(' AND '), args, {
+      'distance_km': ?distance,
+      'calories': ?energy,
+      'steps': ?steps,
+    });
+  }
+
+  /// Recounts the summed session columns with a writer's overlapping rows
+  /// counted once, which the SQL `SUM` above cannot express.
+  Future<void> _distinctSessionTotals(
+    ToolDatabaseExecutor db,
+    String where,
+    List<Object?> args,
+    Map<String, int> columns,
+  ) async {
+    if (columns.isEmpty) return;
+    final sessions = await db.query(
+      HealthSchema.session,
+      columns: ['id', 'app', 't0', 't1', ...columns.keys],
+      where: where,
+      whereArgs: args,
+    );
+    final metricColumn = {
+      for (final entry in columns.entries) entry.value: entry.key,
+    };
+    final batch = db.batch();
+    var queued = 0;
+    for (final session in sessions) {
+      final t0 = session['t0'] as int;
+      final t1 = session['t1'] as int;
+      final rows = await db.query(
+        HealthSchema.interval,
+        columns: ['metric', 't0', 't1', 'v'],
+        where:
+            'metric IN (${columns.values.join(', ')}) AND app = ? '
+            'AND t0 >= ? AND t0 < ?',
+        whereArgs: [session['app'], t0 - HealthOverlap.lookbackMillis, t1],
+      );
+      final byMetric = <int, List<HealthSpan>>{};
+      for (final row in rows) {
+        (byMetric[row['metric'] as int] ??= []).add(_span(row));
+      }
+      final values = <String, Object?>{};
+      for (final MapEntry(key: metric, value: column) in metricColumn.entries) {
+        double? sum;
+        for (final row in HealthOverlap.distinct(
+          byMetric[metric] ?? const [],
+        )) {
+          if (row.t1 > t0) sum = (sum ?? 0) + row.v;
+        }
+        final value = column == 'steps' ? sum?.toInt() : sum;
+        if (value != session[column]) values[column] = value;
+      }
+      if (values.isEmpty) continue;
+      batch.update(
+        HealthSchema.session,
+        values,
+        where: 'id = ?',
+        whereArgs: [session['id']],
+      );
+      queued++;
+    }
+    if (queued > 0) await batch.commit(noResult: true);
   }
 
   /// Rebuilds every daily rollup from the fact tables. Only needed after a bulk
@@ -771,8 +935,10 @@ class HealthStore {
         final best = winners[day];
         if (best == null || _beatsDailyWinner(row, best)) winners[day] = row;
       }
+      if (spec.exclusive) await _distinctWinners(db, entry.value, winners);
       final batch = db.batch();
       for (final win in winners.entries) {
+        if ((win.value['n'] as num?)?.toInt() == 0) continue;
         batch.insert(HealthSchema.daily, {
           'metric': entry.value,
           'day': win.key,
@@ -1115,7 +1281,7 @@ class HealthStore {
       limit: limit,
       offset: offset,
     );
-    return rows.map(_sessionFromRow).toList();
+    return HealthOverlap.distinctSessions(rows.map(_sessionFromRow).toList());
   }
 
   Future<List<HealthSessionPart>> sessionParts(int sessionId) async {

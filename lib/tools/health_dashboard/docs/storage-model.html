@@ -571,7 +571,7 @@
           sees most measurements twice — in captured data, 1,084,472 Google Fit heart-rate records
           alongside 390,830 from the watch's own writer.
         </p>
-        <p class="measure">Four mechanisms, in the order they apply:</p>
+        <p class="measure">Five mechanisms, in the order they apply:</p>
         <ol class="tight measure">
           <li><b>Don't read it.</b> Switching a source off for a type becomes a
             <code>dataOrigins</code> filter on the read request, so Health Connect never hands over
@@ -595,6 +595,14 @@
             against the longer side so a short walk logged inside a long run is not swallowed by it.
             Same-app sessions only collapse on an exact range — an app logging two overlapping
             activities means it. Bounded by <code>(kind, t0)</code>, no vendor names involved.</li>
+          <li><b>One writer's overlaps count once.</b> A watch can store the same run twice — a
+            re-upload with bounds shifted by seconds, or a whole-workout record over its per-minute
+            buckets. For <code>exclusive</code> metrics (steps, distance, energy, floors, elevation,
+            wheelchair pushes — not hydration) a row more than half covered by the same writer's
+            earlier rows is skipped by the daily rollup and the session totals
+            (<code>HealthOverlap</code>). At read time a same-app session of the same activity
+            overlapping by 70% of the longer one is hidden; the longer copy stays. Nothing stored or
+            synced changes.</li>
         </ol>
         <div class="note warn">
           <p><b>Near-mirrors never collapse.</b> A republisher's heart rate differs from the direct
@@ -1752,7 +1760,7 @@ then      Samsung action → healthconnect:// → per-app deep link →
         ["origin", "TEXT", "", "Health Connect record id — per-device provenance. Null for a session that only ever arrived through backend sync"],
         ["dedupe_key", "TEXT", K.UQ, "Device-independent identity: 'c:' + client_id where the writer set one, otherwise 'k:' + kind|t0|t1|package"],
         ["client_id", "TEXT", "", "Writer's own id — tags our treadmill sessions, and detects mirrors"],
-        ["distance_km", "REAL", "", "Summed from overlapping distance intervals"],
+        ["distance_km", "REAL", "", "Summed from overlapping distance intervals, same-writer overlaps once"],
         ["calories", "REAL", "", "Summed from overlapping active-energy intervals"],
         ["steps", "INTEGER", "", "Summed from overlapping step intervals"],
         ["avg_hr", "REAL", "", "Averaged over heart-rate points inside the range"],
