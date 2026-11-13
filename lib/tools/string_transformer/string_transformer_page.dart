@@ -24,6 +24,8 @@ class StringTransformerPage extends StatefulWidget {
 
 class _StringTransformerPageState extends State<StringTransformerPage>
     with DisposeCleanup {
+  static const double _minPanelHeight = 220;
+
   late final StringTransformerState _state;
 
   @override
@@ -64,32 +66,52 @@ class _StringTransformerPageState extends State<StringTransformerPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final content = Column(
-      children: [
-        const StringTransformerToolbar(),
-        const SizedBox(height: 12),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) => constraints.canSplit
-                ? const Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(child: StringTransformerInput()),
-                      SizedBox(width: 12),
-                      Expanded(child: StringTransformerOutput()),
-                    ],
-                  )
-                : const Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(child: StringTransformerInput()),
-                      SizedBox(height: 12),
-                      Expanded(child: StringTransformerOutput()),
-                    ],
-                  ),
+    // One scrollable tree in both states, so the keyboard opening never
+    // rebuilds the fields and drops focus.
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.canSplit) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              StringTransformerToolbar(),
+              SizedBox(height: 12),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: StringTransformerInput()),
+                    SizedBox(width: 12),
+                    Expanded(child: StringTransformerOutput()),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+        final panelHeight = ((constraints.maxHeight - 100) / 2).clamp(
+          _minPanelHeight,
+          double.infinity,
+        );
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const StringTransformerToolbar(),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: panelHeight,
+                child: const StringTransformerInput(),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: panelHeight,
+                child: const StringTransformerOutput(),
+              ),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
 
     return ToolLayout(

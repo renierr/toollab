@@ -35,19 +35,24 @@ class StringTransformerToolbar extends StatelessWidget {
         state.transformType == StringTransformerState.translateType;
     final detected = state.detectedLanguage;
 
+    final status = state.translating
+        ? l10n.stringTransformerTranslating
+        : detected == null
+        ? null
+        : l10n.stringTransformerDetected(
+            TranslationService.displayName(detected),
+          );
+
     return Card(
       margin: EdgeInsets.zero,
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 12,
-          runSpacing: 8,
+        padding: const EdgeInsets.fromLTRB(16, 4, 4, 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.transform_outlined,
@@ -55,71 +60,68 @@ class StringTransformerToolbar extends StatelessWidget {
                   color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 12),
-                DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: state.transformType,
-                    dropdownColor: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    items: transforms
-                        .map(
-                          (t) => DropdownMenuItem(
-                            value: t['id'],
-                            child: Text(
-                              t['name']!,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
+                Expanded(
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: state.transformType,
+                      dropdownColor: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      items: transforms
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t['id'],
+                              child: Text(
+                                t['name']!,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        state.setTransformType(val);
-                      }
-                    },
+                          )
+                          .toList(),
+                      onChanged: (val) {
+                        if (val != null) state.setTransformType(val);
+                      },
+                    ),
                   ),
+                ),
+                IconButton(
+                  tooltip: l10n.stringTransformerSwap,
+                  onPressed:
+                      state.inputText.isNotEmpty || state.outputText.isNotEmpty
+                      ? state.swap
+                      : null,
+                  icon: const Icon(Icons.swap_vert),
                 ),
               ],
             ),
-            if (translating) ...[
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 260),
-                child: TranslateLanguagePicker(
-                  value: state.targetLanguage,
-                  onChanged: state.setTargetLanguage,
+            if (translating)
+              Padding(
+                padding: const EdgeInsets.only(right: 12, bottom: 4),
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 4,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 240),
+                      child: TranslateLanguagePicker(
+                        value: state.targetLanguage,
+                        onChanged: state.setTargetLanguage,
+                      ),
+                    ),
+                    if (status != null)
+                      Text(
+                        status,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              if (state.translating)
-                Text(
-                  l10n.stringTransformerTranslating,
-                  style: theme.textTheme.bodySmall,
-                )
-              else if (detected != null)
-                Text(
-                  l10n.stringTransformerDetected(
-                    TranslationService.displayName(detected),
-                  ),
-                  style: theme.textTheme.bodySmall,
-                ),
-            ],
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed:
-                  state.inputText.isNotEmpty || state.outputText.isNotEmpty
-                  ? () => state.swap()
-                  : null,
-              icon: const Icon(Icons.swap_horiz, size: 18),
-              label: Text(l10n.stringTransformerSwap),
-            ),
           ],
         ),
       ),
