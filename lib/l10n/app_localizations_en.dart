@@ -3942,6 +3942,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get docScanActionSave => 'Save PDF Document';
 
   @override
+  String get docScanActionPaperless => 'Send to Paperless';
+
+  @override
   String get docScanGeneratingPdf => 'Generating PDF Document...';
 
   @override
@@ -13411,6 +13414,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paperlessUploadTitle => 'Title';
+
+  @override
+  String get paperlessEditUpload => 'Edit details';
+
+  @override
+  String get paperlessAnalysisFailed => 'Could not read the document';
+
+  @override
+  String get paperlessAnalysisEmpty => 'No suggestions found';
+
+  @override
+  String get paperlessAnalyzing => 'Reading document…';
+
+  @override
+  String get paperlessAnalyze => 'Suggest details';
 
   @override
   String get paperlessUploadClearFinished => 'Clear finished';

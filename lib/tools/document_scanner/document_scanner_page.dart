@@ -1,11 +1,13 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
+import 'package:go_router/go_router.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
+import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
@@ -19,6 +21,7 @@ import 'package:tool_lab/tools/document_scanner/widgets/crop_editor.dart';
 import 'package:tool_lab/tools/document_scanner/widgets/scanned_pages_grid.dart';
 import 'package:tool_lab/tools/document_scanner/widgets/page_editor.dart';
 import 'package:tool_lab/tools/document_scanner/widgets/scanner_toolbar.dart';
+import 'package:tool_lab/tools/paperless/config.dart';
 
 enum ScannerViewMode { list, crop, editPage }
 
@@ -187,23 +190,9 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
     }
   }
 
-  Future<void> _compilePdf(DocumentScannerState state) async {
-    final pages = state.pages;
-    if (pages.isEmpty) return;
-
+  /// Builds the PDF behind a progress dialog; null when it failed.
+  Future<Uint8List?> _buildPdf(DocumentScannerState state) async {
     final l10n = AppLocalizations.of(context);
-
-    // Temp set state in progress
-    // Wait, the state doesn't have a direct setter, but has helper _setProcessing.
-    // However, since we compile inside the state, let's write a method in state or do it here.
-    // Wait, let's compile here and use a local processing state if we want, or do it inside the state.
-    // Let's do it here with local state overlay or a dialog. Since the state already has isProcessing,
-    // we can use standard showing of overlay/progress in the coordinator page.
-    setState(
-      () {},
-    ); // trigger rebuild to show indicator if we want, or show a loading indicator dialog.
-
-    // We show a loading dialog for compilation
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -222,37 +211,60 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
     );
 
     try {
-      final pdfBytes = await PdfEngineHelper.createPdfFromImagePaths(
-        pages.map((p) => p.processedImagePath).toList(),
+      return await PdfEngineHelper.createPdfFromImagePaths(
+        state.pages.map((p) => p.processedImagePath).toList(),
         pageSize: ImageToPdfPageSize.fit,
         jpegQuality: 85,
         landscape: false,
       );
-
-      final pdfPath = await _pageTempScope.createFile(
-        'scanned_document_export.pdf',
-        bytes: pdfBytes,
-      );
-
-      if (!mounted) return;
-      Navigator.of(context).pop(); // Close loading dialog
-
-      await FileSaveHelper.saveFileFromPath(
-        context: context,
-        suggestedName: 'scanned_document.pdf',
-        sourcePath: pdfPath,
-        successMessageGeneralBuilder: (path) => l10n.docScanSavedPdf(path),
-        errorMessageBuilder: (e) => l10n.docScanFailedPdf(e.toString()),
-      );
     } catch (e) {
       if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
         FileSaveHelper.showErrorNotification(
           context: context,
           errorMessage: l10n.docScanFailedCreate(e.toString()),
         );
       }
+      return null;
+    } finally {
+      if (mounted) Navigator.of(context).pop();
     }
+  }
+
+  Future<void> _compilePdf(DocumentScannerState state) async {
+    if (state.pages.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
+    final pdfBytes = await _buildPdf(state);
+    if (pdfBytes == null || !mounted) return;
+
+    final pdfPath = await _pageTempScope.createFile(
+      'scanned_document_export.pdf',
+      bytes: pdfBytes,
+    );
+    if (!mounted) return;
+    await FileSaveHelper.saveFileFromPath(
+      context: context,
+      suggestedName: 'scanned_document.pdf',
+      sourcePath: pdfPath,
+      successMessageGeneralBuilder: (path) => l10n.docScanSavedPdf(path),
+      errorMessageBuilder: (e) => l10n.docScanFailedPdf(e.toString()),
+    );
+  }
+
+  Future<void> _sendToPaperless(DocumentScannerState state) async {
+    if (state.pages.isEmpty) return;
+    final pdfBytes = await _buildPdf(state);
+    if (pdfBytes == null || !mounted) return;
+
+    // Session-scoped, not page-scoped: the upload runs after this page closes.
+    final name = 'scan_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    final path = await TempFileManager.createFile(name, bytes: pdfBytes);
+    if (!mounted) return;
+    context.push(
+      PaperlessTool.config.route,
+      extra: SharedData.single(
+        SharedFile(path: path, name: name, mimeType: 'application/pdf'),
+      ),
+    );
   }
 
   Future<void> _clearAll(DocumentScannerState state) async {
@@ -391,6 +403,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
             onAddCamera: () => _onScanPressed(state),
             onAddGallery: () => _pickFromGallery(state),
             onCompilePdf: () => _compilePdf(state),
+            onSendToPaperless: () => _sendToPaperless(state),
             onClearAll: () => _clearAll(state),
           ),
         ],

@@ -6965,6 +6965,12 @@ abstract class AppLocalizations {
   /// **'Save PDF Document'**
   String get docScanActionSave;
 
+  /// No description provided for @docScanActionPaperless.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Paperless'**
+  String get docScanActionPaperless;
+
   /// No description provided for @docScanGeneratingPdf.
   ///
   /// In en, this message translates to:
@@ -23583,6 +23589,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Title'**
   String get paperlessUploadTitle;
+
+  /// No description provided for @paperlessEditUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit details'**
+  String get paperlessEditUpload;
+
+  /// No description provided for @paperlessAnalysisFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the document'**
+  String get paperlessAnalysisFailed;
+
+  /// No description provided for @paperlessAnalysisEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggestions found'**
+  String get paperlessAnalysisEmpty;
+
+  /// No description provided for @paperlessAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading document…'**
+  String get paperlessAnalyzing;
+
+  /// No description provided for @paperlessAnalyze.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest details'**
+  String get paperlessAnalyze;
 
   /// No description provided for @paperlessUploadClearFinished.
   ///

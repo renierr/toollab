@@ -5,6 +5,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/document_insight/document_insight.dart';
+import 'package:tool_lab/services/document_insight/document_insight_service.dart';
 
 import 'config.dart';
 import 'models/paperless_document.dart';
@@ -95,6 +97,8 @@ class PaperlessState extends ChangeNotifier {
   List<PaperlessUpload> get uploads => List.unmodifiable(_uploads);
   PaperlessUploadOptions get uploadOptions => _uploadOptions;
   bool get isUploading => _isUploading;
+  bool get isAnalyzing =>
+      _uploads.any((u) => u.analysis == PaperlessAnalysisStatus.running);
   int get pendingUploadCount =>
       _uploads.where((u) => u.status == PaperlessUploadStatus.pending).length;
   bool get hasFinishedUploads => _uploads.any(
@@ -391,11 +395,88 @@ class PaperlessState extends ChangeNotifier {
     if (added) _notify();
   }
 
-  void renameUpload(String id, String title) {
-    final trimmed = title.trim();
+  /// Fills in title, date and labels read from the file. Fields the user
+  /// already set are kept.
+  Future<void> analyzeUpload(String id, {required String languageCode}) async {
+    final upload = _uploads.where((u) => u.id == id).firstOrNull;
+    if (upload == null ||
+        upload.status != PaperlessUploadStatus.pending ||
+        upload.analysis == PaperlessAnalysisStatus.running) {
+      return;
+    }
     _updateUpload(
       id,
-      (u) => u.copyWith(title: () => trimmed.isEmpty ? null : trimmed),
+      (u) => u.copyWith(analysis: PaperlessAnalysisStatus.running),
+    );
+
+    DocumentInsight insight;
+    try {
+      insight = await DocumentInsightService.instance.analyze(
+        upload.path,
+        languageCode: languageCode,
+        candidates: DocumentInsightCandidates(
+          correspondents: [for (final l in correspondents) l.name],
+          documentTypes: [for (final l in documentTypes) l.name],
+          tags: [
+            for (final l in tags)
+              if (!l.isInboxTag) l.name,
+          ],
+        ),
+      );
+    } catch (e) {
+      errorLog('[Paperless] Analysis of ${upload.fileName} failed: $e');
+      _updateUpload(
+        id,
+        (u) => u.copyWith(analysis: PaperlessAnalysisStatus.failed),
+      );
+      return;
+    }
+    if (_disposed) return;
+
+    int? idOf(Map<int, PaperlessLabel> labels, String? name) => name == null
+        ? null
+        : labels.values.where((l) => l.name == name).firstOrNull?.id;
+    final tagIds = {for (final name in insight.tags) ?idOf(_tags, name)};
+
+    _updateUpload(id, (u) {
+      if (insight.isEmpty) {
+        return u.copyWith(analysis: PaperlessAnalysisStatus.empty);
+      }
+      return u.copyWith(
+        analysis: PaperlessAnalysisStatus.done,
+        title: u.title == null ? () => insight.title : null,
+        created: u.created == null ? () => insight.date : null,
+        correspondentId: u.correspondentId == null
+            ? () => idOf(_correspondents, insight.correspondent)
+            : null,
+        documentTypeId: u.documentTypeId == null
+            ? () => idOf(_documentTypes, insight.documentType)
+            : null,
+        tagIds: u.tagIds == null && tagIds.isNotEmpty
+            ? () => {..._uploadOptions.tagIds, ...tagIds}
+            : null,
+      );
+    });
+  }
+
+  void updateUploadMetadata(
+    String id, {
+    required String? title,
+    required DateTime? created,
+    required int? correspondentId,
+    required int? documentTypeId,
+    required Set<int> tagIds,
+  }) {
+    final trimmed = title?.trim();
+    _updateUpload(
+      id,
+      (u) => u.copyWith(
+        title: () => trimmed == null || trimmed.isEmpty ? null : trimmed,
+        created: () => created,
+        correspondentId: () => correspondentId,
+        documentTypeId: () => documentTypeId,
+        tagIds: () => tagIds,
+      ),
     );
   }
 
@@ -436,8 +517,13 @@ class PaperlessState extends ChangeNotifier {
     final options = _uploadOptions;
     try {
       while (!_disposed && api == _api) {
+        // Uploading waits in the UI while analyzing; this only guards the race.
         final next = _uploads
-            .where((u) => u.status == PaperlessUploadStatus.pending)
+            .where(
+              (u) =>
+                  u.status == PaperlessUploadStatus.pending &&
+                  u.analysis != PaperlessAnalysisStatus.running,
+            )
             .firstOrNull;
         if (next == null) break;
         await _upload(next, api, options);
@@ -467,9 +553,10 @@ class PaperlessState extends ChangeNotifier {
         path: upload.path,
         fileName: upload.fileName,
         title: upload.title,
-        correspondentId: options.correspondentId,
-        documentTypeId: options.documentTypeId,
-        tagIds: options.tagIds,
+        created: upload.created,
+        correspondentId: upload.correspondentId ?? options.correspondentId,
+        documentTypeId: upload.documentTypeId ?? options.documentTypeId,
+        tagIds: upload.tagIds ?? options.tagIds,
         onProgress: (sent, total) {
           if (total <= 0) return;
           final progress = sent / total;

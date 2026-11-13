@@ -17,7 +17,7 @@ import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart'
 import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:tool_lab/tools/image_viewer/utils/onnx_background_remover.dart';
-import 'package:tool_lab/tools/image_viewer/utils/windows_ocr.dart';
+import 'package:tool_lab/helpers/windows_ocr.dart';
 
 /// No bundled decoder handles the data (SVG, exotic codecs).
 class UnsupportedImageFormatException implements Exception {

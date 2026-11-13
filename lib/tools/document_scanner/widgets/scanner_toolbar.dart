@@ -7,6 +7,7 @@ class ScannerToolbar extends StatelessWidget {
   final VoidCallback onAddCamera;
   final VoidCallback onAddGallery;
   final VoidCallback onCompilePdf;
+  final VoidCallback onSendToPaperless;
   final VoidCallback onClearAll;
   final Color accentColor;
 
@@ -17,6 +18,7 @@ class ScannerToolbar extends StatelessWidget {
     required this.onAddCamera,
     required this.onAddGallery,
     required this.onCompilePdf,
+    required this.onSendToPaperless,
     required this.onClearAll,
     required this.accentColor,
   });
@@ -107,6 +109,21 @@ class ScannerToolbar extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: theme.colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: isProcessing ? null : onSendToPaperless,
+                  icon: const Icon(Icons.cloud_upload_outlined),
+                  label: Text(l10n.docScanActionPaperless),
+                  style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

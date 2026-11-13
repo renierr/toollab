@@ -7,6 +7,7 @@ class PaperlessUploadToolbar extends StatelessWidget {
   final int pendingCount;
   final bool isConfigured;
   final bool isUploading;
+  final bool isAnalyzing;
   final bool canClear;
   final VoidCallback onAdd;
   final VoidCallback onClear;
@@ -18,6 +19,7 @@ class PaperlessUploadToolbar extends StatelessWidget {
     required this.pendingCount,
     required this.isConfigured,
     required this.isUploading,
+    required this.isAnalyzing,
     required this.canClear,
     required this.onAdd,
     required this.onClear,
@@ -55,7 +57,7 @@ class PaperlessUploadToolbar extends StatelessWidget {
             )
           else if (pendingCount > 0 || isUploading)
             FilledButton.icon(
-              onPressed: isUploading ? null : onUpload,
+              onPressed: isUploading || isAnalyzing ? null : onUpload,
               icon: isUploading
                   ? SizedBox.square(
                       dimension: 16,

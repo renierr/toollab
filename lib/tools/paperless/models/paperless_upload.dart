@@ -13,6 +13,8 @@ enum PaperlessUploadStatus {
   failed,
 }
 
+enum PaperlessAnalysisStatus { none, running, done, empty, failed }
+
 class PaperlessUpload {
   final String id;
   final String path;
@@ -20,6 +22,14 @@ class PaperlessUpload {
 
   /// Null leaves the title to Paperless, which derives it from the file name.
   final String? title;
+
+  /// Per-upload metadata; null falls back to the batch [PaperlessUploadOptions].
+  final DateTime? created;
+  final int? correspondentId;
+  final int? documentTypeId;
+  final Set<int>? tagIds;
+  final PaperlessAnalysisStatus analysis;
+
   final PaperlessUploadStatus status;
   final double? progress;
   final String? taskId;
@@ -31,6 +41,11 @@ class PaperlessUpload {
     required this.path,
     required this.fileName,
     this.title,
+    this.created,
+    this.correspondentId,
+    this.documentTypeId,
+    this.tagIds,
+    this.analysis = PaperlessAnalysisStatus.none,
     this.status = PaperlessUploadStatus.pending,
     this.progress,
     this.taskId,
@@ -39,6 +54,12 @@ class PaperlessUpload {
   });
 
   String get displayTitle => title ?? fileName;
+
+  bool get hasMetadata =>
+      created != null ||
+      correspondentId != null ||
+      documentTypeId != null ||
+      tagIds != null;
 
   bool get isActive =>
       status == PaperlessUploadStatus.uploading ||
@@ -50,6 +71,11 @@ class PaperlessUpload {
 
   PaperlessUpload copyWith({
     ValueGetter<String?>? title,
+    ValueGetter<DateTime?>? created,
+    ValueGetter<int?>? correspondentId,
+    ValueGetter<int?>? documentTypeId,
+    ValueGetter<Set<int>?>? tagIds,
+    PaperlessAnalysisStatus? analysis,
     PaperlessUploadStatus? status,
     ValueGetter<double?>? progress,
     String? taskId,
@@ -61,6 +87,15 @@ class PaperlessUpload {
       path: path,
       fileName: fileName,
       title: title != null ? title() : this.title,
+      created: created != null ? created() : this.created,
+      correspondentId: correspondentId != null
+          ? correspondentId()
+          : this.correspondentId,
+      documentTypeId: documentTypeId != null
+          ? documentTypeId()
+          : this.documentTypeId,
+      tagIds: tagIds != null ? tagIds() : this.tagIds,
+      analysis: analysis ?? this.analysis,
       status: status ?? this.status,
       progress: progress != null ? progress() : this.progress,
       taskId: taskId ?? this.taskId,

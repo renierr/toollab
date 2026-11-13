@@ -728,42 +728,50 @@ packages:
     dependency: "direct main"
     description:
       name: google_mlkit_barcode_scanning
-      sha256: "4dcd732ea49d10d08d8dc6dbed916edd2b455290fcb1bdef686fc41b73b94f20"
+      sha256: "55b737251dcd47b4f2843c206b257cd3da4e666d28806548020347981c3f8aa4"
       url: "https://pub.dev"
     source: hosted
-    version: "0.16.0"
+    version: "1.0.3"
   google_mlkit_commons:
     dependency: transitive
     description:
       name: google_mlkit_commons
-      sha256: c7fc384bdb66c3b83e24e3a41818e61d7a378d900f65f5e775344fbca95a0917
+      sha256: "58b969da65027b6242afb38b944f5a0d3f6b90305b29d70b0cca3048a50b4263"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.0"
+    version: "1.0.3"
   google_mlkit_document_scanner:
     dependency: "direct main"
     description:
       name: google_mlkit_document_scanner
-      sha256: "8cc17a7f62d4285298f7970867d24c030d42840068d8b680b988655d50b196ec"
+      sha256: "0ce54cd3318642e771aa5851aa3fbce61eb7d72ca0ecfbb82b433d1b15680a04"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.1"
+    version: "0.7.2"
+  google_mlkit_entity_extraction:
+    dependency: "direct main"
+    description:
+      name: google_mlkit_entity_extraction
+      sha256: "79865d558596a4bcc57f7dcc3b26daff3e6c9e5cf12d00d4551227c873a43c7e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.3"
   google_mlkit_subject_segmentation:
     dependency: "direct main"
     description:
       name: google_mlkit_subject_segmentation
-      sha256: e1bbd63e7b9ffcc2c6adc451de71af779a25537d75feaf05d0dc4e6c8771349e
+      sha256: ddf3ae5c7170d4e8a95acf81a26ee7ffa417a7f8183e3469ef84733ca4ba12e3
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.0"
+    version: "0.3.2"
   google_mlkit_text_recognition:
     dependency: "direct main"
     description:
       name: google_mlkit_text_recognition
-      sha256: be0b6df9b70c534443e482fc1433d559b0541bffcc1a1e5ed50b5e48f2225682
+      sha256: "546e3e40181af7166d539f44416ff592a88bd12de61625ad9f2ec7166624f12b"
       url: "https://pub.dev"
     source: hosted
-    version: "0.17.0"
+    version: "1.0.3"
   graphs:
     dependency: transitive
     description:

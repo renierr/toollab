@@ -249,6 +249,7 @@ class PaperlessApi {
     required String path,
     required String fileName,
     String? title,
+    DateTime? created,
     int? correspondentId,
     int? documentTypeId,
     Iterable<int> tagIds = const [],
@@ -257,6 +258,12 @@ class PaperlessApi {
     final url = _uri('documents/post_document/');
     final request = http.MultipartRequest('POST', url);
     if (title != null && title.isNotEmpty) request.fields['title'] = title;
+    if (created != null) {
+      request.fields['created'] =
+          '${created.year.toString().padLeft(4, '0')}-'
+          '${created.month.toString().padLeft(2, '0')}-'
+          '${created.day.toString().padLeft(2, '0')}';
+    }
     if (correspondentId != null) {
       request.fields['correspondent'] = '$correspondentId';
     }

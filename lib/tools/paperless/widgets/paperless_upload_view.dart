@@ -4,13 +4,13 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
-import 'package:tool_lab/widgets/file_name_dialog.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import '../config.dart';
 import '../models/paperless_upload.dart';
 import '../paperless_state.dart';
+import 'paperless_upload_edit_sheet.dart';
 import 'paperless_upload_options_card.dart';
 import 'paperless_upload_tile.dart';
 import 'paperless_upload_toolbar.dart';
@@ -46,18 +46,22 @@ class PaperlessUploadView extends StatelessWidget {
     if (files.isNotEmpty && context.mounted) _add(context, files);
   }
 
-  Future<void> _rename(BuildContext context, PaperlessUpload upload) async {
-    final l10n = AppLocalizations.of(context);
-    final title = await showDialog<String>(
-      context: context,
-      builder: (_) => FileNameDialog(
-        title: l10n.paperlessUploadTitle,
-        initialValue: upload.displayTitle,
-      ),
+  Future<void> _edit(BuildContext context, PaperlessUpload upload) async {
+    final state = context.read<PaperlessState>();
+    final edit = await PaperlessUploadEditSheet.show(
+      context,
+      upload: upload,
+      batch: state.uploadOptions,
     );
-    if (title != null && context.mounted) {
-      context.read<PaperlessState>().renameUpload(upload.id, title);
-    }
+    if (edit == null) return;
+    state.updateUploadMetadata(
+      upload.id,
+      title: edit.title,
+      created: edit.created,
+      correspondentId: edit.correspondentId,
+      documentTypeId: edit.documentTypeId,
+      tagIds: edit.tagIds,
+    );
   }
 
   @override
@@ -92,6 +96,7 @@ class PaperlessUploadView extends StatelessWidget {
           pendingCount: state.pendingUploadCount,
           isConfigured: state.isConfigured,
           isUploading: state.isUploading,
+          isAnalyzing: state.isAnalyzing,
           canClear: state.hasFinishedUploads,
           onAdd: () => _pickMore(context),
           onClear: state.clearFinishedUploads,
@@ -118,7 +123,11 @@ class PaperlessUploadView extends StatelessWidget {
                 return PaperlessUploadTile(
                   key: ValueKey(upload.id),
                   upload: upload,
-                  onRename: () => _rename(context, upload),
+                  onEdit: () => _edit(context, upload),
+                  onAnalyze: () => state.analyzeUpload(
+                    upload.id,
+                    languageCode: Localizations.localeOf(context).languageCode,
+                  ),
                   onRemove: () => state.removeUpload(upload.id),
                   onRetry: () => state.retryUpload(upload.id),
                 );
