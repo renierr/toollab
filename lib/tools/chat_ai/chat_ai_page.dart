@@ -14,6 +14,7 @@ import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 import 'chat_ai_state.dart';
+import 'chat_models.dart';
 import 'widgets/chat_message_bubble.dart';
 import 'widgets/chat_session_drawer.dart';
 import 'package:tool_lab/widgets/genai_status_banner.dart';
@@ -92,13 +93,18 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
   }
 
   void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    // Per-chunk animations would pile up while a reply streams in.
+    if (context.read<ChatAiState>().streamingText.isNotEmpty) {
+      _scrollController.jumpTo(position.maxScrollExtent);
+      return;
     }
+    _scrollController.animateTo(
+      position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> _pickImage(ChatAiState state) async {
@@ -247,6 +253,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
         children: [
           GenAiStatusBanner(
             status: state.featureStatus,
+            downloadProgress: state.downloadProgress,
             onDownload: state.downloadModel,
           ),
           Expanded(
@@ -268,7 +275,18 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                       padding: padding,
                       itemBuilder: (context, index) {
                         if (index == state.messages.length) {
-                          return const ChatThinkingBubble();
+                          if (state.streamingText.isEmpty) {
+                            return const ChatThinkingBubble();
+                          }
+                          return ChatMessageBubble(
+                            message: ChatMessage(
+                              id: -1,
+                              sessionId: state.currentSessionId ?? -1,
+                              role: 'model',
+                              content: state.streamingText,
+                              createdAt: 0,
+                            ),
+                          );
                         }
                         final message = state.messages[index];
                         return ChatMessageBubble(message: message);

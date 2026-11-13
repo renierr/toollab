@@ -40,34 +40,38 @@ final prompt = Prompt();
 ```dart
 final status = await prompt.checkFeatureStatus();
 if (status == FeatureStatus.downloadable) {
+  // Completes when the model is ready; throws PlatformException on failure.
   await prompt.downloadFeature(
-    onDownloadCompleted: () {
-      // Start prompt generation
-    },
+    onDownloadStarted: (totalBytes) {},
+    onDownloadProgress: (downloadedBytes) {},
   );
-} else if (status == FeatureStatus.available) {
-  // Start prompt generation
 }
 ```
 
-#### Generate text from prompt
+#### Generate text
 
 ```dart
-final text = "Write a 3 sentence story about a magical dog.";
-final response = await prompt.runInference(text);
-print('Response: $response');
+final response = await prompt.runInference(
+  'Write a 3 sentence story about a magical dog.',
+  systemInstruction: 'You are a children\'s book author.',
+);
 ```
 
-#### Generate text from multimodal prompt (image + text)
+#### Stream the response
 
 ```dart
-final imageData = {
-  'type': 'file',
-  'path': '/path/to/image.jpg',
-};
-final text = "What's in this image?";
-final response = await prompt.runInference(text, imageData: imageData);
-print('Response: $response');
+await for (final chunk in prompt.runInferenceStreaming(text)) {
+  buffer.write(chunk);
+}
+```
+
+Cancelling the subscription cancels the native request.
+
+#### Image + text
+
+```dart
+final Uint8List bytes = await file.readAsBytes();
+final response = await prompt.runInference("What's in this image?", imageData: bytes);
 ```
 
 #### Release resources with `close()`

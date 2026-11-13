@@ -3,8 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-// ignore: implementation_imports
-import 'package:google_mlkit_genai_prompt/src/prompt.dart';
+import 'package:google_mlkit_genai_prompt/google_mlkit_genai_prompt.dart';
 import 'package:tool_lab/helpers/text_analysis_helper.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'chat_ai_db_helper.dart';
@@ -21,6 +20,9 @@ class ChatAiState extends ChangeNotifier {
   Timer? _statusPollingTimer;
   Prompt? _prompt;
   Uint8List? _selectedImageBytes;
+  String _streamingText = '';
+  int? _downloadTotalBytes;
+  int _downloadedBytes = 0;
 
   static const String defaultSystemPrompt =
       'You are a helpful, respectful, and honest on-device AI assistant. Respond in the same language as the user (e.g. if the user writes in German, respond in German; if the user writes in English, respond in English).';
@@ -40,6 +42,17 @@ class ChatAiState extends ChangeNotifier {
   FeatureStatus get featureStatus => _featureStatus;
   bool get isInitializing => _isInitializing;
   bool get isGenerating => _isGenerating;
+
+  /// Partial model reply while [isGenerating]; empty until the first chunk.
+  String get streamingText => _streamingText;
+
+  /// Model download progress in 0..1, or null when the size is unknown.
+  double? get downloadProgress {
+    final total = _downloadTotalBytes;
+    if (total == null || total <= 0) return null;
+    return (_downloadedBytes / total).clamp(0.0, 1.0);
+  }
+
   Uint8List? get selectedImageBytes => _selectedImageBytes;
   String? get attachedFileName => _attachedFileName;
   String? get attachedFileContent => _attachedFileContent;
@@ -113,8 +126,6 @@ class ChatAiState extends ChangeNotifier {
           : documentText;
       final promptText =
           (StringBuffer()
-                ..writeln(activeSystemPrompt)
-                ..writeln()
                 ..writeln(
                   'The user provided the following document text. Answer the '
                   'question based only on this text.',
@@ -125,7 +136,10 @@ class ChatAiState extends ChangeNotifier {
                 ..writeln()
                 ..writeln('Question: $question'))
               .toString();
-      final response = await _prompt!.runInference(promptText);
+      final response = await _prompt!.runInference(
+        promptText,
+        systemInstruction: activeSystemPrompt,
+      );
       return response.trim();
     }
 
@@ -200,8 +214,20 @@ class ChatAiState extends ChangeNotifier {
     if (!Platform.isAndroid || _prompt == null) return;
     _modelError = null;
     notifyListeners();
+    _downloadTotalBytes = null;
+    _downloadedBytes = 0;
     try {
-      await _prompt!.downloadFeature();
+      await _prompt!.downloadFeature(
+        onDownloadStarted: (total) {
+          _downloadTotalBytes = total;
+          _featureStatus = FeatureStatus.downloading;
+          notifyListeners();
+        },
+        onDownloadProgress: (downloaded) {
+          _downloadedBytes = downloaded;
+          notifyListeners();
+        },
+      );
       await updateFeatureStatus();
       _startStatusPolling();
     } catch (e) {
@@ -331,15 +357,20 @@ class ChatAiState extends ChangeNotifier {
       notifyListeners();
 
       if (isGenerativeAvailable) {
-        final promptText = _buildPromptText();
-        final response = await _prompt!.runInference(
-          promptText,
+        final buffer = StringBuffer();
+        await for (final chunk in _prompt!.runInferenceStreaming(
+          _buildPromptText(),
+          systemInstruction: activeSystemPrompt,
           imageData: imageToSend,
-        );
+        )) {
+          buffer.write(chunk);
+          _streamingText = buffer.toString();
+          notifyListeners();
+        }
         await ChatAiDbHelper.instance.insertMessage(
           sessionId,
           'model',
-          response.trim(),
+          buffer.toString().trim(),
         );
       } else {
         // Offline fallback (no on-device LLM). With an attached document we can
@@ -377,13 +408,13 @@ class ChatAiState extends ChangeNotifier {
     } finally {
       _messages = await ChatAiDbHelper.instance.getMessages(sessionId);
       _isGenerating = false;
+      _streamingText = '';
       notifyListeners();
     }
   }
 
   String _buildPromptText() {
     final buffer = StringBuffer();
-    buffer.writeln(activeSystemPrompt);
     buffer.writeln('Below is the history of the conversation so far.');
     buffer.writeln();
 

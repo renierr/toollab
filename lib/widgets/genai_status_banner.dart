@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-// ignore: implementation_imports
-import 'package:google_mlkit_genai_prompt/src/prompt.dart';
+import 'package:google_mlkit_genai_prompt/google_mlkit_genai_prompt.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 /// Shared on-device GenAI (Gemini Nano) model-status banner.
@@ -10,11 +9,13 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 /// that exposes the on-device AI (chat_ai, pdf_viewer extract-text).
 class GenAiStatusBanner extends StatelessWidget {
   final FeatureStatus status;
+  final double? downloadProgress;
   final VoidCallback onDownload;
 
   const GenAiStatusBanner({
     super.key,
     required this.status,
+    this.downloadProgress,
     required this.onDownload,
   });
 
@@ -57,11 +58,21 @@ class GenAiStatusBanner extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              _getStatusText(l10n),
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _getStatusText(l10n),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (status == FeatureStatus.downloading) ...[
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(value: downloadProgress),
+                ],
+              ],
             ),
           ),
           if (status == FeatureStatus.downloadable ||

@@ -187,6 +187,7 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
       children: [
         GenAiStatusBanner(
           status: state.featureStatus,
+          downloadProgress: state.downloadProgress,
           onDownload: state.downloadModel,
         ),
         Padding(
