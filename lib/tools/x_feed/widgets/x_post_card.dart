@@ -113,7 +113,7 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
-    if (_mediaNodes.isNotEmpty) {
+    if (_mediaNodes.isNotEmpty && !HardwareKeyboard.instance.isShiftPressed) {
       if (key == LogicalKeyboardKey.arrowDown && _cardNode.hasPrimaryFocus) {
         _focusFirstMedia();
         return KeyEventResult.handled;

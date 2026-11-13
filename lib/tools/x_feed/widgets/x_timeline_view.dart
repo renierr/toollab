@@ -59,6 +59,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   int _navigationSequence = 0;
   int _alignmentSequence = 0;
   bool _aligningPost = false;
+  double? _nudgeTarget;
   Timer? _seenTimer;
   late int _refreshCount = widget.controller.refreshCount;
 
@@ -113,6 +114,13 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
         ?.findAncestorStateOfType<_PostRowState>();
     if (row == null) return KeyEventResult.ignored;
     final key = event.logicalKey;
+    if (HardwareKeyboard.instance.isShiftPressed &&
+        XKeys.plain &&
+        (key == LogicalKeyboardKey.arrowDown ||
+            key == LogicalKeyboardKey.arrowUp)) {
+      _nudge(key == LogicalKeyboardKey.arrowDown ? 1 : -1);
+      return KeyEventResult.handled;
+    }
     final sequence = ++_navigationSequence;
     if (key == LogicalKeyboardKey.arrowUp && _aligningPost) {
       _aligningPost = false;
@@ -169,6 +177,31 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
       unawaited(_stepTo(_shown[target].id, delta));
     }
     return KeyEventResult.handled;
+  }
+
+  /// Shift+Up/Down scrolls a short step for reading tall posts; held keys
+  /// continue from the running animation's target.
+  void _nudge(int direction) {
+    if (!_scroll.hasClients) return;
+    _aligningPost = false;
+    final position = _scroll.position;
+    final from = _nudgeTarget ?? position.pixels;
+    final target = (from + direction * position.viewportDimension * 0.2).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    _nudgeTarget = target;
+    unawaited(
+      _scroll
+          .animateTo(
+            target,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          )
+          .whenComplete(() {
+            if (_nudgeTarget == target) _nudgeTarget = null;
+          }),
+    );
   }
 
   Future<void> _toFirst() async {
