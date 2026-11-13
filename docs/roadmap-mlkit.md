@@ -43,12 +43,9 @@ Shared `TextAiSheet` (`lib/widgets/text_ai_sheet.dart`): proofread, rewrite (for
 - **string_transformer:** "Translate (on device)" with language detection and target picker.
 - **x_feed:** skipped, x.com already offers post translation.
 
-## Phase 3: Chat AI
+## Phase 3: Chat AI — dropped
 
-- Voice input (GenAI Speech Recognition, alpha).
-- Read replies aloud (GenAI Text-to-Speech, alpha).
-- Thinking mode toggle (`isThinkingModeAvailable`).
-- **Function calling** (beta5 preview): the chat triggers app actions, e.g. add an item to the grocery list or create a note.
+No further work on the chat_ai tool. Voice input, read-aloud, thinking mode and function calling are not planned.
 
 ## Phase 4: Images + Drawing
 
