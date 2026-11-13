@@ -21,6 +21,12 @@ class MarkdownView extends StatefulWidget {
   final double scale;
   final bool copyImages;
 
+  /// Takes over every link that is not an in-document `#anchor`.
+  final ValueChanged<String>? onLinkTap;
+
+  /// Heading anchor scrolled to once the document is first laid out.
+  final String? initialAnchor;
+
   const MarkdownView({
     super.key,
     required this.data,
@@ -28,6 +34,8 @@ class MarkdownView extends StatefulWidget {
     this.accentColor = AppTheme.accentBlue,
     this.scale = 1.0,
     this.copyImages = false,
+    this.onLinkTap,
+    this.initialAnchor,
   });
 
   @override
@@ -50,12 +58,25 @@ class _MarkdownViewState extends State<MarkdownView>
         if (href == null) return;
         if (href.startsWith('#')) {
           _jumpToAnchor(href.substring(1));
+        } else if (widget.onLinkTap != null) {
+          widget.onLinkTap!(href);
         } else {
           launchUrl(Uri.parse(href));
         }
       };
     _recognizers.add(recognizer);
     return recognizer;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final anchor = widget.initialAnchor;
+    if (anchor != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _jumpToAnchor(anchor);
+      });
+    }
   }
 
   void _jumpToAnchor(String fragment) {

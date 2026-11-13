@@ -1986,6 +1986,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscMarkdownReloadMissing => 'Datei existiert nicht mehr';
 
   @override
+  String miscMarkdownLinkUnreachable(String link) {
+    return 'Verlinkte Datei nicht erreichbar: $link';
+  }
+
+  @override
   String get nfcEditorFormTitle => 'NDEF-Datensatz erstellen';
 
   @override

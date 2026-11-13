@@ -722,6 +722,7 @@
   "miscMarkdownReloaded": "Neu geladen",
   "miscMarkdownReloadNoChange": "Datei unverändert",
   "miscMarkdownReloadMissing": "Datei existiert nicht mehr",
+  "miscMarkdownLinkUnreachable": "Verlinkte Datei nicht erreichbar: {link}",
   "nfcEditorFormTitle": "NDEF-Datensatz erstellen",
   "nfcTemplatePreset": "Vorlage",
   "nfcTemplateCustomRecord": "Benutzerdefiniert",

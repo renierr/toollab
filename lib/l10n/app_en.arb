@@ -1057,6 +1057,14 @@
   "miscMarkdownReloaded": "Reloaded from disk",
   "miscMarkdownReloadNoChange": "File unchanged",
   "miscMarkdownReloadMissing": "File no longer exists on disk",
+  "miscMarkdownLinkUnreachable": "Linked file not reachable: {link}",
+  "@miscMarkdownLinkUnreachable": {
+    "placeholders": {
+      "link": {
+        "type": "String"
+      }
+    }
+  },
   "nfcEditorFormTitle": "NDEF Record Creator",
   "nfcTemplatePreset": "Template Preset",
   "nfcTemplateCustomRecord": "Custom Record",

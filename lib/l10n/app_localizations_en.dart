@@ -1966,6 +1966,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miscMarkdownReloadMissing => 'File no longer exists on disk';
 
   @override
+  String miscMarkdownLinkUnreachable(String link) {
+    return 'Linked file not reachable: $link';
+  }
+
+  @override
   String get nfcEditorFormTitle => 'NDEF Record Creator';
 
   @override

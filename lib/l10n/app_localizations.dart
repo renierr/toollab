@@ -3575,6 +3575,12 @@ abstract class AppLocalizations {
   /// **'File no longer exists on disk'**
   String get miscMarkdownReloadMissing;
 
+  /// No description provided for @miscMarkdownLinkUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked file not reachable: {link}'**
+  String miscMarkdownLinkUnreachable(String link);
+
   /// No description provided for @nfcEditorFormTitle.
   ///
   /// In en, this message translates to:

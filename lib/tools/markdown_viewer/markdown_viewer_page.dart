@@ -10,7 +10,10 @@ import 'package:tool_lab/tools/markdown_viewer/config.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
+import 'package:path/path.dart' as p;
+import 'package:url_launcher/url_launcher.dart';
 
+import 'markdown_link_resolver.dart';
 import 'widgets/markdown_open_view.dart';
 
 class MarkdownViewerToolPage extends StatefulWidget {
@@ -28,6 +31,9 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
   String? _fileName;
   String? _filePath;
   SharedFile? _sharedFile;
+  String? _anchor;
+  int _navId = 0;
+  final List<_OpenDocument> _history = <_OpenDocument>[];
 
   @override
   void initState() {
@@ -73,10 +79,13 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         final text = await diskFile.readAsString();
         if (mounted) {
           setState(() {
+            _history.clear();
             _fileContent = text;
             _fileName = file.name;
             _filePath = file.path;
             _sharedFile = file;
+            _anchor = null;
+            _navId++;
           });
         }
       }
@@ -95,10 +104,13 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
       final content = await file.readAsString();
       if (mounted) {
         setState(() {
+          _history.clear();
           _fileContent = content;
           _fileName = file.name;
           _filePath = file.path.isEmpty ? null : file.path;
           _sharedFile = null;
+          _anchor = null;
+          _navId++;
         });
       }
     } catch (e) {
@@ -148,7 +160,66 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     }
   }
 
+  Future<void> _onLinkTap(String href) async {
+    if (MarkdownLinkResolver.isExternal(href)) {
+      await launchUrl(Uri.parse(href));
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final target = MarkdownLinkResolver.resolveLocal(href, _filePath);
+    if (target == null || !await File(target.path).exists()) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.miscMarkdownLinkUnreachable(href))),
+      );
+      return;
+    }
+    final extension = p.extension(target.path).replaceFirst('.', '');
+    if (!MarkdownViewerTool.config.fileExtensions.contains(
+      extension.toLowerCase(),
+    )) {
+      await launchUrl(Uri.file(target.path));
+      return;
+    }
+    try {
+      final text = await File(target.path).readAsString();
+      if (!mounted) return;
+      setState(() {
+        _history.add(
+          _OpenDocument(
+            content: _fileContent!,
+            name: _fileName,
+            path: _filePath,
+            sharedFile: _sharedFile,
+          ),
+        );
+        _fileContent = text;
+        _fileName = p.basename(target.path);
+        _filePath = target.path;
+        _sharedFile = null;
+        _anchor = target.fragment;
+        _navId++;
+      });
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.miscMarkdownFailedToRead(e.toString()))),
+      );
+    }
+  }
+
   void _onClose() {
+    if (_history.isNotEmpty) {
+      final previous = _history.removeLast();
+      setState(() {
+        _fileContent = previous.content;
+        _fileName = previous.name;
+        _filePath = previous.path;
+        _sharedFile = previous.sharedFile;
+        _anchor = null;
+        _navId++;
+      });
+      return;
+    }
     if (widget.sharedFile != null) {
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
@@ -189,6 +260,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     }
 
     return MarkdownViewerPage(
+      key: ValueKey(_navId),
       content: _fileContent!,
       config: MarkdownViewerConfig(
         accentColor: accent,
@@ -202,7 +274,23 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         onClose: _onClose,
         exportSuggestedName: _fileName ?? 'document.md',
         sharedFile: _sharedFile,
+        onLinkTap: _onLinkTap,
+        initialAnchor: _anchor,
       ),
     );
   }
+}
+
+class _OpenDocument {
+  final String content;
+  final String? name;
+  final String? path;
+  final SharedFile? sharedFile;
+
+  const _OpenDocument({
+    required this.content,
+    required this.name,
+    required this.path,
+    required this.sharedFile,
+  });
 }

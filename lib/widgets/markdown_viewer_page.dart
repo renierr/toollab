@@ -50,6 +50,10 @@ class MarkdownViewerConfig {
   final Widget? headerSection;
   final Widget? footerSection;
 
+  /// See [MarkdownView.onLinkTap] and [MarkdownView.initialAnchor].
+  final ValueChanged<String>? onLinkTap;
+  final String? initialAnchor;
+
   const MarkdownViewerConfig({
     this.accentColor = AppTheme.accentBlue,
     this.title = 'Markdown Viewer',
@@ -72,6 +76,8 @@ class MarkdownViewerConfig {
     this.extraActions = const [],
     this.headerSection,
     this.footerSection,
+    this.onLinkTap,
+    this.initialAnchor,
   });
 }
 
@@ -358,6 +364,8 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                       selectable: config.selectable,
                       accentColor: config.accentColor,
                       scale: scale,
+                      onLinkTap: config.onLinkTap,
+                      initialAnchor: config.initialAnchor,
                     ),
                   if (config.footerSection != null) ...[
                     const SizedBox(height: 24),
