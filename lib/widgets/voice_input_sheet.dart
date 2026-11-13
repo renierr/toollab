@@ -4,24 +4,54 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-/// Dictate grocery items; returns the (editable) transcript.
-class GroceryVoiceSheet extends StatefulWidget {
-  const GroceryVoiceSheet({super.key});
+/// Dictation sheet; returns the (editable) transcript.
+class VoiceInputSheet extends StatefulWidget {
+  final String title;
+  final String hint;
+  final String example;
 
-  static Future<String?> show(BuildContext context) {
+  /// Speech locale such as `de_DE`; null follows the app language.
+  final String? localeId;
+
+  /// Joins a new dictation to text already in the field.
+  final String separator;
+
+  const VoiceInputSheet({
+    super.key,
+    required this.title,
+    required this.hint,
+    required this.example,
+    this.localeId,
+    this.separator = ' ',
+  });
+
+  static Future<String?> show(
+    BuildContext context, {
+    required String title,
+    required String hint,
+    required String example,
+    String? localeId,
+    String separator = ' ',
+  }) {
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => const GroceryVoiceSheet(),
+      builder: (_) => VoiceInputSheet(
+        title: title,
+        hint: hint,
+        example: example,
+        localeId: localeId,
+        separator: separator,
+      ),
     );
   }
 
   @override
-  State<GroceryVoiceSheet> createState() => _GroceryVoiceSheetState();
+  State<VoiceInputSheet> createState() => _VoiceInputSheetState();
 }
 
-class _GroceryVoiceSheetState extends State<GroceryVoiceSheet> {
+class _VoiceInputSheetState extends State<VoiceInputSheet> {
   final SpeechToText _speech = SpeechToText();
   final TextEditingController _text = TextEditingController();
   bool _available = true;
@@ -51,7 +81,7 @@ class _GroceryVoiceSheetState extends State<GroceryVoiceSheet> {
         if (mounted) setState(() => _listening = _speech.isListening);
       },
       onError: (SpeechRecognitionError e) {
-        debugLog('[GroceryVoiceSheet] ${e.errorMsg}');
+        debugLog('[VoiceInputSheet] ${e.errorMsg}');
         if (mounted) setState(() => _listening = false);
       },
     );
@@ -60,7 +90,9 @@ class _GroceryVoiceSheetState extends State<GroceryVoiceSheet> {
       setState(() => _available = false);
       return;
     }
-    _prefix = _text.text.trim().isEmpty ? '' : '${_text.text.trim()}, ';
+    _prefix = _text.text.trim().isEmpty
+        ? ''
+        : '${_text.text.trim()}${widget.separator}';
     await _speech.listen(
       onResult: (result) {
         // Late results after a stop must not overwrite typed corrections.
@@ -68,7 +100,7 @@ class _GroceryVoiceSheetState extends State<GroceryVoiceSheet> {
         _text.text = '$_prefix${result.recognizedWords}';
       },
       listenOptions: SpeechListenOptions(
-        localeId: languageCode == 'de' ? 'de_DE' : 'en_US',
+        localeId: widget.localeId ?? (languageCode == 'de' ? 'de_DE' : 'en_US'),
         listenMode: ListenMode.dictation,
         partialResults: true,
         pauseFor: const Duration(seconds: 4),
@@ -103,10 +135,10 @@ class _GroceryVoiceSheetState extends State<GroceryVoiceSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.groceryVoiceTitle, style: theme.textTheme.titleLarge),
+            Text(widget.title, style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              _available ? l10n.groceryVoiceHint : l10n.groceryVoiceUnavailable,
+              _available ? widget.hint : l10n.voiceInputUnavailable,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: _available
                     ? theme.colorScheme.onSurfaceVariant
@@ -120,8 +152,8 @@ class _GroceryVoiceSheetState extends State<GroceryVoiceSheet> {
                 onPressed: _available ? _toggle : null,
                 icon: Icon(_listening ? Icons.stop : Icons.mic),
                 tooltip: _listening
-                    ? l10n.groceryVoiceStop
-                    : l10n.groceryVoiceStart,
+                    ? l10n.voiceInputStop
+                    : l10n.voiceInputStart,
               ),
             ),
             const SizedBox(height: 16),
@@ -134,7 +166,7 @@ class _GroceryVoiceSheetState extends State<GroceryVoiceSheet> {
               },
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
-                hintText: l10n.groceryVoiceExample,
+                hintText: widget.example,
               ),
             ),
             const SizedBox(height: 12),

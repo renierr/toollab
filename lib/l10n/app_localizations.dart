@@ -26626,23 +26626,23 @@ abstract class AppLocalizations {
   /// **'2 liters milk, bread, 5 apples'**
   String get groceryVoiceExample;
 
-  /// No description provided for @groceryVoiceUnavailable.
+  /// No description provided for @voiceInputUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Speech recognition is not available on this device. You can type the items instead.'**
-  String get groceryVoiceUnavailable;
+  /// **'Speech recognition is not available on this device. You can type instead.'**
+  String get voiceInputUnavailable;
 
-  /// No description provided for @groceryVoiceStart.
+  /// No description provided for @voiceInputStart.
   ///
   /// In en, this message translates to:
   /// **'Start listening'**
-  String get groceryVoiceStart;
+  String get voiceInputStart;
 
-  /// No description provided for @groceryVoiceStop.
+  /// No description provided for @voiceInputStop.
   ///
   /// In en, this message translates to:
   /// **'Stop listening'**
-  String get groceryVoiceStop;
+  String get voiceInputStop;
 
   /// No description provided for @groceryScanReceipt.
   ///
@@ -26925,6 +26925,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stopping after the current section. This can take a few minutes.'**
   String get sfTranscriptCancellingUnknown;
+
+  /// No description provided for @toolNameTranslator.
+  ///
+  /// In en, this message translates to:
+  /// **'Translator'**
+  String get toolNameTranslator;
+
+  /// No description provided for @toolDescTranslator.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate text offline from typing, photos and speech, and read the result aloud.'**
+  String get toolDescTranslator;
+
+  /// No description provided for @translatorDetectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect language'**
+  String get translatorDetectLanguage;
+
+  /// No description provided for @translatorDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto: {language}'**
+  String translatorDetected(String language);
+
+  /// No description provided for @translatorSourceLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Source language'**
+  String get translatorSourceLanguage;
+
+  /// No description provided for @translatorTargetLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Target language'**
+  String get translatorTargetLanguage;
+
+  /// No description provided for @translatorSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap languages'**
+  String get translatorSwap;
+
+  /// No description provided for @translatorInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type or paste text'**
+  String get translatorInputHint;
+
+  /// No description provided for @translatorOutputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The translation appears here.'**
+  String get translatorOutputHint;
+
+  /// No description provided for @translatorFromCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Text from camera'**
+  String get translatorFromCamera;
+
+  /// No description provided for @translatorFromImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Text from image'**
+  String get translatorFromImage;
+
+  /// No description provided for @translatorNoTextFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No text found in the image.'**
+  String get translatorNoTextFound;
+
+  /// No description provided for @translatorImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the image: {error}'**
+  String translatorImageFailed(String error);
+
+  /// No description provided for @translatorVoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak'**
+  String get translatorVoiceTitle;
+
+  /// No description provided for @translatorVoiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Speak in the source language. With automatic detection the app language is used.'**
+  String get translatorVoiceHint;
+
+  /// No description provided for @translatorSpeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Read aloud'**
+  String get translatorSpeak;
+
+  /// No description provided for @translatorStopSpeaking.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop reading'**
+  String get translatorStopSpeaking;
+
+  /// No description provided for @translatorSpeechUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Text-to-speech is not available on this device.'**
+  String get translatorSpeechUnavailable;
+
+  /// No description provided for @translatorSpeechLanguageMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No voice installed for {language}. Add it in the system text-to-speech settings.'**
+  String translatorSpeechLanguageMissing(String language);
+
+  /// No description provided for @translatorCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation copied'**
+  String get translatorCopied;
+
+  /// No description provided for @translatorDetecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Detecting language…'**
+  String get translatorDetecting;
+
+  /// No description provided for @translatorDownloadingModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading language model {language} (about 30 MB, once)…'**
+  String translatorDownloadingModel(String language);
+
+  /// No description provided for @translatorTranslating.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating…'**
+  String get translatorTranslating;
+
+  /// No description provided for @translatorUndetermined.
+  ///
+  /// In en, this message translates to:
+  /// **'Language not recognized. Pick the source language.'**
+  String get translatorUndetermined;
+
+  /// No description provided for @translatorFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation failed: {error}'**
+  String translatorFailed(String error);
+
+  /// No description provided for @translatorModelsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Language models'**
+  String get translatorModelsTitle;
+
+  /// No description provided for @translatorModelsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation runs offline with one model per language (about 30 MB each). Missing models download on first use.'**
+  String get translatorModelsHint;
+
+  /// No description provided for @translatorModelBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Built in'**
+  String get translatorModelBuiltIn;
+
+  /// No description provided for @translatorModelDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get translatorModelDownloaded;
+
+  /// No description provided for @translatorModelNotDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not downloaded'**
+  String get translatorModelNotDownloaded;
+
+  /// No description provided for @translatorModelDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get translatorModelDownload;
+
+  /// No description provided for @translatorModelChangeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the model for {language}.'**
+  String translatorModelChangeFailed(String language);
+
+  /// No description provided for @translatorUnsupportedPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'The offline translator uses ML Kit and is only available on Android.'**
+  String get translatorUnsupportedPlatform;
 }
 
 class _AppLocalizationsDelegate

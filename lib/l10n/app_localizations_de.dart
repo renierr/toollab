@@ -15236,14 +15236,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groceryVoiceExample => '2 Liter Milch, Brot, 5 Äpfel';
 
   @override
-  String get groceryVoiceUnavailable =>
-      'Spracherkennung ist auf diesem Gerät nicht verfügbar. Du kannst die Artikel auch eintippen.';
+  String get voiceInputUnavailable =>
+      'Spracherkennung ist auf diesem Gerät nicht verfügbar. Du kannst den Text auch eintippen.';
 
   @override
-  String get groceryVoiceStart => 'Zuhören starten';
+  String get voiceInputStart => 'Zuhören starten';
 
   @override
-  String get groceryVoiceStop => 'Zuhören beenden';
+  String get voiceInputStop => 'Zuhören beenden';
 
   @override
   String get groceryScanReceipt => 'Kassenbon scannen';
@@ -15421,4 +15421,121 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get sfTranscriptCancellingUnknown =>
       'Wird nach dem aktuellen Abschnitt beendet. Das kann noch einige Minuten dauern.';
+
+  @override
+  String get toolNameTranslator => 'Übersetzer';
+
+  @override
+  String get toolDescTranslator =>
+      'Text offline übersetzen – getippt, vom Foto oder gesprochen – und das Ergebnis vorlesen.';
+
+  @override
+  String get translatorDetectLanguage => 'Sprache erkennen';
+
+  @override
+  String translatorDetected(String language) {
+    return 'Auto: $language';
+  }
+
+  @override
+  String get translatorSourceLanguage => 'Ausgangssprache';
+
+  @override
+  String get translatorTargetLanguage => 'Zielsprache';
+
+  @override
+  String get translatorSwap => 'Sprachen tauschen';
+
+  @override
+  String get translatorInputHint => 'Text eingeben oder einfügen';
+
+  @override
+  String get translatorOutputHint => 'Hier erscheint die Übersetzung.';
+
+  @override
+  String get translatorFromCamera => 'Text von der Kamera';
+
+  @override
+  String get translatorFromImage => 'Text aus Bild';
+
+  @override
+  String get translatorNoTextFound => 'Kein Text im Bild gefunden.';
+
+  @override
+  String translatorImageFailed(String error) {
+    return 'Bild konnte nicht gelesen werden: $error';
+  }
+
+  @override
+  String get translatorVoiceTitle => 'Sprechen';
+
+  @override
+  String get translatorVoiceHint =>
+      'Sprich in der Ausgangssprache. Bei automatischer Erkennung wird die App-Sprache verwendet.';
+
+  @override
+  String get translatorSpeak => 'Vorlesen';
+
+  @override
+  String get translatorStopSpeaking => 'Vorlesen beenden';
+
+  @override
+  String get translatorSpeechUnavailable =>
+      'Sprachausgabe ist auf diesem Gerät nicht verfügbar.';
+
+  @override
+  String translatorSpeechLanguageMissing(String language) {
+    return 'Keine Stimme für $language installiert. Du kannst sie in den System-Einstellungen zur Sprachausgabe hinzufügen.';
+  }
+
+  @override
+  String get translatorCopied => 'Übersetzung kopiert';
+
+  @override
+  String get translatorDetecting => 'Sprache wird erkannt…';
+
+  @override
+  String translatorDownloadingModel(String language) {
+    return 'Sprachmodell $language wird geladen (ca. 30 MB, einmalig)…';
+  }
+
+  @override
+  String get translatorTranslating => 'Wird übersetzt…';
+
+  @override
+  String get translatorUndetermined =>
+      'Sprache nicht erkannt. Wähle die Ausgangssprache.';
+
+  @override
+  String translatorFailed(String error) {
+    return 'Übersetzung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get translatorModelsTitle => 'Sprachmodelle';
+
+  @override
+  String get translatorModelsHint =>
+      'Übersetzt wird offline mit einem Modell pro Sprache (je ca. 30 MB). Fehlende Modelle werden beim ersten Gebrauch geladen.';
+
+  @override
+  String get translatorModelBuiltIn => 'Integriert';
+
+  @override
+  String get translatorModelDownloaded => 'Heruntergeladen';
+
+  @override
+  String get translatorModelNotDownloaded => 'Nicht heruntergeladen';
+
+  @override
+  String get translatorModelDownload => 'Herunterladen';
+
+  @override
+  String translatorModelChangeFailed(String language) {
+    return 'Das Modell für $language konnte nicht geändert werden.';
+  }
+
+  @override
+  String get translatorUnsupportedPlatform =>
+      'Der Offline-Übersetzer nutzt ML Kit und ist nur unter Android verfügbar.';
 }

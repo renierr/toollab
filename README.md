@@ -43,6 +43,7 @@
 | **Unit Converter** | Convert between measurement units |
 | **Code Highlight & Edit** | Syntax-highlighted code viewer and editor |
 | **String Transformer** | Transform text with various operations |
+| **Translator** | Offline translation from text, photos and speech, read aloud (Android) |
 | **File Manager** | Browse local files and FTP or SMB network shares |
 | **Text Editor** | Edit text files, local or from network shares |
 | **SQLite Viewer** | Inspect SQLite databases: schema, tables and free SQL |

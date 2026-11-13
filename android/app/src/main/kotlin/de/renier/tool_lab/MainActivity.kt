@@ -285,6 +285,8 @@ open class MainActivity : FlutterFragmentActivity() {
 
         ClipboardImageHelper.register(this, messenger)
 
+        TextToSpeechHelper.register(this, messenger)
+
         MethodChannel(messenger, TV_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "isTelevision" -> result.success(isTelevisionDisplay())

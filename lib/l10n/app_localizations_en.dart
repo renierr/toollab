@@ -15120,14 +15120,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groceryVoiceExample => '2 liters milk, bread, 5 apples';
 
   @override
-  String get groceryVoiceUnavailable =>
-      'Speech recognition is not available on this device. You can type the items instead.';
+  String get voiceInputUnavailable =>
+      'Speech recognition is not available on this device. You can type instead.';
 
   @override
-  String get groceryVoiceStart => 'Start listening';
+  String get voiceInputStart => 'Start listening';
 
   @override
-  String get groceryVoiceStop => 'Stop listening';
+  String get voiceInputStop => 'Stop listening';
 
   @override
   String get groceryScanReceipt => 'Scan receipt';
@@ -15305,4 +15305,121 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sfTranscriptCancellingUnknown =>
       'Stopping after the current section. This can take a few minutes.';
+
+  @override
+  String get toolNameTranslator => 'Translator';
+
+  @override
+  String get toolDescTranslator =>
+      'Translate text offline from typing, photos and speech, and read the result aloud.';
+
+  @override
+  String get translatorDetectLanguage => 'Detect language';
+
+  @override
+  String translatorDetected(String language) {
+    return 'Auto: $language';
+  }
+
+  @override
+  String get translatorSourceLanguage => 'Source language';
+
+  @override
+  String get translatorTargetLanguage => 'Target language';
+
+  @override
+  String get translatorSwap => 'Swap languages';
+
+  @override
+  String get translatorInputHint => 'Type or paste text';
+
+  @override
+  String get translatorOutputHint => 'The translation appears here.';
+
+  @override
+  String get translatorFromCamera => 'Text from camera';
+
+  @override
+  String get translatorFromImage => 'Text from image';
+
+  @override
+  String get translatorNoTextFound => 'No text found in the image.';
+
+  @override
+  String translatorImageFailed(String error) {
+    return 'Could not read the image: $error';
+  }
+
+  @override
+  String get translatorVoiceTitle => 'Speak';
+
+  @override
+  String get translatorVoiceHint =>
+      'Speak in the source language. With automatic detection the app language is used.';
+
+  @override
+  String get translatorSpeak => 'Read aloud';
+
+  @override
+  String get translatorStopSpeaking => 'Stop reading';
+
+  @override
+  String get translatorSpeechUnavailable =>
+      'Text-to-speech is not available on this device.';
+
+  @override
+  String translatorSpeechLanguageMissing(String language) {
+    return 'No voice installed for $language. Add it in the system text-to-speech settings.';
+  }
+
+  @override
+  String get translatorCopied => 'Translation copied';
+
+  @override
+  String get translatorDetecting => 'Detecting language…';
+
+  @override
+  String translatorDownloadingModel(String language) {
+    return 'Downloading language model $language (about 30 MB, once)…';
+  }
+
+  @override
+  String get translatorTranslating => 'Translating…';
+
+  @override
+  String get translatorUndetermined =>
+      'Language not recognized. Pick the source language.';
+
+  @override
+  String translatorFailed(String error) {
+    return 'Translation failed: $error';
+  }
+
+  @override
+  String get translatorModelsTitle => 'Language models';
+
+  @override
+  String get translatorModelsHint =>
+      'Translation runs offline with one model per language (about 30 MB each). Missing models download on first use.';
+
+  @override
+  String get translatorModelBuiltIn => 'Built in';
+
+  @override
+  String get translatorModelDownloaded => 'Downloaded';
+
+  @override
+  String get translatorModelNotDownloaded => 'Not downloaded';
+
+  @override
+  String get translatorModelDownload => 'Download';
+
+  @override
+  String translatorModelChangeFailed(String language) {
+    return 'Could not change the model for $language.';
+  }
+
+  @override
+  String get translatorUnsupportedPlatform =>
+      'The offline translator uses ML Kit and is only available on Android.';
 }

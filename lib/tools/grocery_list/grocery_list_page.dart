@@ -16,6 +16,7 @@ import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
+import 'package:tool_lab/widgets/voice_input_sheet.dart';
 import 'config.dart';
 import 'grocery_item.dart';
 import 'grocery_list_state.dart';
@@ -26,7 +27,6 @@ import 'widgets/grocery_drafts_sheet.dart';
 import 'widgets/grocery_list_input_form.dart';
 import 'widgets/grocery_list_item_row.dart';
 import 'widgets/grocery_list_menu.dart';
-import 'widgets/grocery_voice_sheet.dart';
 
 class GroceryListPage extends StatefulWidget {
   const GroceryListPage({super.key});
@@ -218,7 +218,14 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
   }
 
   Future<void> _onVoice() async {
-    final text = await GroceryVoiceSheet.show(context);
+    final l10n = AppLocalizations.of(context);
+    final text = await VoiceInputSheet.show(
+      context,
+      title: l10n.groceryVoiceTitle,
+      hint: l10n.groceryVoiceHint,
+      example: l10n.groceryVoiceExample,
+      separator: ', ',
+    );
     if (text == null || !mounted) return;
     await _reviewDrafts(GroceryTextParser.parseSpoken(text));
   }

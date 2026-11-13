@@ -48,6 +48,7 @@ import 'package:tool_lab/tools/wifi_heatmap/config.dart';
 import 'package:tool_lab/tools/sudoku/config.dart';
 import 'package:tool_lab/tools/news/config.dart';
 import 'package:tool_lab/tools/x_feed/config.dart';
+import 'package:tool_lab/tools/translator/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -120,5 +121,6 @@ class ToolRegistry {
     SudokuTool.config,
     NewsTool.config,
     XFeedTool.config,
+    TranslatorTool.config,
   ];
 }

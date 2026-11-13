@@ -59,7 +59,7 @@ No further work on the chat_ai tool. Voice input, read-aloud, thinking mode and 
 
 ## Phase 5: New Tools
 
-- **Offline translator (new tool):** text, camera OCR and voice input, read aloud. Translation, Language ID, Text Recognition; Translation on all Android devices.
+- **Offline translator (new tool) — done:** `lib/tools/translator`. Text with automatic language detection, Latin-script text from a camera photo or image (Text Recognition), voice input (`speech_to_text`, shared `VoiceInputSheet`), read aloud through the system text-to-speech engine (`TextToSpeechHelper.kt` platform channel, no plugin). Missing language models download on first use; the models sheet downloads and deletes them. Android only.
 - **Memo transcript (sound_finder / Audio Lab recorder) — done:** memos are transcribed offline with Whisper (`whisper_ggml`, model Base or Small picked on first use, changeable and removable in the recorder settings). WAV and FLAC are converted to 16 kHz mono in Dart (FLAC through flutter_soloud's libFLAC), split into chunks of at most 30 s at quiet spots (Whisper pads every window to 30 s) and transcribed chunk by chunk, so a cancel stops after the running chunk. The transcript with timestamps lives next to the audio as `<file>.transcript.json`; it can be summarized (Gemini Nano, offline extract otherwise), copied, shared or turned into a note. New memos record as FLAC by default.
 - Dropped: fitness rep counter (Pose Detection), semantic search (Embeddings).
 

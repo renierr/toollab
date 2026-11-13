@@ -34,13 +34,40 @@ class TranslationService {
     return BCP47Code.fromRawValue(code.split(RegExp('[-_]')).first);
   }
 
-  static String displayName(TranslateLanguage language) {
+  static String displayName(TranslateLanguage language) =>
+      '${shortName(language)} (${language.bcpCode})';
+
+  static String shortName(TranslateLanguage language) {
     final name = language.name;
-    return '${name[0].toUpperCase()}${name.substring(1)} (${language.bcpCode})';
+    return '${name[0].toUpperCase()}${name.substring(1)}';
   }
 
   Future<bool> isModelReady(TranslateLanguage language) =>
       OnDeviceTranslatorModelManager().isModelDownloaded(language.bcpCode);
+
+  /// Downloads [language]'s model over any network if it is missing.
+  Future<bool> downloadModel(TranslateLanguage language) =>
+      OnDeviceTranslatorModelManager().downloadModel(
+        language.bcpCode,
+        isWifiRequired: false,
+      );
+
+  /// English is built in and cannot be removed.
+  static bool isRemovable(TranslateLanguage language) =>
+      language != TranslateLanguage.english;
+
+  Future<bool> deleteModel(TranslateLanguage language) async {
+    if (!isRemovable(language)) return false;
+    final prefix = '${language.bcpCode}>';
+    final suffix = '>${language.bcpCode}';
+    final stale = _translators.keys
+        .where((k) => k.startsWith(prefix) || k.endsWith(suffix))
+        .toList();
+    for (final key in stale) {
+      await _translators.remove(key)?.close();
+    }
+    return OnDeviceTranslatorModelManager().deleteModel(language.bcpCode);
+  }
 
   /// Translates line by line so Markdown structure and blank lines survive.
   Future<String> translate(

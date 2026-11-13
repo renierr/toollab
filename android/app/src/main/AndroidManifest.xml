@@ -762,6 +762,19 @@
         </activity-alias>
 
         <activity-alias
+            android:name="de.renier.tool_lab.TranslatorAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="Translator"
+            android:icon="@mipmap/ic_launcher_translator"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
             android:name="de.renier.tool_lab.StringTransformerAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="String Transformer"
@@ -1050,9 +1063,13 @@
             <data android:mimeType="text/plain"/>
         </intent>
         <package android:name="com.google.android.aicore" />
-        <!-- Speech recognition service used by speech_to_text (grocery voice input). -->
+        <!-- Speech recognition service used by speech_to_text (voice input). -->
         <intent>
             <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <!-- Text-to-speech engines (TextToSpeechHelper). -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
         <!-- File Manager app category: lists launchable apps without QUERY_ALL_PACKAGES. -->
         <intent>
