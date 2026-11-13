@@ -3575,6 +3575,24 @@ abstract class AppLocalizations {
   /// **'File no longer exists on disk'**
   String get miscMarkdownReloadMissing;
 
+  /// No description provided for @widgetMermaidOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open diagram'**
+  String get widgetMermaidOpen;
+
+  /// No description provided for @widgetMermaidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagram'**
+  String get widgetMermaidTitle;
+
+  /// No description provided for @widgetMermaidOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open diagram: {error}'**
+  String widgetMermaidOpenFailed(String error);
+
   /// No description provided for @miscMarkdownLinkUnreachable.
   ///
   /// In en, this message translates to:

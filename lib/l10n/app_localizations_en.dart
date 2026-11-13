@@ -1966,6 +1966,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miscMarkdownReloadMissing => 'File no longer exists on disk';
 
   @override
+  String get widgetMermaidOpen => 'Open diagram';
+
+  @override
+  String get widgetMermaidTitle => 'Diagram';
+
+  @override
+  String widgetMermaidOpenFailed(String error) {
+    return 'Could not open diagram: $error';
+  }
+
+  @override
   String miscMarkdownLinkUnreachable(String link) {
     return 'Linked file not reachable: $link';
   }

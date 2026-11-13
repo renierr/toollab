@@ -114,6 +114,7 @@ flutter:
     - assets/audio/
     - assets/grammars/
     - assets/models/
+    - assets/mermaid/
 
 flutter_launcher_icons:
   android: true

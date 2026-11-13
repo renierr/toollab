@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/syntax/language_detector.dart';
 import 'package:tool_lab/helpers/syntax/language_registry.dart';
 import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/mermaid/mermaid_viewer.dart';
 
 /// A fenced markdown code block with TextMate syntax highlighting.
 ///
@@ -87,6 +88,7 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
         _CodeBlockHeader(
           code: code,
           label: label,
+          isMermaid: fenceLanguage?.trim().toLowerCase() == 'mermaid',
           lineCount: '\n'.allMatches(code).length + 1,
           expanded: _expanded,
           onToggle: () => setState(() => _expanded = !_expanded),
@@ -121,6 +123,7 @@ class _CodeBlockHeader extends StatelessWidget {
   final String? label;
   final int lineCount;
   final bool expanded;
+  final bool isMermaid;
   final VoidCallback onToggle;
 
   const _CodeBlockHeader({
@@ -128,6 +131,7 @@ class _CodeBlockHeader extends StatelessWidget {
     required this.lineCount,
     required this.expanded,
     required this.onToggle,
+    this.isMermaid = false,
     this.label,
   });
 
@@ -171,6 +175,13 @@ class _CodeBlockHeader extends StatelessWidget {
               ),
             ),
           ),
+          if (isMermaid)
+            IconButton(
+              icon: const Icon(Icons.account_tree_outlined, size: 16),
+              visualDensity: VisualDensity.compact,
+              tooltip: l10n.widgetMermaidOpen,
+              onPressed: () => MermaidViewer.open(context, code),
+            ),
           IconButton(
             icon: const Icon(Icons.copy_outlined, size: 16),
             visualDensity: VisualDensity.compact,

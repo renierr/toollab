@@ -1057,6 +1057,16 @@
   "miscMarkdownReloaded": "Reloaded from disk",
   "miscMarkdownReloadNoChange": "File unchanged",
   "miscMarkdownReloadMissing": "File no longer exists on disk",
+  "widgetMermaidOpen": "Open diagram",
+  "widgetMermaidTitle": "Diagram",
+  "widgetMermaidOpenFailed": "Could not open diagram: {error}",
+  "@widgetMermaidOpenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "miscMarkdownLinkUnreachable": "Linked file not reachable: {link}",
   "@miscMarkdownLinkUnreachable": {
     "placeholders": {
