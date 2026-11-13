@@ -64,6 +64,20 @@ Automatische Abbuchung.
     expect(insight.date, DateTime(2024, 2, 29));
   });
 
+  test('reads dates with written-out month names', () async {
+    final path = await writeText(
+      'Stadtwerke München\nMünchen, den 5. Oktober 2025\nJahresabrechnung',
+    );
+
+    final insight = await DocumentInsightService.instance.analyze(
+      path,
+      candidates: candidates,
+      languageCode: 'en',
+    );
+
+    expect(insight.date, DateTime(2025, 10, 5));
+  });
+
   test('ignores invalid and future dates', () async {
     final path = await writeText('Datum 31.02.2025, gültig bis 01.01.2999');
 

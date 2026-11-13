@@ -47,7 +47,10 @@ class DocumentInsightService {
     final text = (await extractText(path)).trim();
     if (text.isEmpty) return const DocumentInsight(text: '');
 
-    final entities = await _extractEntities(text, languageCode);
+    final entities = await _extractEntities(
+      text,
+      _documentLanguage(text) ?? languageCode,
+    );
     final ai = await _askAi(text, candidates);
     final matchedTags = _matchTags(text, candidates.tags);
 
@@ -193,7 +196,72 @@ class DocumentInsightService {
     }
   }
 
+  static final RegExp _germanWords = RegExp(
+    r'\b(der|die|das|und|ist|nicht|ihr|ihre|ihren|den|dem|mit|für|von|wir|bitte|betrag|datum|rechnung)\b',
+    caseSensitive: false,
+  );
+  static final RegExp _englishWords = RegExp(
+    r'\b(the|and|is|not|your|of|to|with|for|from|we|please|amount|date|invoice)\b',
+    caseSensitive: false,
+  );
+
+  /// 'de' or 'en' when the text clearly leans one way; the UI locale says
+  /// nothing about the language a letter was written in.
+  static String? _documentLanguage(String text) {
+    final de = _germanWords.allMatches(text).length;
+    final en = _englishWords.allMatches(text).length;
+    if (de >= 3 && de > en) return 'de';
+    if (en >= 3 && en > de) return 'en';
+    return null;
+  }
+
+  static const Map<String, int> _months = {
+    'januar': 1,
+    'january': 1,
+    'jan': 1,
+    'februar': 2,
+    'february': 2,
+    'feb': 2,
+    'märz': 3,
+    'maerz': 3,
+    'march': 3,
+    'mar': 3,
+    'april': 4,
+    'apr': 4,
+    'mai': 5,
+    'may': 5,
+    'juni': 6,
+    'june': 6,
+    'jun': 6,
+    'juli': 7,
+    'july': 7,
+    'jul': 7,
+    'august': 8,
+    'aug': 8,
+    'september': 9,
+    'sep': 9,
+    'sept': 9,
+    'oktober': 10,
+    'october': 10,
+    'okt': 10,
+    'oct': 10,
+    'november': 11,
+    'nov': 11,
+    'dezember': 12,
+    'december': 12,
+    'dez': 12,
+    'dec': 12,
+  };
+
   static final List<(RegExp, DateTime? Function(Match))> _datePatterns = [
+    (
+      RegExp(
+        '\\b(\\d{1,2})\\.?\\s+(${_months.keys.join('|')})\\.?\\s+(\\d{4})\\b',
+        caseSensitive: false,
+        unicode: true,
+      ),
+      (m) => _date(m[3]!, '${_months[m[2]!.toLowerCase()]}', m[1]!),
+    ),
     (
       RegExp(r'\b(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4})\b'),
       (m) => _date(m[3]!, m[2]!, m[1]!),

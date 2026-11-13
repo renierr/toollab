@@ -256,7 +256,11 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
     if (pdfBytes == null || !mounted) return;
 
     // Session-scoped, not page-scoped: the upload runs after this page closes.
-    final name = 'scan_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    final now = DateTime.now();
+    String two(int v) => v.toString().padLeft(2, '0');
+    final name =
+        'scan_${now.year}-${two(now.month)}-${two(now.day)}_'
+        '${two(now.hour)}-${two(now.minute)}-${two(now.second)}.pdf';
     final path = await TempFileManager.createFile(name, bytes: pdfBytes);
     if (!mounted) return;
     context.push(

@@ -68,36 +68,45 @@ class PaperlessUploadTile extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: LinearProgressIndicator(value: upload.progress),
             ),
-        ],
-      ),
-      trailing: Wrap(
-        children: [
-          if (upload.status == PaperlessUploadStatus.pending) ...[
-            IconButton(
-              icon: const Icon(Icons.auto_awesome_outlined),
-              tooltip: l10n.paperlessAnalyze,
-              onPressed: upload.analysis == PaperlessAnalysisStatus.running
-                  ? null
-                  : onAnalyze,
+          // Below the text, so the title keeps the full row width.
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Wrap(
+              children: [
+                if (upload.status == PaperlessUploadStatus.pending) ...[
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.auto_awesome_outlined),
+                    tooltip: l10n.paperlessAnalyze,
+                    onPressed:
+                        upload.analysis == PaperlessAnalysisStatus.running
+                        ? null
+                        : onAnalyze,
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: l10n.paperlessEditUpload,
+                    onPressed: onEdit,
+                  ),
+                ],
+                if (upload.status == PaperlessUploadStatus.failed)
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.refresh),
+                    tooltip: l10n.commonRetry,
+                    onPressed: onRetry,
+                  ),
+                if (!upload.isActive)
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.close),
+                    tooltip: l10n.commonRemove,
+                    onPressed: onRemove,
+                  ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: l10n.paperlessEditUpload,
-              onPressed: onEdit,
-            ),
-          ],
-          if (upload.status == PaperlessUploadStatus.failed)
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: l10n.commonRetry,
-              onPressed: onRetry,
-            ),
-          if (!upload.isActive)
-            IconButton(
-              icon: const Icon(Icons.close),
-              tooltip: l10n.commonRemove,
-              onPressed: onRemove,
-            ),
+          ),
         ],
       ),
     );
