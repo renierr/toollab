@@ -164,6 +164,17 @@ class ChatAiState extends ChangeNotifier {
     );
   }
 
+  /// Streams a one-shot description of [imageData], without chat history.
+  Stream<String> streamImageTask({
+    required String instruction,
+    required Uint8List imageData,
+  }) {
+    if (!isGenerativeAvailable) {
+      return Stream.error(StateError('Gemini Nano is not available'));
+    }
+    return _prompt!.runInferenceStreaming(instruction, imageData: imageData);
+  }
+
   ChatAiState() {
     init();
   }

@@ -14,6 +14,8 @@ import 'package:tool_lab/tools/image_viewer/utils/edit_history.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_canvas_ops.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:tool_lab/tools/image_viewer/utils/onnx_background_remover.dart';
@@ -356,6 +358,7 @@ class ImageEditorController extends ChangeNotifier {
       if (session != _loadSessionCounter) return;
       _decodedImage = result;
       _history.record(step);
+      notifyListeners();
     });
   }
 
@@ -674,6 +677,104 @@ class ImageEditorController extends ChangeNotifier {
         pathPoints: pathPoints,
       ),
     );
+  }
+
+  /// Downscaled JPEG of the current image, for on-device model input.
+  Future<Uint8List> previewJpg() async {
+    await _ensureFullySynced();
+    return compute(encodePreviewJpgTask, _decodedImage!);
+  }
+
+  /// ML Kit image labels (English), most confident first.
+  Future<List<ImageLabel>> labelImage() async {
+    if (!Platform.isAndroid) return const [];
+    final path = await _scope.createFile(
+      'labels_input.jpg',
+      bytes: await previewJpg(),
+    );
+    final labeler = ImageLabeler(
+      options: ImageLabelerOptions(confidenceThreshold: 0.6),
+    );
+    try {
+      final labels = await labeler.processImage(InputImage.fromFilePath(path));
+      return labels..sort((a, b) => b.confidence.compareTo(a.confidence));
+    } finally {
+      await labeler.close();
+      try {
+        await _scope.deleteFile('labels_input.jpg');
+      } catch (_) {}
+    }
+  }
+
+  /// Pixelates every detected face as one undo step; returns the face count.
+  Future<int> pixelateFaces() async {
+    if (_uiImage == null || !Platform.isAndroid) return 0;
+    _isProcessing = true;
+    notifyListeners();
+    try {
+      await _ensureFullySynced();
+      final png = await compute(encodePngTask, _decodedImage!);
+      final path = await _scope.createFile('faces_input.png', bytes: png);
+      final detector = FaceDetector(
+        options: FaceDetectorOptions(
+          performanceMode: FaceDetectorMode.accurate,
+          minFaceSize: 0.05,
+        ),
+      );
+      final List<Face> faces;
+      try {
+        faces = await detector.processImage(InputImage.fromFilePath(path));
+      } finally {
+        await detector.close();
+        try {
+          await _scope.deleteFile('faces_input.png');
+        } catch (_) {}
+      }
+      if (faces.isEmpty) return 0;
+
+      final width = _uiImage!.width;
+      final height = _uiImage!.height;
+      final regions = <RedactRegion>[];
+      for (final face in faces) {
+        // Pad the box so hair line and chin are covered too.
+        final box = face.boundingBox.inflate(face.boundingBox.width * 0.15);
+        final x = box.left.round().clamp(0, width - 1);
+        final y = box.top.round().clamp(0, height - 1);
+        final w = (box.right.round() - x).clamp(1, width - x);
+        final h = (box.bottom.round() - y).clamp(1, height - y);
+        regions.add(RedactRegion(x, y, w, h, (w / 8).clamp(8, 80)));
+      }
+
+      var image = _uiImage!;
+      for (final r in regions) {
+        final next = await canvasRedact(
+          image,
+          r.x,
+          r.y,
+          r.width,
+          r.height,
+          'pixelate',
+          r.intensity,
+          null,
+        );
+        if (image != _uiImage) image.dispose();
+        image = next;
+      }
+      _replaceUiImage(image);
+      _isAnimated = false;
+      notifyListeners();
+
+      _queueBackgroundSync(
+        (current) =>
+            compute(pixelateRegionsTask, RedactRegionsParams(current, regions)),
+        (before) async =>
+            PixelateRegionsStep(await compute(encodePngTask, before), regions),
+      );
+      return faces.length;
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
   }
 
   // ---------------------------------------------------------------------------

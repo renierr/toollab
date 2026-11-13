@@ -15163,4 +15163,118 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get textAiSummaryTitle => 'Zusammenfassung (KI)';
+
+  @override
+  String get imgViewPixelateFaces => 'Gesichter verpixeln';
+
+  @override
+  String get imgViewNoFacesFound => 'Keine Gesichter gefunden';
+
+  @override
+  String imgViewFacesPixelated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Gesichter verpixelt',
+      one: '1 Gesicht verpixelt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String imgViewPixelateFacesFailed(String error) {
+    return 'Gesichtserkennung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get imgViewInsightTitle => 'Bildanalyse';
+
+  @override
+  String get imgViewInsightTooltip => 'Bild analysieren';
+
+  @override
+  String get imgViewLabels => 'Erkannter Inhalt';
+
+  @override
+  String get imgViewNoLabels => 'Nichts erkannt';
+
+  @override
+  String get imgViewLabelsFailed => 'Bilderkennung fehlgeschlagen';
+
+  @override
+  String get imgViewDescription => 'Beschreibung (Alt-Text)';
+
+  @override
+  String get imgViewDescribe => 'Beschreiben';
+
+  @override
+  String get sketchInkToText => 'Handschrift zu Text';
+
+  @override
+  String get sketchInkToShape => 'Form glätten';
+
+  @override
+  String get sketchInkRecognizing =>
+      'Erkenne… (das Modell wird beim ersten Mal geladen)';
+
+  @override
+  String get sketchInkNothingRecognized => 'Nichts erkannt';
+
+  @override
+  String sketchInkFailed(String error) {
+    return 'Erkennung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get groceryVoiceTitle => 'Per Sprache hinzufügen';
+
+  @override
+  String get groceryVoiceHint =>
+      'Sag die Artikel, z. B. „zwei Liter Milch, Brot und fünf Äpfel“.';
+
+  @override
+  String get groceryVoiceExample => '2 Liter Milch, Brot, 5 Äpfel';
+
+  @override
+  String get groceryVoiceUnavailable =>
+      'Spracherkennung ist auf diesem Gerät nicht verfügbar. Du kannst die Artikel auch eintippen.';
+
+  @override
+  String get groceryVoiceStart => 'Zuhören starten';
+
+  @override
+  String get groceryVoiceStop => 'Zuhören beenden';
+
+  @override
+  String get groceryScanReceipt => 'Kassenbon scannen';
+
+  @override
+  String get groceryReadingReceipt => 'Kassenbon wird gelesen…';
+
+  @override
+  String groceryReceiptFailed(String error) {
+    return 'Kassenbon konnte nicht gelesen werden: $error';
+  }
+
+  @override
+  String get groceryNothingRecognized => 'Keine Artikel erkannt';
+
+  @override
+  String groceryDraftsTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Artikel erkannt',
+      one: '1 Artikel erkannt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groceryDraftsAdd(int count) {
+    return '$count hinzufügen';
+  }
+
+  @override
+  String get groceryReceiptFromFile => 'Kassenbon aus Datei';
 }

@@ -116,6 +116,15 @@ class RedactStep extends _SnapshotStep {
   );
 }
 
+class PixelateRegionsStep extends _SnapshotStep {
+  final List<RedactRegion> regions;
+  PixelateRegionsStep(super.beforePng, this.regions);
+
+  @override
+  Future<img.Image> apply(img.Image before) =>
+      compute(pixelateRegionsTask, RedactRegionsParams(before, regions));
+}
+
 class SegmentStep extends _SnapshotStep {
   final Uint8List afterPng;
   SegmentStep(super.beforePng, this.afterPng);

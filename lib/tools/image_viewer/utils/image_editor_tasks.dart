@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 
@@ -340,4 +341,49 @@ img.Image redactImageTask(RedactParams params) {
   }
 
   return image;
+}
+
+class RedactRegionsParams {
+  final img.Image image;
+  final List<RedactRegion> regions;
+
+  RedactRegionsParams(this.image, this.regions);
+}
+
+class RedactRegion {
+  final int x, y, width, height;
+  final double intensity;
+
+  const RedactRegion(this.x, this.y, this.width, this.height, this.intensity);
+}
+
+img.Image pixelateRegionsTask(RedactRegionsParams params) {
+  var image = params.image;
+  for (final r in params.regions) {
+    image = redactImageTask(
+      RedactParams(
+        image: image,
+        x: r.x,
+        y: r.y,
+        width: r.width,
+        height: r.height,
+        redactType: 'pixelate',
+        intensity: r.intensity,
+      ),
+    );
+  }
+  return image;
+}
+
+/// JPEG copy no larger than [maxSide] for on-device model input.
+Uint8List encodePreviewJpgTask(img.Image image, {int maxSide = 1024}) {
+  final scale = maxSide / math.max(image.width, image.height);
+  final source = scale < 1
+      ? img.copyResize(
+          image,
+          width: (image.width * scale).round(),
+          height: (image.height * scale).round(),
+        )
+      : image;
+  return Uint8List.fromList(img.encodeJpg(source, quality: 85));
 }

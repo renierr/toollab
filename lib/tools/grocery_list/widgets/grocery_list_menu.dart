@@ -7,6 +7,8 @@ class GroceryListMenu extends StatelessWidget {
   final VoidCallback onReAddBought;
   final VoidCallback onClearBought;
   final VoidCallback onImport;
+  final VoidCallback? onScanReceipt;
+  final VoidCallback? onReceiptFile;
   final VoidCallback onExport;
   final VoidCallback onSync;
   final bool isSyncing;
@@ -18,6 +20,8 @@ class GroceryListMenu extends StatelessWidget {
     required this.onReAddBought,
     required this.onClearBought,
     required this.onImport,
+    this.onScanReceipt,
+    this.onReceiptFile,
     required this.onExport,
     required this.onSync,
     required this.isSyncing,
@@ -38,6 +42,10 @@ class GroceryListMenu extends StatelessWidget {
             onClearBought();
           case 'import':
             onImport();
+          case 'receipt':
+            onScanReceipt?.call();
+          case 'receipt_file':
+            onReceiptFile?.call();
           case 'export':
             onExport();
           case 'sync':
@@ -71,6 +79,30 @@ class GroceryListMenu extends StatelessWidget {
             ],
           ),
         ),
+        if (onScanReceipt != null || onReceiptFile != null)
+          const PopupMenuDivider(),
+        if (onScanReceipt != null)
+          PopupMenuItem(
+            value: 'receipt',
+            child: Row(
+              children: [
+                const Icon(Icons.document_scanner_outlined, size: 18),
+                const SizedBox(width: 8),
+                Text(l10n.groceryScanReceipt),
+              ],
+            ),
+          ),
+        if (onReceiptFile != null)
+          PopupMenuItem(
+            value: 'receipt_file',
+            child: Row(
+              children: [
+                const Icon(Icons.receipt_long_outlined, size: 18),
+                const SizedBox(width: 8),
+                Text(l10n.groceryReceiptFromFile),
+              ],
+            ),
+          ),
         const PopupMenuDivider(),
         PopupMenuItem(
           value: 'import',

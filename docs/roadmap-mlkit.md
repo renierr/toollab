@@ -18,7 +18,10 @@ ML Kit does not run on Windows or Linux. Every feature needs either an offline f
 | Barcode Scanning | qr_code, totp_auth |
 | Document Scanner | document_scanner |
 | Subject Segmentation | image_viewer (ONNX u2netp as fallback and desktop path) |
-| Text Recognition | image_viewer, paperless, document_scanner |
+| Text Recognition | image_viewer, paperless, document_scanner, grocery_list (receipts) |
+| Face Detection | image_viewer (pixelate faces) |
+| Image Labeling | image_viewer (image analysis) |
+| Digital Ink Recognition | sketch_board (handwriting to text, shape cleanup) |
 | Entity Extraction | paperless (upload suggestions) |
 | Language ID + Translation | string_transformer, AI text sheet (notes, text_editor, markdown_viewer, pdf_viewer, news) |
 | GenAI Prompt (`genai-prompt:1.0.0-beta5`, local plugin) | chat_ai, pdf_viewer Q&A + summary, AI text sheet, paperless |
@@ -47,12 +50,12 @@ Shared `TextAiSheet` (`lib/widgets/text_ai_sheet.dart`): proofread, rewrite (for
 
 No further work on the chat_ai tool. Voice input, read-aloud, thinking mode and function calling are not planned.
 
-## Phase 4: Images + Drawing
+## Phase 4: Images + Drawing — done except sudoku
 
-- **image_viewer:** image description / alt text (GenAI Image Description), auto-tags (Image Labeling), detect and pixelate faces (Face Detection).
-- **sketch_board:** handwriting to text, shape cleanup (Digital Ink Recognition).
-- **sudoku:** import a puzzle from a photo (OCR + grid detection).
-- **grocery_list:** add items by voice; scan a receipt into list items (OCR + structured output).
+- **image_viewer:** pixelate faces in one undo step (Face Detection); image analysis sheet with labels (Image Labeling) and an alt-text description (Prompt API with the image, Gemini Nano only).
+- **sketch_board:** selected freehand strokes become text (handwriting model `de` / `en-US`) or a clean shape (`zxx-Zsym-x-shapes`: rectangle, ellipse, triangle, arrow). Models download on first use.
+- **grocery_list:** add items by voice (`speech_to_text`, Android speech service); scan a receipt or open one from a file. OCR rows are rebuilt from line positions; Gemini Nano structures the items when available, otherwise priced lines are parsed. A review sheet confirms the items.
+- **sudoku:** import a puzzle from a photo — not planned for now.
 
 ## Phase 5: New Tools
 

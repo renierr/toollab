@@ -98,6 +98,10 @@ dependencies:
   desktop_webview_window: 0.4.2
   google_mlkit_language_id: ^1.0.3
   google_mlkit_translation: ^1.0.3
+  google_mlkit_face_detection: ^1.0.3
+  google_mlkit_image_labeling: ^1.0.3
+  google_mlkit_digital_ink_recognition: ^1.0.3
+  speech_to_text: ^7.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

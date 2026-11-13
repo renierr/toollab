@@ -869,6 +869,64 @@ class SketchBoardState extends ChangeNotifier {
     return false;
   }
 
+  // ---- Ink recognition ----
+  /// Selected freehand strokes, or empty when anything else is selected.
+  List<FreehandElement> get selectedInk {
+    final sel = selectedElements;
+    if (sel.isEmpty || sel.any((e) => e is! FreehandElement)) return const [];
+    return sel.cast<FreehandElement>();
+  }
+
+  void replaceInkWithText(String text) {
+    final ink = selectedInk;
+    final bounds = selectionBounds;
+    if (ink.isEmpty || bounds == null || text.trim().isEmpty) return;
+    _history.push(_elements);
+    final lines = '\n'.allMatches(text).length + 1;
+    final element = TextElement(
+      id: _db.generateUuid(),
+      color: ink.first.color,
+      width: ink.first.width,
+      position: SkPoint(bounds.left, bounds.top),
+      text: text,
+      fontFamily: _fontFamily,
+      fontSize: (bounds.height / lines * 0.8).clamp(12.0, 160.0),
+      fontWeight: _fontWeight,
+      fontStyle: _fontStyle,
+    );
+    _replaceSelection(element);
+  }
+
+  void replaceInkWithShape(String shapeType) {
+    final ink = selectedInk;
+    final bounds = selectionBounds;
+    if (ink.isEmpty || bounds == null) return;
+    _history.push(_elements);
+    final straight = shapeType == 'line' || shapeType == 'arrow';
+    final first = ink.first.points.first;
+    final last = ink.last.points.last;
+    final element = ShapeElement(
+      id: _db.generateUuid(),
+      shapeType: shapeType,
+      color: ink.first.color,
+      width: ink.first.width,
+      start: straight ? first : SkPoint(bounds.left, bounds.top),
+      end: straight ? last : SkPoint(bounds.right, bounds.bottom),
+    );
+    _replaceSelection(element);
+  }
+
+  void _replaceSelection(SketchElement element) {
+    final index = _elements.indexWhere((e) => _selectedIds.contains(e.id));
+    _elements.removeWhere((e) => _selectedIds.contains(e.id));
+    _elements.insert(index.clamp(0, _elements.length), element);
+    _selectedIds
+      ..clear()
+      ..add(element.id);
+    _dirty = true;
+    notifyListeners();
+  }
+
   // ---- Selection ops: z-order, group, image, delete ----
   void bringToFront() {
     if (_selectedIds.isEmpty) return;

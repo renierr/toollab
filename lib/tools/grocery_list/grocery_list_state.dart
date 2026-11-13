@@ -5,6 +5,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'grocery_item.dart';
 import 'grocery_list_db_helper.dart';
 import 'grocery_list_sync_delegate.dart';
+import 'grocery_text_parser.dart';
 
 class GroceryListState extends ChangeNotifier {
   List<GroceryItem> _items = [];
@@ -31,6 +32,24 @@ class GroceryListState extends ChangeNotifier {
 
   Future<void> saveItem(GroceryItem item) async {
     await GroceryListDbHelper.instance.saveItem(item);
+    await loadItems();
+    _backgroundSync();
+  }
+
+  Future<void> addDrafts(List<GroceryDraft> drafts) async {
+    if (drafts.isEmpty) return;
+    for (final draft in drafts) {
+      await GroceryListDbHelper.instance.saveItem(
+        GroceryItem(
+          shortId: '',
+          name: draft.name,
+          amount: draft.amount,
+          unit: draft.unit,
+          createdAt: 0,
+          updatedAt: 0,
+        ),
+      );
+    }
     await loadItems();
     _backgroundSync();
   }

@@ -15047,4 +15047,118 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get textAiSummaryTitle => 'Summary (AI)';
+
+  @override
+  String get imgViewPixelateFaces => 'Pixelate faces';
+
+  @override
+  String get imgViewNoFacesFound => 'No faces found';
+
+  @override
+  String imgViewFacesPixelated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count faces pixelated',
+      one: '1 face pixelated',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String imgViewPixelateFacesFailed(String error) {
+    return 'Face detection failed: $error';
+  }
+
+  @override
+  String get imgViewInsightTitle => 'Image analysis';
+
+  @override
+  String get imgViewInsightTooltip => 'Analyze image';
+
+  @override
+  String get imgViewLabels => 'Detected content';
+
+  @override
+  String get imgViewNoLabels => 'Nothing recognized';
+
+  @override
+  String get imgViewLabelsFailed => 'Image labeling failed';
+
+  @override
+  String get imgViewDescription => 'Description (alt text)';
+
+  @override
+  String get imgViewDescribe => 'Describe';
+
+  @override
+  String get sketchInkToText => 'Handwriting to text';
+
+  @override
+  String get sketchInkToShape => 'Clean up shape';
+
+  @override
+  String get sketchInkRecognizing =>
+      'Recognizing… (the model downloads on first use)';
+
+  @override
+  String get sketchInkNothingRecognized => 'Nothing recognized';
+
+  @override
+  String sketchInkFailed(String error) {
+    return 'Recognition failed: $error';
+  }
+
+  @override
+  String get groceryVoiceTitle => 'Add by voice';
+
+  @override
+  String get groceryVoiceHint =>
+      'Say the items, e.g. \"two liters of milk, bread and five apples\".';
+
+  @override
+  String get groceryVoiceExample => '2 liters milk, bread, 5 apples';
+
+  @override
+  String get groceryVoiceUnavailable =>
+      'Speech recognition is not available on this device. You can type the items instead.';
+
+  @override
+  String get groceryVoiceStart => 'Start listening';
+
+  @override
+  String get groceryVoiceStop => 'Stop listening';
+
+  @override
+  String get groceryScanReceipt => 'Scan receipt';
+
+  @override
+  String get groceryReadingReceipt => 'Reading receipt…';
+
+  @override
+  String groceryReceiptFailed(String error) {
+    return 'Could not read the receipt: $error';
+  }
+
+  @override
+  String get groceryNothingRecognized => 'No items recognized';
+
+  @override
+  String groceryDraftsTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items recognized',
+      one: '1 item recognized',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groceryDraftsAdd(int count) {
+    return 'Add $count';
+  }
+
+  @override
+  String get groceryReceiptFromFile => 'Receipt from file';
 }

@@ -9,6 +9,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
@@ -25,6 +26,7 @@ import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_redact_panel.da
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_loading_overlay.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/android_picker_buttons.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/extracted_text_dialog.dart';
+import 'package:tool_lab/tools/image_viewer/widgets/image_insight_sheet.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_unsupported_format.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_controller.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
@@ -241,6 +243,22 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
     }
   }
 
+  Future<void> _pixelateFaces(bool canSplit) async {
+    final l10n = AppLocalizations.of(context);
+    if (!canSplit) _scaffoldKey.currentState?.closeEndDrawer();
+    try {
+      final count = await _controller.pixelateFaces();
+      _showSuccess(
+        count == 0
+            ? l10n.imgViewNoFacesFound
+            : l10n.imgViewFacesPixelated(count),
+      );
+    } catch (e) {
+      errorLog('[ImageViewer] Face pixelation failed: $e');
+      _showError(l10n.imgViewPixelateFacesFailed(e.toString()));
+    }
+  }
+
   void _showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -446,6 +464,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                             }
                           }
                         : null,
+                    onPixelateFaces: Platform.isAndroid
+                        ? () => _pixelateFaces(canSplit)
+                        : null,
                   )
                 : const SizedBox.shrink();
 
@@ -592,6 +613,13 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                       },
                       tooltip: l10n.imgViewCopyToClipboard,
                     ),
+                    if (Platform.isAndroid)
+                      IconButton(
+                        icon: const Icon(Icons.auto_awesome_outlined),
+                        onPressed: () =>
+                            ImageInsightSheet.show(context, _controller),
+                        tooltip: l10n.imgViewInsightTooltip,
+                      ),
                     if (Platform.isAndroid || Platform.isWindows)
                       IconButton(
                         icon: const Icon(Icons.text_fields),

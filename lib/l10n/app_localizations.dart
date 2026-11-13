@@ -26511,6 +26511,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Summary (AI)'**
   String get textAiSummaryTitle;
+
+  /// No description provided for @imgViewPixelateFaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Pixelate faces'**
+  String get imgViewPixelateFaces;
+
+  /// No description provided for @imgViewNoFacesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No faces found'**
+  String get imgViewNoFacesFound;
+
+  /// No description provided for @imgViewFacesPixelated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 face pixelated} other{{count} faces pixelated}}'**
+  String imgViewFacesPixelated(int count);
+
+  /// No description provided for @imgViewPixelateFacesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Face detection failed: {error}'**
+  String imgViewPixelateFacesFailed(String error);
+
+  /// No description provided for @imgViewInsightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Image analysis'**
+  String get imgViewInsightTitle;
+
+  /// No description provided for @imgViewInsightTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze image'**
+  String get imgViewInsightTooltip;
+
+  /// No description provided for @imgViewLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected content'**
+  String get imgViewLabels;
+
+  /// No description provided for @imgViewNoLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing recognized'**
+  String get imgViewNoLabels;
+
+  /// No description provided for @imgViewLabelsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Image labeling failed'**
+  String get imgViewLabelsFailed;
+
+  /// No description provided for @imgViewDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (alt text)'**
+  String get imgViewDescription;
+
+  /// No description provided for @imgViewDescribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe'**
+  String get imgViewDescribe;
+
+  /// No description provided for @sketchInkToText.
+  ///
+  /// In en, this message translates to:
+  /// **'Handwriting to text'**
+  String get sketchInkToText;
+
+  /// No description provided for @sketchInkToShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up shape'**
+  String get sketchInkToShape;
+
+  /// No description provided for @sketchInkRecognizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognizing… (the model downloads on first use)'**
+  String get sketchInkRecognizing;
+
+  /// No description provided for @sketchInkNothingRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing recognized'**
+  String get sketchInkNothingRecognized;
+
+  /// No description provided for @sketchInkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition failed: {error}'**
+  String sketchInkFailed(String error);
+
+  /// No description provided for @groceryVoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add by voice'**
+  String get groceryVoiceTitle;
+
+  /// No description provided for @groceryVoiceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say the items, e.g. \"two liters of milk, bread and five apples\".'**
+  String get groceryVoiceHint;
+
+  /// No description provided for @groceryVoiceExample.
+  ///
+  /// In en, this message translates to:
+  /// **'2 liters milk, bread, 5 apples'**
+  String get groceryVoiceExample;
+
+  /// No description provided for @groceryVoiceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition is not available on this device. You can type the items instead.'**
+  String get groceryVoiceUnavailable;
+
+  /// No description provided for @groceryVoiceStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start listening'**
+  String get groceryVoiceStart;
+
+  /// No description provided for @groceryVoiceStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop listening'**
+  String get groceryVoiceStop;
+
+  /// No description provided for @groceryScanReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan receipt'**
+  String get groceryScanReceipt;
+
+  /// No description provided for @groceryReadingReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading receipt…'**
+  String get groceryReadingReceipt;
+
+  /// No description provided for @groceryReceiptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the receipt: {error}'**
+  String groceryReceiptFailed(String error);
+
+  /// No description provided for @groceryNothingRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'No items recognized'**
+  String get groceryNothingRecognized;
+
+  /// No description provided for @groceryDraftsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item recognized} other{{count} items recognized}}'**
+  String groceryDraftsTitle(int count);
+
+  /// No description provided for @groceryDraftsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {count}'**
+  String groceryDraftsAdd(int count);
+
+  /// No description provided for @groceryReceiptFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt from file'**
+  String get groceryReceiptFromFile;
 }
 
 class _AppLocalizationsDelegate

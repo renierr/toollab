@@ -14,6 +14,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   media_kit_libs_windows_video
   pasteboard
   record_windows
+  speech_to_text_windows
   universal_ble
   url_launcher_windows
   share_plus

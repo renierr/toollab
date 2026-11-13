@@ -1,13 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:tool_lab/helpers/debug_log.dart';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/tools/chat_ai/chat_ai_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
@@ -17,9 +20,13 @@ import 'config.dart';
 import 'grocery_item.dart';
 import 'grocery_list_state.dart';
 import 'grocery_list_sync_delegate.dart';
+import 'grocery_receipt_reader.dart';
+import 'grocery_text_parser.dart';
+import 'widgets/grocery_drafts_sheet.dart';
 import 'widgets/grocery_list_input_form.dart';
 import 'widgets/grocery_list_item_row.dart';
 import 'widgets/grocery_list_menu.dart';
+import 'widgets/grocery_voice_sheet.dart';
 
 class GroceryListPage extends StatefulWidget {
   const GroceryListPage({super.key});
@@ -210,6 +217,85 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
     }
   }
 
+  Future<void> _onVoice() async {
+    final text = await GroceryVoiceSheet.show(context);
+    if (text == null || !mounted) return;
+    await _reviewDrafts(GroceryTextParser.parseSpoken(text));
+  }
+
+  Future<void> _onScanReceipt() => _readReceipt(_scanReceipt);
+
+  Future<void> _onReceiptFile() => _readReceipt(_pickReceiptFile);
+
+  Future<void> _readReceipt(Future<String?> Function() source) async {
+    final l10n = AppLocalizations.of(context);
+    final ai = context.read<ChatAiState>();
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final path = await source();
+      if (path == null || !mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.groceryReadingReceipt),
+          duration: const Duration(minutes: 1),
+        ),
+      );
+      final drafts = await GroceryReceiptReader.read(path, ai);
+      messenger.hideCurrentSnackBar();
+      if (mounted) await _reviewDrafts(drafts);
+    } catch (e) {
+      errorLog('[GroceryList] Receipt scan failed: $e');
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.groceryReceiptFailed(e.toString()))),
+      );
+    }
+  }
+
+  Future<String?> _scanReceipt() async {
+    final scanner = DocumentScanner(
+      options: DocumentScannerOptions(
+        documentFormats: {DocumentFormat.jpeg},
+        mode: ScannerMode.full,
+      ),
+    );
+    try {
+      final result = await scanner.scanDocument();
+      return result.images?.firstOrNull;
+    } on PlatformException catch (e) {
+      if (e.message == 'Operation cancelled') return null;
+      rethrow;
+    } finally {
+      scanner.close();
+    }
+  }
+
+  Future<String?> _pickReceiptFile() async {
+    const types = XTypeGroup(
+      label: 'Receipts',
+      extensions: ['jpg', 'jpeg', 'png', 'pdf'],
+    );
+    final file = await TvFilePickerDialog.openSingleFile(
+      context,
+      acceptedTypeGroups: const [types],
+    );
+    return file?.path;
+  }
+
+  Future<void> _reviewDrafts(List<GroceryDraft> drafts) async {
+    if (drafts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).groceryNothingRecognized),
+        ),
+      );
+      return;
+    }
+    final selected = await GroceryDraftsSheet.show(context, drafts);
+    if (selected == null || !mounted) return;
+    await context.read<GroceryListState>().addDrafts(selected);
+  }
+
   Future<void> _onExport() async {
     final l10n = AppLocalizations.of(context);
     try {
@@ -330,8 +416,18 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
       title: GroceryListTool.config.localizedName(l10n),
       fullscreen: false,
       actions: [
+        if (Platform.isAndroid)
+          IconButton(
+            icon: const Icon(Icons.mic_none),
+            tooltip: l10n.groceryVoiceTitle,
+            onPressed: _onVoice,
+          ),
         GroceryListMenu(
           checkedCount: checked.length,
+          onScanReceipt: Platform.isAndroid ? _onScanReceipt : null,
+          onReceiptFile: GroceryReceiptReader.isSupported
+              ? _onReceiptFile
+              : null,
           onReAddBought: _onReAddBought,
           onClearBought: _onClearBought,
           onImport: _onImport,

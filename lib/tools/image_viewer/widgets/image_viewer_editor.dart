@@ -35,6 +35,7 @@ class ImageViewerEditor extends StatelessWidget {
   final bool isRedactMode;
   final bool inSidebar;
   final VoidCallback? onSegmentSubject;
+  final VoidCallback? onPixelateFaces;
 
   const ImageViewerEditor({
     super.key,
@@ -66,6 +67,7 @@ class ImageViewerEditor extends StatelessWidget {
     required this.isRedactMode,
     required this.inSidebar,
     this.onSegmentSubject,
+    this.onPixelateFaces,
   });
 
   @override
@@ -249,6 +251,17 @@ class ImageViewerEditor extends StatelessWidget {
                         onPressed: onSegmentSubject,
                         icon: const Icon(Icons.portrait),
                         label: Text(l10n.imgViewSegmentSubject),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    if (onPixelateFaces != null)
+                      OutlinedButton.icon(
+                        onPressed: onPixelateFaces,
+                        icon: const Icon(Icons.face_retouching_off),
+                        label: Text(l10n.imgViewPixelateFaces),
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
