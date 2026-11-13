@@ -14983,4 +14983,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get xFeedApiRefreshed => 'API data refreshed';
+
+  @override
+  String get textAiTitle => 'AI text tools';
+
+  @override
+  String get textAiOpen => 'AI text tools';
+
+  @override
+  String get textAiProofread => 'Proofread';
+
+  @override
+  String get textAiFormal => 'Formal';
+
+  @override
+  String get textAiShorter => 'Shorter';
+
+  @override
+  String get textAiFriendly => 'Friendlier';
+
+  @override
+  String get textAiTranslate => 'Translate';
+
+  @override
+  String textAiTooLong(int limit) {
+    return 'The text is too long. Select a passage of at most $limit characters.';
+  }
+
+  @override
+  String get textAiLanguageUnknown =>
+      'Could not detect the language of the text.';
+
+  @override
+  String get textAiDownloadingLanguage => 'Downloading language model…';
+
+  @override
+  String textAiTranslatedFrom(String source, String target) {
+    return 'Translated $source → $target';
+  }
+
+  @override
+  String get textAiCopied => 'Copied to clipboard';
+
+  @override
+  String get textAiInsert => 'Insert below';
+
+  @override
+  String get textAiReplace => 'Replace';
+
+  @override
+  String get textAiTargetAuto => 'Automatic';
+
+  @override
+  String get stringTransformerTypeTranslate => 'Translate (on device)';
+
+  @override
+  String stringTransformerDetected(String language) {
+    return 'Detected: $language';
+  }
+
+  @override
+  String get stringTransformerTranslating => 'Translating…';
+
+  @override
+  String get textAiSummaryTitle => 'Summary (AI)';
 }

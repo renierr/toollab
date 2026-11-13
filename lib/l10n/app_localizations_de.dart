@@ -15099,4 +15099,68 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get xFeedApiRefreshed => 'API-Daten aktualisiert';
+
+  @override
+  String get textAiTitle => 'KI-Textwerkzeuge';
+
+  @override
+  String get textAiOpen => 'KI-Textwerkzeuge';
+
+  @override
+  String get textAiProofread => 'Korrigieren';
+
+  @override
+  String get textAiFormal => 'Förmlich';
+
+  @override
+  String get textAiShorter => 'Kürzer';
+
+  @override
+  String get textAiFriendly => 'Freundlicher';
+
+  @override
+  String get textAiTranslate => 'Übersetzen';
+
+  @override
+  String textAiTooLong(int limit) {
+    return 'Der Text ist zu lang. Markiere einen Abschnitt mit höchstens $limit Zeichen.';
+  }
+
+  @override
+  String get textAiLanguageUnknown =>
+      'Die Sprache des Texts wurde nicht erkannt.';
+
+  @override
+  String get textAiDownloadingLanguage => 'Sprachmodell wird heruntergeladen…';
+
+  @override
+  String textAiTranslatedFrom(String source, String target) {
+    return 'Übersetzt $source → $target';
+  }
+
+  @override
+  String get textAiCopied => 'In die Zwischenablage kopiert';
+
+  @override
+  String get textAiInsert => 'Darunter einfügen';
+
+  @override
+  String get textAiReplace => 'Ersetzen';
+
+  @override
+  String get textAiTargetAuto => 'Automatisch';
+
+  @override
+  String get stringTransformerTypeTranslate => 'Übersetzen (auf dem Gerät)';
+
+  @override
+  String stringTransformerDetected(String language) {
+    return 'Erkannt: $language';
+  }
+
+  @override
+  String get stringTransformerTranslating => 'Übersetze…';
+
+  @override
+  String get textAiSummaryTitle => 'Zusammenfassung (KI)';
 }

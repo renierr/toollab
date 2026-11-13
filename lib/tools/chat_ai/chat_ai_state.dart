@@ -150,6 +150,20 @@ class ChatAiState extends ChangeNotifier {
         : 'No relevant passages found for your question in the extracted text.';
   }
 
+  /// Streams the model's output for a one-shot text task, without chat history.
+  Stream<String> streamTextTask({
+    required String instruction,
+    required String text,
+  }) {
+    if (!isGenerativeAvailable) {
+      return Stream.error(StateError('Gemini Nano is not available'));
+    }
+    return _prompt!.runInferenceStreaming(
+      '$instruction Reply only with the result, without any preamble.\n\n'
+      '----- TEXT START -----\n$text\n----- TEXT END -----',
+    );
+  }
+
   ChatAiState() {
     init();
   }

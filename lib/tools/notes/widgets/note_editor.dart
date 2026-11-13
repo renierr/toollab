@@ -9,6 +9,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
+import 'package:tool_lab/widgets/text_ai_sheet.dart';
 import 'package:tool_lab/widgets/zoomable_area.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/tools/notes/widgets/tag_input.dart';
@@ -358,6 +359,26 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     _focusNode.requestFocus();
   }
 
+  Future<void> _openTextAi() async {
+    final text = _controller.text;
+    final selection = _controller.selection;
+    final partial = selection.isValid && !selection.isCollapsed;
+    final start = partial ? selection.start : 0;
+    final end = partial ? selection.end : text.length;
+    final input = text.substring(start, end);
+    if (input.trim().isEmpty) return;
+
+    final result = await TextAiSheet.show(context, text: input);
+    if (result == null || !mounted || _controller.text != text) return;
+    final replacement = result.apply == TextAiApply.replace
+        ? result.text
+        : '${input.trimRight()}\n\n${result.text}';
+    _controller.value = TextEditingValue(
+      text: text.replaceRange(start, end, replacement),
+      selection: TextSelection.collapsed(offset: start + replacement.length),
+    );
+  }
+
   Future<bool> _showDiscardDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmActionDialog.show(
@@ -612,6 +633,13 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                                   onPressed: _controller.text.trim().isEmpty
                                       ? null
                                       : () => _exportPdf(context),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.auto_awesome_outlined),
+                                  tooltip: l10n.textAiOpen,
+                                  onPressed: _controller.text.trim().isEmpty
+                                      ? null
+                                      : _openTextAi,
                                 ),
                               ],
                             ),

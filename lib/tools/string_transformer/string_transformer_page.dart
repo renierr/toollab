@@ -46,6 +46,12 @@ class _StringTransformerPageState extends State<StringTransformerPage>
     onDispose(sharingSub.cancel);
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _state.uiLanguageCode = Localizations.localeOf(context).languageCode;
+  }
+
   void _onClose() {
     _state.clear();
     if (widget.sharedData != null) {

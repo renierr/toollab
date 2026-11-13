@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/translation/translation_service.dart';
+import 'package:tool_lab/widgets/translate_language_picker.dart';
 import '../string_transformer_state.dart';
 
 class StringTransformerToolbar extends StatelessWidget {
@@ -23,7 +25,15 @@ class StringTransformerToolbar extends StatelessWidget {
       {'id': 'hex-encode', 'name': l10n.stringTransformerTypeHexEncode},
       {'id': 'hex-decode', 'name': l10n.stringTransformerTypeHexDecode},
       {'id': 'ad-url-decode', 'name': l10n.stringTransformerTypeAdUrlDecode},
+      if (TranslationService.isSupported)
+        {
+          'id': StringTransformerState.translateType,
+          'name': l10n.stringTransformerTypeTranslate,
+        },
     ];
+    final translating =
+        state.transformType == StringTransformerState.translateType;
+    final detected = state.detectedLanguage;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -72,6 +82,27 @@ class StringTransformerToolbar extends StatelessWidget {
                 ),
               ],
             ),
+            if (translating) ...[
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 260),
+                child: TranslateLanguagePicker(
+                  value: state.targetLanguage,
+                  onChanged: state.setTargetLanguage,
+                ),
+              ),
+              if (state.translating)
+                Text(
+                  l10n.stringTransformerTranslating,
+                  style: theme.textTheme.bodySmall,
+                )
+              else if (detected != null)
+                Text(
+                  l10n.stringTransformerDetected(
+                    TranslationService.displayName(detected),
+                  ),
+                  style: theme.textTheme.bodySmall,
+                ),
+            ],
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(

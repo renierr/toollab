@@ -18,8 +18,10 @@ ML Kit does not run on Windows or Linux. Every feature needs either an offline f
 | Barcode Scanning | qr_code, totp_auth |
 | Document Scanner | document_scanner |
 | Subject Segmentation | image_viewer (ONNX u2netp as fallback and desktop path) |
-| Text Recognition | image_viewer |
-| GenAI Prompt (`genai-prompt:1.0.0-beta5`, local plugin) | chat_ai, pdf_viewer Q&A |
+| Text Recognition | image_viewer, paperless, document_scanner |
+| Entity Extraction | paperless (upload suggestions) |
+| Language ID + Translation | string_transformer, AI text sheet (notes, text_editor, markdown_viewer, pdf_viewer, news) |
+| GenAI Prompt (`genai-prompt:1.0.0-beta5`, local plugin) | chat_ai, pdf_viewer Q&A + summary, AI text sheet, paperless |
 
 ## Phase 1: Paperless + Document Scanner (Auto-Metadata)
 
@@ -31,12 +33,15 @@ ML Kit does not run on Windows or Linux. Every feature needs either an offline f
 - Show the result as suggestions in the upload form; the user confirms.
 - Fallback without Nano: only the Entity Extraction fields. On desktop: no suggestions.
 
-## Phase 2: Text Tools (GenAI)
+## Phase 2: Text Tools (GenAI) — done
 
-- **notes / text_editor / markdown_viewer:** Proofread, Rewrite (formal, shorter, friendlier), Summarize.
-- **pdf_viewer:** "Summarize PDF" in addition to the existing Q&A.
-- **string_transformer:** Language ID + Translation (all Android devices).
-- **news / x_feed:** translate and summarize articles and posts.
+Shared `TextAiSheet` (`lib/widgets/text_ai_sheet.dart`): proofread, rewrite (formal, shorter, friendlier) and summarize through the Prompt API; translate through ML Kit Translation. Without Gemini Nano only offline summary and translation remain.
+
+- **notes / text_editor:** sheet works on the selection or the whole text; replace or insert below.
+- **markdown_viewer / news reader:** summarize and translate (read only).
+- **pdf_viewer:** summary uses Gemini Nano when available; translate button.
+- **string_transformer:** "Translate (on device)" with language detection and target picker.
+- **x_feed:** skipped, x.com already offers post translation.
 
 ## Phase 3: Chat AI
 

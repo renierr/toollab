@@ -26397,6 +26397,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'API data refreshed'**
   String get xFeedApiRefreshed;
+
+  /// No description provided for @textAiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI text tools'**
+  String get textAiTitle;
+
+  /// No description provided for @textAiOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'AI text tools'**
+  String get textAiOpen;
+
+  /// No description provided for @textAiProofread.
+  ///
+  /// In en, this message translates to:
+  /// **'Proofread'**
+  String get textAiProofread;
+
+  /// No description provided for @textAiFormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Formal'**
+  String get textAiFormal;
+
+  /// No description provided for @textAiShorter.
+  ///
+  /// In en, this message translates to:
+  /// **'Shorter'**
+  String get textAiShorter;
+
+  /// No description provided for @textAiFriendly.
+  ///
+  /// In en, this message translates to:
+  /// **'Friendlier'**
+  String get textAiFriendly;
+
+  /// No description provided for @textAiTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get textAiTranslate;
+
+  /// No description provided for @textAiTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The text is too long. Select a passage of at most {limit} characters.'**
+  String textAiTooLong(int limit);
+
+  /// No description provided for @textAiLanguageUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not detect the language of the text.'**
+  String get textAiLanguageUnknown;
+
+  /// No description provided for @textAiDownloadingLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading language model…'**
+  String get textAiDownloadingLanguage;
+
+  /// No description provided for @textAiTranslatedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated {source} → {target}'**
+  String textAiTranslatedFrom(String source, String target);
+
+  /// No description provided for @textAiCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get textAiCopied;
+
+  /// No description provided for @textAiInsert.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert below'**
+  String get textAiInsert;
+
+  /// No description provided for @textAiReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get textAiReplace;
+
+  /// No description provided for @textAiTargetAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get textAiTargetAuto;
+
+  /// No description provided for @stringTransformerTypeTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate (on device)'**
+  String get stringTransformerTypeTranslate;
+
+  /// No description provided for @stringTransformerDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected: {language}'**
+  String stringTransformerDetected(String language);
+
+  /// No description provided for @stringTransformerTranslating.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating…'**
+  String get stringTransformerTranslating;
+
+  /// No description provided for @textAiSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary (AI)'**
+  String get textAiSummaryTitle;
 }
 
 class _AppLocalizationsDelegate

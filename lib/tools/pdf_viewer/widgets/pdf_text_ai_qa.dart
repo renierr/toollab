@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/text_analysis_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/text_ai/text_ai_action.dart';
+import 'package:tool_lab/services/translation/translation_service.dart';
 import 'package:tool_lab/tools/chat_ai/chat_ai_state.dart';
 import 'package:tool_lab/widgets/genai_status_banner.dart';
+import 'package:tool_lab/widgets/text_ai_sheet.dart';
 
 enum _ResultKind { ask, summary, keywords }
 
@@ -68,9 +71,14 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
     }
   }
 
-  void _summarize() {
+  Future<void> _summarize() async {
     if (_isBusy || !_hasText) return;
     final l10n = AppLocalizations.of(context);
+    final state = context.read<ChatAiState>();
+    if (state.isGenerativeAvailable) {
+      await _summarizeWithAi(state);
+      return;
+    }
     final summary = TextAnalysisHelper.summarize(widget.documentText);
     setState(() {
       _error = null;
@@ -78,6 +86,46 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
       _resultFromAi = false;
       _result = summary.isNotEmpty ? summary : l10n.pdfExtractTextEmpty;
     });
+  }
+
+  Future<void> _summarizeWithAi(ChatAiState state) async {
+    const limit = ChatAiState.maxDocumentContextChars;
+    final text = widget.documentText;
+    setState(() {
+      _isBusy = true;
+      _error = null;
+      _resultKind = _ResultKind.summary;
+      _resultFromAi = true;
+      _result = '';
+    });
+    try {
+      await for (final chunk in state.streamTextTask(
+        instruction: TextAiAction.summarize.instruction!,
+        text: text.length > limit ? text.substring(0, limit) : text,
+      )) {
+        if (!mounted) return;
+        setState(() => _result = '${_result ?? ''}$chunk');
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+          _result = _result?.trim();
+        });
+      }
+    }
+  }
+
+  void _translate() {
+    TextAiSheet.show(
+      context,
+      text: widget.documentText,
+      actions: const [TextAiAction.translate],
+      canApply: false,
+      initialAction: TextAiAction.translate,
+    );
   }
 
   void _keywords() {
@@ -111,7 +159,9 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
             : l10n.textToolsSourceOffline;
         break;
       case _ResultKind.summary:
-        resultLabel = l10n.textToolsSummaryTitle;
+        resultLabel = _resultFromAi
+            ? l10n.textAiSummaryTitle
+            : l10n.textToolsSummaryTitle;
         break;
       case _ResultKind.keywords:
         resultLabel = l10n.textToolsKeywordsTitle;
@@ -122,7 +172,7 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
     }
 
     final Widget resultArea;
-    if (_isBusy) {
+    if (_isBusy && (_result ?? '').isEmpty) {
       resultArea = Row(
         children: [
           const SizedBox(
@@ -237,6 +287,12 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
                     icon: const Icon(Icons.label_outline, size: 18),
                     label: Text(l10n.textToolsKeywords),
                   ),
+                  if (TranslationService.isSupported)
+                    OutlinedButton.icon(
+                      onPressed: (_isBusy || !_hasText) ? null : _translate,
+                      icon: Icon(TextAiAction.translate.icon, size: 18),
+                      label: Text(l10n.textAiTranslate),
+                    ),
                 ],
               ),
               if (isTruncated)

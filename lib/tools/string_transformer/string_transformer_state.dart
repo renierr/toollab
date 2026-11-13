@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_translation/google_mlkit_translation.dart';
 import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/services/translation/translation_service.dart';
 
 class StringTransformerState extends ChangeNotifier {
   String _inputText = '';
@@ -16,6 +20,29 @@ class StringTransformerState extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  static const translateType = 'translate';
+
+  /// UI language, used to pick the automatic translation target.
+  String uiLanguageCode = 'en';
+
+  TranslateLanguage? _targetLanguage;
+  TranslateLanguage? get targetLanguage => _targetLanguage;
+
+  TranslateLanguage? _detectedLanguage;
+  TranslateLanguage? get detectedLanguage => _detectedLanguage;
+
+  bool _translating = false;
+  bool get translating => _translating;
+
+  Timer? _translateDebounce;
+  int _translateRun = 0;
+
+  void setTargetLanguage(TranslateLanguage language) {
+    if (_targetLanguage == language) return;
+    _targetLanguage = language;
+    _transform();
+  }
+
   void setInputText(String text) {
     if (_inputText == text) return;
     _inputText = text;
@@ -29,10 +56,20 @@ class StringTransformerState extends ChangeNotifier {
   }
 
   void clear() {
+    _translateDebounce?.cancel();
+    _translateRun++;
     _inputText = '';
     _outputText = '';
     _errorMessage = null;
+    _detectedLanguage = null;
+    _translating = false;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _translateDebounce?.cancel();
+    super.dispose();
   }
 
   void swap() {
@@ -63,9 +100,23 @@ class StringTransformerState extends ChangeNotifier {
 
   void _transform() {
     _errorMessage = null;
+    _translateDebounce?.cancel();
+    _translateRun++;
+    _translating = false;
     if (_inputText.isEmpty) {
       _outputText = '';
+      _detectedLanguage = null;
       notifyListeners();
+      return;
+    }
+    if (_transformType == translateType) {
+      _translating = true;
+      notifyListeners();
+      final run = _translateRun;
+      _translateDebounce = Timer(
+        const Duration(milliseconds: 600),
+        () => _translate(run),
+      );
       return;
     }
 
@@ -75,6 +126,38 @@ class StringTransformerState extends ChangeNotifier {
       _errorMessage = e is FormatException ? e.message : e.toString();
       _outputText = '';
     }
+    notifyListeners();
+  }
+
+  Future<void> _translate(int run) async {
+    final input = _inputText;
+    final service = TranslationService.instance;
+    try {
+      final source = TranslationService.languageFor(
+        await service.identifyLanguage(input),
+      );
+      if (run != _translateRun) return;
+      _detectedLanguage = source;
+      if (source == null) {
+        throw const FormatException('Language not detected');
+      }
+      final target =
+          _targetLanguage ??
+          TranslationService.defaultTarget(uiLanguageCode, source);
+      final output = await service.translate(
+        input,
+        source: source,
+        target: target,
+      );
+      if (run != _translateRun) return;
+      _outputText = output;
+    } catch (e) {
+      if (run != _translateRun) return;
+      errorLog('[StringTransformerState] Translation failed: $e');
+      _errorMessage = e is FormatException ? e.message : e.toString();
+      _outputText = '';
+    }
+    _translating = false;
     notifyListeners();
   }
 

@@ -4,6 +4,7 @@ import 'package:re_editor/re_editor.dart';
 
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/text_editor/text_editor_state.dart';
+import 'package:tool_lab/widgets/text_ai_sheet.dart';
 
 /// The editor control row: undo/redo, font size, wrap and highlight toggles.
 class TextEditorToolbarControls extends StatelessWidget {
@@ -30,6 +31,7 @@ class TextEditorToolbarControls extends StatelessWidget {
           onPressed: () => state.setFontSize(state.fontSize + 1),
           icon: const Icon(Icons.text_increase_outlined),
         ),
+        _TextAiButton(controller: state.controller),
         const VerticalDivider(width: 8),
         FilterChip(
           label: Text(l10n.textEditorWordWrap),
@@ -110,6 +112,39 @@ class _UndoRedoButtonsState extends State<_UndoRedoButtons> {
           icon: const Icon(Icons.redo),
         ),
       ],
+    );
+  }
+}
+
+class _TextAiButton extends StatelessWidget {
+  final CodeLineEditingController controller;
+
+  const _TextAiButton({required this.controller});
+
+  Future<void> _open(BuildContext context) async {
+    final previous = controller.selection;
+    if (previous.isCollapsed) controller.selectAll();
+    final input = controller.selectedText;
+    final result = input.trim().isEmpty
+        ? null
+        : await TextAiSheet.show(context, text: input);
+    if (result == null || controller.selectedText != input) {
+      if (previous.isCollapsed) controller.selection = previous;
+      return;
+    }
+    controller.replaceSelection(
+      result.apply == TextAiApply.replace
+          ? result.text
+          : '${input.trimRight()}\n\n${result.text}',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: AppLocalizations.of(context).textAiOpen,
+      onPressed: () => _open(context),
+      icon: const Icon(Icons.auto_awesome_outlined),
     );
   }
 }

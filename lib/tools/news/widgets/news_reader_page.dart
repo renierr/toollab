@@ -6,11 +6,13 @@ import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/text_ai/text_ai_action.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/copyable_image.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
+import 'package:tool_lab/widgets/text_ai_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../news_article.dart';
@@ -44,6 +46,31 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
   }
 
   bool get _hasLink => widget.article.link.trim().isNotEmpty;
+
+  static final _image = RegExp(r'!\[[^\]]*\]\([^)]*\)');
+  static final _link = RegExp(r'\[([^\]]*)\]\([^)]*\)');
+
+  Future<void> _openTextAi() async {
+    String body;
+    try {
+      body = (await _body)?.markdown ?? '';
+    } catch (_) {
+      body = '';
+    }
+    if (!mounted) return;
+    if (body.trim().isEmpty) body = widget.article.summary;
+    final text = '${widget.article.title}\n\n$body'
+        .replaceAll(_image, '')
+        .replaceAllMapped(_link, (m) => m[1]!)
+        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+        .trim();
+    await TextAiSheet.show(
+      context,
+      text: text,
+      actions: TextAiAction.reading,
+      canApply: false,
+    );
+  }
 
   Future<void> _openOriginal() async {
     final l10n = AppLocalizations.of(context);
@@ -109,6 +136,11 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          IconButton(
+            onPressed: _openTextAi,
+            icon: const Icon(Icons.auto_awesome_outlined),
+            tooltip: l10n.textAiOpen,
+          ),
           IconButton(
             onPressed: fontPercent <= NewsState.minFontPercent
                 ? null

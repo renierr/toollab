@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:tool_lab/services/text_ai/text_ai_action.dart';
+import 'package:tool_lab/widgets/text_ai_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -276,6 +278,18 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         sharedFile: _sharedFile,
         onLinkTap: _onLinkTap,
         initialAnchor: _anchor,
+        extraActions: [
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_outlined),
+            tooltip: l10n.textAiOpen,
+            onPressed: () => TextAiSheet.show(
+              context,
+              text: _fileContent!,
+              actions: TextAiAction.reading,
+              canApply: false,
+            ),
+          ),
+        ],
       ),
     );
   }
