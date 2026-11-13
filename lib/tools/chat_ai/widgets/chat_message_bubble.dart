@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import '../chat_models.dart';
 import '../config.dart';
 import 'chat_bubble_shell.dart';
+import 'chat_thoughts.dart';
 
 class ChatMessageBubble extends StatelessWidget {
   final ChatMessage message;
 
-  const ChatMessageBubble({super.key, required this.message});
+  /// Shown above replies, so it is clear who answered.
+  final String modelName;
+
+  /// The reply is still streaming, so its thoughts stay open.
+  final bool live;
+
+  const ChatMessageBubble({
+    super.key,
+    required this.message,
+    required this.modelName,
+    this.live = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +35,7 @@ class ChatMessageBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            isUser ? 'You' : 'AI',
+            isUser ? AppLocalizations.of(context).chatAiYou : modelName,
             style: theme.textTheme.labelSmall?.copyWith(
               color: isUser
                   ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
@@ -83,6 +96,8 @@ class ChatMessageBubble extends StatelessWidget {
             ),
             const SizedBox(height: 8.0),
           ],
+          if (message.thinking case final thinking? when thinking.isNotEmpty)
+            ChatThoughts(text: thinking, live: live && message.content.isEmpty),
           if (isUser)
             SelectableText(
               message.content,
@@ -90,7 +105,7 @@ class ChatMessageBubble extends StatelessWidget {
                 color: theme.colorScheme.onPrimaryContainer,
               ),
             )
-          else
+          else if (message.content.isNotEmpty)
             MarkdownView(
               data: message.content,
               selectable: true,

@@ -22,6 +22,11 @@ import 'widgets/chat_suggestions.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/chat_thinking_bubble.dart';
 import 'widgets/chat_system_prompt_dialog.dart';
+import 'widgets/chat_backend_switch.dart';
+import 'widgets/deepseek_account_menu.dart';
+import 'widgets/deepseek_login_view.dart';
+import 'widgets/deepseek_options_bar.dart';
+import 'deepseek/deepseek_login_actions.dart';
 
 class ChatAiPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -72,6 +77,17 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
         _showError(state.modelError!);
         state.clearModelError();
       }
+      final deepSeekError = state.deepSeekError;
+      if (deepSeekError != null) {
+        _showError(
+          DeepSeekLoginActions.errorText(
+            AppLocalizations.of(context),
+            deepSeekError,
+            state.deepSeekErrorDetail,
+          ),
+        );
+        state.clearDeepSeekError();
+      }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom();
       });
@@ -96,7 +112,8 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     // Per-chunk animations would pile up while a reply streams in.
-    if (context.read<ChatAiState>().streamingText.isNotEmpty) {
+    final state = context.read<ChatAiState>();
+    if (state.streamingText.isNotEmpty || state.streamingThinking.isNotEmpty) {
       _scrollController.jumpTo(position.maxScrollExtent);
       return;
     }
@@ -191,12 +208,15 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
     final theme = Theme.of(context);
 
     final showSuggestions = state.messages.isEmpty;
+    final deepSeek = state.backend == ChatBackend.deepseek;
+    final modelName = ChatBackendSwitch.modelName(state.backend);
 
     return ToolLayout(
       scaffoldKey: _scaffoldKey,
       title: l10n.toolNameChatAi,
       drawer: const ChatSessionDrawer(),
       actions: [
+        if (deepSeek) const DeepSeekAccountMenu(),
         IconButton(
           icon: const Icon(Icons.settings_outlined),
           tooltip: l10n.chatAiSystemPromptTitle,
@@ -213,7 +233,8 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
             }
           },
         ),
-        if (state.messages.isNotEmpty)
+        // A DeepSeek chat lives on the account; it is deleted from the history.
+        if (!deepSeek && state.messages.isNotEmpty)
           IconButton(
             icon: const Icon(Icons.delete_sweep_outlined),
             tooltip: l10n.chatAiClearHistory,
@@ -246,68 +267,87 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
         IconButton(
           icon: const Icon(Icons.history_rounded),
           tooltip: l10n.toolNameChatAi,
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer();
+            if (deepSeek) state.refreshDeepSeekHistory();
+          },
         ),
       ],
       child: Column(
         children: [
-          GenAiStatusBanner(
-            status: state.featureStatus,
-            downloadProgress: state.downloadProgress,
-            onDownload: state.downloadModel,
-          ),
-          Expanded(
-            child: showSuggestions
-                ? ReadableWidth(
-                    child: ChatSuggestions(
-                      onSelectSuggestion: (text) {
-                        _textController.text = text;
-                        _handleSend(state);
-                      },
-                    ),
-                  )
-                : ReadableScrollPadding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    builder: (context, padding) => ListView.builder(
-                      controller: _scrollController,
-                      itemCount:
-                          state.messages.length + (state.isGenerating ? 1 : 0),
-                      padding: padding,
-                      itemBuilder: (context, index) {
-                        if (index == state.messages.length) {
-                          if (state.streamingText.isEmpty) {
-                            return const ChatThinkingBubble();
+          const ChatBackendSwitch(),
+          if (state.needsDeepSeekLogin)
+            const Expanded(child: DeepSeekLoginView())
+          else ...[
+            if (!deepSeek)
+              GenAiStatusBanner(
+                status: state.featureStatus,
+                downloadProgress: state.downloadProgress,
+                onDownload: state.downloadModel,
+              ),
+            Expanded(
+              child: showSuggestions
+                  ? ReadableWidth(
+                      child: ChatSuggestions(
+                        backend: state.backend,
+                        onSelectSuggestion: (text) {
+                          _textController.text = text;
+                          _handleSend(state);
+                        },
+                      ),
+                    )
+                  : ReadableScrollPadding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      builder: (context, padding) => ListView.builder(
+                        controller: _scrollController,
+                        itemCount:
+                            state.messages.length +
+                            (state.isGenerating ? 1 : 0),
+                        padding: padding,
+                        itemBuilder: (context, index) {
+                          if (index == state.messages.length) {
+                            if (state.streamingText.isEmpty &&
+                                state.streamingThinking.isEmpty) {
+                              return ChatThinkingBubble(modelName: modelName);
+                            }
+                            return ChatMessageBubble(
+                              modelName: modelName,
+                              live: true,
+                              message: ChatMessage(
+                                id: -1,
+                                sessionId: state.currentSessionId ?? -1,
+                                role: 'model',
+                                content: state.streamingText,
+                                thinking: state.streamingThinking,
+                                createdAt: 0,
+                              ),
+                            );
                           }
+                          final message = state.messages[index];
                           return ChatMessageBubble(
-                            message: ChatMessage(
-                              id: -1,
-                              sessionId: state.currentSessionId ?? -1,
-                              role: 'model',
-                              content: state.streamingText,
-                              createdAt: 0,
-                            ),
+                            modelName: modelName,
+                            message: message,
                           );
-                        }
-                        final message = state.messages[index];
-                        return ChatMessageBubble(message: message);
-                      },
+                        },
+                      ),
                     ),
-                  ),
-          ),
-          ReadableWidth(
-            child: ChatInputBar(
-              controller: _textController,
-              onSend: () => _handleSend(state),
-              isGenerating: state.isGenerating,
-              enabled: !state.isInitializing,
-              selectedImageBytes: state.selectedImageBytes,
-              onPickImage: () => _pickImage(state),
-              onRemoveImage: () => state.selectImage(null),
-              attachedFileName: state.attachedFileName,
-              onPickFile: () => _pickFile(state),
-              onRemoveFile: () => state.selectFile(null, null),
             ),
-          ),
+            ReadableWidth(
+              child: ChatInputBar(
+                controller: _textController,
+                onSend: () => _handleSend(state),
+                isGenerating: state.isGenerating,
+                enabled: !state.isInitializing,
+                selectedImageBytes: state.selectedImageBytes,
+                onPickImage: deepSeek ? null : () => _pickImage(state),
+                options: deepSeek ? const DeepSeekOptionsBar() : null,
+                onRemoveImage: () => state.selectImage(null),
+                attachedFileName: state.attachedFileName,
+                onPickFile: () => _pickFile(state),
+                onRemoveFile: () => state.selectFile(null, null),
+              ),
+            ),
+          ],
         ],
       ),
     );

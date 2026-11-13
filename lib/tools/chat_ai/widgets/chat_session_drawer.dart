@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../chat_ai_state.dart';
+import 'chat_backend_switch.dart';
 
 class ChatSessionDrawer extends StatelessWidget {
   const ChatSessionDrawer({super.key});
@@ -40,17 +41,20 @@ class ChatSessionDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(height: 1),
+            if (state.syncingHistory)
+              const LinearProgressIndicator(minHeight: 1)
+            else
+              const Divider(height: 1),
             Expanded(
               child: ListView.builder(
-                itemCount: state.sessions.length,
+                itemCount: state.backendSessions.length,
                 itemBuilder: (context, index) {
-                  final session = state.sessions[index];
+                  final session = state.backendSessions[index];
                   final isSelected = session.id == state.currentSessionId;
 
                   return ListTile(
                     selected: isSelected,
-                    leading: const Icon(Icons.chat_bubble_outline),
+                    leading: Icon(ChatBackendSwitch.iconFor(session.backend)),
                     title: Text(
                       session.title,
                       maxLines: 1,

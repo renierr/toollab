@@ -9,11 +9,16 @@ class ChatInputBar extends StatelessWidget {
   final bool isGenerating;
   final bool enabled;
   final Uint8List? selectedImageBytes;
-  final VoidCallback onPickImage;
+
+  /// Null when the model takes no images.
+  final VoidCallback? onPickImage;
   final VoidCallback onRemoveImage;
   final String? attachedFileName;
   final VoidCallback onPickFile;
   final VoidCallback onRemoveFile;
+
+  /// Shown above the text field, for model options.
+  final Widget? options;
 
   const ChatInputBar({
     super.key,
@@ -27,6 +32,7 @@ class ChatInputBar extends StatelessWidget {
     required this.attachedFileName,
     required this.onPickFile,
     required this.onRemoveFile,
+    this.options,
   });
 
   @override
@@ -34,12 +40,6 @@ class ChatInputBar extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final accentColor = ChatAiTool.config.accentColor;
-    final sendDisabled =
-        isGenerating ||
-        !enabled ||
-        (selectedImageBytes == null &&
-            attachedFileName == null &&
-            controller.text.trim().isEmpty);
 
     return Container(
       padding: const EdgeInsets.all(12.0),
@@ -56,6 +56,7 @@ class ChatInputBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            ?options,
             if (selectedImageBytes != null) ...[
               Stack(
                 clipBehavior: Clip.none,
@@ -181,25 +182,26 @@ class ChatInputBar extends StatelessWidget {
                   enabled: enabled && !isGenerating,
                   onSelected: (value) {
                     if (value == 1) {
-                      onPickImage();
+                      onPickImage?.call();
                     } else if (value == 2) {
                       onPickFile();
                     }
                   },
                   itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 1,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.image_outlined,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(l10n.chatAiAttachImage),
-                        ],
+                    if (onPickImage != null)
+                      PopupMenuItem(
+                        value: 1,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.image_outlined,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(l10n.chatAiAttachImage),
+                          ],
+                        ),
                       ),
-                    ),
                     PopupMenuItem(
                       value: 2,
                       child: Row(
@@ -251,37 +253,48 @@ class ChatInputBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Material(
-                  color: sendDisabled
-                      ? theme.colorScheme.surfaceContainerHighest
-                      : accentColor,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    onTap: sendDisabled ? null : onSend,
-                    customBorder: const CircleBorder(),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: isGenerating
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  theme.colorScheme.onPrimary,
+                ListenableBuilder(
+                  listenable: controller,
+                  builder: (context, _) {
+                    final sendDisabled =
+                        isGenerating ||
+                        !enabled ||
+                        (selectedImageBytes == null &&
+                            attachedFileName == null &&
+                            controller.text.trim().isEmpty);
+                    return Material(
+                      color: sendDisabled
+                          ? theme.colorScheme.surfaceContainerHighest
+                          : accentColor,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        onTap: sendDisabled ? null : onSend,
+                        customBorder: const CircleBorder(),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: isGenerating
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      theme.colorScheme.onPrimary,
+                                    ),
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.send_rounded,
+                                  color: sendDisabled
+                                      ? theme.colorScheme.onSurface.withValues(
+                                          alpha: 0.3,
+                                        )
+                                      : Colors.white,
                                 ),
-                              ),
-                            )
-                          : Icon(
-                              Icons.send_rounded,
-                              color: sendDisabled
-                                  ? theme.colorScheme.onSurface.withValues(
-                                      alpha: 0.3,
-                                    )
-                                  : Colors.white,
-                            ),
-                    ),
-                  ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

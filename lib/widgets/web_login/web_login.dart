@@ -8,8 +8,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'desktop_web_login.dart';
 import 'web_login_page.dart';
 
-/// Decides when an in-app login is done, from the URL being navigated to or
-/// the cookies the site has set so far.
+/// Decides when an in-app login is done, from the URL being navigated to,
+/// the cookies the site has set so far, or a value its page script returns.
 class WebLoginTarget {
   /// Navigations starting with this end the login and are never loaded, so a
   /// loopback OAuth redirect needs no listener and no cleartext permission.
@@ -19,14 +19,29 @@ class WebLoginTarget {
   final Uri? cookieUrl;
   final bool Function(Map<String, String> cookies)? isComplete;
 
+  /// Polled while the page is open, for logins kept in local storage.
+  final String? script;
+  final bool Function(Object? value)? isScriptComplete;
+
   const WebLoginTarget.redirect(String this.callbackPrefix)
     : cookieUrl = null,
-      isComplete = null;
+      isComplete = null,
+      script = null,
+      isScriptComplete = null;
 
   const WebLoginTarget.cookies({
     required Uri this.cookieUrl,
     required bool Function(Map<String, String> cookies) this.isComplete,
-  }) : callbackPrefix = null;
+  }) : callbackPrefix = null,
+       script = null,
+       isScriptComplete = null;
+
+  const WebLoginTarget.script({
+    required String this.script,
+    required bool Function(Object? value) this.isScriptComplete,
+  }) : callbackPrefix = null,
+       cookieUrl = null,
+       isComplete = null;
 }
 
 sealed class WebLoginResult {
@@ -41,6 +56,11 @@ class WebLoginRedirect extends WebLoginResult {
 class WebLoginCookies extends WebLoginResult {
   final Map<String, String> cookies;
   const WebLoginCookies(this.cookies);
+}
+
+class WebLoginScriptValue extends WebLoginResult {
+  final Object? value;
+  const WebLoginScriptValue(this.value);
 }
 
 /// A login page inside the app, for devices without a browser (Android TV)

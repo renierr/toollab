@@ -27123,6 +27123,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The offline translator uses ML Kit and is only available on Android.'**
   String get translatorUnsupportedPlatform;
+
+  /// No description provided for @chatAiBackendTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'AI model'**
+  String get chatAiBackendTooltip;
+
+  /// No description provided for @chatAiBackendNano.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini Nano (on device)'**
+  String get chatAiBackendNano;
+
+  /// No description provided for @chatAiBackendDeepSeek.
+  ///
+  /// In en, this message translates to:
+  /// **'DeepSeek (web account)'**
+  String get chatAiBackendDeepSeek;
+
+  /// No description provided for @chatAiDeepSeekSignedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {name}'**
+  String chatAiDeepSeekSignedInAs(String name);
+
+  /// No description provided for @chatAiDeepSeekSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of DeepSeek'**
+  String get chatAiDeepSeekSignOut;
+
+  /// No description provided for @chatAiDeepSeekLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to DeepSeek'**
+  String get chatAiDeepSeekLoginTitle;
+
+  /// No description provided for @chatAiDeepSeekLoginBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with your DeepSeek account, as on chat.deepseek.com. Sign in once; the login stays on this device. This uses DeepSeek\'s unofficial web interface, which can change or block access at any time.'**
+  String get chatAiDeepSeekLoginBody;
+
+  /// No description provided for @chatAiDeepSeekLoginButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get chatAiDeepSeekLoginButton;
+
+  /// No description provided for @chatAiDeepSeekPasteToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste token'**
+  String get chatAiDeepSeekPasteToken;
+
+  /// No description provided for @chatAiDeepSeekTokenHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'In a browser signed in to chat.deepseek.com, open the developer tools and copy the value of userToken from Local Storage.'**
+  String get chatAiDeepSeekTokenHelp;
+
+  /// No description provided for @chatAiDeepSeekSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in to DeepSeek'**
+  String get chatAiDeepSeekSignedIn;
+
+  /// No description provided for @chatAiDeepThink.
+  ///
+  /// In en, this message translates to:
+  /// **'DeepThink'**
+  String get chatAiDeepThink;
+
+  /// No description provided for @chatAiDeepSeekSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get chatAiDeepSeekSearch;
+
+  /// No description provided for @chatAiThoughts.
+  ///
+  /// In en, this message translates to:
+  /// **'Thoughts'**
+  String get chatAiThoughts;
+
+  /// No description provided for @chatAiDeepSeekErrorUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'The DeepSeek login is no longer valid. Please sign in again.'**
+  String get chatAiDeepSeekErrorUnauthorized;
+
+  /// No description provided for @chatAiDeepSeekErrorBanned.
+  ///
+  /// In en, this message translates to:
+  /// **'DeepSeek has blocked this account.'**
+  String get chatAiDeepSeekErrorBanned;
+
+  /// No description provided for @chatAiDeepSeekErrorChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'DeepSeek\'s security check failed. Try again later.'**
+  String get chatAiDeepSeekErrorChallenge;
+
+  /// No description provided for @chatAiDeepSeekErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to DeepSeek.'**
+  String get chatAiDeepSeekErrorNetwork;
+
+  /// No description provided for @chatAiDeepSeekErrorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'DeepSeek error: {detail}'**
+  String chatAiDeepSeekErrorServer(String detail);
+
+  /// No description provided for @chatAiModeLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get chatAiModeLocal;
+
+  /// No description provided for @chatAiYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get chatAiYou;
+
+  /// No description provided for @chatAiDeepSeekCopyToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy token'**
+  String get chatAiDeepSeekCopyToken;
+
+  /// No description provided for @chatAiDeepSeekSetToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Set token'**
+  String get chatAiDeepSeekSetToken;
+
+  /// No description provided for @chatAiDeepSeekTokenCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Token copied. Keep it secret: it gives full access to your DeepSeek account.'**
+  String get chatAiDeepSeekTokenCopied;
 }
 
 class _AppLocalizationsDelegate

@@ -46,12 +46,17 @@ class _WebLoginPageState extends State<WebLoginPage> with DisposeCleanup {
           onPageFinished: (_) {
             _setLoading(false);
             unawaited(_checkCookies());
+            unawaited(_checkScript());
           },
         ),
       )
       ..loadRequest(widget.url);
     if (widget.target.cookieUrl != null) {
       final timer = Timer.periodic(_cookiePollInterval, (_) => _checkCookies());
+      onDispose(timer.cancel);
+    }
+    if (widget.target.script != null) {
+      final timer = Timer.periodic(_cookiePollInterval, (_) => _checkScript());
       onDispose(timer.cancel);
     }
   }
@@ -79,6 +84,18 @@ class _WebLoginPageState extends State<WebLoginPage> with DisposeCleanup {
       if (isComplete(cookies)) _finish(WebLoginCookies(cookies));
     } catch (e) {
       debugLog('[WebLoginPage] Reading cookies failed: $e');
+    }
+  }
+
+  Future<void> _checkScript() async {
+    final script = widget.target.script;
+    final isComplete = widget.target.isScriptComplete;
+    if (_done || script == null || isComplete == null) return;
+    try {
+      final value = await _controller.runJavaScriptReturningResult(script);
+      if (isComplete(value)) _finish(WebLoginScriptValue(value));
+    } catch (e) {
+      debugLog('[WebLoginPage] Running login script failed: $e');
     }
   }
 

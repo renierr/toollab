@@ -3,7 +3,9 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'chat_bubble_shell.dart';
 
 class ChatThinkingBubble extends StatelessWidget {
-  const ChatThinkingBubble({super.key});
+  final String modelName;
+
+  const ChatThinkingBubble({super.key, required this.modelName});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +19,7 @@ class ChatThinkingBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'AI',
+            modelName,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.bold,

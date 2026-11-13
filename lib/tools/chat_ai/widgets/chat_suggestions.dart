@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import '../chat_models.dart';
 import '../config.dart';
+import 'chat_backend_switch.dart';
 
 class ChatSuggestions extends StatelessWidget {
   final ValueChanged<String> onSelectSuggestion;
+  final ChatBackend backend;
 
-  const ChatSuggestions({super.key, required this.onSelectSuggestion});
+  const ChatSuggestions({
+    super.key,
+    required this.onSelectSuggestion,
+    this.backend = ChatBackend.nano,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final accentColor = ChatAiTool.config.accentColor;
+    final model = ChatBackendSwitch.modelName(backend);
 
     final suggestions = [
       'Explain photosynthesis simply.',
@@ -26,13 +36,13 @@ class ChatSuggestions extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.chat_bubble_outline,
+                ChatBackendSwitch.iconFor(backend),
                 size: 64,
                 color: accentColor.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
-                'AI Chat (Gemini Nano)',
+                '${l10n.toolNameChatAi} ($model)',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),

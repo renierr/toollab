@@ -1,17 +1,34 @@
 import 'dart:typed_data';
 
+/// Who answers a chat: Gemini Nano on the device or the DeepSeek web account.
+enum ChatBackend {
+  nano,
+  deepseek;
+
+  static ChatBackend fromName(String? name) =>
+      ChatBackend.values.where((b) => b.name == name).firstOrNull ?? nano;
+}
+
 /// A chat conversation. Built from a `chat_sessions` row.
 class ChatSession {
   final int id;
   final String title;
   final int createdAt;
   final int updatedAt;
+  final ChatBackend backend;
+
+  /// The DeepSeek conversation id and the reply the next message answers.
+  final String? remoteId;
+  final int? remoteParentId;
 
   const ChatSession({
     required this.id,
     required this.title,
     required this.createdAt,
     required this.updatedAt,
+    this.backend = ChatBackend.nano,
+    this.remoteId,
+    this.remoteParentId,
   });
 
   factory ChatSession.fromMap(Map<String, dynamic> map) => ChatSession(
@@ -19,6 +36,9 @@ class ChatSession {
     title: map['title'] as String? ?? '',
     createdAt: map['created_at'] as int? ?? 0,
     updatedAt: map['updated_at'] as int? ?? 0,
+    backend: ChatBackend.fromName(map['backend'] as String?),
+    remoteId: map['remote_id'] as String?,
+    remoteParentId: map['remote_parent_id'] as int?,
   );
 }
 
@@ -31,6 +51,7 @@ class ChatMessage {
   final Uint8List? imageData;
   final String? fileName;
   final String? fileContent;
+  final String? thinking;
   final int createdAt;
 
   const ChatMessage({
@@ -41,6 +62,7 @@ class ChatMessage {
     this.imageData,
     this.fileName,
     this.fileContent,
+    this.thinking,
     required this.createdAt,
   });
 
@@ -55,6 +77,7 @@ class ChatMessage {
     imageData: map['image_data'] as Uint8List?,
     fileName: map['file_name'] as String?,
     fileContent: map['file_content'] as String?,
+    thinking: map['thinking'] as String?,
     createdAt: map['created_at'] as int? ?? 0,
   );
 }

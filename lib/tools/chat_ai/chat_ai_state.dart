@@ -9,6 +9,9 @@ import 'package:tool_lab/services/database_service.dart';
 import 'chat_ai_db_helper.dart';
 import 'chat_models.dart';
 import 'config.dart';
+import 'deepseek/deepseek_account.dart';
+import 'deepseek/deepseek_api.dart';
+import 'deepseek/deepseek_stream.dart';
 
 class ChatAiState extends ChangeNotifier {
   List<ChatSession> _sessions = [];
@@ -21,6 +24,7 @@ class ChatAiState extends ChangeNotifier {
   Prompt? _prompt;
   Uint8List? _selectedImageBytes;
   String _streamingText = '';
+  String _streamingThinking = '';
   int? _downloadTotalBytes;
   int _downloadedBytes = 0;
 
@@ -36,7 +40,39 @@ class ChatAiState extends ChangeNotifier {
   String? _attachedFileContent;
   String? _modelError;
 
+  ChatBackend _backend = ChatBackend.nano;
+  DeepSeekAccount? _deepSeekAccount;
+  bool _deepSeekThinking = false;
+  bool _deepSeekSearch = false;
+  DeepSeekErrorKind? _deepSeekError;
+  String? _deepSeekErrorDetail;
+
+  static const String _backendKey = 'backend';
+  static const String _deepSeekThinkingKey = 'deepseek_thinking';
+  static const String _deepSeekSearchKey = 'deepseek_search';
+
+  ChatBackend get backend => _backend;
+  DeepSeekAccount? get deepSeekAccount => _deepSeekAccount;
+  bool get deepSeekThinking => _deepSeekThinking;
+  bool get deepSeekSearch => _deepSeekSearch;
+  DeepSeekErrorKind? get deepSeekError => _deepSeekError;
+  String? get deepSeekErrorDetail => _deepSeekErrorDetail;
+
+  /// The DeepSeek backend is picked but nobody is signed in.
+  bool get needsDeepSeekLogin =>
+      _backend == ChatBackend.deepseek && _deepSeekAccount == null;
+
+  /// Thoughts of a thinking model while [isGenerating].
+  String get streamingThinking => _streamingThinking;
+
   List<ChatSession> get sessions => _sessions;
+
+  /// The history of the active backend, for the session drawer.
+  List<ChatSession> get backendSessions =>
+      _sessions.where((s) => s.backend == _backend).toList();
+
+  bool _syncingHistory = false;
+  bool get syncingHistory => _syncingHistory;
   int? get currentSessionId => _currentSessionId;
   List<ChatMessage> get messages => _messages;
   FeatureStatus get featureStatus => _featureStatus;
@@ -70,6 +106,145 @@ class ChatAiState extends ChangeNotifier {
     _modelError = null;
     notifyListeners();
   }
+
+  void clearDeepSeekError() {
+    _deepSeekError = null;
+    _deepSeekErrorDetail = null;
+  }
+
+  /// Switches who answers; a session of the other backend is closed.
+  Future<void> setBackend(ChatBackend backend) async {
+    if (_backend == backend) return;
+    _backend = backend;
+    _currentSessionId = null;
+    _messages = [];
+    await loadSessions();
+    if (backend == ChatBackend.deepseek) _selectedImageBytes = null;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      ChatAiTool.config.id,
+      _backendKey,
+      backend.name,
+    );
+    if (backend == ChatBackend.deepseek) await refreshDeepSeekHistory();
+  }
+
+  /// Pulls the account's conversations, including those from the website.
+  Future<void> refreshDeepSeekHistory() async {
+    final account = _deepSeekAccount;
+    if (account == null || _syncingHistory) return;
+    _syncingHistory = true;
+    notifyListeners();
+    try {
+      const pageSize = 100;
+      final remote = await DeepSeekApi(
+        account.token,
+        locale: _locale,
+      ).fetchSessions(count: pageSize);
+      await ChatAiDbHelper.instance.syncRemoteSessions([
+        for (final session in remote)
+          (id: session.id, title: session.title, updatedAt: session.updatedAt),
+      ], complete: remote.length < pageSize);
+      final current = _currentSession;
+      await loadSessions();
+      if (current != null && _currentSession == null) {
+        _currentSessionId = null;
+        _messages = [];
+      }
+    } on DeepSeekException catch (e) {
+      _onDeepSeekError(e);
+    } finally {
+      _syncingHistory = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _loadDeepSeekMessages(ChatSession session) async {
+    final account = _deepSeekAccount;
+    final remoteId = session.remoteId;
+    if (account == null || remoteId == null) return;
+    try {
+      final history = await DeepSeekApi(
+        account.token,
+        locale: _locale,
+      ).history(remoteId);
+      if (_isGenerating) return;
+      // A reply can carry an earlier timestamp than its question, and the
+      // messages are listed by time.
+      var lastTime = 0;
+      await ChatAiDbHelper.instance.replaceMessages(session.id, [
+        for (final message in history.messages)
+          (
+            role: message.fromUser ? 'user' : 'model',
+            content: message.text.trim(),
+            thinking: message.thinking.trim().isEmpty
+                ? null
+                : message.thinking.trim(),
+            createdAt: lastTime = message.insertedAt > lastTime
+                ? message.insertedAt
+                : lastTime + 1,
+          ),
+      ], remoteParentId: history.currentMessageId);
+      _sessions = await ChatAiDbHelper.instance.getSessions();
+      if (_currentSessionId == session.id && !_isGenerating) {
+        _messages = await ChatAiDbHelper.instance.getMessages(session.id);
+        notifyListeners();
+      }
+    } on DeepSeekException catch (e) {
+      _onDeepSeekError(e);
+      notifyListeners();
+    }
+  }
+
+  void _onDeepSeekError(DeepSeekException e) {
+    errorLog('[ChatAiState] DeepSeek request failed: $e');
+    _deepSeekError = e.kind;
+    _deepSeekErrorDetail = e.message;
+    if (e.kind == DeepSeekErrorKind.unauthorized) {
+      _deepSeekAccount = null;
+      unawaited(DeepSeekAccount.clear());
+    }
+  }
+
+  Future<void> setDeepSeekThinking(bool enabled) async {
+    _deepSeekThinking = enabled;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      ChatAiTool.config.id,
+      _deepSeekThinkingKey,
+      '$enabled',
+    );
+  }
+
+  Future<void> setDeepSeekSearch(bool enabled) async {
+    _deepSeekSearch = enabled;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      ChatAiTool.config.id,
+      _deepSeekSearchKey,
+      '$enabled',
+    );
+  }
+
+  /// Checks [token] against the account and keeps it; throws
+  /// [DeepSeekException] when DeepSeek rejects it.
+  Future<void> signInDeepSeek(String token, {String locale = 'en'}) async {
+    final name = await DeepSeekApi(token, locale: locale).currentUser();
+    final account = DeepSeekAccount(token: token, name: name);
+    await account.save();
+    _deepSeekAccount = account;
+    notifyListeners();
+    await refreshDeepSeekHistory();
+  }
+
+  Future<void> signOutDeepSeek() async {
+    await DeepSeekAccount.clear();
+    _deepSeekAccount = null;
+    notifyListeners();
+  }
+
+  ChatSession? get _currentSession =>
+      _sessions.where((s) => s.id == _currentSessionId).firstOrNull;
 
   Future<void> updateSystemPrompt(String? newPrompt) async {
     if (newPrompt == null ||
@@ -184,14 +359,21 @@ class ChatAiState extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final db = DatabaseService.instance;
+      final id = ChatAiTool.config.id;
+      _backend = ChatBackend.fromName(await db.getSetting(id, _backendKey));
+      _deepSeekThinking =
+          await db.getSetting(id, _deepSeekThinkingKey) == 'true';
+      _deepSeekSearch = await db.getSetting(id, _deepSeekSearchKey) == 'true';
+      _customSystemPrompt = await db.getSetting(id, 'system_prompt');
+      _deepSeekAccount = await DeepSeekAccount.read();
       await loadSessions();
+      if (_backend == ChatBackend.deepseek) {
+        unawaited(refreshDeepSeekHistory());
+      }
 
       if (Platform.isAndroid) {
         _prompt = Prompt();
-        _customSystemPrompt = await DatabaseService.instance.getSetting(
-          ChatAiTool.config.id,
-          'system_prompt',
-        );
         await updateFeatureStatus();
 
         if (_featureStatus == FeatureStatus.downloading) {
@@ -280,11 +462,17 @@ class ChatAiState extends ChangeNotifier {
   Future<void> loadSessions() async {
     try {
       _sessions = await ChatAiDbHelper.instance.getSessions();
-      if (_sessions.isNotEmpty && _currentSessionId == null) {
-        await selectSession(_sessions.first.id);
-      } else if (_sessions.isEmpty) {
-        _currentSessionId = null;
-        _messages = [];
+      if (_currentSession == null) {
+        final last = await _lastSessionId(_backend);
+        final own = backendSessions;
+        final resume =
+            own.where((s) => s.id == last).firstOrNull ?? own.firstOrNull;
+        if (resume != null) {
+          await selectSession(resume.id);
+        } else {
+          _currentSessionId = null;
+          _messages = [];
+        }
       }
       notifyListeners();
     } catch (e) {
@@ -292,8 +480,39 @@ class ChatAiState extends ChangeNotifier {
     }
   }
 
+  static String _lastSessionKey(ChatBackend backend) =>
+      'last_session_${backend.name}';
+
+  Future<int?> _lastSessionId(ChatBackend backend) async => int.tryParse(
+    await DatabaseService.instance.getSetting(
+          ChatAiTool.config.id,
+          _lastSessionKey(backend),
+        ) ??
+        '',
+  );
+
   Future<void> selectSession(int sessionId) async {
     _currentSessionId = sessionId;
+    final session = _currentSession;
+    if (session != null) {
+      unawaited(
+        DatabaseService.instance.setSetting(
+          ChatAiTool.config.id,
+          _lastSessionKey(session.backend),
+          '$sessionId',
+        ),
+      );
+    }
+    if (session != null && session.backend != _backend) {
+      _backend = session.backend;
+      unawaited(
+        DatabaseService.instance.setSetting(
+          ChatAiTool.config.id,
+          _backendKey,
+          _backend.name,
+        ),
+      );
+    }
     try {
       _messages = await ChatAiDbHelper.instance.getMessages(sessionId);
     } catch (e) {
@@ -301,6 +520,9 @@ class ChatAiState extends ChangeNotifier {
       _messages = [];
     }
     notifyListeners();
+    if (session != null && session.backend == ChatBackend.deepseek) {
+      await _loadDeepSeekMessages(session);
+    }
   }
 
   Future<void> createNewSession({String? initialTitle}) async {
@@ -308,7 +530,10 @@ class ChatAiState extends ChangeNotifier {
       final title =
           initialTitle ??
           'Chat ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}';
-      final newId = await ChatAiDbHelper.instance.createSession(title);
+      final newId = await ChatAiDbHelper.instance.createSession(
+        title,
+        backend: _backend,
+      );
       await loadSessions();
       await selectSession(newId);
     } catch (e) {
@@ -317,6 +542,21 @@ class ChatAiState extends ChangeNotifier {
   }
 
   Future<void> deleteSession(int sessionId) async {
+    final session = _sessions.where((s) => s.id == sessionId).firstOrNull;
+    final remoteId = session?.remoteId;
+    final account = _deepSeekAccount;
+    if (remoteId != null && account != null) {
+      try {
+        await DeepSeekApi(
+          account.token,
+          locale: _locale,
+        ).deleteSession(remoteId);
+      } on DeepSeekException catch (e) {
+        _onDeepSeekError(e);
+        notifyListeners();
+        return;
+      }
+    }
     try {
       await ChatAiDbHelper.instance.deleteSession(sessionId);
       if (_currentSessionId == sessionId) {
@@ -381,7 +621,14 @@ class ChatAiState extends ChangeNotifier {
       _isGenerating = true;
       notifyListeners();
 
-      if (isGenerativeAvailable) {
+      if (_backend == ChatBackend.deepseek) {
+        await _replyWithDeepSeek(
+          sessionId,
+          text,
+          fileNameToSend,
+          fileContentToSend,
+        );
+      } else if (isGenerativeAvailable) {
         final buffer = StringBuffer();
         await for (final chunk in _prompt!.runInferenceStreaming(
           _buildPromptText(),
@@ -434,9 +681,81 @@ class ChatAiState extends ChangeNotifier {
       _messages = await ChatAiDbHelper.instance.getMessages(sessionId);
       _isGenerating = false;
       _streamingText = '';
+      _streamingThinking = '';
       notifyListeners();
     }
   }
+
+  Future<void> _replyWithDeepSeek(
+    int sessionId,
+    String text,
+    String? fileName,
+    String? fileContent,
+  ) async {
+    final account = _deepSeekAccount;
+    if (account == null) {
+      _deepSeekError = DeepSeekErrorKind.unauthorized;
+      return;
+    }
+    final api = DeepSeekApi(account.token, locale: _locale);
+    final session = _currentSession;
+    try {
+      var remoteId = session?.remoteId;
+      var parentId = session?.remoteParentId;
+      final firstMessage = remoteId == null;
+      if (remoteId == null) {
+        remoteId = await api.createSession();
+        parentId = null;
+      }
+      final prompt = StringBuffer();
+      final custom = _customSystemPrompt;
+      if (firstMessage && custom != null) prompt.writeln('$custom\n');
+      if (fileName != null && fileContent != null) {
+        prompt
+          ..writeln('[Attached File: $fileName]')
+          ..writeln(fileContent)
+          ..writeln('-----');
+      }
+      prompt.write(text);
+
+      var reply = const DeepSeekReply();
+      await for (final update in api.complete(
+        sessionId: remoteId,
+        parentMessageId: parentId,
+        prompt: prompt.toString(),
+        thinking: _deepSeekThinking,
+        search: _deepSeekSearch,
+      )) {
+        reply = update;
+        _streamingThinking = update.thinking;
+        _streamingText = update.text;
+        notifyListeners();
+      }
+      if (reply.text.trim().isEmpty && reply.notice != null) {
+        throw DeepSeekException(DeepSeekErrorKind.server, reply.notice);
+      }
+      await ChatAiDbHelper.instance.insertMessage(
+        sessionId,
+        'model',
+        reply.text.trim(),
+        thinking: reply.thinking.trim().isEmpty ? null : reply.thinking.trim(),
+      );
+      await ChatAiDbHelper.instance.updateRemote(
+        sessionId,
+        remoteId: remoteId,
+        parentId: reply.responseMessageId ?? parentId,
+      );
+      final title = reply.title;
+      if (title != null && title.isNotEmpty) {
+        await ChatAiDbHelper.instance.updateSessionTitle(sessionId, title);
+      }
+      await loadSessions();
+    } on DeepSeekException catch (e) {
+      _onDeepSeekError(e);
+    }
+  }
+
+  String get _locale => Platform.localeName.split(RegExp('[_-]')).first;
 
   String _buildPromptText() {
     final buffer = StringBuffer();

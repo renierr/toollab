@@ -77,6 +77,24 @@ class DesktopWebLogin {
       });
     }
 
+    final script = target.script;
+    final isScriptComplete = target.isScriptComplete;
+    if (script != null && isScriptComplete != null) {
+      var running = false;
+      poll = Timer.periodic(_cookiePollInterval, (_) async {
+        if (running || completer.isCompleted) return;
+        running = true;
+        try {
+          final value = await webview.evaluateJavaScript(script);
+          if (isScriptComplete(value)) finish(WebLoginScriptValue(value));
+        } catch (e) {
+          debugLog('[DesktopWebLogin] Running login script failed: $e');
+        } finally {
+          running = false;
+        }
+      });
+    }
+
     await webview.launch(url.toString());
     try {
       return await completer.future;

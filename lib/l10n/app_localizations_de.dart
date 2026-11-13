@@ -15538,4 +15538,85 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get translatorUnsupportedPlatform =>
       'Der Offline-Übersetzer nutzt ML Kit und ist nur unter Android verfügbar.';
+
+  @override
+  String get chatAiBackendTooltip => 'KI-Modell';
+
+  @override
+  String get chatAiBackendNano => 'Gemini Nano (auf dem Gerät)';
+
+  @override
+  String get chatAiBackendDeepSeek => 'DeepSeek (Web-Konto)';
+
+  @override
+  String chatAiDeepSeekSignedInAs(String name) {
+    return 'Angemeldet als $name';
+  }
+
+  @override
+  String get chatAiDeepSeekSignOut => 'Von DeepSeek abmelden';
+
+  @override
+  String get chatAiDeepSeekLoginTitle => 'Bei DeepSeek anmelden';
+
+  @override
+  String get chatAiDeepSeekLoginBody =>
+      'Chatte mit deinem DeepSeek-Konto wie auf chat.deepseek.com. Einmal anmelden, die Anmeldung bleibt auf diesem Gerät. Das nutzt die inoffizielle Web-Schnittstelle von DeepSeek, die sich jederzeit ändern oder den Zugang sperren kann.';
+
+  @override
+  String get chatAiDeepSeekLoginButton => 'Anmelden';
+
+  @override
+  String get chatAiDeepSeekPasteToken => 'Token einfügen';
+
+  @override
+  String get chatAiDeepSeekTokenHelp =>
+      'Öffne in einem Browser, der bei chat.deepseek.com angemeldet ist, die Entwicklertools und kopiere den Wert von userToken aus dem Local Storage.';
+
+  @override
+  String get chatAiDeepSeekSignedIn => 'Bei DeepSeek angemeldet';
+
+  @override
+  String get chatAiDeepThink => 'DeepThink';
+
+  @override
+  String get chatAiDeepSeekSearch => 'Suche';
+
+  @override
+  String get chatAiThoughts => 'Gedanken';
+
+  @override
+  String get chatAiDeepSeekErrorUnauthorized =>
+      'Die DeepSeek-Anmeldung ist nicht mehr gültig. Bitte neu anmelden.';
+
+  @override
+  String get chatAiDeepSeekErrorBanned => 'DeepSeek hat dieses Konto gesperrt.';
+
+  @override
+  String get chatAiDeepSeekErrorChallenge =>
+      'Die Sicherheitsprüfung von DeepSeek ist fehlgeschlagen. Versuch es später nochmal.';
+
+  @override
+  String get chatAiDeepSeekErrorNetwork => 'Keine Verbindung zu DeepSeek.';
+
+  @override
+  String chatAiDeepSeekErrorServer(String detail) {
+    return 'DeepSeek-Fehler: $detail';
+  }
+
+  @override
+  String get chatAiModeLocal => 'Lokal';
+
+  @override
+  String get chatAiYou => 'Du';
+
+  @override
+  String get chatAiDeepSeekCopyToken => 'Token kopieren';
+
+  @override
+  String get chatAiDeepSeekSetToken => 'Token setzen';
+
+  @override
+  String get chatAiDeepSeekTokenCopied =>
+      'Token kopiert. Halte ihn geheim: Er gibt vollen Zugriff auf dein DeepSeek-Konto.';
 }
