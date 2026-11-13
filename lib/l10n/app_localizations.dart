@@ -27267,6 +27267,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Token copied. Keep it secret: it gives full access to your DeepSeek account.'**
   String get chatAiDeepSeekTokenCopied;
+
+  /// No description provided for @chatAiDeepSeekSignOutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of DeepSeek on this device? To chat with DeepSeek again you need to sign in or set the token.'**
+  String get chatAiDeepSeekSignOutConfirm;
 }
 
 class _AppLocalizationsDelegate

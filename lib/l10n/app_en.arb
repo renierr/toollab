@@ -7455,5 +7455,6 @@
   "chatAiYou": "You",
   "chatAiDeepSeekCopyToken": "Copy token",
   "chatAiDeepSeekSetToken": "Set token",
-  "chatAiDeepSeekTokenCopied": "Token copied. Keep it secret: it gives full access to your DeepSeek account."
+  "chatAiDeepSeekTokenCopied": "Token copied. Keep it secret: it gives full access to your DeepSeek account.",
+  "chatAiDeepSeekSignOutConfirm": "Sign out of DeepSeek on this device? To chat with DeepSeek again you need to sign in or set the token."
 }

@@ -15503,4 +15503,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatAiDeepSeekTokenCopied =>
       'Token copied. Keep it secret: it gives full access to your DeepSeek account.';
+
+  @override
+  String get chatAiDeepSeekSignOutConfirm =>
+      'Sign out of DeepSeek on this device? To chat with DeepSeek again you need to sign in or set the token.';
 }

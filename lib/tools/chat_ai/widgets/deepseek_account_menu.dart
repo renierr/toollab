@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../chat_ai_state.dart';
 import '../deepseek/deepseek_login_actions.dart';
@@ -29,7 +30,27 @@ class DeepSeekAccountMenu extends StatelessWidget {
           messenger?.showSnackBar(SnackBar(content: Text(error)));
         }
       case _AccountAction.signOut:
-        await state.signOutDeepSeek();
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => ResponsiveAlertDialog(
+            title: Text(l10n.chatAiDeepSeekSignOut),
+            content: Text(l10n.chatAiDeepSeekSignOutConfirm),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(l10n.commonCancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                child: Text(l10n.chatAiDeepSeekSignOut),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true) await state.signOutDeepSeek();
     }
   }
 

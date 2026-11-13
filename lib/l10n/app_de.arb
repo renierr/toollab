@@ -5921,5 +5921,6 @@
   "chatAiYou": "Du",
   "chatAiDeepSeekCopyToken": "Token kopieren",
   "chatAiDeepSeekSetToken": "Token setzen",
-  "chatAiDeepSeekTokenCopied": "Token kopiert. Halte ihn geheim: Er gibt vollen Zugriff auf dein DeepSeek-Konto."
+  "chatAiDeepSeekTokenCopied": "Token kopiert. Halte ihn geheim: Er gibt vollen Zugriff auf dein DeepSeek-Konto.",
+  "chatAiDeepSeekSignOutConfirm": "Auf diesem Gerät von DeepSeek abmelden? Um wieder mit DeepSeek zu chatten, musst du dich neu anmelden oder den Token setzen."
 }
