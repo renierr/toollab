@@ -324,14 +324,28 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
                       );
                     }
                     final post = posts[i];
+                    final focal = post.id == widget.focalPostId;
+                    // A thread page's replies hang off the focal post as
+                    // siblings, so the line stops there.
+                    final above =
+                        i > 0 &&
+                        post.replyToId == posts[i - 1].id &&
+                        posts[i - 1].id != widget.focalPostId;
+                    final below =
+                        !focal &&
+                        i + 1 < posts.length &&
+                        posts[i + 1].replyToId == post.id;
                     return _PostRow(
                       key: ValueKey(post.id),
                       postId: post.id,
                       rows: _rows,
+                      divider: !below,
                       child: XPostCard(
                         post: post,
                         autofocus: i == 0,
-                        focal: post.id == widget.focalPostId,
+                        focal: focal,
+                        threadAbove: above,
+                        threadBelow: below,
                       ),
                     );
                   },
@@ -350,12 +364,14 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
 class _PostRow extends StatefulWidget {
   final String postId;
   final Map<String, _PostRowState> rows;
+  final bool divider;
   final Widget child;
 
   const _PostRow({
     super.key,
     required this.postId,
     required this.rows,
+    required this.divider,
     required this.child,
   });
 
@@ -419,10 +435,12 @@ class _PostRowState extends State<_PostRow> with DisposeCleanup {
       child: DecoratedBox(
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-              width: 0.5,
-            ),
+            bottom: widget.divider
+                ? BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.5,
+                  )
+                : BorderSide.none,
           ),
         ),
         child: widget.child,

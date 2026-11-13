@@ -34,11 +34,17 @@ class XPostCard extends StatefulWidget {
   final bool focal;
   final bool autofocus;
 
+  /// Draw the thread line to the parent above / the reply below.
+  final bool threadAbove;
+  final bool threadBelow;
+
   const XPostCard({
     super.key,
     required this.post,
     this.focal = false,
     this.autofocus = false,
+    this.threadAbove = false,
+    this.threadBelow = false,
   });
 
   @override
@@ -197,7 +203,7 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         XPostHeader(post: post, fullTime: widget.focal),
-        if (replyTo != null && !widget.focal)
+        if (replyTo != null && !widget.focal && !widget.threadAbove)
           Text(l10n.xFeedReplyingTo(replyTo), style: muted),
         if (post.text.isNotEmpty)
           Padding(
@@ -302,19 +308,23 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
                         ],
                       ),
                     ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () => XNavigation.openUser(
-                          context,
-                          post.author.screenName,
+                  _ThreadLines(
+                    above: widget.threadAbove,
+                    below: widget.threadBelow,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onTap: () => XNavigation.openUser(
+                            context,
+                            post.author.screenName,
+                          ),
+                          child: XAvatar(url: post.author.avatarUrl),
                         ),
-                        child: XAvatar(url: post.author.avatarUrl),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(child: body),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(child: body),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -332,6 +342,54 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
         textScaler: TextScaler.linear(media.textScaler.scale(1) * textScale),
       ),
       child: content,
+    );
+  }
+}
+
+/// The vertical line joining this post's avatar to its thread neighbours. It
+/// reaches into the card's 10 px top and 4 px bottom padding.
+class _ThreadLines extends StatelessWidget {
+  static const double _avatar = 44;
+  static const double _width = 2;
+  static const double _left = (_avatar - _width) / 2;
+
+  final bool above;
+  final bool below;
+  final Widget child;
+
+  const _ThreadLines({
+    required this.above,
+    required this.below,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!above && !below) return child;
+    final line = ColoredBox(
+      color: Theme.of(context).colorScheme.outlineVariant,
+    );
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        if (above)
+          Positioned(
+            left: _left,
+            width: _width,
+            top: -10,
+            height: 8,
+            child: line,
+          ),
+        if (below)
+          Positioned(
+            left: _left,
+            width: _width,
+            top: _avatar + 2,
+            bottom: -4,
+            child: line,
+          ),
+        child,
+      ],
     );
   }
 }

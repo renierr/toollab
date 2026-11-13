@@ -206,6 +206,20 @@ void main() {
     expect(post.url, 'https://x.com/user5/status/5');
   });
 
+  test('reads the parent of a reply', () {
+    final post = XTimelineParser.parseTweet(
+      _tweet(
+        '9',
+        legacy: {
+          'in_reply_to_status_id_str': '8',
+          'in_reply_to_screen_name': 'user8',
+        },
+      ),
+    );
+    expect(post?.replyToId, '8');
+    expect(post?.replyToScreenName, 'user8');
+  });
+
   test('builds pbs.twimg.com renditions', () {
     const media = XMedia(
       type: XMediaType.photo,

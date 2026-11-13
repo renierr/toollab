@@ -74,6 +74,7 @@ class XPost {
   final XPost? quoted;
   final XUser? repostedBy;
   final String? replyToScreenName;
+  final String? replyToId;
   final XLinkCard? card;
   final int replies;
   final int quotes;
@@ -98,6 +99,7 @@ class XPost {
     this.quoted,
     this.repostedBy,
     this.replyToScreenName,
+    this.replyToId,
     this.card,
     this.replies = 0,
     this.quotes = 0,
