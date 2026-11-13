@@ -127,6 +127,13 @@ class TreadmillControlState extends ChangeNotifier {
   // Aborts an in-flight connect retry loop (user cancelled / disconnected).
   bool _treadmillConnectAbort = false;
 
+  // A link lost mid-session is retried for this long before the device is
+  // dropped (and, for the treadmill, the session saved).
+  static const _reconnectWindow = Duration(minutes: 2);
+  static const _reconnectInterval = Duration(seconds: 3);
+  bool _treadmillReconnecting = false;
+  bool _hrmReconnecting = false;
+
   AppLifecycleListener? _lifecycleListener;
 
   TreadmillControlState() {
@@ -557,6 +564,7 @@ class TreadmillControlState extends ChangeNotifier {
     treadmillName = name;
     treadmillConnection = BleConnectionState.connecting;
     _treadmillConnectAbort = false;
+    _treadmillReconnecting = false;
     notifyListeners();
     if (stopScanning) await stopScan();
 
@@ -606,6 +614,7 @@ class TreadmillControlState extends ChangeNotifier {
 
   Future<void> disconnectTreadmill({bool notify = true}) async {
     _treadmillConnectAbort = true;
+    _treadmillReconnecting = false;
     if (treadmillDeviceId == null) return;
     final deviceId = treadmillDeviceId;
 
@@ -651,6 +660,7 @@ class TreadmillControlState extends ChangeNotifier {
     hrmDeviceId = deviceId;
     hrmName = name;
     hrmConnection = BleConnectionState.connecting;
+    _hrmReconnecting = false;
     notifyListeners();
     if (stopScanning) await stopScan();
     try {
@@ -663,6 +673,7 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   Future<void> disconnectHrm({bool notify = true}) async {
+    _hrmReconnecting = false;
     if (hrmDeviceId == null) return;
     final deviceId = hrmDeviceId;
 
@@ -691,8 +702,19 @@ class TreadmillControlState extends ChangeNotifier {
         ? BleConnectionState.connected
         : BleConnectionState.disconnected;
     if (deviceId == treadmillDeviceId) {
+      if (state == BleConnectionState.disconnected &&
+          _shouldReconnect(_treadmillReconnecting)) {
+        _treadmillReconnecting = true;
+        treadmillConnection = BleConnectionState.connecting;
+        _stopPitPatHeartbeat();
+        _isControlRequested = false;
+        notifyListeners();
+        unawaited(_reconnect(deviceId, treadmill: true));
+        return;
+      }
       treadmillConnection = state;
       if (state == BleConnectionState.connected) {
+        _treadmillReconnecting = false;
         savedTreadmillId = deviceId;
         savedTreadmillName = treadmillName;
         unawaited(
@@ -792,33 +814,22 @@ class TreadmillControlState extends ChangeNotifier {
           } catch (_) {}
         }
       } else if (state == BleConnectionState.disconnected) {
-        _stopPitPatHeartbeat();
-        treadmillType = TreadmillType.none;
-        _isControlRequested = false;
-        _noWriteWithoutResponse.clear();
-
-        treadmillDeviceId = null;
-        treadmillName = null;
-
-        if (workoutStatus == WorkoutStatus.running ||
-            workoutStatus == WorkoutStatus.paused) {
-          stopWorkout();
-        }
-
-        speed = 0.0;
-        incline = 0.0;
-        distance = 0.0;
-        calories = 0;
-        steps = 0;
-        elapsedTime = 0;
-        hrmHistory.clear();
-        speedControlSupported = false;
-        inclineControlSupported = false;
+        _dropTreadmillLink();
       }
       notifyListeners();
     } else if (deviceId == hrmDeviceId) {
+      if (state == BleConnectionState.disconnected &&
+          _shouldReconnect(_hrmReconnecting)) {
+        _hrmReconnecting = true;
+        hrmConnection = BleConnectionState.connecting;
+        heartRate = 0;
+        notifyListeners();
+        unawaited(_reconnect(deviceId, treadmill: false));
+        return;
+      }
       hrmConnection = state;
       if (state == BleConnectionState.connected) {
+        _hrmReconnecting = false;
         savedHrmId = deviceId;
         savedHrmName = hrmName;
         unawaited(_persistSavedDevice(_savedHrmKey, deviceId, hrmName));
@@ -856,14 +867,89 @@ class TreadmillControlState extends ChangeNotifier {
           }
         } catch (_) {}
       } else if (state == BleConnectionState.disconnected) {
-        batteryLevel = null;
-        hrmDeviceId = null;
-        hrmName = null;
-        heartRate = 0;
-        hrmHistory.clear();
+        _dropHrmLink();
       }
       notifyListeners();
     }
+  }
+
+  /// An unexpected drop during a session is retried; a manual disconnect has
+  /// already cleared the device id, so it never reaches here.
+  bool _shouldReconnect(bool alreadyReconnecting) =>
+      !alreadyReconnecting && !isSimulator && hasActiveSession;
+
+  /// Retries a link lost mid-session. The session keeps running meanwhile; a
+  /// successful connect goes through [_onConnectionChange], which sets the
+  /// device up again and clears the reconnecting flag.
+  Future<void> _reconnect(String deviceId, {required bool treadmill}) async {
+    bool wanted() => treadmill
+        ? _treadmillReconnecting && treadmillDeviceId == deviceId
+        : _hrmReconnecting && hrmDeviceId == deviceId;
+    final deadline = DateTime.now().add(_reconnectWindow);
+    var attempt = 0;
+    while (wanted() && hasActiveSession && DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(_reconnectInterval);
+      if (!wanted() || !hasActiveSession) break;
+      attempt++;
+      debugLog('[TreadmillControl] Reconnect $deviceId attempt $attempt');
+      try {
+        await UniversalBle.connect(deviceId);
+      } catch (e) {
+        debugLog('[TreadmillControl] Reconnect attempt $attempt failed: $e');
+      }
+      // The user disconnected or picked another device while connecting.
+      if (treadmill ? treadmillDeviceId != deviceId : hrmDeviceId != deviceId) {
+        try {
+          await UniversalBle.disconnect(deviceId);
+        } catch (_) {}
+        return;
+      }
+    }
+    if (!wanted()) return;
+    errorLog('[TreadmillControl] Reconnect to $deviceId gave up');
+    if (treadmill) {
+      _treadmillReconnecting = false;
+      treadmillConnection = BleConnectionState.disconnected;
+      _dropTreadmillLink();
+    } else {
+      _hrmReconnecting = false;
+      hrmConnection = BleConnectionState.disconnected;
+      _dropHrmLink();
+    }
+    notifyListeners();
+  }
+
+  void _dropTreadmillLink() {
+    _stopPitPatHeartbeat();
+    treadmillType = TreadmillType.none;
+    _isControlRequested = false;
+    _noWriteWithoutResponse.clear();
+
+    treadmillDeviceId = null;
+    treadmillName = null;
+
+    if (workoutStatus == WorkoutStatus.running ||
+        workoutStatus == WorkoutStatus.paused) {
+      stopWorkout();
+    }
+
+    speed = 0.0;
+    incline = 0.0;
+    distance = 0.0;
+    calories = 0;
+    steps = 0;
+    elapsedTime = 0;
+    hrmHistory.clear();
+    speedControlSupported = false;
+    inclineControlSupported = false;
+  }
+
+  void _dropHrmLink() {
+    batteryLevel = null;
+    hrmDeviceId = null;
+    hrmName = null;
+    heartRate = 0;
+    hrmHistory.clear();
   }
 
   // Incoming GATT Data Parsing

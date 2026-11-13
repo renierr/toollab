@@ -36,104 +36,120 @@ class VideoControls extends StatelessWidget {
     final durationMs = state.duration.inMilliseconds;
     final positionMs = state.position.inMilliseconds.clamp(0, durationMs);
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.black54, Colors.transparent, Colors.black87],
-          stops: [0, 0.35, 1],
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  tooltip: l10n.commonClose,
-                  onPressed: onClose,
-                ),
-                Expanded(
-                  child: Text(
-                    title ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                for (final action in actions)
-                  IconButton(
-                    icon: Icon(action.icon),
-                    tooltip: action.label,
-                    onPressed: () => action.onPressed(context),
-                  ),
-              ],
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+    return Column(
+      children: [
+        _Scrim(
+          alignment: Alignment.topCenter,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
               child: Row(
                 children: [
-                  Text(_format(state.position)),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: l10n.commonClose,
+                    onPressed: onClose,
+                  ),
                   Expanded(
-                    child: Slider(
-                      value: durationMs > 0 ? positionMs.toDouble() : 0,
-                      max: durationMs > 0 ? durationMs.toDouble() : 1,
-                      onChanged: durationMs > 0
-                          ? (v) => onSeek(Duration(milliseconds: v.round()))
-                          : null,
+                    child: Text(
+                      title ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
-                  Text(_format(state.duration)),
+                  for (final action in actions)
+                    IconButton(
+                      icon: Icon(action.icon),
+                      tooltip: action.label,
+                      onPressed: () => action.onPressed(context),
+                    ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 12,
-                children: [
-                  IconButton(
-                    iconSize: 32,
-                    icon: const Icon(Icons.replay_10),
-                    tooltip: l10n.videoPlayerBack(seekStep.inSeconds),
-                    onPressed: () => onSeekBy(-seekStep),
-                  ),
-                  IconButton.filled(
-                    focusNode: playFocusNode,
-                    autofocus: true,
-                    iconSize: 40,
-                    icon: Icon(state.playing ? Icons.pause : Icons.play_arrow),
-                    tooltip: state.playing
-                        ? l10n.videoPlayerPause
-                        : l10n.videoPlayerPlay,
-                    onPressed: onTogglePlay,
-                  ),
-                  IconButton(
-                    iconSize: 32,
-                    icon: const Icon(Icons.forward_10),
-                    tooltip: l10n.videoPlayerForward(seekStep.inSeconds),
-                    onPressed: () => onSeekBy(seekStep),
-                  ),
-                  IconButton(
-                    iconSize: 28,
-                    icon: Icon(
-                      state.volume > 0 ? Icons.volume_up : Icons.volume_off,
-                    ),
-                    tooltip: state.volume > 0
-                        ? l10n.videoPlayerMute
-                        : l10n.videoPlayerUnmute,
-                    onPressed: onToggleMute,
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+        const Spacer(),
+        _Scrim(
+          alignment: Alignment.bottomCenter,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Text(_format(state.position)),
+                        Expanded(
+                          child: Slider(
+                            value: durationMs > 0 ? positionMs.toDouble() : 0,
+                            max: durationMs > 0 ? durationMs.toDouble() : 1,
+                            onChanged: durationMs > 0
+                                ? (v) =>
+                                      onSeek(Duration(milliseconds: v.round()))
+                                : null,
+                          ),
+                        ),
+                        Text(_format(state.duration)),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      children: [
+                        IconButton(
+                          iconSize: 32,
+                          icon: const Icon(Icons.replay_10),
+                          tooltip: l10n.videoPlayerBack(seekStep.inSeconds),
+                          onPressed: () => onSeekBy(-seekStep),
+                        ),
+                        IconButton.filled(
+                          focusNode: playFocusNode,
+                          autofocus: true,
+                          iconSize: 40,
+                          icon: Icon(
+                            state.playing ? Icons.pause : Icons.play_arrow,
+                          ),
+                          tooltip: state.playing
+                              ? l10n.videoPlayerPause
+                              : l10n.videoPlayerPlay,
+                          onPressed: onTogglePlay,
+                        ),
+                        IconButton(
+                          iconSize: 32,
+                          icon: const Icon(Icons.forward_10),
+                          tooltip: l10n.videoPlayerForward(seekStep.inSeconds),
+                          onPressed: () => onSeekBy(seekStep),
+                        ),
+                        IconButton(
+                          iconSize: 28,
+                          icon: Icon(
+                            state.volume > 0
+                                ? Icons.volume_up
+                                : Icons.volume_off,
+                          ),
+                          tooltip: state.volume > 0
+                              ? l10n.videoPlayerMute
+                              : l10n.videoPlayerUnmute,
+                          onPressed: onToggleMute,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -143,5 +159,29 @@ class VideoControls extends StatelessWidget {
     if (minutes < 60) return '$minutes:$seconds';
     final mm = (minutes % 60).toString().padLeft(2, '0');
     return '${d.inHours}:$mm:$seconds';
+  }
+}
+
+/// A shade behind one control bar, dark at the screen edge and clear toward the
+/// video, so its height follows the controls rather than the window.
+class _Scrim extends StatelessWidget {
+  final Alignment alignment;
+  final Widget child;
+
+  const _Scrim({required this.alignment, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final top = alignment == Alignment.topCenter;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: alignment,
+          end: top ? Alignment.bottomCenter : Alignment.topCenter,
+          colors: [top ? Colors.black54 : Colors.black87, Colors.transparent],
+        ),
+      ),
+      child: child,
+    );
   }
 }

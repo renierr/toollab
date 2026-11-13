@@ -76,6 +76,11 @@ lives in memory and has to survive both leaving the page and the app going away.
   own, and the guard dialog offers *cancel*, *leave and keep recording*, or *stop and save*. The
   page tears the tool down (`resetState`) only when no session is active, so a backgrounded
   session keeps its BLE links, its sampling timer and its keep-alive leases.
+- **Losing a Bluetooth link**: if the treadmill or heart rate monitor drops while a session is
+  active, the device is kept, its badge shows *connecting*, and a reconnect is tried every three
+  seconds for two minutes. The session keeps running (heart rate reads 0 meanwhile, or falls
+  back to the treadmill's own value). Only when the window runs out is the device dropped — and
+  for the treadmill, the session stopped and saved — as an immediate drop did before.
 - **Crash / kill insurance**: the running workout is written to the `active_session` tool setting
   every ten ticks, on pause, and whenever the app loses the foreground (the last certain moment
   before a swipe-away). Stopping a workout clears the snapshot.
