@@ -6,6 +6,7 @@ import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../chat_ai_state.dart';
 import '../chat_history_groups.dart';
 import '../chat_models.dart';
+import '../config.dart';
 import 'chat_session_info.dart';
 
 class ChatSessionDrawer extends StatelessWidget {
@@ -93,14 +94,26 @@ class _HistoryHeading extends StatelessWidget {
       ChatHistoryAge.month => DateFormat.yMMMM(locale).format(group.month!),
     };
 
+    final accent = ChatAiTool.config.accentColor;
+
     return Padding(
       padding: EdgeInsets.fromLTRB(16.0, first ? 12.0 : 20.0, 16.0, 4.0),
-      child: Text(
-        label,
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        children: [
+          Text(
+            label.toUpperCase(),
+            maxLines: 1,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Divider(height: 1.0, color: accent.withValues(alpha: 0.35)),
+          ),
+        ],
       ),
     );
   }
