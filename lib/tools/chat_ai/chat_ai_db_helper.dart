@@ -20,7 +20,7 @@ class ChatAiDbHelper {
     );
     try {
       await _cachedDb!.migrate(
-        currentVersion: 5,
+        currentVersion: 6,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -72,6 +72,11 @@ class ChatAiDbHelper {
           if (oldVersion < 5) {
             await txn.execute(
               'ALTER TABLE ${txn.nameTable(messageTable)} ADD COLUMN citations TEXT',
+            );
+          }
+          if (oldVersion < 6) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(messageTable)} ADD COLUMN files TEXT',
             );
           }
         },
@@ -188,7 +193,7 @@ class ChatAiDbHelper {
         String role,
         String content,
         String? thinking,
-        String? fileName,
+        List<ChatFile> files,
         List<ChatCitation> citations,
         int createdAt,
       })
@@ -209,7 +214,10 @@ class ChatAiDbHelper {
           'role': message.role,
           'content': message.content,
           'thinking': message.thinking,
-          'file_name': message.fileName,
+          'file_name': message.files.isEmpty
+              ? null
+              : message.files.map((f) => f.name).join('\n'),
+          'files': ChatFile.encodeList(message.files),
           'citations': ChatCitation.encodeList(message.citations),
           'created_at': message.createdAt,
         });

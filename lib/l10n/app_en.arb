@@ -2527,6 +2527,8 @@
   "chatAiAttachImage": "Attach Image",
   "chatAiAttachDocument": "Attach Document",
   "chatAiAttachTooltip": "Attach file or image",
+  "chatAiMessageCopied": "Message copied",
+  "chatAiFileDownloadFailed": "Could not load the file from DeepSeek.",
   "chatAiFileUploading": "Uploading and reading file…",
   "chatAiFileUploadFailed": "Upload failed. Remove the file to send.",
   "chatAiPrepareButton": "Prepare AI Core",

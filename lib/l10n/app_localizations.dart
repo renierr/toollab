@@ -7559,6 +7559,18 @@ abstract class AppLocalizations {
   /// **'Attach file or image'**
   String get chatAiAttachTooltip;
 
+  /// No description provided for @chatAiMessageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Message copied'**
+  String get chatAiMessageCopied;
+
+  /// No description provided for @chatAiFileDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the file from DeepSeek.'**
+  String get chatAiFileDownloadFailed;
+
   /// No description provided for @chatAiFileUploading.
   ///
   /// In en, this message translates to:

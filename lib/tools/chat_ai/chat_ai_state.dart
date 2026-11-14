@@ -208,9 +208,7 @@ class ChatAiState extends ChangeNotifier {
                 ? null
                 : message.thinking.trim(),
             citations: message.citations,
-            fileName: message.fileNames.isEmpty
-                ? null
-                : message.fileNames.join('\n'),
+            files: message.files,
             createdAt: lastTime = message.insertedAt > lastTime
                 ? message.insertedAt
                 : lastTime + 1,
@@ -798,6 +796,11 @@ class ChatAiState extends ChangeNotifier {
       _streamingThinking = '';
       _streamingCitations = const [];
       notifyListeners();
+    }
+    // Only the account's copy knows where the files are kept.
+    final session = _currentSession;
+    if (remoteFiles.isNotEmpty && session != null && session.id == sessionId) {
+      await _loadDeepSeekMessages(session);
     }
   }
 

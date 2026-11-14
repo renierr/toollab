@@ -10,6 +10,18 @@ import 'deepseek_history.dart';
 import 'deepseek_pow.dart';
 import 'deepseek_stream.dart';
 
+/// What the file server returns for a stored file; previews exist for
+/// images only.
+enum DeepSeekFileVariant {
+  thumbnail('t'),
+  preview('p'),
+  original('r');
+
+  final String code;
+
+  const DeepSeekFileVariant(this.code);
+}
+
 enum DeepSeekErrorKind { unauthorized, banned, challenge, network, server }
 
 class DeepSeekException implements Exception {
@@ -34,6 +46,7 @@ class DeepSeekApi {
   static final Uri _base = Uri.parse('https://chat.deepseek.com');
   static const String _completionPath = '/api/v0/chat/completion';
   static const String _uploadPath = '/api/v0/file/upload_file';
+  static const String _filesBase = 'https://files.deepseeksvc.com/api/file';
   static const Duration _timeout = Duration(seconds: 30);
   static const Duration _uploadTimeout = Duration(minutes: 3);
   static const Duration _parsePollInterval = Duration(seconds: 2);
@@ -192,6 +205,37 @@ class DeepSeekApi {
     yield parser.reply;
   }
 
+  /// A link to a file of the account from its history `signed_path`; the
+  /// signature stands in for the login.
+  static Uri fileUri(String signedPath, DeepSeekFileVariant variant) {
+    final query = signedPath.contains('?')
+        ? signedPath.substring(signedPath.indexOf('?') + 1)
+        : signedPath;
+    return Uri.parse('$_filesBase?$query&ty=${variant.code}');
+  }
+
+  /// Streams the original of [signedPath] into [target].
+  static Future<void> downloadFile(String signedPath, File target) async {
+    final client = await AppHttpClient.client;
+    final request = http.Request(
+      'GET',
+      fileUri(signedPath, DeepSeekFileVariant.original),
+    )..headers['user-agent'] = _userAgent;
+    final http.StreamedResponse response;
+    try {
+      response = await client.send(request).timeout(_uploadTimeout);
+    } catch (e) {
+      throw DeepSeekException(DeepSeekErrorKind.network, '$e');
+    }
+    _checkStatus(response.statusCode);
+    final sink = target.openWrite();
+    try {
+      await response.stream.pipe(sink);
+    } catch (e) {
+      throw DeepSeekException(DeepSeekErrorKind.network, '$e');
+    }
+  }
+
   /// Uploads the file at [path] and waits until DeepSeek has parsed it;
   /// returns the id a message references it by.
   Future<String> uploadFile(String path, String name) async {
@@ -206,7 +250,7 @@ class DeepSeekApi {
     final head = utf8.encode(
       '--$boundary\r\n'
       'Content-Disposition: form-data; name="file"; filename="$safeName"\r\n'
-      'Content-Type: ${_mimeType(name)}\r\n\r\n',
+      'Content-Type: ${mimeTypeFor(name)}\r\n\r\n',
     );
     final tail = utf8.encode('\r\n--$boundary--\r\n');
     final http.Response response;
@@ -254,7 +298,7 @@ class DeepSeekApi {
     throw DeepSeekException(DeepSeekErrorKind.server, '$name: timeout');
   }
 
-  static String _mimeType(String name) => switch (name
+  static String mimeTypeFor(String name) => switch (name
       .split('.')
       .last
       .toLowerCase()) {

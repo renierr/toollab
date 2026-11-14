@@ -9,9 +9,14 @@ import '../chat_models.dart';
 /// Turns DeepSeek's `[citation:N]` markers into `citation` elements.
 class CitationSyntax extends md.InlineSyntax {
   static const String tag = 'citation';
+  static const String _pattern = r'\[citation:(\d+)\]';
   static final CitationSyntax instance = CitationSyntax._();
 
-  CitationSyntax._() : super(r'\[citation:(\d+)\]');
+  CitationSyntax._() : super(_pattern);
+
+  /// [text] without its markers, for copying or sharing.
+  static String strip(String text) =>
+      text.replaceAll(RegExp(r' ?' + _pattern), '');
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {
@@ -126,15 +131,13 @@ class _CitationBadge extends StatelessWidget {
         ],
       ),
       waitDuration: const Duration(milliseconds: 250),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: () => launchUrl(
-            Uri.parse(citation.url),
-            mode: LaunchMode.externalApplication,
-          ),
-          child: badge,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8.0),
+        onTap: () => launchUrl(
+          Uri.parse(citation.url),
+          mode: LaunchMode.externalApplication,
         ),
+        child: badge,
       ),
     );
   }

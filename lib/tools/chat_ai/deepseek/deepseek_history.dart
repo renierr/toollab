@@ -29,7 +29,7 @@ class DeepSeekHistoryMessage {
   final String text;
   final String thinking;
   final int insertedAt;
-  final List<String> fileNames;
+  final List<ChatFile> files;
   final List<ChatCitation> citations;
 
   const DeepSeekHistoryMessage({
@@ -38,7 +38,7 @@ class DeepSeekHistoryMessage {
     required this.text,
     required this.thinking,
     required this.insertedAt,
-    this.fileNames = const [],
+    this.files = const [],
     this.citations = const [],
   });
 }
@@ -89,20 +89,13 @@ class DeepSeekHistory {
     final text = StringBuffer();
     final thinking = StringBuffer();
     final citations = <ChatCitation>[];
-    final fileNames = <String>[];
+    final files = <ChatFile>[];
     final fragments = item['fragments'];
     if (fragments is List) {
       for (final fragment in fragments) {
         if (fragment is! Map) continue;
         citations.addAll(ChatCitation.fromJsonList(fragment['results']));
-        final files = fragment['files'];
-        if (files is List) {
-          for (final file in files) {
-            if (file is Map && file['file_name'] is String) {
-              fileNames.add(file['file_name'] as String);
-            }
-          }
-        }
+        files.addAll(ChatFile.fromJsonList(fragment['files']));
         final content = fragment['content'];
         if (content is! String) continue;
         switch (fragment['type']) {
@@ -116,7 +109,7 @@ class DeepSeekHistory {
     return DeepSeekHistoryMessage(
       id: id,
       citations: citations,
-      fileNames: fileNames,
+      files: files,
       fromUser: item['role'] == 'USER',
       text: text.toString(),
       thinking: thinking.toString(),

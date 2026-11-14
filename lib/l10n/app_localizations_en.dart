@@ -4276,6 +4276,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatAiAttachTooltip => 'Attach file or image';
 
   @override
+  String get chatAiMessageCopied => 'Message copied';
+
+  @override
+  String get chatAiFileDownloadFailed =>
+      'Could not load the file from DeepSeek.';
+
+  @override
   String get chatAiFileUploading => 'Uploading and reading file…';
 
   @override

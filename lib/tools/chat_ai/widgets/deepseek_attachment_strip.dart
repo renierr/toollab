@@ -16,12 +16,18 @@ class DeepSeekAttachmentStrip extends StatelessWidget {
       (state) => state.deepSeekFiles,
     );
     if (files.isEmpty) return const SizedBox.shrink();
+    // Many files must not push the text field off a short screen.
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: Wrap(
-        spacing: 8.0,
-        runSpacing: 8.0,
-        children: [for (final file in files) _AttachmentChip(file: file)],
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 132.0),
+        child: SingleChildScrollView(
+          child: Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: [for (final file in files) _AttachmentChip(file: file)],
+          ),
+        ),
       ),
     );
   }

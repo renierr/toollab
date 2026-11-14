@@ -4,6 +4,8 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 
+import '../chat_models.dart';
+
 enum DeepSeekUploadStatus { uploading, ready, failed }
 
 /// A file picked for the next DeepSeek message, uploaded as soon as it is
@@ -23,7 +25,7 @@ class DeepSeekAttachment {
     this.fileId,
   });
 
-  bool get isImage => isImageName(name);
+  bool get isImage => ChatFile(name: name).isImage;
 
   DeepSeekAttachment ready(String id) => DeepSeekAttachment(
     path: path,
@@ -37,16 +39,6 @@ class DeepSeekAttachment {
     name: name,
     status: DeepSeekUploadStatus.failed,
   );
-
-  static const Set<String> imageExtensions = {
-    'png',
-    'jpg',
-    'jpeg',
-    'webp',
-    'gif',
-    'bmp',
-    'heic',
-  };
 
   /// Deletes the copies Android's pickers leave in the app cache once a file
   /// is no longer needed; anywhere else the path is the user's own file.
@@ -64,7 +56,4 @@ class DeepSeekAttachment {
       }
     }
   }
-
-  static bool isImageName(String name) =>
-      imageExtensions.contains(name.split('.').last.toLowerCase());
 }

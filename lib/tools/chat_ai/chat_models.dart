@@ -58,6 +58,9 @@ class ChatMessage {
   /// Web sources a DeepSeek reply cites as `[citation:N]`.
   final List<ChatCitation> citations;
 
+  /// Files DeepSeek keeps for this message, known once loaded from history.
+  final List<ChatFile> files;
+
   const ChatMessage({
     required this.id,
     required this.sessionId,
@@ -69,6 +72,7 @@ class ChatMessage {
     this.thinking,
     required this.createdAt,
     this.citations = const [],
+    this.files = const [],
   });
 
   bool get isUser => role == 'user';
@@ -76,6 +80,11 @@ class ChatMessage {
 
   /// A DeepSeek message can carry several files, stored one name per line.
   List<String> get fileNames => fileName?.split('\n') ?? const [];
+
+  /// [files] when known, otherwise just the names from [fileName].
+  List<ChatFile> get attachments => files.isNotEmpty
+      ? files
+      : [for (final name in fileNames) ChatFile(name: name)];
 
   factory ChatMessage.fromMap(Map<String, dynamic> map) => ChatMessage(
     id: map['id'] as int? ?? 0,
@@ -88,7 +97,70 @@ class ChatMessage {
     thinking: map['thinking'] as String?,
     createdAt: map['created_at'] as int? ?? 0,
     citations: ChatCitation.decodeList(map['citations'] as String?),
+    files: ChatFile.decodeList(map['files'] as String?),
   );
+}
+
+/// A file attached to a DeepSeek message.
+class ChatFile {
+  final String name;
+  final bool isImage;
+
+  /// DeepSeek's signed `/file?file_id=…&state=…` path, which needs no login.
+  final String? signedPath;
+
+  ChatFile({required this.name, bool? isImage, this.signedPath})
+    : isImage = isImage ?? imageExtensions.contains(_extension(name));
+
+  static const Set<String> imageExtensions = {
+    'png',
+    'jpg',
+    'jpeg',
+    'webp',
+    'gif',
+    'bmp',
+    'heic',
+  };
+
+  static String _extension(String name) => name.split('.').last.toLowerCase();
+
+  static ChatFile? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final name = json['file_name'];
+    if (name is! String || name.isEmpty) return null;
+    final isImage = json['is_image'];
+    final signedPath = json['signed_path'];
+    return ChatFile(
+      name: name,
+      isImage: isImage is bool ? isImage : null,
+      signedPath: signedPath is String && signedPath.isNotEmpty
+          ? signedPath
+          : null,
+    );
+  }
+
+  static List<ChatFile> fromJsonList(Object? json) => [
+    if (json is List)
+      for (final item in json) ?fromJson(item),
+  ];
+
+  Map<String, Object?> toJson() => {
+    'file_name': name,
+    'is_image': isImage,
+    'signed_path': signedPath,
+  };
+
+  static String? encodeList(List<ChatFile> files) =>
+      files.isEmpty ? null : jsonEncode([for (final f in files) f.toJson()]);
+
+  static List<ChatFile> decodeList(String? text) {
+    if (text == null || text.isEmpty) return const [];
+    try {
+      return fromJsonList(jsonDecode(text));
+    } on FormatException {
+      return const [];
+    }
+  }
 }
 
 /// A search result a reply cites; [index] is the `N` of `[citation:N]`.
