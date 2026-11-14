@@ -145,7 +145,7 @@ class ChatAiState extends ChangeNotifier {
     if (backend == ChatBackend.deepseek) {
       _selectedImageBytes = null;
     } else {
-      _deepSeekFiles = const [];
+      _clearDeepSeekFiles();
     }
     notifyListeners();
     await DatabaseService.instance.setSetting(
@@ -283,8 +283,13 @@ class ChatAiState extends ChangeNotifier {
   Future<void> signOutDeepSeek() async {
     await DeepSeekAccount.clear();
     _deepSeekAccount = null;
-    _deepSeekFiles = const [];
+    _clearDeepSeekFiles();
     notifyListeners();
+  }
+
+  void _clearDeepSeekFiles() {
+    unawaited(DeepSeekAttachment.discardPickerCopies(_deepSeekFiles));
+    _deepSeekFiles = const [];
   }
 
   /// Starts uploading [files] for the next DeepSeek message.
@@ -325,6 +330,7 @@ class ChatAiState extends ChangeNotifier {
   }
 
   void removeDeepSeekFile(DeepSeekAttachment file) {
+    unawaited(DeepSeekAttachment.discardPickerCopies([file]));
     _deepSeekFiles = [
       for (final f in _deepSeekFiles)
         if (!identical(f, file)) f,
@@ -548,7 +554,7 @@ class ChatAiState extends ChangeNotifier {
     _selectedImageBytes = null;
     _attachedFileName = null;
     _attachedFileContent = null;
-    _deepSeekFiles = const [];
+    _clearDeepSeekFiles();
     notifyListeners();
   }
 
@@ -693,7 +699,7 @@ class ChatAiState extends ChangeNotifier {
     _selectedImageBytes = null;
     _attachedFileName = null;
     _attachedFileContent = null;
-    if (deepSeek) _deepSeekFiles = const [];
+    if (deepSeek) _clearDeepSeekFiles();
     notifyListeners();
 
     try {
