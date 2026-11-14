@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:video_player/video_player.dart';
 
@@ -73,9 +74,16 @@ class NativeVideoBackend implements VideoBackend {
   @override
   Future<void> setVolume(double volume) async => _controller?.setVolume(volume);
 
-  /// ExoPlayer draws into a SurfaceView, which has no frame readback.
+  static const _frameChannel = MethodChannel('de.renier.tool_lab/video_frame');
+
   @override
-  bool get canScreenshot => false;
+  Future<Uint8List?> nativeFrame() {
+    final size = _controller?.value.size;
+    return _frameChannel.invokeMethod<Uint8List>('capture', {
+      'width': size?.width.round(),
+      'height': size?.height.round(),
+    });
+  }
 
   @override
   Widget buildView(BuildContext context) {

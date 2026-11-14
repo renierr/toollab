@@ -31,7 +31,14 @@ class VideoQuality {
   final String label;
   final Uri source;
 
-  const VideoQuality({required this.label, required this.source});
+  /// A master playlist; never a stall fallback, mpv plays its best variant.
+  final bool adaptive;
+
+  const VideoQuality({
+    required this.label,
+    required this.source,
+    this.adaptive = false,
+  });
 }
 
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
@@ -90,6 +97,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   static const Duration _hideDelay = Duration(seconds: 3);
   static const Duration _seekStep = Duration(seconds: 10);
   static const Duration _arrowSeekStep = Duration(seconds: 5);
+  static const Duration _stallLimit = Duration(seconds: 8);
 
   VideoBackend _backend = VideoBackend.create();
   late Uri _source = widget.source;
@@ -99,6 +107,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   final ScreenOnRequest _screenOn = ScreenOnRequest();
   Timer? _hideTimer;
   bool _controlsVisible = false;
+  Timer? _stallTimer;
+
+  /// Where playback should continue: X serves some replay segments only at
+  /// lower qualities, so a seek can stall forever on the chosen one.
+  Duration? _resumeAt;
 
   @override
   void initState() {
@@ -107,6 +120,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _backend.state.addListener(_onState);
     onDispose(() {
       _hideTimer?.cancel();
+      _stallTimer?.cancel();
       _backend.state.removeListener(_onState);
       if (Platform.isAndroid) _screenOn.set(false);
       unawaited(_backend.dispose());
@@ -117,10 +131,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
 
   /// A fresh backend per source: the old view leaves the tree before its
   /// controller is disposed.
-  Future<void> _switchQuality(VideoQuality quality) async {
+  Future<void> _switchQuality(VideoQuality quality, {Duration? start}) async {
     if (quality.source == _source) return;
     final old = _backend;
-    final position = widget.live ? null : old.state.value.position;
+    final position = widget.live
+        ? null
+        : start ?? _resumeAt ?? old.state.value.position;
+    _stallTimer?.cancel();
+    _stallTimer = null;
+    _resumeAt = position;
     old.state.removeListener(_onState);
     final next = VideoBackend.create();
     // Opening first: the Android backend builds its view from the controller
@@ -145,9 +164,59 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   void _onState() {
     final state = _backend.state.value;
     if (Platform.isAndroid) _screenOn.set(state.playing);
+    _watchStall(state);
     if ((state.completed || state.error != null) && !_controlsVisible) {
       _showControls();
     }
+  }
+
+  void _watchStall(VideoPlaybackState state) {
+    final resumeAt = _resumeAt;
+    final nearEnd =
+        resumeAt != null &&
+        state.duration > Duration.zero &&
+        state.duration - resumeAt < const Duration(seconds: 10);
+    final failed =
+        resumeAt != null &&
+        (state.error != null || (state.completed && !nearEnd));
+    if (failed) {
+      _fallBack();
+      return;
+    }
+    final loading = !state.initialized || state.buffering;
+    if (!loading || state.error != null) {
+      _stallTimer?.cancel();
+      _stallTimer = null;
+      if (state.playing && state.initialized) _resumeAt = null;
+      return;
+    }
+    _stallTimer ??= Timer(_stallLimit, _fallBack);
+  }
+
+  void _fallBack() {
+    _stallTimer?.cancel();
+    _stallTimer = null;
+    final qualities = widget.qualities;
+    final index = qualities.indexWhere((q) => q.source == _source);
+    final lower = qualities
+        .skip(index + 1)
+        .where((q) => !q.adaptive)
+        .firstOrNull;
+    if (index < 0 || lower == null || !mounted) return;
+    debugLog('[VideoPlayerPage] Stalled, falling back to ${lower.label}');
+    unawaited(_switchQuality(lower));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context).videoPlayerQualityFallback(lower.label),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _seekTo(Duration position) async {
+    if (!widget.live) _resumeAt = position;
+    await _backend.seek(position);
   }
 
   void _scheduleHide() {
@@ -185,16 +254,20 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Future<void> _copyFrame() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
     var copied = false;
     try {
+      final native = await _backend.nativeFrame();
       final boundary =
           _frameKey.currentContext?.findRenderObject()
               as RenderRepaintBoundary?;
-      if (boundary != null && boundary.size.width > 0) {
+      if (native != null) {
+        copied = await ClipboardHelper.copyImageBytes(native);
+      } else if (boundary != null && boundary.size.width > 0) {
         final videoWidth = _backend.state.value.videoWidth;
         final ratio = videoWidth != null
             ? videoWidth / boundary.size.width
-            : MediaQuery.devicePixelRatioOf(context);
+            : devicePixelRatio;
         final image = await boundary.toImage(pixelRatio: ratio);
         try {
           final png = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -228,7 +301,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     if (state.duration > Duration.zero && target > state.duration) {
       target = state.duration;
     }
-    await _backend.seek(target);
+    await _seekTo(target);
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
@@ -260,9 +333,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       unawaited(_seekBy(-_seekStep));
       return KeyEventResult.handled;
     }
-    if (key == LogicalKeyboardKey.keyS &&
-        event is KeyDownEvent &&
-        _backend.canScreenshot) {
+    if (key == LogicalKeyboardKey.keyS && event is KeyDownEvent) {
       unawaited(_copyFrame());
       return KeyEventResult.handled;
     }
@@ -360,7 +431,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                             actions: widget.actions,
                             onTogglePlay: _togglePlay,
                             onSeek: (position) {
-                              unawaited(_backend.seek(position));
+                              unawaited(_seekTo(position));
                               _scheduleHide();
                             },
                             onSeekBy: (delta) {
@@ -371,12 +442,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                                 _backend.setVolume(state.volume > 0 ? 0 : 1),
                             onClose: () => Navigator.of(context).maybePop(),
                             seekStep: _seekStep,
-                            onCopyFrame: _backend.canScreenshot
-                                ? () {
-                                    unawaited(_copyFrame());
-                                    _scheduleHide();
-                                  }
-                                : null,
+                            onCopyFrame: () {
+                              unawaited(_copyFrame());
+                              _scheduleHide();
+                            },
                             live: widget.live,
                             qualities: widget.qualities,
                             source: _source,

@@ -25948,6 +25948,12 @@ abstract class AppLocalizations {
   /// **'Auto'**
   String get videoPlayerQualityAuto;
 
+  /// No description provided for @videoPlayerQualityFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Not loading, switched to {quality}'**
+  String videoPlayerQualityFallback(String quality);
+
   /// No description provided for @toolNameXFeed.
   ///
   /// In en, this message translates to:

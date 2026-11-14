@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -122,7 +123,7 @@ class MediaKitVideoBackend implements VideoBackend {
   Future<void> setVolume(double volume) => _player.setVolume(volume * 100);
 
   @override
-  bool get canScreenshot => true;
+  Future<Uint8List?> nativeFrame() async => null;
 
   @override
   Widget buildView(BuildContext context) =>

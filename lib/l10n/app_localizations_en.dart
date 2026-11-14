@@ -14741,6 +14741,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoPlayerQualityAuto => 'Auto';
 
   @override
+  String videoPlayerQualityFallback(String quality) {
+    return 'Not loading, switched to $quality';
+  }
+
+  @override
   String get toolNameXFeed => 'X Feed';
 
   @override

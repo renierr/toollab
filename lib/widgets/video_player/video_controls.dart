@@ -17,7 +17,7 @@ class VideoControls extends StatelessWidget {
   final VoidCallback onClose;
   final Duration seekStep;
 
-  /// Copies the bare video frame; null where the backend cannot read it back.
+  /// Copies the bare video frame.
   final VoidCallback? onCopyFrame;
   final bool live;
   final List<VideoQuality> qualities;

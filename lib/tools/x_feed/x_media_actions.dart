@@ -116,6 +116,7 @@ class XMediaActions {
           VideoQuality(
             label: l10n.videoPlayerQualityAuto,
             source: stream.playlist,
+            adaptive: true,
           ),
       ];
     } on XGeoblockedException {

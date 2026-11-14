@@ -7213,6 +7213,12 @@
   "videoPlayerCopyFrame": "Copy frame to clipboard",
   "videoPlayerQuality": "Quality",
   "videoPlayerQualityAuto": "Auto",
+  "videoPlayerQualityFallback": "Not loading, switched to {quality}",
+  "@videoPlayerQualityFallback": {
+    "placeholders": {
+      "quality": {"type": "String"}
+    }
+  },
   "toolNameXFeed": "X Feed",
   "toolDescXFeed": "Your X timeline without ads, with native video playback and sharing",
   "xFeedForYou": "For you",

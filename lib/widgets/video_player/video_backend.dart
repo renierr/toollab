@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'media_kit_video_backend.dart';
@@ -45,9 +46,9 @@ abstract class VideoBackend {
   Future<void> seek(Duration position);
   Future<void> setVolume(double volume);
 
-  /// Whether the view is a Flutter texture that can be read back; Android's
-  /// SurfaceView cannot.
-  bool get canScreenshot;
+  /// PNG of the current frame when the view is not a Flutter texture (Android's
+  /// SurfaceView); null means the page reads the frame back from Flutter.
+  Future<Uint8List?> nativeFrame();
   Widget buildView(BuildContext context);
   Future<void> dispose();
 

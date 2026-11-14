@@ -14853,6 +14853,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get videoPlayerQualityAuto => 'Automatisch';
 
   @override
+  String videoPlayerQualityFallback(String quality) {
+    return 'Lädt nicht, auf $quality gewechselt';
+  }
+
+  @override
   String get toolNameXFeed => 'X Feed';
 
   @override
