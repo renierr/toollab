@@ -7559,6 +7559,48 @@ abstract class AppLocalizations {
   /// **'Attach file or image'**
   String get chatAiAttachTooltip;
 
+  /// No description provided for @chatAiHistoryToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get chatAiHistoryToday;
+
+  /// No description provided for @chatAiHistoryYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get chatAiHistoryYesterday;
+
+  /// No description provided for @chatAiHistoryLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous 7 days'**
+  String get chatAiHistoryLastWeek;
+
+  /// No description provided for @chatAiHistoryLastMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous 30 days'**
+  String get chatAiHistoryLastMonth;
+
+  /// No description provided for @chatAiSessionStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Started {time}'**
+  String chatAiSessionStarted(String time);
+
+  /// No description provided for @chatAiSessionLastActive.
+  ///
+  /// In en, this message translates to:
+  /// **'last active {time}'**
+  String chatAiSessionLastActive(String time);
+
+  /// No description provided for @chatAiSessionMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 message} other{{count} messages}}'**
+  String chatAiSessionMessages(int count);
+
   /// No description provided for @chatAiMessageCopied.
   ///
   /// In en, this message translates to:

@@ -4309,6 +4309,39 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatAiAttachTooltip => 'Datei oder Bild anfügen';
 
   @override
+  String get chatAiHistoryToday => 'Heute';
+
+  @override
+  String get chatAiHistoryYesterday => 'Gestern';
+
+  @override
+  String get chatAiHistoryLastWeek => 'Letzte 7 Tage';
+
+  @override
+  String get chatAiHistoryLastMonth => 'Letzte 30 Tage';
+
+  @override
+  String chatAiSessionStarted(String time) {
+    return 'Begonnen: $time';
+  }
+
+  @override
+  String chatAiSessionLastActive(String time) {
+    return 'zuletzt aktiv: $time';
+  }
+
+  @override
+  String chatAiSessionMessages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Nachrichten',
+      one: '1 Nachricht',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get chatAiMessageCopied => 'Nachricht kopiert';
 
   @override

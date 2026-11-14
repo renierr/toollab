@@ -2527,6 +2527,28 @@
   "chatAiAttachImage": "Attach Image",
   "chatAiAttachDocument": "Attach Document",
   "chatAiAttachTooltip": "Attach file or image",
+  "chatAiHistoryToday": "Today",
+  "chatAiHistoryYesterday": "Yesterday",
+  "chatAiHistoryLastWeek": "Previous 7 days",
+  "chatAiHistoryLastMonth": "Previous 30 days",
+  "chatAiSessionStarted": "Started {time}",
+  "@chatAiSessionStarted": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "chatAiSessionLastActive": "last active {time}",
+  "@chatAiSessionLastActive": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "chatAiSessionMessages": "{count, plural, =1{1 message} other{{count} messages}}",
+  "@chatAiSessionMessages": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "chatAiMessageCopied": "Message copied",
   "chatAiFileDownloadFailed": "Could not load the file from DeepSeek.",
   "chatAiFileUploading": "Uploading and reading file…",

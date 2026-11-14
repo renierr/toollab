@@ -19,16 +19,17 @@ import 'chat_ai_state.dart';
 import 'chat_models.dart';
 import 'widgets/chat_message_bubble.dart';
 import 'widgets/chat_session_drawer.dart';
+import 'widgets/chat_session_info.dart';
 import 'package:tool_lab/widgets/genai_status_banner.dart';
 import 'widgets/chat_suggestions.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/chat_thinking_bubble.dart';
 import 'widgets/chat_settings_menu.dart';
-import 'widgets/chat_backend_switch.dart';
+import 'widgets/chat_model_picker.dart';
 import 'widgets/deepseek_account_menu.dart';
 import 'widgets/deepseek_attachment_strip.dart';
 import 'widgets/deepseek_login_view.dart';
-import 'widgets/deepseek_options_bar.dart';
+import 'widgets/chat_options_bar.dart';
 import 'deepseek/deepseek_login_actions.dart';
 
 class ChatAiPage extends StatefulWidget {
@@ -238,7 +239,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
 
     final showSuggestions = state.messages.isEmpty;
     final deepSeek = state.backend == ChatBackend.deepseek;
-    final modelName = ChatBackendSwitch.modelName(state.backend);
+    final modelName = ChatModelPicker.modelName(state.backend);
     final textScale = state.textPercent / 100;
     final enlarged = textScale > 1.0;
 
@@ -291,10 +292,16 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
       ],
       child: Column(
         children: [
-          const ChatBackendSwitch(),
-          if (state.needsDeepSeekLogin)
-            const Expanded(child: DeepSeekLoginView())
-          else ...[
+          if (state.needsDeepSeekLogin) ...[
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: ChatModelPicker(),
+              ),
+            ),
+            const Expanded(child: DeepSeekLoginView()),
+          ] else ...[
             if (!deepSeek)
               GenAiStatusBanner(
                 status: state.featureStatus,
@@ -321,10 +328,18 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                         builder: (context, padding) => ListView.builder(
                           controller: _scrollController,
                           itemCount:
+                              1 +
                               state.messages.length +
                               (state.isGenerating ? 1 : 0),
                           padding: padding,
-                          itemBuilder: (context, index) {
+                          itemBuilder: (context, row) {
+                            if (row == 0) {
+                              return ChatSessionInfo(
+                                backend: state.backend,
+                                messages: state.messages,
+                              );
+                            }
+                            final index = row - 1;
                             if (index == state.messages.length) {
                               if (state.streamingText.isEmpty &&
                                   state.streamingThinking.isEmpty) {
@@ -366,7 +381,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                 onPickImage: deepSeek
                     ? () => _pickDeepSeekImages(state)
                     : () => _pickImage(state),
-                options: deepSeek ? const DeepSeekOptionsBar() : null,
+                options: const ChatOptionsBar(),
                 attachments: deepSeek ? const DeepSeekAttachmentStrip() : null,
                 hasAttachments: deepSeek && state.deepSeekFiles.isNotEmpty,
                 attachmentsReady: !deepSeek || state.deepSeekFilesReady,
