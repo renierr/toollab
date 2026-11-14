@@ -11,6 +11,7 @@ import 'package:tool_lab/widgets/readable_width.dart';
 import '../models/x_post.dart';
 import '../x_feed_state.dart';
 import '../x_keys.dart';
+import '../x_layout.dart';
 import '../x_timeline_controller.dart';
 import 'x_error_view.dart';
 import 'x_post_card.dart';
@@ -42,7 +43,6 @@ class XTimelineView extends StatefulWidget {
 }
 
 class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
-  static const double _maxWidth = 680;
   static const int _prefetchDistance = 5;
   static const Duration _seenDwell = Duration(seconds: 1);
 
@@ -320,7 +320,12 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
           if (header == null) return placeholder;
           return ListView(
             children: [
-              ReadableWidth(maxWidth: _maxWidth, child: header),
+              ReadableWidth(
+                maxWidth: XLayout.maxWidth,
+                minWidth: XLayout.minWidth,
+                widthFactor: XLayout.widthFactor,
+                child: header,
+              ),
               SizedBox(height: 240, child: placeholder),
             ],
           );
@@ -336,7 +341,9 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
               focusNode: _listFocus,
               onKeyEvent: _onListKey,
               child: ReadableScrollPadding(
-                maxWidth: _maxWidth,
+                maxWidth: XLayout.maxWidth,
+                minWidth: XLayout.minWidth,
+                widthFactor: XLayout.widthFactor,
                 // Jumping the old list to 0 lands below the top: its stale
                 // child offsets correct the position once the new posts lay out.
                 builder: (context, padding) => ListView.builder(

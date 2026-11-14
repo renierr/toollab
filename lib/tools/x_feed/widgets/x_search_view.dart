@@ -6,6 +6,7 @@ import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../api/x_api.dart';
 import '../x_feed_state.dart';
+import '../x_layout.dart';
 import '../x_timeline_controller.dart';
 import 'x_timeline_view.dart';
 
@@ -59,7 +60,9 @@ class _XSearchViewState extends State<XSearchView> with DisposeCleanup {
     return Column(
       children: [
         ReadableWidth(
-          maxWidth: 680,
+          maxWidth: XLayout.maxWidth,
+          minWidth: XLayout.minWidth,
+          widthFactor: XLayout.widthFactor,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: Column(
