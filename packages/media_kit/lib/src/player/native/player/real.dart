@@ -2764,10 +2764,12 @@ Uint8List? _screenshot(_ScreenshotData data) {
   final pointers = args.map<Pointer<Utf8>>((e) {
     return e.toNativeUtf8();
   }).toList();
-  final Pointer<Pointer<Utf8>> arr = calloc.allocate(args.join().length);
+  // mpv reads argv up to a NULL entry: one pointer per argument plus that.
+  final Pointer<Pointer<Utf8>> arr = calloc<Pointer<Utf8>>(args.length + 1);
   for (int i = 0; i < args.length; i++) {
     arr[i] = pointers[i];
   }
+  arr[args.length] = nullptr;
   mpv.mpv_command_ret(
     ctx,
     arr.cast(),

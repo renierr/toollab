@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
@@ -15,6 +14,9 @@ class VideoPlaybackState {
   final Duration position;
   final Duration duration;
   final double aspectRatio;
+
+  /// The decoded frame's width in pixels, when the backend knows it.
+  final int? videoWidth;
   final double volume;
   final String? error;
 
@@ -26,6 +28,7 @@ class VideoPlaybackState {
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.aspectRatio = 16 / 9,
+    this.videoWidth,
     this.volume = 1,
     this.error,
   });
@@ -41,10 +44,10 @@ abstract class VideoBackend {
   Future<void> pause();
   Future<void> seek(Duration position);
   Future<void> setVolume(double volume);
-  bool get canScreenshot;
 
-  /// The current video frame as PNG, without any controls drawn over it.
-  Future<Uint8List?> screenshot();
+  /// Whether the view is a Flutter texture that can be read back; Android's
+  /// SurfaceView cannot.
+  bool get canScreenshot;
   Widget buildView(BuildContext context);
   Future<void> dispose();
 

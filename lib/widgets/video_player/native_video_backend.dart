@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:video_player/video_player.dart';
@@ -77,9 +76,6 @@ class NativeVideoBackend implements VideoBackend {
   /// ExoPlayer draws into a SurfaceView, which has no frame readback.
   @override
   bool get canScreenshot => false;
-
-  @override
-  Future<Uint8List?> screenshot() async => null;
 
   @override
   Widget buildView(BuildContext context) {

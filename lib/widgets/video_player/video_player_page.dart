@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
@@ -91,6 +93,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
 
   VideoBackend _backend = VideoBackend.create();
   late Uri _source = widget.source;
+  final GlobalKey _frameKey = GlobalKey(debugLabel: 'VideoFrame');
   final FocusNode _keyFocus = FocusNode(debugLabel: 'VideoPlayerKeys');
   final FocusNode _playFocus = FocusNode(debugLabel: 'VideoPlayerPlay');
   final ScreenOnRequest _screenOn = ScreenOnRequest();
@@ -177,13 +180,34 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _showControls();
   }
 
+  /// Reads the video texture back through Flutter at the video's own size.
+  /// mpv's screenshot cannot convert VA-API GPU frames.
   Future<void> _copyFrame() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     var copied = false;
     try {
-      final bytes = await _backend.screenshot();
-      if (bytes != null) copied = await ClipboardHelper.copyImageBytes(bytes);
+      final boundary =
+          _frameKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary != null && boundary.size.width > 0) {
+        final videoWidth = _backend.state.value.videoWidth;
+        final ratio = videoWidth != null
+            ? videoWidth / boundary.size.width
+            : MediaQuery.devicePixelRatioOf(context);
+        final image = await boundary.toImage(pixelRatio: ratio);
+        try {
+          final png = await image.toByteData(format: ui.ImageByteFormat.png);
+          if (png != null) {
+            copied = await ClipboardHelper.copyImageBytes(
+              png.buffer.asUint8List(),
+              decoded: image,
+            );
+          }
+        } finally {
+          image.dispose();
+        }
+      }
     } catch (e) {
       errorLog('[VideoPlayerPage] Frame capture failed: $e');
     }
@@ -310,6 +334,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                   ValueListenableBuilder<VideoPlaybackState>(
                     valueListenable: _backend.state,
                     builder: (context, state, view) => _VideoSurface(
+                      frameKey: _frameKey,
                       state: state,
                       view: view!,
                       errorLabel: l10n.videoPlayerFailed,
@@ -375,11 +400,13 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
 }
 
 class _VideoSurface extends StatelessWidget {
+  final GlobalKey frameKey;
   final VideoPlaybackState state;
   final Widget view;
   final String errorLabel;
 
   const _VideoSurface({
+    required this.frameKey,
     required this.state,
     required this.view,
     required this.errorLabel,
@@ -403,7 +430,10 @@ class _VideoSurface extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         Center(
-          child: AspectRatio(aspectRatio: state.aspectRatio, child: view),
+          child: AspectRatio(
+            aspectRatio: state.aspectRatio,
+            child: RepaintBoundary(key: frameKey, child: view),
+          ),
         ),
         if (!state.initialized || state.buffering)
           const Center(child: CircularProgressIndicator()),

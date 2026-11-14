@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:media_kit/media_kit.dart';
@@ -54,6 +53,7 @@ class MediaKitVideoBackend implements VideoBackend {
       position: s.position,
       duration: s.duration,
       aspectRatio: width > 0 && height > 0 ? width / height : 16 / 9,
+      videoWidth: width > 0 ? width : null,
       volume: s.volume / 100,
       error: error ?? state.value.error,
     );
@@ -123,9 +123,6 @@ class MediaKitVideoBackend implements VideoBackend {
 
   @override
   bool get canScreenshot => true;
-
-  @override
-  Future<Uint8List?> screenshot() => _player.screenshot(format: 'image/png');
 
   @override
   Widget buildView(BuildContext context) =>
