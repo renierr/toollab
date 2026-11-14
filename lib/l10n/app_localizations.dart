@@ -362,6 +362,18 @@ abstract class AppLocalizations {
   /// **'Reset'**
   String get commonReset;
 
+  /// No description provided for @commonDecreaseTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease text size'**
+  String get commonDecreaseTextSize;
+
+  /// No description provided for @commonIncreaseTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase text size'**
+  String get commonIncreaseTextSize;
+
   /// No description provided for @commonDone.
   ///
   /// In en, this message translates to:
@@ -7582,6 +7594,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customize the instructions for the AI model. Leave empty to use the default.'**
   String get chatAiSystemPromptDescription;
+
+  /// No description provided for @chatAiTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat text size'**
+  String get chatAiTextSize;
 
   /// No description provided for @toolNameHexEditor.
   ///

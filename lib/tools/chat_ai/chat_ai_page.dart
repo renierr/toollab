@@ -10,6 +10,9 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
+import 'package:tool_lab/widgets/text_scale_multiplier.dart';
+import 'package:tool_lab/widgets/text_size_sheet.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
@@ -210,6 +213,8 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
     final showSuggestions = state.messages.isEmpty;
     final deepSeek = state.backend == ChatBackend.deepseek;
     final modelName = ChatBackendSwitch.modelName(state.backend);
+    final textScale = state.textPercent / 100;
+    final enlarged = textScale > 1.0;
 
     return ToolLayout(
       scaffoldKey: _scaffoldKey,
@@ -217,6 +222,19 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
       drawer: const ChatSessionDrawer(),
       actions: [
         if (deepSeek) const DeepSeekAccountMenu(),
+        IconButton(
+          icon: const Icon(Icons.format_size),
+          tooltip: l10n.chatAiTextSize,
+          onPressed: () => TextSizeSheet.show<ChatAiState>(
+            context,
+            title: l10n.chatAiTextSize,
+            percentOf: (state) => state.textPercent,
+            onChanged: (state, percent) => state.setTextPercent(percent),
+            minPercent: ChatAiState.minTextPercent,
+            maxPercent: ChatAiState.maxTextPercent,
+            step: ChatAiState.textPercentStep,
+          ),
+        ),
         IconButton(
           icon: const Icon(Icons.settings_outlined),
           tooltip: l10n.chatAiSystemPromptTitle,
@@ -296,39 +314,46 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                         },
                       ),
                     )
-                  : ReadableScrollPadding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      builder: (context, padding) => ListView.builder(
-                        controller: _scrollController,
-                        itemCount:
-                            state.messages.length +
-                            (state.isGenerating ? 1 : 0),
-                        padding: padding,
-                        itemBuilder: (context, index) {
-                          if (index == state.messages.length) {
-                            if (state.streamingText.isEmpty &&
-                                state.streamingThinking.isEmpty) {
-                              return ChatThinkingBubble(modelName: modelName);
+                  : TextScaleMultiplier(
+                      scale: textScale,
+                      child: ReadableScrollPadding(
+                        // Larger text keeps the same words per line.
+                        maxWidth: Breakpoints.readableContent * textScale,
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        builder: (context, padding) => ListView.builder(
+                          controller: _scrollController,
+                          itemCount:
+                              state.messages.length +
+                              (state.isGenerating ? 1 : 0),
+                          padding: padding,
+                          itemBuilder: (context, index) {
+                            if (index == state.messages.length) {
+                              if (state.streamingText.isEmpty &&
+                                  state.streamingThinking.isEmpty) {
+                                return ChatThinkingBubble(modelName: modelName);
+                              }
+                              return ChatMessageBubble(
+                                modelName: modelName,
+                                live: true,
+                                expand: enlarged,
+                                message: ChatMessage(
+                                  id: -1,
+                                  sessionId: state.currentSessionId ?? -1,
+                                  role: 'model',
+                                  content: state.streamingText,
+                                  thinking: state.streamingThinking,
+                                  createdAt: 0,
+                                ),
+                              );
                             }
+                            final message = state.messages[index];
                             return ChatMessageBubble(
                               modelName: modelName,
-                              live: true,
-                              message: ChatMessage(
-                                id: -1,
-                                sessionId: state.currentSessionId ?? -1,
-                                role: 'model',
-                                content: state.streamingText,
-                                thinking: state.streamingThinking,
-                                createdAt: 0,
-                              ),
+                              message: message,
+                              expand: enlarged,
                             );
-                          }
-                          final message = state.messages[index];
-                          return ChatMessageBubble(
-                            modelName: modelName,
-                            message: message,
-                          );
-                        },
+                          },
+                        ),
                       ),
                     ),
             ),

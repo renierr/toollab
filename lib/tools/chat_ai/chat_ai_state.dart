@@ -50,6 +50,15 @@ class ChatAiState extends ChangeNotifier {
   static const String _backendKey = 'backend';
   static const String _deepSeekThinkingKey = 'deepseek_thinking';
   static const String _deepSeekSearchKey = 'deepseek_search';
+  static const String _textPercentKey = 'text_size_percent';
+
+  static const int minTextPercent = 80;
+  static const int maxTextPercent = 200;
+  static const int textPercentStep = 10;
+
+  int _textPercent = 100;
+
+  int get textPercent => _textPercent;
 
   ChatBackend get backend => _backend;
   DeepSeekAccount? get deepSeekAccount => _deepSeekAccount;
@@ -216,6 +225,18 @@ class ChatAiState extends ChangeNotifier {
     );
   }
 
+  Future<void> setTextPercent(int value) async {
+    final next = value.clamp(minTextPercent, maxTextPercent);
+    if (next == _textPercent) return;
+    _textPercent = next;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      ChatAiTool.config.id,
+      _textPercentKey,
+      '$next',
+    );
+  }
+
   Future<void> setDeepSeekSearch(bool enabled) async {
     _deepSeekSearch = enabled;
     notifyListeners();
@@ -366,6 +387,9 @@ class ChatAiState extends ChangeNotifier {
           await db.getSetting(id, _deepSeekThinkingKey) == 'true';
       _deepSeekSearch = await db.getSetting(id, _deepSeekSearchKey) == 'true';
       _customSystemPrompt = await db.getSetting(id, 'system_prompt');
+      _textPercent =
+          (int.tryParse(await db.getSetting(id, _textPercentKey) ?? '') ?? 100)
+              .clamp(minTextPercent, maxTextPercent);
       _deepSeekAccount = await DeepSeekAccount.read();
       await loadSessions();
       if (_backend == ChatBackend.deepseek) {

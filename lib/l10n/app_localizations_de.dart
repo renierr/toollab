@@ -145,6 +145,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonReset => 'Zurücksetzen';
 
   @override
+  String get commonDecreaseTextSize => 'Text verkleinern';
+
+  @override
+  String get commonIncreaseTextSize => 'Text vergrößern';
+
+  @override
   String get commonDone => 'Fertig';
 
   @override
@@ -4321,6 +4327,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get chatAiSystemPromptDescription =>
       'Passen Sie die Anweisungen für das KI-Modell an. Leer lassen, um den Standard zu verwenden.';
+
+  @override
+  String get chatAiTextSize => 'Textgröße im Chat';
 
   @override
   String get toolNameHexEditor => 'Hex-Editor';

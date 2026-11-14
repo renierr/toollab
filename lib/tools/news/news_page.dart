@@ -19,8 +19,8 @@ import 'widgets/news_reader_page.dart';
 import 'widgets/news_settings_page.dart';
 import 'widgets/news_source_filter_bar.dart';
 import 'widgets/news_source_picker_page.dart';
-import 'widgets/news_text_scale.dart';
-import 'widgets/news_text_size_sheet.dart';
+import 'package:tool_lab/widgets/text_scale_multiplier.dart';
+import 'package:tool_lab/widgets/text_size_sheet.dart';
 
 class NewsPage extends StatefulWidget {
   const NewsPage({super.key});
@@ -241,7 +241,15 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
               : const Icon(Icons.refresh),
         ),
         IconButton(
-          onPressed: () => NewsTextSizeSheet.show(context),
+          onPressed: () => TextSizeSheet.show<NewsState>(
+            context,
+            title: l10n.newsListTextSize,
+            percentOf: (state) => state.listFontPercent,
+            onChanged: (state, percent) => state.setListFontPercent(percent),
+            minPercent: NewsState.minFontPercent,
+            maxPercent: NewsState.maxFontPercent,
+            step: NewsState.fontStep,
+          ),
           tooltip: l10n.newsListTextSize,
           icon: const Icon(Icons.format_size),
         ),
@@ -265,7 +273,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
                 if (state.isRefreshing)
                   const LinearProgressIndicator(minHeight: 2),
                 Expanded(
-                  child: NewsTextScale(
+                  child: TextScaleMultiplier(
                     scale: state.listFontPercent / 100,
                     child: NewsList(
                       controller: _scrollController,

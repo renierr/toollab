@@ -15,11 +15,15 @@ class ChatMessageBubble extends StatelessWidget {
   /// The reply is still streaming, so its thoughts stay open.
   final bool live;
 
+  /// Lets the reply span the full row.
+  final bool expand;
+
   const ChatMessageBubble({
     super.key,
     required this.message,
     required this.modelName,
     this.live = false,
+    this.expand = false,
   });
 
   @override
@@ -30,6 +34,7 @@ class ChatMessageBubble extends StatelessWidget {
 
     return ChatBubbleShell(
       fromUser: isUser,
+      expand: expand,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -110,6 +115,8 @@ class ChatMessageBubble extends StatelessWidget {
               data: message.content,
               selectable: true,
               accentColor: accentColor,
+              // The style sheet replaces the inherited scaler, so pass it on.
+              scale: MediaQuery.textScalerOf(context).scale(1),
             ),
         ],
       ),

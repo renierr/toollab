@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 /// Multiplies the inherited text scaling by [scale] for [child].
-class NewsTextScale extends StatelessWidget {
+class TextScaleMultiplier extends StatelessWidget {
   final double scale;
   final Widget child;
 
-  const NewsTextScale({super.key, required this.scale, required this.child});
+  const TextScaleMultiplier({
+    super.key,
+    required this.scale,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
