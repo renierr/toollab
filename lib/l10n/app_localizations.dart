@@ -25624,6 +25624,12 @@ abstract class AppLocalizations {
   /// **'Open original'**
   String get newsOpenOriginal;
 
+  /// No description provided for @newsReadingMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min read'**
+  String newsReadingMinutes(int minutes);
+
   /// No description provided for @newsReaderSummaryLabel.
   ///
   /// In en, this message translates to:

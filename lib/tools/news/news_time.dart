@@ -30,3 +30,15 @@ String newsDayLabel(
   if (difference == 1) return l10n.newsYesterday;
   return DateFormat.MMMMd(locale).format(date);
 }
+
+final RegExp _markdownSyntax = RegExp(r'!\[[^\]]*\]\([^)]*\)|\]\([^)]*\)');
+
+int? newsReadingMinutes(String markdown) {
+  final words = markdown
+      .replaceAll(_markdownSyntax, ' ')
+      .split(RegExp(r'\s+'))
+      .where((word) => word.length > 1 || RegExp(r'\w').hasMatch(word))
+      .length;
+  if (words < 80) return null;
+  return (words / 220).ceil();
+}

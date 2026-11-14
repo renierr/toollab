@@ -5640,6 +5640,7 @@
   "newsLinkCopied": "Link in die Zwischenablage kopiert",
   "newsCopyFailed": "Der Link konnte nicht kopiert werden.",
   "newsOpenOriginal": "Original öffnen",
+  "newsReadingMinutes": "{minutes} Min. Lesezeit",
   "newsReaderSummaryLabel": "Zusammenfassung",
   "newsReaderFontSmaller": "Text verkleinern",
   "newsReaderFontLarger": "Text vergrößern",

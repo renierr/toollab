@@ -50,6 +50,15 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
   static final _image = RegExp(r'!\[[^\]]*\]\([^)]*\)');
   static final _link = RegExp(r'\[([^\]]*)\]\([^)]*\)');
 
+  // Aggregators such as Hacker News link to other sites; name the target.
+  static String? _linkHost(String link, String? siteUrl) {
+    String host(String url) => (Uri.tryParse(url.trim())?.host ?? '')
+        .replaceFirst(RegExp(r'^www\.'), '');
+    final target = host(link);
+    if (target.isEmpty || target == host(siteUrl ?? '')) return null;
+    return target;
+  }
+
   Future<void> _openTextAi() async {
     String body;
     try {
@@ -184,11 +193,17 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
                   source: widget.source,
                   heroImage: widget.article.imageUrl ?? extracted?.imageUrl,
                   fontScale: readerScale,
-                  relativeTime: newsRelativeTimeFor(
-                    l10n,
-                    locale,
-                    widget.article.publishedAt,
-                  ),
+                  meta: [
+                    ?_linkHost(widget.article.link, widget.source?.siteUrl),
+                    newsRelativeTimeFor(
+                      l10n,
+                      locale,
+                      widget.article.publishedAt,
+                    ),
+                    if (newsReadingMinutes(extracted?.markdown ?? '')
+                        case final minutes?)
+                      l10n.newsReadingMinutes(minutes),
+                  ].where((part) => part.isNotEmpty).join(' · '),
                 ),
                 const SizedBox(height: 20),
                 if (loading) ...[
@@ -241,14 +256,14 @@ class _ReaderHeader extends StatelessWidget {
   final NewsArticle article;
   final NewsSource? source;
   final String? heroImage;
-  final String relativeTime;
+  final String meta;
   final double fontScale;
 
   const _ReaderHeader({
     required this.article,
     required this.source,
     required this.heroImage,
-    required this.relativeTime,
+    required this.meta,
     required this.fontScale,
   });
 
@@ -261,33 +276,31 @@ class _ReaderHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentAmber.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  source?.title ?? l10n.newsUnknownSource,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppTheme.accentAmberLight,
-                    fontWeight: FontWeight.w700,
-                  ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppTheme.accentAmber.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                source?.title ?? l10n.newsUnknownSource,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppTheme.accentAmberLight,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                relativeTime,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.hintColor,
-                ),
+            Text(
+              meta,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.hintColor,
               ),
             ),
           ],

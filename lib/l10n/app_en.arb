@@ -7144,6 +7144,12 @@
   "newsLinkCopied": "Link copied to clipboard",
   "newsCopyFailed": "Could not copy the link.",
   "newsOpenOriginal": "Open original",
+  "newsReadingMinutes": "{minutes} min read",
+  "@newsReadingMinutes": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
   "newsReaderSummaryLabel": "Summary",
   "newsReaderFontSmaller": "Decrease text size",
   "newsReaderFontLarger": "Increase text size",

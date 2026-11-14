@@ -52,23 +52,43 @@ class NewsArticleService {
     '[role="banner"]',
     '[role="complementary"]',
     '[aria-hidden="true"]',
-    '[class*="cookie"]',
-    '[class*="consent"]',
-    '[class*="newsletter"]',
-    '[class*="subscribe"]',
-    '[class*="advert"]',
-    '[class*="advertisement"]',
-    '[class*="sponsored"]',
-    '[class*="share"]',
-    '[class*="social"]',
-    '[class*="related"]',
-    '[class*="recommend"]',
-    '[class*="promo"]',
-    '[class*="paywall"]',
-    '[id*="cookie"]',
-    '[id*="advert"]',
-    '[id*="newsletter"]',
   ];
+
+  // Matched against class/id words, not substrings: `node--promoted` is no
+  // promo. Words of six letters or more also match as a prefix.
+  static const List<String> _junkWords = [
+    'ad',
+    'ads',
+    'advert',
+    'avatar',
+    'consent',
+    'cookie',
+    'newsletter',
+    'outbrain',
+    'paywall',
+    'promo',
+    'recirc',
+    'recommend',
+    'related',
+    'share',
+    'sharing',
+    'social',
+    'sponsored',
+    'subscribe',
+    'subscription',
+    'taboola',
+  ];
+
+  static bool _isJunkWord(String word) => _junkWords.any(
+    (junk) => word == junk || (junk.length >= 6 && word.startsWith(junk)),
+  );
+
+  static final RegExp _challenge = RegExp(
+    r'bot check|just a moment|checking your browser|'
+    r'checking if the site connection is secure|verify you are (a )?human|'
+    r'are you a robot|enable javascript and cookies|attention required',
+    caseSensitive: false,
+  );
 
   static const List<String> _contentSelectors = [
     '[itemprop="articleBody"]',
@@ -149,12 +169,14 @@ class NewsArticleService {
     final baseUri = _baseUri(document, baseUrl);
     final metadataImage = _imageFromDocument(document, baseUri);
     final pageTitle = _metaContent(document, 'meta[property="og:title"]');
+    final documentTitle = document.querySelector('title')?.text ?? '';
 
     for (final selector in _dropSelectors) {
       for (final element in document.querySelectorAll(selector)) {
         element.remove();
       }
     }
+    _dropJunk(document);
 
     final main =
         _selectMain(document) ??
@@ -176,8 +198,15 @@ class NewsArticleService {
       baseUri,
     );
 
-    final markdown = _toMarkdown(main, baseUrl);
-    if (_usableLength(markdown) < 40 && videoUrls.isEmpty) return null;
+    final markdown = _toMarkdown(main);
+    final usable = _usableLength(markdown);
+    if (usable < 40 && videoUrls.isEmpty) return null;
+    if (usable < 1500 &&
+        _challenge.hasMatch(
+          '$documentTitle\n${markdown.substring(0, markdown.length.clamp(0, 600))}',
+        )) {
+      return null;
+    }
 
     return ExtractedArticle(
       markdown: markdown,
@@ -199,6 +228,24 @@ class NewsArticleService {
           '',
       baseUri,
     );
+  }
+
+  static void _dropJunk(dom.Document document) {
+    final junk = <dom.Element>[];
+    for (final element in document.querySelectorAll('[class], [id]')) {
+      final name = element.localName;
+      if (name == 'html' || name == 'body' || name == 'main') continue;
+      final words = '${element.className} ${element.id}'
+          .replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]}-${m[2]}')
+          .toLowerCase()
+          .split(RegExp(r'[^a-z0-9]+'));
+      if (!words.any(_isJunkWord)) continue;
+      if (element.querySelector('[itemprop="articleBody"]') != null) continue;
+      junk.add(element);
+    }
+    for (final element in junk) {
+      element.remove();
+    }
   }
 
   static void _deduplicate(
@@ -234,7 +281,10 @@ class NewsArticleService {
     if (hero != null) seenImages.add(_imageIdentity(hero));
     for (final image in root.querySelectorAll('img[src]')) {
       final url = _imageIdentity(image.attributes['src']!);
-      if (!seenImages.add(url)) image.remove();
+      final alt = normalize(image.attributes['alt'] ?? '');
+      if (!seenImages.add(url) || (byline.isNotEmpty && alt == byline)) {
+        image.remove();
+      }
     }
     for (final item in root.querySelectorAll('li')) {
       if (item.text.trim().isEmpty && item.querySelector('img') == null) {
@@ -246,18 +296,60 @@ class NewsArticleService {
     }
   }
 
+  static final RegExp _imageExtension = RegExp(
+    r'\.(jpe?g|png|gif|webp|avif)$',
+    caseSensitive: false,
+  );
+
+  // Same picture regardless of size, crop or format variant.
   static String _imageIdentity(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null) return url;
-    const dimensions = {'width', 'height', 'w', 'h', 'quality', 'q', 'format'};
-    final parameters = Map<String, String>.from(uri.queryParameters)
-      ..removeWhere((key, _) => dimensions.contains(key.toLowerCase()));
-    final base = uri.replace(query: '', fragment: '').toString();
-    final withoutQuery = base.endsWith('?')
-        ? base.substring(0, base.length - 1)
-        : base;
-    if (parameters.isEmpty) return withoutQuery;
-    return '$withoutQuery?${Uri(queryParameters: parameters).query}';
+    final Map<String, String> query;
+    try {
+      query = uri.queryParameters;
+    } on FormatException {
+      return url;
+    }
+    // Image proxies carry the real image in a parameter.
+    for (final key in const ['url', 'src', 'image']) {
+      final inner = query[key];
+      if (inner != null && inner.startsWith('http')) {
+        return _imageIdentity(inner);
+      }
+    }
+    final path = uri.path.replaceFirst(
+      RegExp(r'-\d{2,5}x\d{2,5}(?=\.\w+$)'),
+      '',
+    );
+    final base = '${uri.host.toLowerCase()}$path';
+    if (_imageExtension.hasMatch(path)) return base;
+    const variants = {
+      'width',
+      'height',
+      'w',
+      'h',
+      'quality',
+      'q',
+      'format',
+      'fm',
+      'auto',
+      'crop',
+      'fit',
+      'strip',
+      'dpr',
+      'resize',
+    };
+    final parameters = Map<String, String>.from(query)
+      ..removeWhere((key, _) => variants.contains(key.toLowerCase()));
+    if (parameters.isEmpty) return base;
+    return '$base?${Uri(queryParameters: parameters).query}';
+  }
+
+  static bool _isThumbnail(String url) {
+    final query = Uri.tryParse(url)?.queryParameters ?? const {};
+    final width = int.tryParse(query['w'] ?? query['width'] ?? '');
+    return width != null && width <= 120;
   }
 
   static String cleanCachedMarkdown(
@@ -279,7 +371,12 @@ class NewsArticleService {
     final imagePattern = RegExp(r'!\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)');
     var inCode = false;
     final lines = <String>[];
-    for (var line in markdown.split('\n')) {
+    // Older extractions prefixed the page URL to absolute image URLs.
+    final repaired = markdown.replaceAllMapped(
+      RegExp(r'(!\[[^\]]*\]\()https?://[^\s)]+?/(https?://)'),
+      (m) => '${m[1]}${m[2]}',
+    );
+    for (var line in repaired.split('\n')) {
       if (line.trimLeft().startsWith('```') ||
           line.trimLeft().startsWith('~~~')) {
         inCode = !inCode;
@@ -411,7 +508,9 @@ class NewsArticleService {
       }
       final width = int.tryParse(image.attributes['width'] ?? '');
       final height = int.tryParse(image.attributes['height'] ?? '');
-      if ((width != null && width <= 2) || (height != null && height <= 2)) {
+      if ((width != null && width <= 2) ||
+          (height != null && height <= 2) ||
+          _isThumbnail(resolved)) {
         image.remove();
         continue;
       }
@@ -445,6 +544,33 @@ class NewsArticleService {
         ..remove('rel');
     }
 
+    for (final caption in root.querySelectorAll('figcaption')) {
+      // Credit and caption often sit in adjacent spans.
+      for (final part in caption.querySelectorAll('*')) {
+        part.append(dom.Text(' '));
+      }
+      final text = caption.text.replaceAll(RegExp(r'\s+'), ' ').trim();
+      if (text.isEmpty) {
+        caption.remove();
+        continue;
+      }
+      caption.replaceWith(
+        dom.Element.tag('p')..append(dom.Element.tag('em')..text = text),
+      );
+    }
+
+    // A linked image would turn the tap that enlarges it into navigation.
+    for (final link in root.querySelectorAll('a[href]')) {
+      final images = link.querySelectorAll('img');
+      if (images.length != 1 || link.text.trim().isNotEmpty) continue;
+      final href = link.attributes['href']!;
+      final src = images.single.attributes['src'] ?? '';
+      if (_imageIdentity(href) == _imageIdentity(src) ||
+          _imageExtension.hasMatch(Uri.tryParse(href)?.path ?? '')) {
+        link.replaceWith(images.single);
+      }
+    }
+
     for (final element in root.querySelectorAll(
       'video, audio, object, embed, button, input, textarea, select',
     )) {
@@ -452,10 +578,11 @@ class NewsArticleService {
     }
   }
 
-  static String _toMarkdown(dom.Element element, String baseUrl) {
+  // No `imageBaseUrl`: sources are already absolute and html2md would prefix
+  // the page URL to them anyway.
+  static String _toMarkdown(dom.Element element) {
     final markdown = html2md.convert(
       element,
-      imageBaseUrl: baseUrl,
       styleOptions: const {
         'headingStyle': 'atx',
         'codeBlockStyle': 'fenced',

@@ -5,6 +5,26 @@ import 'package:tool_lab/tools/news/news_feed_parser.dart';
 
 void main() {
   group('NewsFeedParser', () {
+    test('drops link-only lines from aggregator summaries', () {
+      const rss = '''
+<rss version="2.0"><channel><title>HN</title><item>
+  <title>Story</title>
+  <link>https://example.com/story</link>
+  <description><![CDATA[
+<p>Article URL: <a href="https://example.com/story">https://example.com/story</a></p>
+<p>Comments URL: <a href="https://news.ycombinator.com/item?id=1">https://news.ycombinator.com/item?id=1</a></p>
+<p>Points: 58</p>
+]]></description>
+</item></channel></rss>
+''';
+      final feed = NewsFeedParser.parse(
+        rss,
+        sourceShortId: 'SRC1',
+        feedUrl: 'https://hnrss.org/frontpage',
+      );
+      expect(feed.items.single.summary, 'Points: 58');
+    });
+
     test('parses RSS with media and content namespaces', () {
       const rss = '''
 <?xml version="1.0" encoding="UTF-8"?>

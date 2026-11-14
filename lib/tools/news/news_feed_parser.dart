@@ -178,7 +178,10 @@ class NewsFeedParser {
       'description',
       'summary',
     ]);
-    final summaryHtml = _textOf(element, const ['summary', 'description']);
+    final summaryHtml = _textOf(element, const [
+      'summary',
+      'description',
+    ]).replaceAll(_urlOnlyParagraph, '');
     final summary = _plainText(
       summaryHtml.isNotEmpty ? summaryHtml : contentHtml,
       maxChars: _maxSummaryChars,
@@ -209,6 +212,13 @@ class NewsFeedParser {
       contentHtml: contentHtml,
     );
   }
+
+  // Aggregators such as hnrss list "Article URL: …" lines that only repeat
+  // the item link.
+  static final RegExp _urlOnlyParagraph = RegExp(
+    r'<p>\s*[\w ]{1,30}URL:\s*<a [^>]*>[^<]*</a>\s*</p>',
+    caseSensitive: false,
+  );
 
   static String _guidKey(String sourceShortId, String identity) {
     return sha1.convert(utf8.encode('$sourceShortId|$identity')).toString();

@@ -14555,6 +14555,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newsOpenOriginal => 'Open original';
 
   @override
+  String newsReadingMinutes(int minutes) {
+    return '$minutes min read';
+  }
+
+  @override
   String get newsReaderSummaryLabel => 'Summary';
 
   @override

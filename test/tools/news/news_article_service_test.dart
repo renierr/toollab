@@ -150,5 +150,62 @@ void main() {
       );
       expect(article?.videoUrls, ['https://example.com/clip.mp4']);
     });
+
+    test('keeps an article whose class only contains a junk word', () {
+      final article = NewsArticleService.extract(
+        '<html><body><article class="node node--promoted">'
+            '<p>${'Body text of the promoted story. ' * 5}</p></article>'
+            '<div class="related-posts"><p>Other story</p></div>'
+            '<div class="shareBar">Share</div></body></html>',
+        'https://example.com/story',
+      )!;
+      expect(article.markdown, contains('promoted story'));
+      expect(article.markdown, isNot(contains('Other story')));
+      expect(article.markdown, isNot(contains('Share')));
+    });
+
+    test('keeps absolute image URLs and drops crop variants of the hero', () {
+      final article = NewsArticleService.extract(
+        '<html><body><article><p>${'Some story text here. ' * 5}</p>'
+            '<img src="https://cdn.example.com/a/hero.jpg?crop=0,10,100,80&w=2400">'
+            '<a href="https://cdn.example.com/a/photo.jpg?w=2400">'
+            '<img src="https://cdn.example.com/a/photo.jpg?w=1200"></a>'
+            '<img src="https://cdn.example.com/a/author.jpg?w=96">'
+            '<figure><img src="https://cdn.example.com/a/photo-1200x630.jpg">'
+            '<figcaption><span>Caption.</span><span>Credit</span></figcaption>'
+            '</figure></article></body></html>',
+        'https://example.com/story',
+        heroImageUrl: 'https://cdn.example.com/a/hero.jpg?crop=0,0,100,100',
+      )!;
+      final markdown = article.markdown;
+      expect(markdown, isNot(contains('hero.jpg')));
+      expect(markdown, isNot(contains('author.jpg')));
+      expect('photo'.allMatches(markdown), hasLength(1));
+      expect(markdown, contains('](https://cdn.example.com/a/photo.jpg'));
+      expect(markdown, isNot(contains('[![')));
+      expect(markdown, contains('_Caption. Credit_'));
+    });
+
+    test('rejects a bot check page', () {
+      final article = NewsArticleService.extract(
+        '<html><head><title>Just a moment...</title></head><body><main>'
+            '<h1>Automated bot check in progress</h1><p>This should only take '
+            'a few seconds. If you have issues, please contact us.</p>'
+            '</main></body></html>',
+        'https://example.com/story',
+      );
+      expect(article, isNull);
+    });
+
+    test(
+      'repairs image URLs prefixed with the page URL in cached markdown',
+      () {
+        final result = NewsArticleService.cleanCachedMarkdown(
+          '![x](https://example.com/story/https://cdn.example.com/a.jpg)',
+          title: 'Headline',
+        );
+        expect(result, '![x](https://cdn.example.com/a.jpg)');
+      },
+    );
   });
 }
