@@ -69,6 +69,7 @@ class _CitationBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final citation = this.citation;
     final badge = Container(
       margin: const EdgeInsets.symmetric(horizontal: 2.0),
@@ -95,7 +96,7 @@ class _CitationBadge extends StatelessWidget {
         children: [
           TextSpan(
             text: site,
-            style: const TextStyle(fontWeight: FontWeight.w300),
+            style: TextStyle(color: scheme.onSurfaceVariant),
           ),
           if (citation.title.isNotEmpty)
             TextSpan(
@@ -107,7 +108,23 @@ class _CitationBadge extends StatelessWidget {
         ],
       ),
       constraints: const BoxConstraints(maxWidth: 360),
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(12.0),
+      textStyle: theme.textTheme.bodySmall?.copyWith(
+        color: scheme.onSurface,
+        height: 1.35,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: scheme.outlineVariant),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: 0.3),
+            blurRadius: 12.0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       waitDuration: const Duration(milliseconds: 250),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
