@@ -20,7 +20,7 @@ class ChatAiDbHelper {
     );
     try {
       await _cachedDb!.migrate(
-        currentVersion: 4,
+        currentVersion: 5,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -67,6 +67,11 @@ class ChatAiDbHelper {
             );
             await txn.execute(
               'ALTER TABLE ${txn.nameTable(messageTable)} ADD COLUMN thinking TEXT',
+            );
+          }
+          if (oldVersion < 5) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(messageTable)} ADD COLUMN citations TEXT',
             );
           }
         },
@@ -184,6 +189,7 @@ class ChatAiDbHelper {
         String content,
         String? thinking,
         String? fileName,
+        List<ChatCitation> citations,
         int createdAt,
       })
     >
@@ -204,6 +210,7 @@ class ChatAiDbHelper {
           'content': message.content,
           'thinking': message.thinking,
           'file_name': message.fileName,
+          'citations': ChatCitation.encodeList(message.citations),
           'created_at': message.createdAt,
         });
       }
@@ -262,6 +269,7 @@ class ChatAiDbHelper {
     String? fileName,
     String? fileContent,
     String? thinking,
+    List<ChatCitation> citations = const [],
   }) async {
     final db = await _getDb();
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -273,6 +281,7 @@ class ChatAiDbHelper {
       'image_data': imageData,
       'file_name': fileName,
       'file_content': fileContent,
+      'citations': ChatCitation.encodeList(citations),
       'created_at': now,
     });
     await touchSession(sessionId);

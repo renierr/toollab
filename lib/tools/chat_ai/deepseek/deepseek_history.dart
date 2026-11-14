@@ -1,3 +1,5 @@
+import '../chat_models.dart';
+
 /// A conversation in the account's history.
 class DeepSeekRemoteSession {
   final String id;
@@ -28,6 +30,7 @@ class DeepSeekHistoryMessage {
   final String thinking;
   final int insertedAt;
   final List<String> fileNames;
+  final List<ChatCitation> citations;
 
   const DeepSeekHistoryMessage({
     required this.id,
@@ -36,6 +39,7 @@ class DeepSeekHistoryMessage {
     required this.thinking,
     required this.insertedAt,
     this.fileNames = const [],
+    this.citations = const [],
   });
 }
 
@@ -84,10 +88,12 @@ class DeepSeekHistory {
   static DeepSeekHistoryMessage _message(int id, Map<String, dynamic> item) {
     final text = StringBuffer();
     final thinking = StringBuffer();
+    final citations = <ChatCitation>[];
     final fragments = item['fragments'];
     if (fragments is List) {
       for (final fragment in fragments) {
         if (fragment is! Map) continue;
+        citations.addAll(ChatCitation.fromJsonList(fragment['results']));
         final content = fragment['content'];
         if (content is! String) continue;
         switch (fragment['type']) {
@@ -101,6 +107,7 @@ class DeepSeekHistory {
     final files = item['files'];
     return DeepSeekHistoryMessage(
       id: id,
+      citations: citations,
       fileNames: [
         if (files is List)
           for (final file in files)

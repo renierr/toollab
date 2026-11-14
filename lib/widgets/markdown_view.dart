@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -27,6 +28,11 @@ class MarkdownView extends StatefulWidget {
   /// Heading anchor scrolled to once the document is first laid out.
   final String? initialAnchor;
 
+  /// Extra inline syntaxes and the builders rendering their element tags.
+  /// Compared with `==`, so builders should define equality.
+  final List<md.InlineSyntax> inlineSyntaxes;
+  final Map<String, MarkdownElementBuilder> builders;
+
   const MarkdownView({
     super.key,
     required this.data,
@@ -36,6 +42,8 @@ class MarkdownView extends StatefulWidget {
     this.copyImages = false,
     this.onLinkTap,
     this.initialAnchor,
+    this.inlineSyntaxes = const [],
+    this.builders = const {},
   });
 
   @override
@@ -273,6 +281,7 @@ class _MarkdownViewState extends State<MarkdownView>
 
     final document = md.Document(
       extensionSet: md.ExtensionSet.gitHubFlavored,
+      inlineSyntaxes: widget.inlineSyntaxes,
       encodeHtml: false,
     );
 
@@ -397,6 +406,7 @@ class _MarkdownViewState extends State<MarkdownView>
       builders: {
         'pre': MarkdownCodeBlockBuilder(scale: widget.scale),
         _anchorTag: _HeadingAnchorBuilder(_anchors),
+        ...widget.builders,
       },
       paddingBuilders: const {},
       fitContent: true,
@@ -419,7 +429,9 @@ class _MarkdownViewState extends State<MarkdownView>
     if (widget.data != oldWidget.data ||
         widget.scale != oldWidget.scale ||
         widget.copyImages != oldWidget.copyImages ||
-        widget.accentColor != oldWidget.accentColor) {
+        widget.accentColor != oldWidget.accentColor ||
+        !listEquals(widget.inlineSyntaxes, oldWidget.inlineSyntaxes) ||
+        !mapEquals(widget.builders, oldWidget.builders)) {
       _parseMarkdown();
       if (widget.data != oldWidget.data) {
         _preloadGrammars();

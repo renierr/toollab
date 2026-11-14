@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../chat_models.dart';
+
 /// A reply as far as it has streamed in.
 class DeepSeekReply {
   final String thinking;
@@ -8,6 +10,7 @@ class DeepSeekReply {
   final String? title;
   final String? notice;
   final bool finished;
+  final List<ChatCitation> citations;
 
   const DeepSeekReply({
     this.thinking = '',
@@ -16,14 +19,16 @@ class DeepSeekReply {
     this.title,
     this.notice,
     this.finished = false,
+    this.citations = const [],
   });
 }
 
 class _Fragment {
   final String type;
   String content;
+  List<ChatCitation> results;
 
-  _Fragment(this.type, this.content);
+  _Fragment(this.type, this.content, [this.results = const []]);
 }
 
 /// Folds the web app's SSE patch stream (`p` path, `o` op, `v` value; lines
@@ -39,12 +44,16 @@ class DeepSeekStreamParser {
   String? _status;
 
   static const String _fragmentsPath = 'response/fragments';
-  static const String _lastContentPath = 'response/fragments/-1/content';
+  static final RegExp _fragmentField = RegExp(
+    r'^response/fragments/(-?\d+)/(\w+)$',
+  );
 
   DeepSeekReply get reply {
     final thinking = StringBuffer();
     final text = StringBuffer();
+    final citations = <ChatCitation>[];
     for (final fragment in _fragments) {
+      citations.addAll(fragment.results);
       switch (fragment.type) {
         case 'THINK':
           thinking.write(fragment.content);
@@ -59,6 +68,7 @@ class DeepSeekStreamParser {
       title: _title,
       notice: _notice,
       finished: _status == 'FINISHED',
+      citations: citations,
     );
   }
 
@@ -128,12 +138,9 @@ class DeepSeekStreamParser {
   }
 
   bool _apply(String? path, String op, Object? value) {
+    final field = path == null ? null : _fragmentField.firstMatch(path);
+    if (field != null) return _applyField(field, op, value);
     switch (path) {
-      case _lastContentPath when value is String:
-        if (_fragments.isEmpty) _fragments.add(_Fragment('RESPONSE', ''));
-        final last = _fragments.last;
-        last.content = op == 'APPEND' ? last.content + value : value;
-        return true;
       case _fragmentsPath when value is List:
         final fragments = _parseFragments(value);
         if (op != 'APPEND') _fragments.clear();
@@ -165,6 +172,29 @@ class DeepSeekStreamParser {
     return false;
   }
 
+  /// `fragments/<i>/content` or `/results`; a negative index counts back.
+  bool _applyField(RegExpMatch field, String op, Object? value) {
+    final at = int.parse(field.group(1)!);
+    if (_fragments.isEmpty && at == -1) {
+      _fragments.add(_Fragment('RESPONSE', ''));
+    }
+    final index = at < 0 ? _fragments.length + at : at;
+    if (index < 0 || index >= _fragments.length) return false;
+    final fragment = _fragments[index];
+    switch (field.group(2)) {
+      case 'content' when value is String:
+        fragment.content = op == 'APPEND' ? fragment.content + value : value;
+        return true;
+      case 'results' when value is List:
+        final results = ChatCitation.fromJsonList(value);
+        fragment.results = op == 'APPEND'
+            ? [...fragment.results, ...results]
+            : results;
+        return true;
+    }
+    return false;
+  }
+
   bool _applyResponse(Map<String, dynamic> response) {
     _responseMessageId =
         (response['message_id'] as num?)?.toInt() ?? _responseMessageId;
@@ -185,6 +215,7 @@ class DeepSeekStreamParser {
         _Fragment(
           item['type'] as String? ?? '',
           item['content'] as String? ?? '',
+          ChatCitation.fromJsonList(item['results']),
         ),
   ];
 }

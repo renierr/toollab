@@ -5,6 +5,7 @@ import '../chat_models.dart';
 import '../config.dart';
 import '../deepseek/deepseek_attachment.dart';
 import 'chat_bubble_shell.dart';
+import 'chat_citation.dart';
 import 'chat_thoughts.dart';
 
 class ChatMessageBubble extends StatelessWidget {
@@ -82,6 +83,13 @@ class ChatMessageBubble extends StatelessWidget {
               data: message.content,
               selectable: true,
               accentColor: accentColor,
+              inlineSyntaxes: [CitationSyntax.instance],
+              builders: {
+                CitationSyntax.tag: CitationBuilder(
+                  citations: message.citations,
+                  color: accentColor,
+                ),
+              },
               // The style sheet replaces the inherited scaler, so pass it on.
               scale: MediaQuery.textScalerOf(context).scale(1),
             ),

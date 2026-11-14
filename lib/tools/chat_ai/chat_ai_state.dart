@@ -26,6 +26,7 @@ class ChatAiState extends ChangeNotifier {
   Uint8List? _selectedImageBytes;
   String _streamingText = '';
   String _streamingThinking = '';
+  List<ChatCitation> _streamingCitations = const [];
   int? _downloadTotalBytes;
   int _downloadedBytes = 0;
 
@@ -102,6 +103,7 @@ class ChatAiState extends ChangeNotifier {
 
   /// Partial model reply while [isGenerating]; empty until the first chunk.
   String get streamingText => _streamingText;
+  List<ChatCitation> get streamingCitations => _streamingCitations;
 
   /// Model download progress in 0..1, or null when the size is unknown.
   double? get downloadProgress {
@@ -205,6 +207,7 @@ class ChatAiState extends ChangeNotifier {
             thinking: message.thinking.trim().isEmpty
                 ? null
                 : message.thinking.trim(),
+            citations: message.citations,
             fileName: message.fileNames.isEmpty
                 ? null
                 : message.fileNames.join('\n'),
@@ -787,6 +790,7 @@ class ChatAiState extends ChangeNotifier {
       _isGenerating = false;
       _streamingText = '';
       _streamingThinking = '';
+      _streamingCitations = const [];
       notifyListeners();
     }
   }
@@ -836,6 +840,7 @@ class ChatAiState extends ChangeNotifier {
         reply = update;
         _streamingThinking = update.thinking;
         _streamingText = update.text;
+        _streamingCitations = update.citations;
         notifyListeners();
       }
       if (reply.text.trim().isEmpty && reply.notice != null) {
@@ -846,6 +851,7 @@ class ChatAiState extends ChangeNotifier {
         'model',
         reply.text.trim(),
         thinking: reply.thinking.trim().isEmpty ? null : reply.thinking.trim(),
+        citations: reply.citations,
       );
       await ChatAiDbHelper.instance.updateRemote(
         sessionId,

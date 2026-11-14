@@ -369,6 +369,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                                   role: 'model',
                                   content: state.streamingText,
                                   thinking: state.streamingThinking,
+                                  citations: state.streamingCitations,
                                   createdAt: 0,
                                 ),
                               );
