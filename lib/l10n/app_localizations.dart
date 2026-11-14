@@ -25924,6 +25924,24 @@ abstract class AppLocalizations {
   /// **'Forward {seconds} s'**
   String videoPlayerForward(int seconds);
 
+  /// No description provided for @videoPlayerLive.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get videoPlayerLive;
+
+  /// No description provided for @videoPlayerQuality.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality'**
+  String get videoPlayerQuality;
+
+  /// No description provided for @videoPlayerQualityAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get videoPlayerQualityAuto;
+
   /// No description provided for @toolNameXFeed.
   ///
   /// In en, this message translates to:
@@ -26013,6 +26031,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{hours}h'**
   String xFeedHoursShort(int hours);
+
+  /// No description provided for @xFeedBroadcastReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get xFeedBroadcastReplay;
+
+  /// No description provided for @xFeedBroadcastUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get xFeedBroadcastUpcoming;
+
+  /// No description provided for @xFeedBroadcastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live broadcast'**
+  String get xFeedBroadcastTitle;
+
+  /// No description provided for @xFeedBroadcastLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading broadcast…'**
+  String get xFeedBroadcastLoading;
+
+  /// No description provided for @xFeedBroadcastFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This broadcast could not be loaded'**
+  String get xFeedBroadcastFailed;
+
+  /// No description provided for @xFeedBroadcastNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'This broadcast has not started yet'**
+  String get xFeedBroadcastNotStarted;
+
+  /// No description provided for @xFeedBroadcastGeoblocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This broadcast is not available in your region'**
+  String get xFeedBroadcastGeoblocked;
 
   /// No description provided for @xFeedGifBadge.
   ///

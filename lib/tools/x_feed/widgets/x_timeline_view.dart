@@ -320,12 +320,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
           if (header == null) return placeholder;
           return ListView(
             children: [
-              ReadableWidth(
-                maxWidth: XLayout.maxWidth,
-                minWidth: XLayout.minWidth,
-                widthFactor: XLayout.widthFactor,
-                child: header,
-              ),
+              ReadableWidth(maxWidth: XLayout.maxWidth, child: header),
               SizedBox(height: 240, child: placeholder),
             ],
           );
@@ -342,8 +337,6 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
               onKeyEvent: _onListKey,
               child: ReadableScrollPadding(
                 maxWidth: XLayout.maxWidth,
-                minWidth: XLayout.minWidth,
-                widthFactor: XLayout.widthFactor,
                 // Jumping the old list to 0 lands below the top: its stale
                 // child offsets correct the position once the new posts lay out.
                 builder: (context, padding) => ListView.builder(

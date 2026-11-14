@@ -57,6 +57,30 @@ sent this session (the last 5000) are not sent again, so each batch holds only n
 No request is ever made just for seen ids. The buffer is kept in the tool's settings so ids seen right
 before the app closes go out on the next launch.
 
+## Live broadcasts
+
+A post with a live video carries a card named `…:broadcast` whose binding values hold
+`broadcast_id`, `broadcast_state`, `broadcast_title` and a thumbnail;
+`XTimelineParser.parseBroadcast` reads it, or failing that an `x.com/i/broadcasts/<id>`
+link in the text. The post then shows `XBroadcastTile` with a LIVE / Replay / Upcoming
+badge instead of the link card. Space or Play on the post opens it too.
+
+The card's state is from when the post was fetched, so opening it asks X again, the way
+x.com's player does (`XApi.broadcastStream`):
+
+1. `/i/api/1.1/broadcasts/show.json?ids=<id>` gives the current `state`
+   (`RUNNING` / `ENDED` / `TIMED_OUT` / `NOT_STARTED`) and the `media_key`.
+2. `/i/api/1.1/live_video_stream/status/<media_key>` gives `source.noRedirectPlaybackUrl`
+   (or `source.location`): an HLS master playlist on `*.video.pscp.tv`. A path containing
+   `/live_video_stream/geoblocked/` means the region is blocked.
+
+The playlist needs no cookies or Referer. `HlsPlaylist.parseVariants` lists its
+renditions (480p to 2160p so far), and the player starts on the best one. Its quality
+menu switches between them, plus Auto (the master playlist, left to the player's own
+bitrate choice). A running broadcast plays as live: no seek bar, no seeking. A replay
+seeks normally and keeps its position across a quality switch. There is no download
+for broadcasts.
+
 ## Translation
 
 Posts whose `lang` is neither `en` nor `de` and that X marks `is_translatable`, or that

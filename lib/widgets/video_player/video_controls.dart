@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 import 'video_backend.dart';
 import 'video_player_page.dart';
@@ -15,6 +16,10 @@ class VideoControls extends StatelessWidget {
   final VoidCallback onToggleMute;
   final VoidCallback onClose;
   final Duration seekStep;
+  final bool live;
+  final List<VideoQuality> qualities;
+  final Uri source;
+  final ValueChanged<VideoQuality> onQuality;
 
   const VideoControls({
     super.key,
@@ -28,6 +33,10 @@ class VideoControls extends StatelessWidget {
     required this.onToggleMute,
     required this.onClose,
     required this.seekStep,
+    required this.live,
+    required this.qualities,
+    required this.source,
+    required this.onQuality,
   });
 
   @override
@@ -80,37 +89,48 @@ class VideoControls extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Text(_format(state.position)),
-                        Expanded(
-                          child: Slider(
-                            value: durationMs > 0 ? positionMs.toDouble() : 0,
-                            max: durationMs > 0 ? durationMs.toDouble() : 1,
-                            onChanged: durationMs > 0
-                                ? (v) =>
-                                      onSeek(Duration(milliseconds: v.round()))
-                                : null,
+                  if (live)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: _LiveBadge(),
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Text(_format(state.position)),
+                          Expanded(
+                            child: Slider(
+                              value: durationMs > 0 ? positionMs.toDouble() : 0,
+                              max: durationMs > 0 ? durationMs.toDouble() : 1,
+                              onChanged: durationMs > 0
+                                  ? (v) => onSeek(
+                                      Duration(milliseconds: v.round()),
+                                    )
+                                  : null,
+                            ),
                           ),
-                        ),
-                        Text(_format(state.duration)),
-                      ],
+                          Text(_format(state.duration)),
+                        ],
+                      ),
                     ),
-                  ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Wrap(
                       alignment: WrapAlignment.center,
                       spacing: 12,
                       children: [
-                        IconButton(
-                          iconSize: 32,
-                          icon: const Icon(Icons.replay_10),
-                          tooltip: l10n.videoPlayerBack(seekStep.inSeconds),
-                          onPressed: () => onSeekBy(-seekStep),
-                        ),
+                        if (!live)
+                          IconButton(
+                            iconSize: 32,
+                            icon: const Icon(Icons.replay_10),
+                            tooltip: l10n.videoPlayerBack(seekStep.inSeconds),
+                            onPressed: () => onSeekBy(-seekStep),
+                          ),
                         IconButton.filled(
                           focusNode: playFocusNode,
                           autofocus: true,
@@ -123,12 +143,15 @@ class VideoControls extends StatelessWidget {
                               : l10n.videoPlayerPlay,
                           onPressed: onTogglePlay,
                         ),
-                        IconButton(
-                          iconSize: 32,
-                          icon: const Icon(Icons.forward_10),
-                          tooltip: l10n.videoPlayerForward(seekStep.inSeconds),
-                          onPressed: () => onSeekBy(seekStep),
-                        ),
+                        if (!live)
+                          IconButton(
+                            iconSize: 32,
+                            icon: const Icon(Icons.forward_10),
+                            tooltip: l10n.videoPlayerForward(
+                              seekStep.inSeconds,
+                            ),
+                            onPressed: () => onSeekBy(seekStep),
+                          ),
                         IconButton(
                           iconSize: 28,
                           icon: Icon(
@@ -141,6 +164,12 @@ class VideoControls extends StatelessWidget {
                               : l10n.videoPlayerUnmute,
                           onPressed: onToggleMute,
                         ),
+                        if (qualities.length > 1)
+                          _QualityButton(
+                            qualities: qualities,
+                            source: source,
+                            onSelected: onQuality,
+                          ),
                       ],
                     ),
                   ),
@@ -182,6 +211,73 @@ class _Scrim extends StatelessWidget {
         ),
       ),
       child: child,
+    );
+  }
+}
+
+class _LiveBadge extends StatelessWidget {
+  const _LiveBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppTheme.statusRed,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Text(
+          AppLocalizations.of(context).videoPlayerLive,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QualityButton extends StatelessWidget {
+  final List<VideoQuality> qualities;
+  final Uri source;
+  final ValueChanged<VideoQuality> onSelected;
+
+  const _QualityButton({
+    required this.qualities,
+    required this.source,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final current = qualities.where((q) => q.source == source).firstOrNull;
+    return PopupMenuButton<VideoQuality>(
+      tooltip: AppLocalizations.of(context).videoPlayerQuality,
+      onSelected: onSelected,
+      itemBuilder: (_) => [
+        for (final q in qualities)
+          CheckedPopupMenuItem(
+            value: q,
+            checked: q == current,
+            child: Text(q.label),
+          ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.high_quality_outlined, size: 28),
+            if (current != null) ...[
+              const SizedBox(width: 4),
+              Text(current.label),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

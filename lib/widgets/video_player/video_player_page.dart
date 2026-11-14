@@ -22,6 +22,14 @@ class VideoPlayerAction {
   });
 }
 
+/// A rendition the viewer can switch to, e.g. one HLS variant.
+class VideoQuality {
+  final String label;
+  final Uri source;
+
+  const VideoQuality({required this.label, required this.source});
+}
+
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
 /// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
 /// 10 s, M mutes, Esc / Backspace close, any other key shows the controls.
@@ -31,12 +39,20 @@ class VideoPlayerPage extends StatefulWidget {
   final bool loop;
   final List<VideoPlayerAction> actions;
 
+  /// Offered in a quality menu; [source] should be one of them.
+  final List<VideoQuality> qualities;
+
+  /// A live stream: no seek bar, no seeking.
+  final bool live;
+
   const VideoPlayerPage({
     super.key,
     required this.source,
     this.title,
     this.loop = false,
     this.actions = const [],
+    this.qualities = const [],
+    this.live = false,
   });
 
   static Future<void> open(
@@ -45,6 +61,8 @@ class VideoPlayerPage extends StatefulWidget {
     String? title,
     bool loop = false,
     List<VideoPlayerAction> actions = const [],
+    List<VideoQuality> qualities = const [],
+    bool live = false,
   }) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -53,6 +71,8 @@ class VideoPlayerPage extends StatefulWidget {
           title: title,
           loop: loop,
           actions: actions,
+          qualities: qualities,
+          live: live,
         ),
       ),
     );
@@ -67,7 +87,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   static const Duration _seekStep = Duration(seconds: 10);
   static const Duration _arrowSeekStep = Duration(seconds: 5);
 
-  late final VideoBackend _backend = VideoBackend.create();
+  VideoBackend _backend = VideoBackend.create();
+  late Uri _source = widget.source;
   final FocusNode _keyFocus = FocusNode(debugLabel: 'VideoPlayerKeys');
   final FocusNode _playFocus = FocusNode(debugLabel: 'VideoPlayerPlay');
   final ScreenOnRequest _screenOn = ScreenOnRequest();
@@ -87,6 +108,32 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       _keyFocus.dispose();
       _playFocus.dispose();
     });
+  }
+
+  /// A fresh backend per source: the old view leaves the tree before its
+  /// controller is disposed.
+  Future<void> _switchQuality(VideoQuality quality) async {
+    if (quality.source == _source) return;
+    final old = _backend;
+    final position = widget.live ? null : old.state.value.position;
+    old.state.removeListener(_onState);
+    final next = VideoBackend.create();
+    // Opening first: the Android backend builds its view from the controller
+    // that open() creates synchronously.
+    final opening = next.open(
+      quality.source,
+      loop: widget.loop,
+      start: position,
+    );
+    next.state.addListener(_onState);
+    setState(() {
+      _source = quality.source;
+      _backend = next;
+    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => unawaited(old.dispose()),
+    );
+    await opening;
   }
 
   /// Controls appear on interaction only, plus at the end and on an error.
@@ -129,6 +176,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   }
 
   Future<void> _seekBy(Duration delta) async {
+    if (widget.live) return;
     final state = _backend.state.value;
     var target = state.position + delta;
     if (target < Duration.zero) target = Duration.zero;
@@ -179,7 +227,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     }
     // While playing, or with the controls hidden, arrows seek; a paused
     // player leaves them to move between the controls.
-    final seeks = !_controlsVisible || _backend.state.value.playing;
+    final seeks =
+        !widget.live && (!_controlsVisible || _backend.state.value.playing);
     if (seeks && key == LogicalKeyboardKey.arrowLeft) {
       unawaited(_seekBy(-_arrowSeekStep));
       if (_controlsVisible) _scheduleHide();
@@ -238,7 +287,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                       view: view!,
                       errorLabel: l10n.videoPlayerFailed,
                     ),
-                    child: _backend.buildView(context),
+                    child: KeyedSubtree(
+                      key: ObjectKey(_backend),
+                      child: _backend.buildView(context),
+                    ),
                   ),
                   AnimatedOpacity(
                     opacity: _controlsVisible ? 1 : 0,
@@ -267,6 +319,13 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                                 _backend.setVolume(state.volume > 0 ? 0 : 1),
                             onClose: () => Navigator.of(context).maybePop(),
                             seekStep: _seekStep,
+                            live: widget.live,
+                            qualities: widget.qualities,
+                            source: _source,
+                            onQuality: (q) {
+                              unawaited(_switchQuality(q));
+                              _scheduleHide();
+                            },
                           ),
                         ),
                       ),

@@ -61,8 +61,6 @@ class _XSearchViewState extends State<XSearchView> with DisposeCleanup {
       children: [
         ReadableWidth(
           maxWidth: XLayout.maxWidth,
-          minWidth: XLayout.minWidth,
-          widthFactor: XLayout.widthFactor,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: Column(

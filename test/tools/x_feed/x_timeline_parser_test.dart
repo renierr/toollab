@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/tools/x_feed/api/x_timeline_parser.dart';
+import 'package:tool_lab/tools/x_feed/models/x_broadcast.dart';
 import 'package:tool_lab/tools/x_feed/models/x_media.dart';
+import 'package:tool_lab/tools/x_feed/models/x_post.dart';
 
 Map<String, Object?> _user(String id, String handle) => {
   'rest_id': id,
@@ -231,5 +233,62 @@ void main() {
       media.fullUrl,
       'https://pbs.twimg.com/media/abc?format=jpg&name=large',
     );
+  });
+
+  group('broadcast', () {
+    Map<String, Object?> value(String key, Object v) => {
+      'key': key,
+      'value': v,
+    };
+
+    test('is read from a broadcast card', () {
+      final card = {
+        'legacy': {
+          'name': '745291183405076480:broadcast',
+          'binding_values': [
+            value('broadcast_id', {'string_value': '2brajgZlOKRMka'}),
+            value('broadcast_state', {'string_value': 'RUNNING'}),
+            value('broadcast_title', {'string_value': 'Starship Flight 15'}),
+            value('broadcast_thumbnail_large', {
+              'image_value': {'url': 'https://pbs.twimg.com/thumb.jpg'},
+            }),
+          ],
+        },
+      };
+      final broadcast = XTimelineParser.parseBroadcast(card, const [])!;
+      expect(broadcast.id, '2brajgZlOKRMka');
+      expect(broadcast.state, XBroadcastState.live);
+      expect(broadcast.title, 'Starship Flight 15');
+      expect(broadcast.imageUrl, 'https://pbs.twimg.com/thumb.jpg');
+    });
+
+    test('falls back to a broadcast link in the text', () {
+      final broadcast = XTimelineParser.parseBroadcast(null, const [
+        XLink(display: 'example.com', url: 'https://example.com'),
+        XLink(
+          display: 'x.com/i/broadcasts/1yNGaQLWpejGj',
+          url: 'https://x.com/i/broadcasts/1yNGaQLWpejGj',
+        ),
+      ])!;
+      expect(broadcast.id, '1yNGaQLWpejGj');
+      expect(broadcast.state, XBroadcastState.unknown);
+    });
+
+    test('is absent for other cards', () {
+      final card = {
+        'legacy': {
+          'name': 'summary_large_image',
+          'binding_values': [
+            value('title', {'string_value': 'News'}),
+          ],
+        },
+      };
+      expect(
+        XTimelineParser.parseBroadcast(card, const [
+          XLink(display: 'example.com', url: 'https://example.com/a'),
+        ]),
+        isNull,
+      );
+    });
   });
 }

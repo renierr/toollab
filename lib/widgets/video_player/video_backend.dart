@@ -35,7 +35,7 @@ class VideoPlaybackState {
 abstract class VideoBackend {
   ValueNotifier<VideoPlaybackState> get state;
 
-  Future<void> open(Uri source, {required bool loop});
+  Future<void> open(Uri source, {required bool loop, Duration? start});
   Future<void> play();
   Future<void> pause();
   Future<void> seek(Duration position);

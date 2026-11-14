@@ -1,5 +1,6 @@
 import 'package:html/parser.dart' as html_parser;
 
+import '../models/x_broadcast.dart';
 import '../models/x_media.dart';
 import '../models/x_post.dart';
 import '../models/x_user.dart';
@@ -166,6 +167,7 @@ class XTimelineParser {
           replyToScreenName: inner.replyToScreenName,
           replyToId: inner.replyToId,
           card: inner.card,
+          broadcast: inner.broadcast,
           replies: inner.replies,
           quotes: inner.quotes,
           views: inner.views,
@@ -192,6 +194,7 @@ class XTimelineParser {
       replyToScreenName: legacy['in_reply_to_screen_name'] as String?,
       replyToId: legacy['in_reply_to_status_id_str'] as String?,
       card: _parseCard(result['card'], links),
+      broadcast: parseBroadcast(result['card'], links),
       replies: _int(legacy['reply_count']),
       quotes: _int(legacy['quote_count']),
       views: int.tryParse('${_path(result, ['views', 'count']) ?? ''}'),
@@ -369,15 +372,44 @@ class XTimelineParser {
     return html_parser.parseFragment(text).text ?? text;
   }
 
-  static XLinkCard? _parseCard(Object? card, List<XLink> links) {
+  static Map<String, Map>? _bindingValues(Object? card) {
     final values = _path(card, ['legacy', 'binding_values']);
     if (values is! List) return null;
-    final map = <String, Map>{};
-    for (final v in values) {
-      if (v is Map && v['key'] is String && v['value'] is Map) {
-        map[v['key'] as String] = v['value'] as Map;
-      }
-    }
+    return {
+      for (final v in values)
+        if (v is Map && v['key'] is String && v['value'] is Map)
+          v['key'] as String: v['value'] as Map,
+    };
+  }
+
+  /// A `…:broadcast` card, or failing that a link to `x.com/i/broadcasts/…`.
+  static XBroadcast? parseBroadcast(Object? card, List<XLink> links) {
+    final name = _path(card, ['legacy', 'name']);
+    final map = name is String && name.endsWith(':broadcast')
+        ? _bindingValues(card)
+        : null;
+    String? string(String key) => map?[key]?['string_value'] as String?;
+    final id =
+        string('broadcast_id') ??
+        XBroadcast.idFromUrl(string('broadcast_url')) ??
+        links.map((l) => XBroadcast.idFromUrl(l.url)).nonNulls.firstOrNull;
+    if (id == null) return null;
+    final image =
+        map?['broadcast_thumbnail_large'] ??
+        map?['broadcast_thumbnail_original'] ??
+        map?['broadcast_thumbnail'] ??
+        map?['broadcast_thumbnail_medium'];
+    return XBroadcast(
+      id: id,
+      title: string('broadcast_title') ?? string('title'),
+      imageUrl: _path(image, ['image_value', 'url']) as String?,
+      state: XBroadcast.parseState(string('broadcast_state')),
+    );
+  }
+
+  static XLinkCard? _parseCard(Object? card, List<XLink> links) {
+    final map = _bindingValues(card);
+    if (map == null) return null;
     final title = map['title']?['string_value'] as String?;
     if (title == null) return null;
     // The card belongs to the post's last link; its own card_url is a t.co.

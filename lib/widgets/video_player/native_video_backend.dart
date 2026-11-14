@@ -14,7 +14,7 @@ class NativeVideoBackend implements VideoBackend {
   VideoPlayerController? _controller;
 
   @override
-  Future<void> open(Uri source, {required bool loop}) async {
+  Future<void> open(Uri source, {required bool loop, Duration? start}) async {
     // A SurfaceView lets Android scale the decoder output itself; the texture
     // path draws it shrunk into a corner on some Android TV decoders.
     final controller = source.isScheme('file')
@@ -31,6 +31,9 @@ class NativeVideoBackend implements VideoBackend {
     try {
       await controller.initialize();
       await controller.setLooping(loop);
+      if (start != null && start > Duration.zero) {
+        await controller.seekTo(start);
+      }
       await controller.play();
     } catch (e) {
       state.value = VideoPlaybackState(error: '$e');

@@ -44,7 +44,8 @@ class MediaKitVideoBackend implements VideoBackend {
     final width = s.width ?? 0;
     final height = s.height ?? 0;
     state.value = VideoPlaybackState(
-      initialized: s.duration > Duration.zero,
+      // A live stream may report no duration; its first frame still counts.
+      initialized: s.duration > Duration.zero || width > 0,
       playing: s.playing,
       buffering: s.buffering,
       completed: s.completed && !_loop,
@@ -57,12 +58,12 @@ class MediaKitVideoBackend implements VideoBackend {
   }
 
   @override
-  Future<void> open(Uri source, {required bool loop}) async {
+  Future<void> open(Uri source, {required bool loop, Duration? start}) async {
     _loop = loop;
     await _player.setPlaylistMode(
       loop ? PlaylistMode.single : PlaylistMode.none,
     );
-    await _player.open(Media(source.toString()));
+    await _player.open(Media(source.toString(), start: start));
   }
 
   @override

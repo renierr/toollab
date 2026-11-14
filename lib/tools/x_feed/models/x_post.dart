@@ -1,3 +1,4 @@
+import 'x_broadcast.dart';
 import 'x_media.dart';
 import 'x_user.dart';
 
@@ -76,6 +77,7 @@ class XPost {
   final String? replyToScreenName;
   final String? replyToId;
   final XLinkCard? card;
+  final XBroadcast? broadcast;
   final int replies;
   final int quotes;
   final int? views;
@@ -101,6 +103,7 @@ class XPost {
     this.replyToScreenName,
     this.replyToId,
     this.card,
+    this.broadcast,
     this.replies = 0,
     this.quotes = 0,
     this.views,

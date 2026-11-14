@@ -1,6 +1,4 @@
-/// Feed column width: grows with the window, capped so posts stay readable.
+/// Feed column: fills the available width up to this cap.
 abstract final class XLayout {
-  static const double minWidth = 680;
-  static const double maxWidth = 960;
-  static const double widthFactor = 0.55;
+  static const double maxWidth = 1200;
 }

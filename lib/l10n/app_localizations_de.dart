@@ -14841,6 +14841,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get videoPlayerLive => 'LIVE';
+
+  @override
+  String get videoPlayerQuality => 'Qualität';
+
+  @override
+  String get videoPlayerQualityAuto => 'Automatisch';
+
+  @override
   String get toolNameXFeed => 'X Feed';
 
   @override
@@ -14889,6 +14898,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String xFeedHoursShort(int hours) {
     return '$hours Std.';
   }
+
+  @override
+  String get xFeedBroadcastReplay => 'Aufzeichnung';
+
+  @override
+  String get xFeedBroadcastUpcoming => 'Demnächst';
+
+  @override
+  String get xFeedBroadcastTitle => 'Liveübertragung';
+
+  @override
+  String get xFeedBroadcastLoading => 'Übertragung wird geladen…';
+
+  @override
+  String get xFeedBroadcastFailed =>
+      'Diese Übertragung konnte nicht geladen werden';
+
+  @override
+  String get xFeedBroadcastNotStarted =>
+      'Diese Übertragung hat noch nicht begonnen';
+
+  @override
+  String get xFeedBroadcastGeoblocked =>
+      'Diese Übertragung ist in deiner Region nicht verfügbar';
 
   @override
   String get xFeedGifBadge => 'GIF';

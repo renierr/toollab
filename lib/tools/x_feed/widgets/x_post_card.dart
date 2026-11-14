@@ -14,6 +14,7 @@ import '../x_media_actions.dart';
 import '../x_navigation.dart';
 import '../x_translation_actions.dart';
 import 'x_avatar.dart';
+import 'x_broadcast_tile.dart';
 import 'x_link_card.dart';
 import 'x_media_grid.dart';
 import 'x_post_actions.dart';
@@ -128,6 +129,16 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
         }
       }
     }
+    final playsBroadcast =
+        widget.post.broadcast != null && widget.post.media.isEmpty;
+    if (playsBroadcast &&
+        _cardNode.hasPrimaryFocus &&
+        (key == LogicalKeyboardKey.space ||
+            key == LogicalKeyboardKey.mediaPlayPause ||
+            key == LogicalKeyboardKey.mediaPlay)) {
+      unawaited(XMediaActions.openBroadcast(context, widget.post));
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.space && _cardNode.hasPrimaryFocus) {
       final media = widget.post.allMedia;
       if (media.isEmpty) return KeyEventResult.ignored;
@@ -192,6 +203,7 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
     final reposter = post.repostedBy;
     final replyTo = post.replyToScreenName;
     final card = post.card;
+    final broadcast = post.media.isEmpty ? post.broadcast : null;
     final quoted = post.quoted;
     final translation = post.canTranslate
         ? context.select<XFeedState, XTranslation?>(
@@ -248,7 +260,20 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
               ),
             ),
           ),
-        if (card != null && post.media.isEmpty && quoted == null)
+        if (broadcast != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: ExcludeFocus(
+              child: XBroadcastTile(
+                broadcast: broadcast,
+                onTap: () => XMediaActions.openBroadcast(context, post),
+              ),
+            ),
+          ),
+        if (card != null &&
+            broadcast == null &&
+            post.media.isEmpty &&
+            quoted == null)
           Padding(
             padding: const EdgeInsets.only(top: 10),
             child: ExcludeFocus(

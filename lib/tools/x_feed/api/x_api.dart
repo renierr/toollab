@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 
+import '../models/x_broadcast.dart';
 import '../models/x_post.dart';
 import '../models/x_user.dart';
 import 'x_session.dart';
@@ -22,6 +23,11 @@ class XApiException implements Exception {
   @override
   String toString() =>
       'XApiException($kind${message == null ? '' : ': $message'})';
+}
+
+/// A broadcast X does not stream to the viewer's region.
+class XGeoblockedException implements Exception {
+  const XGeoblockedException();
 }
 
 enum XSearchProduct { top, latest, media }
@@ -295,6 +301,71 @@ class XApi {
     }
     if (res.statusCode != 200) return null;
     return _decode(res.body)['screen_name'] as String?;
+  }
+
+  Future<Map<String, dynamic>> _rest(
+    String path, [
+    Map<String, String>? query,
+  ]) async {
+    final config = await _ensureConfig();
+    final res = await _send(
+      'GET',
+      Uri.https('x.com', path, query),
+      _headers(config, 'GET', path),
+    );
+    switch (res.statusCode) {
+      case 200:
+        return _decode(res.body);
+      case 401:
+      case 403:
+        throw const XApiException(XApiErrorKind.unauthorized);
+      case 429:
+        throw const XApiException(XApiErrorKind.rateLimited);
+      default:
+        throw XApiException(
+          XApiErrorKind.server,
+          'HTTP ${res.statusCode}: ${_bodyMessage(res.body)}',
+        );
+    }
+  }
+
+  /// The broadcast's playlist the way x.com's player gets it: the broadcast
+  /// for its state and media key, then the stream for that key. Null when it
+  /// has not started.
+  Future<XBroadcastStream?> broadcastStream(String id) async {
+    final shown = await _rest('/i/api/1.1/broadcasts/show.json', {'ids': id});
+    final broadcast = _path(shown, ['broadcasts', id]);
+    if (broadcast is! Map) {
+      throw const XApiException(XApiErrorKind.server, 'Broadcast not found');
+    }
+    final state = XBroadcast.parseState(broadcast['state'] as String?);
+    final mediaKey = broadcast['media_key'] as String?;
+    if (state == XBroadcastState.upcoming || mediaKey == null) return null;
+    final status = await _rest('/i/api/1.1/live_video_stream/status/$mediaKey');
+    final source = status['source'];
+    final location = source is Map
+        ? (source['noRedirectPlaybackUrl'] ?? source['location']) as String?
+        : null;
+    final playlist = location == null ? null : Uri.tryParse(location);
+    if (playlist == null) {
+      throw const XApiException(XApiErrorKind.server, 'No stream location');
+    }
+    if (playlist.path.contains('/live_video_stream/geoblocked/')) {
+      throw const XGeoblockedException();
+    }
+    return XBroadcastStream(
+      playlist: playlist,
+      state: state,
+      title: broadcast['status'] as String?,
+    );
+  }
+
+  static Object? _path(Object? node, List<String> keys) {
+    for (final key in keys) {
+      if (node is! Map) return null;
+      node = node[key];
+    }
+    return node;
   }
 
   /// [seenPostIds] tells X which posts were already on screen, as the web

@@ -7,12 +7,15 @@ import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/hls_playlist.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 import 'package:tool_lab/widgets/video_player/video_backend.dart';
 import 'package:tool_lab/widgets/video_player/video_player_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'api/x_api.dart';
+import 'models/x_broadcast.dart';
 import 'models/x_media.dart';
 import 'models/x_post.dart';
 import 'widgets/x_photo_viewer_page.dart';
@@ -69,6 +72,90 @@ class XMediaActions {
         ),
       ],
     );
+  }
+
+  static Future<void> openBroadcast(BuildContext context, XPost post) async {
+    final broadcast = post.broadcast;
+    if (broadcast == null) return;
+    final pageUrl = Uri.https('x.com', '/i/broadcasts/${broadcast.id}');
+    if (!VideoBackend.isSupported) {
+      await openUrl(context, pageUrl);
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final api = context.read<XFeedState>().api;
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text(l10n.xFeedBroadcastLoading),
+        duration: const Duration(seconds: 30),
+      ),
+    );
+    void fail(String message) => messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+
+    final XBroadcastStream? stream;
+    final List<VideoQuality> qualities;
+    try {
+      stream = await api.broadcastStream(broadcast.id);
+      qualities = stream == null ? const [] : await _qualities(stream, l10n);
+    } on XGeoblockedException {
+      fail(l10n.xFeedBroadcastGeoblocked);
+      return;
+    } catch (e) {
+      errorLog('[XMediaActions] Broadcast ${broadcast.id} failed: $e');
+      fail(l10n.xFeedBroadcastFailed);
+      return;
+    }
+    if (stream == null) {
+      fail(l10n.xFeedBroadcastNotStarted);
+      return;
+    }
+    messenger?.hideCurrentSnackBar();
+    if (!context.mounted) return;
+    await VideoPlayerPage.open(
+      context,
+      source: qualities.firstOrNull?.source ?? stream.playlist,
+      title: stream.title ?? broadcast.title ?? '@${post.author.screenName}',
+      live: stream.live,
+      qualities: qualities,
+      actions: [
+        VideoPlayerAction(
+          icon: Icons.link,
+          label: l10n.xFeedCopyMediaLink,
+          onPressed: (c) =>
+              copyText(c, pageUrl.toString(), l10n.xFeedLinkCopied),
+        ),
+      ],
+    );
+  }
+
+  /// Every variant of the master playlist, best first, then the master itself
+  /// as Auto. A playlist without variants plays as it is.
+  static Future<List<VideoQuality>> _qualities(
+    XBroadcastStream stream,
+    AppLocalizations l10n,
+  ) async {
+    final client = await AppHttpClient.client;
+    final res = await client
+        .get(stream.playlist)
+        .timeout(const Duration(seconds: 15));
+    if (res.statusCode != 200) {
+      throw HttpException('playlist ${res.statusCode}', uri: stream.playlist);
+    }
+    final variants = HlsPlaylist.parseVariants(res.body, stream.playlist);
+    if (variants.isEmpty) return const [];
+    return [
+      for (final v in variants)
+        VideoQuality(
+          label: v.height != null
+              ? '${v.height}p'
+              : '${(v.bandwidth / 1000).round()} kbps',
+          source: v.uri,
+        ),
+      VideoQuality(label: l10n.videoPlayerQualityAuto, source: stream.playlist),
+    ];
   }
 
   static String fileName(XPost post, XMedia media) {
