@@ -2531,6 +2531,7 @@
   "chatAiHistoryYesterday": "Yesterday",
   "chatAiHistoryLastWeek": "Previous 7 days",
   "chatAiHistoryLastMonth": "Previous 30 days",
+  "chatAiOpenWebsite": "Open website",
   "chatAiSessionStarted": "Started {time}",
   "@chatAiSessionStarted": {
     "placeholders": {

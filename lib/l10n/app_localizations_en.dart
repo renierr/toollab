@@ -4288,6 +4288,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatAiHistoryLastMonth => 'Previous 30 days';
 
   @override
+  String get chatAiOpenWebsite => 'Open website';
+
+  @override
   String chatAiSessionStarted(String time) {
     return 'Started $time';
   }

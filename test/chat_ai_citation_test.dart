@@ -143,6 +143,11 @@ void main() {
     expect(find.text('1'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
     expect(find.byType(Tooltip), findsOneWidget);
+    expect(find.text('Open website'), findsNothing);
+    await tester.tap(find.text('1'));
+    await tester.pumpAndSettle();
+    expect(find.text('Example title'), findsOneWidget);
+    expect(find.text('Open website'), findsOneWidget);
   });
 
   for (final width in [320.0, 1400.0]) {

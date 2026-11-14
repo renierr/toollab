@@ -1619,6 +1619,7 @@
   "chatAiHistoryYesterday": "Gestern",
   "chatAiHistoryLastWeek": "Letzte 7 Tage",
   "chatAiHistoryLastMonth": "Letzte 30 Tage",
+  "chatAiOpenWebsite": "Webseite öffnen",
   "chatAiSessionStarted": "Begonnen: {time}",
   "chatAiSessionLastActive": "zuletzt aktiv: {time}",
   "chatAiSessionMessages": "{count, plural, =1{1 Nachricht} other{{count} Nachrichten}}",

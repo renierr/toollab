@@ -7583,6 +7583,12 @@ abstract class AppLocalizations {
   /// **'Previous 30 days'**
   String get chatAiHistoryLastMonth;
 
+  /// No description provided for @chatAiOpenWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Open website'**
+  String get chatAiOpenWebsite;
+
   /// No description provided for @chatAiSessionStarted.
   ///
   /// In en, this message translates to:
