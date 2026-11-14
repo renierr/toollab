@@ -12,7 +12,6 @@ import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/text_scale_multiplier.dart';
-import 'package:tool_lab/widgets/text_size_sheet.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
@@ -24,7 +23,7 @@ import 'package:tool_lab/widgets/genai_status_banner.dart';
 import 'widgets/chat_suggestions.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/chat_thinking_bubble.dart';
-import 'widgets/chat_system_prompt_dialog.dart';
+import 'widgets/chat_settings_menu.dart';
 import 'widgets/chat_backend_switch.dart';
 import 'widgets/deepseek_account_menu.dart';
 import 'widgets/deepseek_attachment_strip.dart';
@@ -249,35 +248,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
       drawer: const ChatSessionDrawer(),
       actions: [
         if (deepSeek) const DeepSeekAccountMenu(),
-        IconButton(
-          icon: const Icon(Icons.format_size),
-          tooltip: l10n.chatAiTextSize,
-          onPressed: () => TextSizeSheet.show<ChatAiState>(
-            context,
-            title: l10n.chatAiTextSize,
-            percentOf: (state) => state.textPercent,
-            onChanged: (state, percent) => state.setTextPercent(percent),
-            minPercent: ChatAiState.minTextPercent,
-            maxPercent: ChatAiState.maxTextPercent,
-            step: ChatAiState.textPercentStep,
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.settings_outlined),
-          tooltip: l10n.chatAiSystemPromptTitle,
-          onPressed: () async {
-            final newPrompt = await showDialog<String?>(
-              context: context,
-              builder: (context) => ChatSystemPromptDialog(
-                currentPrompt: state.customSystemPrompt,
-                defaultPrompt: ChatAiState.defaultSystemPrompt,
-              ),
-            );
-            if (newPrompt != null) {
-              await state.updateSystemPrompt(newPrompt);
-            }
-          },
-        ),
+        const ChatSettingsMenu(),
         // A DeepSeek chat lives on the account; it is deleted from the history.
         if (!deepSeek && state.messages.isNotEmpty)
           IconButton(

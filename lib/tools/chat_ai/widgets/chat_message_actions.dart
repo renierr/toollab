@@ -7,7 +7,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import 'chat_citation.dart';
 
-/// Small copy and share buttons under a message.
+/// Small copy and share buttons in a message's corner.
 class ChatMessageActions extends StatelessWidget {
   final String text;
   final Color color;
@@ -45,15 +45,17 @@ class ChatMessageActions extends StatelessWidget {
           padding: EdgeInsets.zero,
           constraints: constraints,
         ),
-        IconButton(
-          onPressed: () => SharePlus.instance.share(ShareParams(text: plain)),
-          icon: const Icon(Icons.share_outlined, size: 16),
-          color: muted,
-          tooltip: l10n.commonShare,
-          visualDensity: VisualDensity.compact,
-          padding: EdgeInsets.zero,
-          constraints: constraints,
-        ),
+        // Linux has no share sheet; share_plus falls back to a mailto link.
+        if (!Platform.isLinux)
+          IconButton(
+            onPressed: () => SharePlus.instance.share(ShareParams(text: plain)),
+            icon: const Icon(Icons.share_outlined, size: 16),
+            color: muted,
+            tooltip: l10n.commonShare,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: constraints,
+          ),
       ],
     );
   }

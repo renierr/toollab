@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -190,7 +191,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.byIcon(Icons.copy_rounded), findsNWidgets(2));
-      expect(find.byIcon(Icons.share_outlined), findsNWidgets(2));
+      expect(
+        find.byIcon(Icons.share_outlined),
+        findsNWidgets(Platform.isLinux ? 0 : 2),
+      );
       expect(find.text('receipt.png'), findsOneWidget);
     });
   }
