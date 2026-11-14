@@ -2527,6 +2527,8 @@
   "chatAiAttachImage": "Attach Image",
   "chatAiAttachDocument": "Attach Document",
   "chatAiAttachTooltip": "Attach file or image",
+  "chatAiFileUploading": "Uploading and reading file…",
+  "chatAiFileUploadFailed": "Upload failed. Remove the file to send.",
   "chatAiPrepareButton": "Prepare AI Core",
   "chatAiClearHistory": "Clear History",
   "chatAiClearHistoryConfirm": "Are you sure you want to clear all messages in this chat?",

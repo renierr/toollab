@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -32,7 +33,11 @@ class DeepSeekApi {
 
   static final Uri _base = Uri.parse('https://chat.deepseek.com');
   static const String _completionPath = '/api/v0/chat/completion';
+  static const String _uploadPath = '/api/v0/file/upload_file';
   static const Duration _timeout = Duration(seconds: 30);
+  static const Duration _uploadTimeout = Duration(minutes: 3);
+  static const Duration _parsePollInterval = Duration(seconds: 2);
+  static const int _parsePollLimit = 90;
   static const String _userAgent =
       'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36';
@@ -134,6 +139,7 @@ class DeepSeekApi {
     required String prompt,
     required bool thinking,
     required bool search,
+    List<String> fileIds = const [],
   }) async* {
     final challenge = await _challenge(_completionPath);
     final answer = await DeepSeekPow.solveInBackground(challenge);
@@ -148,7 +154,7 @@ class DeepSeekApi {
         'parent_message_id': parentMessageId,
         'model_type': null,
         'prompt': prompt,
-        'ref_file_ids': <String>[],
+        'ref_file_ids': fileIds,
         'thinking_enabled': thinking,
         'search_enabled': search,
         'action': null,
@@ -185,6 +191,93 @@ class DeepSeekApi {
     }
     yield parser.reply;
   }
+
+  /// Uploads the file at [path] and waits until DeepSeek has parsed it;
+  /// returns the id a message references it by.
+  Future<String> uploadFile(String path, String name) async {
+    final challenge = await _challenge(_uploadPath);
+    final answer = await DeepSeekPow.solveInBackground(challenge);
+    if (answer == null) {
+      throw const DeepSeekException(DeepSeekErrorKind.challenge);
+    }
+    final file = File(path);
+    final boundary = '----ToolLab${DateTime.now().microsecondsSinceEpoch}';
+    final safeName = name.replaceAll(RegExp(r'["\r\n]'), '_');
+    final head = utf8.encode(
+      '--$boundary\r\n'
+      'Content-Disposition: form-data; name="file"; filename="$safeName"\r\n'
+      'Content-Type: ${_mimeType(name)}\r\n\r\n',
+    );
+    final tail = utf8.encode('\r\n--$boundary--\r\n');
+    final http.Response response;
+    try {
+      final request = http.StreamedRequest('POST', _base.resolve(_uploadPath))
+        ..headers.addAll(_headers)
+        ..headers['content-type'] = 'multipart/form-data; boundary=$boundary'
+        ..headers['x-ds-pow-response'] = challenge.header(answer)
+        ..contentLength = head.length + await file.length() + tail.length;
+      final client = await AppHttpClient.client;
+      final sent = client.send(request).timeout(_uploadTimeout);
+      request.sink.add(head);
+      await request.sink.addStream(file.openRead());
+      request.sink
+        ..add(tail)
+        ..close();
+      response = await http.Response.fromStream(await sent);
+    } catch (e) {
+      throw DeepSeekException(DeepSeekErrorKind.network, '$e');
+    }
+    _checkStatus(response.statusCode);
+    final data = _unwrap(utf8.decode(response.bodyBytes));
+    final id = data is Map ? data['id'] : null;
+    if (id is! String) {
+      throw const DeepSeekException(DeepSeekErrorKind.server, 'no file id');
+    }
+    for (var i = 0; i < _parsePollLimit; i++) {
+      final files = await _call(
+        'GET',
+        '/api/v0/file/fetch_files?file_ids=${Uri.encodeQueryComponent(id)}',
+      );
+      final list = files is Map ? files['files'] : null;
+      final info = list is List && list.isNotEmpty ? list.first : null;
+      switch (info is Map ? info['status'] : null) {
+        case 'SUCCESS':
+          return id;
+        case 'FAILED':
+          throw DeepSeekException(
+            DeepSeekErrorKind.server,
+            '$name: ${(info as Map)['error_code'] ?? 'FAILED'}',
+          );
+      }
+      await Future<void>.delayed(_parsePollInterval);
+    }
+    throw DeepSeekException(DeepSeekErrorKind.server, '$name: timeout');
+  }
+
+  static String _mimeType(String name) => switch (name
+      .split('.')
+      .last
+      .toLowerCase()) {
+    'png' => 'image/png',
+    'jpg' || 'jpeg' => 'image/jpeg',
+    'webp' => 'image/webp',
+    'gif' => 'image/gif',
+    'bmp' => 'image/bmp',
+    'heic' => 'image/heic',
+    'pdf' => 'application/pdf',
+    'txt' || 'log' => 'text/plain',
+    'md' || 'markdown' => 'text/markdown',
+    'csv' => 'text/csv',
+    'json' => 'application/json',
+    'html' || 'htm' => 'text/html',
+    'docx' =>
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xlsx' =>
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'pptx' =>
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    _ => 'application/octet-stream',
+  };
 
   Future<DeepSeekPowChallenge> _challenge(String targetPath) async {
     final data = await _call('POST', '/api/v0/chat/create_pow_challenge', {

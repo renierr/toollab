@@ -1615,6 +1615,8 @@
   "chatAiAttachImage": "Bild anfügen",
   "chatAiAttachDocument": "Dokument anfügen",
   "chatAiAttachTooltip": "Datei oder Bild anfügen",
+  "chatAiFileUploading": "Datei wird hochgeladen und gelesen…",
+  "chatAiFileUploadFailed": "Hochladen fehlgeschlagen. Entfernen Sie die Datei, um zu senden.",
   "chatAiPrepareButton": "KI Core vorbereiten",
   "chatAiClearHistory": "Verlauf löschen",
   "chatAiClearHistoryConfirm": "Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?",

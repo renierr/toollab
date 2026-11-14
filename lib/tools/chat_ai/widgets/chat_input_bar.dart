@@ -20,6 +20,13 @@ class ChatInputBar extends StatelessWidget {
   /// Shown above the text field, for model options.
   final Widget? options;
 
+  /// Files picked outside [selectedImageBytes] and [attachedFileName].
+  final Widget? attachments;
+  final bool hasAttachments;
+
+  /// False while an attachment is still uploading or has failed.
+  final bool attachmentsReady;
+
   const ChatInputBar({
     super.key,
     required this.controller,
@@ -33,6 +40,9 @@ class ChatInputBar extends StatelessWidget {
     required this.onPickFile,
     required this.onRemoveFile,
     this.options,
+    this.attachments,
+    this.hasAttachments = false,
+    this.attachmentsReady = true,
   });
 
   @override
@@ -57,6 +67,7 @@ class ChatInputBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ?options,
+            ?attachments,
             if (selectedImageBytes != null) ...[
               Stack(
                 clipBehavior: Clip.none,
@@ -243,7 +254,7 @@ class ChatInputBar extends StatelessWidget {
                       minLines: 1,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) {
-                        if (enabled && !isGenerating) {
+                        if (enabled && !isGenerating && attachmentsReady) {
                           onSend();
                         }
                       },
@@ -259,8 +270,10 @@ class ChatInputBar extends StatelessWidget {
                     final sendDisabled =
                         isGenerating ||
                         !enabled ||
+                        !attachmentsReady ||
                         (selectedImageBytes == null &&
                             attachedFileName == null &&
+                            !hasAttachments &&
                             controller.text.trim().isEmpty);
                     return Material(
                       color: sendDisabled

@@ -11,6 +11,7 @@ import 'chat_models.dart';
 import 'config.dart';
 import 'deepseek/deepseek_account.dart';
 import 'deepseek/deepseek_api.dart';
+import 'deepseek/deepseek_attachment.dart';
 import 'deepseek/deepseek_stream.dart';
 
 class ChatAiState extends ChangeNotifier {
@@ -57,6 +58,17 @@ class ChatAiState extends ChangeNotifier {
   static const int textPercentStep = 10;
 
   int _textPercent = 100;
+
+  /// The web app's limit per message.
+  static const int maxDeepSeekFiles = 50;
+
+  List<DeepSeekAttachment> _deepSeekFiles = const [];
+
+  List<DeepSeekAttachment> get deepSeekFiles => _deepSeekFiles;
+
+  /// Every picked file is parsed and none failed, so the message can go out.
+  bool get deepSeekFilesReady =>
+      _deepSeekFiles.every((file) => file.status == DeepSeekUploadStatus.ready);
 
   int get textPercent => _textPercent;
 
@@ -128,7 +140,11 @@ class ChatAiState extends ChangeNotifier {
     _currentSessionId = null;
     _messages = [];
     await loadSessions();
-    if (backend == ChatBackend.deepseek) _selectedImageBytes = null;
+    if (backend == ChatBackend.deepseek) {
+      _selectedImageBytes = null;
+    } else {
+      _deepSeekFiles = const [];
+    }
     notifyListeners();
     await DatabaseService.instance.setSetting(
       ChatAiTool.config.id,
@@ -189,6 +205,9 @@ class ChatAiState extends ChangeNotifier {
             thinking: message.thinking.trim().isEmpty
                 ? null
                 : message.thinking.trim(),
+            fileName: message.fileNames.isEmpty
+                ? null
+                : message.fileNames.join('\n'),
             createdAt: lastTime = message.insertedAt > lastTime
                 ? message.insertedAt
                 : lastTime + 1,
@@ -261,6 +280,52 @@ class ChatAiState extends ChangeNotifier {
   Future<void> signOutDeepSeek() async {
     await DeepSeekAccount.clear();
     _deepSeekAccount = null;
+    _deepSeekFiles = const [];
+    notifyListeners();
+  }
+
+  /// Starts uploading [files] for the next DeepSeek message.
+  void addDeepSeekFiles(List<({String path, String name})> files) {
+    final account = _deepSeekAccount;
+    if (account == null) return;
+    final room = maxDeepSeekFiles - _deepSeekFiles.length;
+    final added = [
+      for (final file in files.take(room < 0 ? 0 : room))
+        DeepSeekAttachment(path: file.path, name: file.name),
+    ];
+    if (added.isEmpty) return;
+    _deepSeekFiles = [..._deepSeekFiles, ...added];
+    notifyListeners();
+    final api = DeepSeekApi(account.token, locale: _locale);
+    for (final file in added) {
+      unawaited(_uploadDeepSeekFile(api, file));
+    }
+  }
+
+  Future<void> _uploadDeepSeekFile(
+    DeepSeekApi api,
+    DeepSeekAttachment file,
+  ) async {
+    DeepSeekAttachment result;
+    try {
+      result = file.ready(await api.uploadFile(file.path, file.name));
+    } on DeepSeekException catch (e) {
+      _onDeepSeekError(e);
+      result = file.failed();
+    }
+    // Removed while it was uploading.
+    if (!_deepSeekFiles.contains(file)) return;
+    _deepSeekFiles = [
+      for (final f in _deepSeekFiles) identical(f, file) ? result : f,
+    ];
+    notifyListeners();
+  }
+
+  void removeDeepSeekFile(DeepSeekAttachment file) {
+    _deepSeekFiles = [
+      for (final f in _deepSeekFiles)
+        if (!identical(f, file)) f,
+    ];
     notifyListeners();
   }
 
@@ -480,6 +545,7 @@ class ChatAiState extends ChangeNotifier {
     _selectedImageBytes = null;
     _attachedFileName = null;
     _attachedFileContent = null;
+    _deepSeekFiles = const [];
     notifyListeners();
   }
 
@@ -593,15 +659,26 @@ class ChatAiState extends ChangeNotifier {
   }
 
   Future<void> sendMessage(String text) async {
+    final deepSeek = _backend == ChatBackend.deepseek;
+    final remoteFiles = deepSeek
+        ? _deepSeekFiles
+        : const <DeepSeekAttachment>[];
+    if (!deepSeekFilesReady && deepSeek) return;
     if (text.trim().isEmpty &&
         _selectedImageBytes == null &&
-        _attachedFileName == null) {
+        _attachedFileName == null &&
+        remoteFiles.isEmpty) {
       return;
     }
+    final remoteNames = remoteFiles.isEmpty
+        ? null
+        : remoteFiles.map((f) => f.name).join('\n');
     if (_currentSessionId == null) {
       final initialTitle = text.trim().isNotEmpty
           ? (text.length > 20 ? '${text.substring(0, 17)}...' : text)
-          : (_attachedFileName ?? 'Image Prompt');
+          : (_attachedFileName ??
+                remoteFiles.firstOrNull?.name ??
+                'Image Prompt');
       await createNewSession(initialTitle: initialTitle);
     }
 
@@ -613,6 +690,7 @@ class ChatAiState extends ChangeNotifier {
     _selectedImageBytes = null;
     _attachedFileName = null;
     _attachedFileContent = null;
+    if (deepSeek) _deepSeekFiles = const [];
     notifyListeners();
 
     try {
@@ -622,7 +700,7 @@ class ChatAiState extends ChangeNotifier {
         'user',
         text,
         imageData: imageToSend,
-        fileName: fileNameToSend,
+        fileName: fileNameToSend ?? remoteNames,
         fileContent: fileContentToSend,
       );
       _messages = await ChatAiDbHelper.instance.getMessages(sessionId);
@@ -633,7 +711,9 @@ class ChatAiState extends ChangeNotifier {
           .where((s) => s.id == sessionId)
           .firstOrNull;
       if (currentSession != null && currentSession.title.startsWith('Chat ')) {
-        final titleSource = text.isNotEmpty ? text : (fileNameToSend ?? 'Chat');
+        final titleSource = text.isNotEmpty
+            ? text
+            : (fileNameToSend ?? remoteFiles.firstOrNull?.name ?? 'Chat');
         final newTitle = titleSource.length > 25
             ? '${titleSource.substring(0, 22)}...'
             : titleSource;
@@ -651,6 +731,7 @@ class ChatAiState extends ChangeNotifier {
           text,
           fileNameToSend,
           fileContentToSend,
+          [for (final file in remoteFiles) ?file.fileId],
         );
       } else if (isGenerativeAvailable) {
         final buffer = StringBuffer();
@@ -715,6 +796,7 @@ class ChatAiState extends ChangeNotifier {
     String text,
     String? fileName,
     String? fileContent,
+    List<String> fileIds,
   ) async {
     final account = _deepSeekAccount;
     if (account == null) {
@@ -749,6 +831,7 @@ class ChatAiState extends ChangeNotifier {
         prompt: prompt.toString(),
         thinking: _deepSeekThinking,
         search: _deepSeekSearch,
+        fileIds: fileIds,
       )) {
         reply = update;
         _streamingThinking = update.thinking;

@@ -7559,6 +7559,18 @@ abstract class AppLocalizations {
   /// **'Attach file or image'**
   String get chatAiAttachTooltip;
 
+  /// No description provided for @chatAiFileUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading and reading file…'**
+  String get chatAiFileUploading;
+
+  /// No description provided for @chatAiFileUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload failed. Remove the file to send.'**
+  String get chatAiFileUploadFailed;
+
   /// No description provided for @chatAiPrepareButton.
   ///
   /// In en, this message translates to:

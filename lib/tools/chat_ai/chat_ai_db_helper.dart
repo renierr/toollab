@@ -178,7 +178,15 @@ class ChatAiDbHelper {
   /// Replaces a session's messages with the remote conversation.
   Future<void> replaceMessages(
     int sessionId,
-    List<({String role, String content, String? thinking, int createdAt})>
+    List<
+      ({
+        String role,
+        String content,
+        String? thinking,
+        String? fileName,
+        int createdAt,
+      })
+    >
     messages, {
     required int? remoteParentId,
   }) async {
@@ -195,6 +203,7 @@ class ChatAiDbHelper {
           'role': message.role,
           'content': message.content,
           'thinking': message.thinking,
+          'file_name': message.fileName,
           'created_at': message.createdAt,
         });
       }

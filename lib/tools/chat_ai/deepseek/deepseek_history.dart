@@ -27,6 +27,7 @@ class DeepSeekHistoryMessage {
   final String text;
   final String thinking;
   final int insertedAt;
+  final List<String> fileNames;
 
   const DeepSeekHistoryMessage({
     required this.id,
@@ -34,6 +35,7 @@ class DeepSeekHistoryMessage {
     required this.text,
     required this.thinking,
     required this.insertedAt,
+    this.fileNames = const [],
   });
 }
 
@@ -96,8 +98,15 @@ class DeepSeekHistory {
         }
       }
     }
+    final files = item['files'];
     return DeepSeekHistoryMessage(
       id: id,
+      fileNames: [
+        if (files is List)
+          for (final file in files)
+            if (file is Map && file['file_name'] is String)
+              file['file_name'] as String,
+      ],
       fromUser: item['role'] == 'USER',
       text: text.toString(),
       thinking: thinking.toString(),

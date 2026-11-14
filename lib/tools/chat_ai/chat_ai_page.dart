@@ -27,6 +27,7 @@ import 'widgets/chat_thinking_bubble.dart';
 import 'widgets/chat_system_prompt_dialog.dart';
 import 'widgets/chat_backend_switch.dart';
 import 'widgets/deepseek_account_menu.dart';
+import 'widgets/deepseek_attachment_strip.dart';
 import 'widgets/deepseek_login_view.dart';
 import 'widgets/deepseek_options_bar.dart';
 import 'deepseek/deepseek_login_actions.dart';
@@ -127,6 +128,28 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
     );
   }
 
+  Future<void> _pickDeepSeekImages(ChatAiState state) async {
+    try {
+      final images = await ImagePicker().pickMultiImage();
+      state.addDeepSeekFiles([
+        for (final image in images) (path: image.path, name: image.name),
+      ]);
+    } catch (e) {
+      errorLog('[ChatAiPage] Error picking images: $e');
+    }
+  }
+
+  Future<void> _pickDeepSeekFiles(ChatAiState state) async {
+    try {
+      final files = await TvFilePickerDialog.openMultipleFiles(context);
+      state.addDeepSeekFiles([
+        for (final file in files) (path: file.path, name: file.name),
+      ]);
+    } catch (e) {
+      errorLog('[ChatAiPage] Error picking files: $e');
+    }
+  }
+
   Future<void> _pickImage(ChatAiState state) async {
     try {
       final picker = ImagePicker();
@@ -196,9 +219,13 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
   void _handleSend(ChatAiState state) {
     if (state.isInitializing || state.isGenerating) return;
     final text = _textController.text.trim();
+    if (state.backend == ChatBackend.deepseek && !state.deepSeekFilesReady) {
+      return;
+    }
     if (text.isNotEmpty ||
         state.selectedImageBytes != null ||
-        state.attachedFileName != null) {
+        state.attachedFileName != null ||
+        state.deepSeekFiles.isNotEmpty) {
       state.sendMessage(text);
       _textController.clear();
     }
@@ -364,11 +391,18 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                 isGenerating: state.isGenerating,
                 enabled: !state.isInitializing,
                 selectedImageBytes: state.selectedImageBytes,
-                onPickImage: deepSeek ? null : () => _pickImage(state),
+                onPickImage: deepSeek
+                    ? () => _pickDeepSeekImages(state)
+                    : () => _pickImage(state),
                 options: deepSeek ? const DeepSeekOptionsBar() : null,
+                attachments: deepSeek ? const DeepSeekAttachmentStrip() : null,
+                hasAttachments: deepSeek && state.deepSeekFiles.isNotEmpty,
+                attachmentsReady: !deepSeek || state.deepSeekFilesReady,
                 onRemoveImage: () => state.selectImage(null),
                 attachedFileName: state.attachedFileName,
-                onPickFile: () => _pickFile(state),
+                onPickFile: deepSeek
+                    ? () => _pickDeepSeekFiles(state)
+                    : () => _pickFile(state),
                 onRemoveFile: () => state.selectFile(null, null),
               ),
             ),

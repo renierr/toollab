@@ -4276,6 +4276,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatAiAttachTooltip => 'Attach file or image';
 
   @override
+  String get chatAiFileUploading => 'Uploading and reading file…';
+
+  @override
+  String get chatAiFileUploadFailed =>
+      'Upload failed. Remove the file to send.';
+
+  @override
   String get chatAiPrepareButton => 'Prepare AI Core';
 
   @override

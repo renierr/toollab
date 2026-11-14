@@ -69,6 +69,9 @@ class ChatMessage {
   bool get isUser => role == 'user';
   bool get hasAttachedFile => fileName != null && fileContent != null;
 
+  /// A DeepSeek message can carry several files, stored one name per line.
+  List<String> get fileNames => fileName?.split('\n') ?? const [];
+
   factory ChatMessage.fromMap(Map<String, dynamic> map) => ChatMessage(
     id: map['id'] as int? ?? 0,
     sessionId: map['session_id'] as int? ?? 0,

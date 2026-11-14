@@ -3,6 +3,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import '../chat_models.dart';
 import '../config.dart';
+import '../deepseek/deepseek_attachment.dart';
 import 'chat_bubble_shell.dart';
 import 'chat_thoughts.dart';
 
@@ -56,48 +57,14 @@ class ChatMessageBubble extends StatelessWidget {
             ),
             const SizedBox(height: 8.0),
           ],
-          if (message.fileName != null) ...[
-            Container(
-              padding: const EdgeInsets.all(10.0),
-              decoration: BoxDecoration(
-                color: isUser
-                    ? theme.colorScheme.onPrimaryContainer.withValues(
-                        alpha: 0.1,
-                      )
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(
-                  color: isUser
-                      ? theme.colorScheme.onPrimaryContainer.withValues(
-                          alpha: 0.2,
-                        )
-                      : theme.colorScheme.outline.withValues(alpha: 0.15),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.insert_drive_file_outlined,
-                    color: isUser
-                        ? theme.colorScheme.onPrimaryContainer
-                        : theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8.0),
-                  Flexible(
-                    child: Text(
-                      message.fileName!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isUser
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+          if (message.fileNames.isNotEmpty) ...[
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: [
+                for (final name in message.fileNames)
+                  _FileChip(name: name, fromUser: isUser),
+              ],
             ),
             const SizedBox(height: 8.0),
           ],
@@ -118,6 +85,55 @@ class ChatMessageBubble extends StatelessWidget {
               // The style sheet replaces the inherited scaler, so pass it on.
               scale: MediaQuery.textScalerOf(context).scale(1),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FileChip extends StatelessWidget {
+  final String name;
+  final bool fromUser;
+
+  const _FileChip({required this.name, required this.fromUser});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        color: fromUser
+            ? scheme.onPrimaryContainer.withValues(alpha: 0.1)
+            : scheme.onSurface.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: fromUser
+              ? scheme.onPrimaryContainer.withValues(alpha: 0.2)
+              : scheme.outline.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            DeepSeekAttachment.isImageName(name)
+                ? Icons.image_outlined
+                : Icons.insert_drive_file_outlined,
+            color: fromUser ? scheme.onPrimaryContainer : scheme.primary,
+          ),
+          const SizedBox(width: 8.0),
+          Flexible(
+            child: Text(
+              name,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: fromUser ? scheme.onPrimaryContainer : scheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
