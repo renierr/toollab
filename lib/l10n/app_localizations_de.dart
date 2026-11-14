@@ -14844,6 +14844,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get videoPlayerLive => 'LIVE';
 
   @override
+  String get videoPlayerCopyFrame => 'Bild in Zwischenablage kopieren';
+
+  @override
   String get videoPlayerQuality => 'Qualität';
 
   @override

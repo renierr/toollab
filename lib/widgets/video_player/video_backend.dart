@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
@@ -40,6 +41,10 @@ abstract class VideoBackend {
   Future<void> pause();
   Future<void> seek(Duration position);
   Future<void> setVolume(double volume);
+  bool get canScreenshot;
+
+  /// The current video frame as PNG, without any controls drawn over it.
+  Future<Uint8List?> screenshot();
   Widget buildView(BuildContext context);
   Future<void> dispose();
 

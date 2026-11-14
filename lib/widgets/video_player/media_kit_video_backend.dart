@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 import 'package:media_kit/media_kit.dart';
@@ -57,9 +59,47 @@ class MediaKitVideoBackend implements VideoBackend {
     );
   }
 
+  static String? _vaapiDevice;
+  static bool _vaapiDeviceResolved = false;
+
+  /// libva opens the first render node, which on hybrid laptops is often an
+  /// NVIDIA GPU without a VA-API driver; the first other GPU decodes instead.
+  static String? _resolveVaapiDevice() {
+    if (_vaapiDeviceResolved) return _vaapiDevice;
+    _vaapiDeviceResolved = true;
+    try {
+      final nodes =
+          Directory('/sys/class/drm')
+              .listSync()
+              .map((e) => e.uri.pathSegments.where((s) => s.isNotEmpty).last)
+              .where((name) => name.startsWith('renderD'))
+              .toList()
+            ..sort();
+      String? first;
+      var skipped = false;
+      for (final name in nodes) {
+        final vendor = File(
+          '/sys/class/drm/$name/device/vendor',
+        ).readAsStringSync().trim();
+        if (vendor == '0x10de') {
+          skipped = true;
+          continue;
+        }
+        first ??= '/dev/dri/$name';
+      }
+      if (skipped) _vaapiDevice = first;
+    } catch (_) {}
+    return _vaapiDevice;
+  }
+
   @override
   Future<void> open(Uri source, {required bool loop, Duration? start}) async {
     _loop = loop;
+    final platform = _player.platform;
+    final device = Platform.isLinux ? _resolveVaapiDevice() : null;
+    if (device != null && platform is NativePlayer) {
+      await platform.setProperty('vaapi-device', device);
+    }
     await _player.setPlaylistMode(
       loop ? PlaylistMode.single : PlaylistMode.none,
     );
@@ -80,6 +120,12 @@ class MediaKitVideoBackend implements VideoBackend {
 
   @override
   Future<void> setVolume(double volume) => _player.setVolume(volume * 100);
+
+  @override
+  bool get canScreenshot => true;
+
+  @override
+  Future<Uint8List?> screenshot() => _player.screenshot(format: 'image/png');
 
   @override
   Widget buildView(BuildContext context) =>

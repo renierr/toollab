@@ -6,12 +6,14 @@ version: 1.8.4+59
 environment:
   sdk: ^3.12.1
 
-# Both patched packages in packages/ share this one resolution: a single
+# The patched packages in packages/ share this one resolution: a single
 # `flutter pub get` at the repo root writes the only .dart_tool/package_config.json,
 # so no member keeps a config holding another machine's Flutter SDK path.
 workspace:
   - packages/google_mlkit_genai_prompt
   - packages/rhttp
+  - packages/media_kit
+  - packages/media_kit_video
 
 dependencies:
   flutter:
@@ -91,8 +93,14 @@ dependencies:
   cryptography_flutter: ^2.3.4
   webview_flutter: 4.14.1
   video_player: 2.14.1
-  media_kit: 1.2.6
-  media_kit_video: 2.0.1
+  # Local patch of media_kit 1.2.6: mpv starts without its Lua scripts
+  # (packages/media_kit/VENDOR.md).
+  media_kit:
+    path: ./packages/media_kit
+  # Local patch of media_kit_video 2.0.1: GPU video on Flutter's Wayland renderer
+  # (packages/media_kit_video/VENDOR.md).
+  media_kit_video:
+    path: ./packages/media_kit_video
   media_kit_libs_windows_video: 1.0.11
   media_kit_libs_linux: 1.2.1
   desktop_webview_window: 0.4.2

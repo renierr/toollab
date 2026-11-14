@@ -5699,6 +5699,7 @@
   "videoPlayerBack": "{seconds} s zurück",
   "videoPlayerForward": "{seconds} s vor",
   "videoPlayerLive": "LIVE",
+  "videoPlayerCopyFrame": "Bild in Zwischenablage kopieren",
   "videoPlayerQuality": "Qualität",
   "videoPlayerQualityAuto": "Automatisch",
   "toolNameXFeed": "X Feed",

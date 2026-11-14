@@ -14732,6 +14732,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoPlayerLive => 'LIVE';
 
   @override
+  String get videoPlayerCopyFrame => 'Copy frame to clipboard';
+
+  @override
   String get videoPlayerQuality => 'Quality';
 
   @override

@@ -25930,6 +25930,12 @@ abstract class AppLocalizations {
   /// **'LIVE'**
   String get videoPlayerLive;
 
+  /// No description provided for @videoPlayerCopyFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy frame to clipboard'**
+  String get videoPlayerCopyFrame;
+
   /// No description provided for @videoPlayerQuality.
   ///
   /// In en, this message translates to:

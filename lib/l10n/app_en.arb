@@ -7210,6 +7210,7 @@
   "videoPlayerForward": "Forward {seconds} s",
   "@videoPlayerForward": {"placeholders": {"seconds": {"type": "int"}}},
   "videoPlayerLive": "LIVE",
+  "videoPlayerCopyFrame": "Copy frame to clipboard",
   "videoPlayerQuality": "Quality",
   "videoPlayerQualityAuto": "Auto",
   "toolNameXFeed": "X Feed",

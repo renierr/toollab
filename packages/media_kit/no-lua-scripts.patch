@@ -1,0 +1,23 @@
+--- a/lib/src/player/native/player/real.dart
++++ b/lib/src/player/native/player/real.dart
+@@ -2323,6 +2323,20 @@
+         // Set --vid=no by default to prevent redundant video decoding.
+         // [VideoController] internally sets --vid=auto upon attachment to enable video rendering & decoding.
+         if (!test) 'vid': 'no',
++        // mpv's built-in Lua scripts are unused here, and on Linux a Lua error
++        // unwinds through libflutter_linux_gtk's _Unwind_RaiseException and
++        // crashes the app. Unknown options on older libmpv builds are ignored.
++        'load-scripts': 'no',
++        'osc': 'no',
++        'ytdl': 'no',
++        'load-auto-profiles': 'no',
++        'load-stats-overlay': 'no',
++        'load-console': 'no',
++        'load-osd-console': 'no',
++        'load-select': 'no',
++        'load-positioning': 'no',
++        'load-commands': 'no',
++        'load-context-menu': 'no',
+       };
+ 
+       if (Platform.isAndroid &&

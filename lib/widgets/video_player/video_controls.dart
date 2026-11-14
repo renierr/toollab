@@ -16,6 +16,9 @@ class VideoControls extends StatelessWidget {
   final VoidCallback onToggleMute;
   final VoidCallback onClose;
   final Duration seekStep;
+
+  /// Copies the bare video frame; null where the backend cannot read it back.
+  final VoidCallback? onCopyFrame;
   final bool live;
   final List<VideoQuality> qualities;
   final Uri source;
@@ -33,6 +36,7 @@ class VideoControls extends StatelessWidget {
     required this.onToggleMute,
     required this.onClose,
     required this.seekStep,
+    this.onCopyFrame,
     required this.live,
     required this.qualities,
     required this.source,
@@ -68,6 +72,12 @@ class VideoControls extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
+                  if (onCopyFrame != null)
+                    IconButton(
+                      icon: const Icon(Icons.photo_camera_outlined),
+                      tooltip: l10n.videoPlayerCopyFrame,
+                      onPressed: onCopyFrame,
+                    ),
                   for (final action in actions)
                     IconButton(
                       icon: Icon(action.icon),

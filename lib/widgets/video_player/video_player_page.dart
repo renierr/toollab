@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 
@@ -32,7 +34,7 @@ class VideoQuality {
 
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
 /// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
-/// 10 s, M mutes, Esc / Backspace close, any other key shows the controls.
+/// 10 s, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
 class VideoPlayerPage extends StatefulWidget {
   final Uri source;
   final String? title;
@@ -175,6 +177,25 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _showControls();
   }
 
+  Future<void> _copyFrame() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    var copied = false;
+    try {
+      final bytes = await _backend.screenshot();
+      if (bytes != null) copied = await ClipboardHelper.copyImageBytes(bytes);
+    } catch (e) {
+      errorLog('[VideoPlayerPage] Frame capture failed: $e');
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          copied ? l10n.widgetImageCopied : l10n.widgetImageCopyFailed,
+        ),
+      ),
+    );
+  }
+
   Future<void> _seekBy(Duration delta) async {
     if (widget.live) return;
     final state = _backend.state.value;
@@ -213,6 +234,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     if (key == LogicalKeyboardKey.mediaRewind ||
         key == LogicalKeyboardKey.keyJ) {
       unawaited(_seekBy(-_seekStep));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyS &&
+        event is KeyDownEvent &&
+        _backend.canScreenshot) {
+      unawaited(_copyFrame());
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyM && event is KeyDownEvent) {
@@ -319,6 +346,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                                 _backend.setVolume(state.volume > 0 ? 0 : 1),
                             onClose: () => Navigator.of(context).maybePop(),
                             seekStep: _seekStep,
+                            onCopyFrame: _backend.canScreenshot
+                                ? () {
+                                    unawaited(_copyFrame());
+                                    _scheduleHide();
+                                  }
+                                : null,
                             live: widget.live,
                             qualities: widget.qualities,
                             source: _source,

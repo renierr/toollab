@@ -97,9 +97,27 @@ class XMediaActions {
 
     final XBroadcastStream? stream;
     final List<VideoQuality> qualities;
+    Uri? initial;
     try {
       stream = await api.broadcastStream(broadcast.id);
-      qualities = stream == null ? const [] : await _qualities(stream, l10n);
+      final variants = stream == null
+          ? const <HlsVariant>[]
+          : await _variants(stream.playlist);
+      initial = variants.firstOrNull?.uri;
+      qualities = [
+        for (final v in variants)
+          VideoQuality(
+            label: v.height != null
+                ? '${v.height}p'
+                : '${(v.bandwidth / 1000).round()} kbps',
+            source: v.uri,
+          ),
+        if (variants.isNotEmpty && stream != null)
+          VideoQuality(
+            label: l10n.videoPlayerQualityAuto,
+            source: stream.playlist,
+          ),
+      ];
     } on XGeoblockedException {
       fail(l10n.xFeedBroadcastGeoblocked);
       return;
@@ -116,7 +134,7 @@ class XMediaActions {
     if (!context.mounted) return;
     await VideoPlayerPage.open(
       context,
-      source: qualities.firstOrNull?.source ?? stream.playlist,
+      source: initial ?? stream.playlist,
       title: stream.title ?? broadcast.title ?? '@${post.author.screenName}',
       live: stream.live,
       qualities: qualities,
@@ -131,31 +149,14 @@ class XMediaActions {
     );
   }
 
-  /// Every variant of the master playlist, best first, then the master itself
-  /// as Auto. A playlist without variants plays as it is.
-  static Future<List<VideoQuality>> _qualities(
-    XBroadcastStream stream,
-    AppLocalizations l10n,
-  ) async {
+  /// The master playlist's variants, best first; empty for a media playlist.
+  static Future<List<HlsVariant>> _variants(Uri playlist) async {
     final client = await AppHttpClient.client;
-    final res = await client
-        .get(stream.playlist)
-        .timeout(const Duration(seconds: 15));
+    final res = await client.get(playlist).timeout(const Duration(seconds: 15));
     if (res.statusCode != 200) {
-      throw HttpException('playlist ${res.statusCode}', uri: stream.playlist);
+      throw HttpException('playlist ${res.statusCode}', uri: playlist);
     }
-    final variants = HlsPlaylist.parseVariants(res.body, stream.playlist);
-    if (variants.isEmpty) return const [];
-    return [
-      for (final v in variants)
-        VideoQuality(
-          label: v.height != null
-              ? '${v.height}p'
-              : '${(v.bandwidth / 1000).round()} kbps',
-          source: v.uri,
-        ),
-      VideoQuality(label: l10n.videoPlayerQualityAuto, source: stream.playlist),
-    ];
+    return HlsPlaylist.parseVariants(res.body, playlist);
   }
 
   static String fileName(XPost post, XMedia media) {
