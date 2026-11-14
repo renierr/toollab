@@ -61,6 +61,30 @@ void main() {
     expect(reply.citations.single.url, 'https://example.com/a');
   });
 
+  test('history reads attached file names from file fragments', () {
+    final history = DeepSeekHistory.fromJson({
+      'chat_messages': [
+        {
+          'message_id': 1,
+          'role': 'USER',
+          'fragments': [
+            {
+              'type': 'FILE',
+              'files': [
+                {'id': 'file-1', 'file_name': 'receipt.png'},
+                {'id': 'file-2', 'file_name': 'report.pdf'},
+              ],
+            },
+            {'type': 'REQUEST', 'content': 'Read these'},
+          ],
+        },
+      ],
+    });
+    final message = history.messages.single;
+    expect(message.fileNames, ['receipt.png', 'report.pdf']);
+    expect(message.text, 'Read these');
+  });
+
   test('history reads citations from search fragments', () {
     final history = DeepSeekHistory.fromJson({
       'chat_messages': [

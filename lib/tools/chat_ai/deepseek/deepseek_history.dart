@@ -89,11 +89,20 @@ class DeepSeekHistory {
     final text = StringBuffer();
     final thinking = StringBuffer();
     final citations = <ChatCitation>[];
+    final fileNames = <String>[];
     final fragments = item['fragments'];
     if (fragments is List) {
       for (final fragment in fragments) {
         if (fragment is! Map) continue;
         citations.addAll(ChatCitation.fromJsonList(fragment['results']));
+        final files = fragment['files'];
+        if (files is List) {
+          for (final file in files) {
+            if (file is Map && file['file_name'] is String) {
+              fileNames.add(file['file_name'] as String);
+            }
+          }
+        }
         final content = fragment['content'];
         if (content is! String) continue;
         switch (fragment['type']) {
@@ -104,16 +113,10 @@ class DeepSeekHistory {
         }
       }
     }
-    final files = item['files'];
     return DeepSeekHistoryMessage(
       id: id,
       citations: citations,
-      fileNames: [
-        if (files is List)
-          for (final file in files)
-            if (file is Map && file['file_name'] is String)
-              file['file_name'] as String,
-      ],
+      fileNames: fileNames,
       fromUser: item['role'] == 'USER',
       text: text.toString(),
       thinking: thinking.toString(),
