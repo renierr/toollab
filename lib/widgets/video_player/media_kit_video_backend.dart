@@ -26,6 +26,11 @@ class MediaKitVideoBackend implements VideoBackend {
   late final VideoController _video;
   final List<StreamSubscription<Object?>> _subscriptions = [];
   bool _loop = false;
+  String? _error;
+  Duration _errorPosition = Duration.zero;
+  Timer? _pendingError;
+
+  static const Duration _errorGrace = Duration(seconds: 2);
 
   MediaKitVideoBackend(this.settings) {
     if (!_initialized) {
@@ -51,17 +56,45 @@ class MediaKitVideoBackend implements VideoBackend {
       streams.rate.listen((_) => _sync()),
       streams.tracks.listen((_) => _sync()),
       streams.track.listen((_) => _sync()),
-      streams.error.listen((e) => _sync(error: e)),
+      streams.error.listen(_onError),
     ]);
   }
 
-  void _sync({String? error}) {
+  // A live stream may report no duration; its first frame still counts.
+  static bool _started(PlayerState s) =>
+      s.duration > Duration.zero || (s.width ?? 0) > 0;
+
+  /// mpv also reports a broken frame or packet as an error; only one after
+  /// which playback stops moving is shown.
+  void _onError(String message) {
     final s = _player.state;
+    _pendingError?.cancel();
+    _errorPosition = s.position;
+    if (!_started(s)) {
+      _error = message;
+      _sync();
+      return;
+    }
+    _pendingError = Timer(_errorGrace, () {
+      _pendingError = null;
+      final now = _player.state;
+      final stuck = now.position <= _errorPosition;
+      if (stuck && (now.playing || now.buffering || now.completed)) {
+        _error = message;
+        _sync();
+      }
+    });
+  }
+
+  void _sync() {
+    final s = _player.state;
+    if (_error != null && s.playing && s.position > _errorPosition) {
+      _error = null;
+    }
     final width = s.width ?? 0;
     final height = s.height ?? 0;
     state.value = VideoPlaybackState(
-      // A live stream may report no duration; its first frame still counts.
-      initialized: s.duration > Duration.zero || width > 0,
+      initialized: _started(s),
       playing: s.playing,
       buffering: s.buffering,
       completed: s.completed && !_loop,
@@ -91,7 +124,7 @@ class MediaKitVideoBackend implements VideoBackend {
             selected: t.id == s.track.subtitle.id,
           ),
       ],
-      error: error ?? state.value.error,
+      error: _error,
     );
   }
 
@@ -140,6 +173,8 @@ class MediaKitVideoBackend implements VideoBackend {
   @override
   Future<void> open(Uri source, {required bool loop, Duration? start}) async {
     _loop = loop;
+    _pendingError?.cancel();
+    _error = null;
     final platform = _player.platform;
     final device = Platform.isLinux ? _resolveVaapiDevice() : null;
     if (platform is NativePlayer) {
@@ -244,6 +279,7 @@ class MediaKitVideoBackend implements VideoBackend {
 
   @override
   Future<void> dispose() async {
+    _pendingError?.cancel();
     for (final s in _subscriptions) {
       await s.cancel();
     }

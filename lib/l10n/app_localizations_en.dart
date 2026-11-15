@@ -15898,6 +15898,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoPlayerToolClearRecent => 'Clear list';
 
   @override
+  String get videoPlayerToolClearRecentMessage =>
+      'Remove all videos from the list? Saved positions are lost.';
+
+  @override
   String get videoPlayerToolRemoveRecent => 'Remove from list';
 
   @override

@@ -1,15 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
-import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/pages/video_settings_page.dart';
@@ -19,50 +13,27 @@ import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import 'video_backend.dart';
 import 'video_controls.dart';
+import 'video_format.dart';
+import 'video_frame_capture.dart';
 import 'video_gesture_badge.dart';
+import 'video_gesture_layer.dart';
 import 'video_info_dialog.dart';
+import 'video_keymap.dart';
 import 'video_media_session.dart';
 import 'video_pip.dart';
 import 'video_player_settings.dart';
+import 'video_player_types.dart';
 import 'video_playlist.dart';
+import 'video_progress_saver.dart';
 import 'video_resume_store.dart';
-import 'video_system_channel.dart';
+import 'video_stall_watchdog.dart';
+import 'video_surface.dart';
 
-class VideoPlayerAction {
-  final IconData icon;
-  final String label;
-  final Future<void> Function(BuildContext context) onPressed;
+export 'video_player_types.dart';
 
-  const VideoPlayerAction({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-}
-
-/// A rendition the viewer can switch to, e.g. one HLS variant.
-class VideoQuality {
-  final String label;
-  final Uri source;
-
-  /// A master playlist; never a stall fallback, mpv plays its best variant.
-  final bool adaptive;
-
-  const VideoQuality({
-    required this.label,
-    required this.source,
-    this.adaptive = false,
-  });
-}
-
-/// Full-screen player with touch, mouse, keyboard and TV-remote controls.
-/// Space / K / Play toggles playback, left/right seek by the arrow step, J / L
-/// skip, N / P or Page Down / Up step through the folder, M mutes, S copies the frame,
-/// Esc / Backspace close, any other key shows the controls.
-/// < / > change the speed. A tap shows the controls; a double tap follows the settings, a horizontal swipe skips,
-/// a vertical swipe sets the volume (brightness on the left half on Android), a long press plays
-/// at 2× and a pinch zooms. Skips use the video settings' length.
-/// The system media controls follow playback; Android adds picture-in-picture.
+/// Full-screen player with touch ([VideoGestureLayer]), mouse, keyboard and
+/// TV-remote ([videoKeyCommand]) controls. The system media controls follow
+/// playback; Android adds picture-in-picture.
 class VideoPlayerPage extends StatefulWidget {
   static const String preferenceId = 'tool-lab-video-player';
 
@@ -98,7 +69,6 @@ class VideoPlayerPage extends StatefulWidget {
   });
 
   /// Loads the settings first: the backend needs them before it starts.
-
   static Future<void> open(
     BuildContext context, {
     required Uri source,
@@ -134,14 +104,7 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
-  static const Duration _stallLimit = Duration(seconds: 8);
-  static const double _swipeDistance = 48;
-  static const double _swipeVelocity = 400;
-  static const double _maxZoom = 4;
-  static const double _holdSpeed = 2;
   static const List<double> _speeds = VideoPlayerSettings.speedOptions;
-  static const MethodChannel _systemChannel = VideoSystemChannel.channel;
-  static const Duration _saveInterval = Duration(seconds: 5);
 
   late VideoPlayerSettings _settings = widget.settings;
   late VideoBackend _backend = _createBackend();
@@ -149,41 +112,25 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   late String? _title = widget.title;
   List<VideoPlaylistItem> _playlist = const [];
   int _playlistIndex = -1;
-  DateTime _lastSave = DateTime(0);
-  bool _savedPlaying = false;
+  late final VideoProgressSaver? _saver =
+      widget.resumeStore == null || widget.live
+      ? null
+      : VideoProgressSaver(widget.resumeStore!);
+  late final VideoStallWatchdog _stall = VideoStallWatchdog(onStall: _fallBack);
+  final VideoBadgeController _badge = VideoBadgeController();
   final GlobalKey _frameKey = GlobalKey(debugLabel: 'VideoFrame');
   final FocusNode _keyFocus = FocusNode(debugLabel: 'VideoPlayerKeys');
   final FocusNode _playFocus = FocusNode(debugLabel: 'VideoPlayerPlay');
   final ScreenOnRequest _screenOn = ScreenOnRequest();
   Timer? _hideTimer;
   bool _controlsVisible = false;
-  Timer? _stallTimer;
   VideoPip? _pip;
   VideoMediaSession? _session;
   bool _pipSupported = false;
   bool _closing = false;
-  Offset? _doubleTapAt;
-  _Drag _drag = _Drag.undecided;
-  Offset _dragStart = Offset.zero;
-  Offset _dragTotal = Offset.zero;
-  double? _levelStart;
-  double _zoom = 1;
-  double _zoomStart = 1;
-  Offset _pan = Offset.zero;
-  bool _brightnessChanged = false;
-  double? _heldSpeed;
-  Timer? _badgeTimer;
-  bool _badgeVisible = false;
-  IconData _badgeIcon = Icons.fast_forward;
-  String _badgeLabel = '';
-  Alignment _badgeAlignment = Alignment.center;
-  double? _badgeLevel;
+  double _unmutedVolume = 1;
 
   Duration get _seekStep => _settings.skip;
-
-  /// Where playback should continue: X serves some replay segments only at
-  /// lower qualities, so a seek can stall forever on the chosen one.
-  Duration? _resumeAt;
 
   @override
   void initState() {
@@ -200,17 +147,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     }
     onDispose(() {
       _hideTimer?.cancel();
-      _stallTimer?.cancel();
-      _badgeTimer?.cancel();
+      _stall.cancel();
+      _badge.dispose();
       _pip?.active.removeListener(_onPipChanged);
       unawaited(_pip?.dispose());
       unawaited(_session?.dispose());
       _backend.state.removeListener(_onState);
-      _saveProgress();
+      _saveProgress(force: true);
       if (Platform.isAndroid) _screenOn.set(false);
-      if (_brightnessChanged) {
-        unawaited(_systemChannel.invokeMethod<void>('setBrightness'));
-      }
       unawaited(_backend.dispose());
       _keyFocus.dispose();
       _playFocus.dispose();
@@ -240,30 +184,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     return store.resumePosition(source);
   }
 
-  /// Throttled while playing; immediate on pause, end and close.
-  void _saveProgress({VideoPlaybackState? state}) {
-    final store = widget.resumeStore;
-    final s = state ?? _backend.state.value;
-    if (store == null || widget.live || !s.initialized) return;
-    if (s.duration <= Duration.zero) return;
-    final now = DateTime.now();
-    if (state != null &&
-        s.playing == _savedPlaying &&
-        !s.completed &&
-        now.difference(_lastSave) < _saveInterval) {
-      return;
-    }
-    _lastSave = now;
-    _savedPlaying = s.playing;
-    unawaited(
-      store.savePosition(
-        source: _source,
-        title: _title ?? _source.pathSegments.lastOrNull ?? '',
-        position: s.completed ? s.duration : s.position,
-        duration: s.duration,
-      ),
-    );
-  }
+  void _saveProgress({bool force = false}) => _saver?.save(
+    source: _source,
+    title: _title ?? _source.pathSegments.lastOrNull ?? '',
+    state: _backend.state.value,
+    force: force,
+  );
 
   Future<void> _scanFolder() async {
     final items = await videoFolderPlaylist(widget.source);
@@ -281,17 +207,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     if (index < 0 || index >= _playlist.length || index == _playlistIndex) {
       return;
     }
-    _saveProgress();
+    _saveProgress(force: true);
     final item = _playlist[index];
     final start = await _resumeStart(item.source);
     if (!mounted) return;
     setState(() {
       _playlistIndex = index;
       _title = item.title;
-      _zoom = 1;
-      _pan = Offset.zero;
     });
-    _lastSave = DateTime(0);
+    _saver?.reset();
     _session?.retitle(item.title);
     await _reopen(item.source, start: start ?? Duration.zero);
   }
@@ -360,9 +284,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     };
   }
 
-  Future<void> _switchQuality(VideoQuality quality, {Duration? start}) async {
+  Future<void> _switchQuality(VideoQuality quality) async {
     if (quality.source == _source) return;
-    await _reopen(quality.source, start: start);
+    await _reopen(quality.source);
   }
 
   /// A fresh backend per source: the old view leaves the tree before its
@@ -371,10 +295,9 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     final old = _backend;
     final position = widget.live
         ? null
-        : start ?? _resumeAt ?? old.state.value.position;
-    _stallTimer?.cancel();
-    _stallTimer = null;
-    _resumeAt = position;
+        : start ?? _stall.resumeAt ?? old.state.value.position;
+    _stall.cancel();
+    _stall.resumeAt = position;
     old.state.removeListener(_onState);
     final next = _createBackend();
     // Opening first: the Android backend builds its view from the controller
@@ -388,9 +311,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => unawaited(old.dispose()),
     );
+    final previous = old.state.value;
     await opening;
-    final speed = old.state.value.speed;
-    if (speed != 1) await next.setSpeed(speed);
+    if (previous.speed != 1) await next.setSpeed(previous.speed);
+    if (previous.volume != 1) await next.setVolume(previous.volume);
   }
 
   /// Controls appear on interaction only, plus at the end and on an error.
@@ -405,46 +329,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       ),
     );
     unawaited(_session?.sync(state));
-    _watchStall(state);
-    _saveProgress(state: state);
+    _stall.watch(state);
+    _saveProgress();
     if ((state.completed || state.error != null) && !_controlsVisible) {
       _showControls();
     }
   }
 
-  void _watchStall(VideoPlaybackState state) {
-    final resumeAt = _resumeAt;
-    final nearEnd =
-        resumeAt != null &&
-        state.duration > Duration.zero &&
-        state.duration - resumeAt < const Duration(seconds: 10);
-    final failed =
-        resumeAt != null &&
-        (state.error != null || (state.completed && !nearEnd));
-    if (failed) {
-      _fallBack();
-      return;
-    }
-    final loading = !state.initialized || state.buffering;
-    if (!loading || state.error != null) {
-      _stallTimer?.cancel();
-      _stallTimer = null;
-      if (state.playing && state.initialized) _resumeAt = null;
-      return;
-    }
-    _stallTimer ??= Timer(_stallLimit, _fallBack);
-  }
-
   void _fallBack() {
-    _stallTimer?.cancel();
-    _stallTimer = null;
-    final qualities = widget.qualities;
-    final index = qualities.indexWhere((q) => q.source == _source);
-    final lower = qualities
-        .skip(index + 1)
-        .where((q) => !q.adaptive)
-        .firstOrNull;
-    if (index < 0 || lower == null || !mounted) return;
+    final lower = lowerVideoQuality(widget.qualities, _source);
+    if (lower == null || !mounted) return;
     debugLog('[VideoPlayerPage] Stalled, falling back to ${lower.label}');
     unawaited(_switchQuality(lower));
     ScaffoldMessenger.of(context).showSnackBar(
@@ -457,11 +351,22 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   }
 
   Future<void> _seekTo(Duration position) async {
-    if (!widget.live) _resumeAt = position;
+    if (!widget.live) _stall.resumeAt = position;
     await _backend.seek(position);
     unawaited(
       _session?.seeked(position, playing: _backend.state.value.playing),
     );
+  }
+
+  Future<void> _seekBy(Duration delta) async {
+    if (widget.live) return;
+    final state = _backend.state.value;
+    var target = state.position + delta;
+    if (target < Duration.zero) target = Duration.zero;
+    if (state.duration > Duration.zero && target > state.duration) {
+      target = state.duration;
+    }
+    await _seekTo(target);
   }
 
   /// Notification, media key and picture-in-picture controls.
@@ -515,266 +420,23 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _closing = false;
   }
 
-  void _onScaleStart(ScaleStartDetails details) {
-    _drag = details.pointerCount > 1 ? _Drag.zoom : _Drag.undecided;
-    _dragStart = details.localFocalPoint;
-    _dragTotal = Offset.zero;
-    _zoomStart = _zoom;
-    _levelStart = null;
-  }
-
-  void _onScaleUpdate(ScaleUpdateDetails details) {
-    if (details.pointerCount > 1 && _drag != _Drag.zoom) {
-      _drag = _Drag.zoom;
-      _zoomStart = _zoom / details.scale;
-    }
-    _dragTotal += details.focalPointDelta;
-    if (_drag == _Drag.undecided) {
-      if (_dragTotal.distance < 4) return;
-      _drag = _pickDrag();
-      if (_drag == _Drag.volume || _drag == _Drag.brightness) {
-        final brightness = _drag == _Drag.brightness;
-        unawaited(
-          (brightness ? _readBrightness() : _readVolume()).then(
-            (level) => _levelStart = level,
-          ),
-        );
-      }
-    }
-    switch (_drag) {
-      case _Drag.zoom:
-        _setZoom(_zoomStart * details.scale, details.focalPointDelta);
-      case _Drag.pan:
-        _setZoom(_zoom, details.focalPointDelta);
-      case _Drag.volume:
-        _dragVolume();
-      case _Drag.brightness:
-        _dragBrightness();
-      case _Drag.undecided || _Drag.skip || _Drag.none:
-        break;
-    }
-  }
-
-  void _onScaleEnd(ScaleEndDetails details) {
-    final drag = _drag;
-    _drag = _Drag.undecided;
-    if (drag == _Drag.zoom && _zoom < 1.05) _setZoom(1, Offset.zero);
-    if (drag != _Drag.skip) return;
-    final dx = _dragTotal.dx;
-    final velocity = details.velocity.pixelsPerSecond.dx;
-    final far = dx.abs() >= _swipeDistance;
-    if (!far && velocity.abs() < _swipeVelocity) return;
-    _skip(forward: far ? dx > 0 : velocity > 0);
-  }
-
-  /// A zoomed video pans; otherwise the direction and side pick the gesture.
-  _Drag _pickDrag() {
-    if (_zoom > 1) return _Drag.pan;
-    if (_dragTotal.dx.abs() > _dragTotal.dy.abs()) {
-      return !widget.live && _settings.swipeSkip ? _Drag.skip : _Drag.none;
-    }
-    final width = context.size?.width ?? 0;
-    final left = width > 0 && _dragStart.dx < width / 2;
-    if (Platform.isAndroid && _settings.swipeBrightness && left) {
-      return _Drag.brightness;
-    }
-    return _settings.swipeVolume ? _Drag.volume : _Drag.none;
-  }
-
-  /// Keeps the zoomed video covering the screen where it can.
-  void _setZoom(double zoom, Offset delta) {
-    final box = context.size;
-    if (box == null || box.isEmpty) return;
-    final next = zoom.clamp(1.0, _maxZoom);
-    final aspect = _backend.state.value.aspectRatio;
-    final fitted = box.aspectRatio > aspect
-        ? Size(box.height * aspect, box.height)
-        : Size(box.width, box.width / aspect);
-    final limitX = math.max(0.0, (fitted.width * next - box.width) / 2);
-    final limitY = math.max(0.0, (fitted.height * next - box.height) / 2);
-    final pan = _pan + delta;
-    setState(() {
-      _zoom = next;
-      _pan = Offset(
-        pan.dx.clamp(-limitX, limitX),
-        pan.dy.clamp(-limitY, limitY),
-      );
-    });
-    if (_drag == _Drag.zoom) {
-      _flashBadge(
-        icon: Icons.zoom_in,
-        label: AppLocalizations.of(
-          context,
-        ).videoPlayerZoom((next * 100).round()),
-        alignment: Alignment.center,
-      );
-    }
-  }
-
-  void _onLongPressStart(LongPressStartDetails _) {
-    final state = _backend.state.value;
-    if (widget.live || !state.playing || state.speed >= _holdSpeed) return;
-    _heldSpeed = state.speed;
-    unawaited(_backend.setSpeed(_holdSpeed));
-    _flashBadge(
-      icon: Icons.fast_forward,
-      label: AppLocalizations.of(
-        context,
-      ).videoPlayerHoldSpeed(_holdSpeed.round()),
-      alignment: const Alignment(0, -0.8),
-      hold: true,
-    );
-  }
-
-  void _onLongPressEnd(LongPressEndDetails _) {
-    final speed = _heldSpeed;
-    if (speed == null) return;
-    _heldSpeed = null;
-    unawaited(_backend.setSpeed(speed));
-    setState(() => _badgeVisible = false);
-  }
-
-  void _skip({required bool forward}) {
-    unawaited(_seekBy(forward ? _seekStep : -_seekStep));
-    final l10n = AppLocalizations.of(context);
-    _flashBadge(
-      icon: forward ? Icons.fast_forward : Icons.fast_rewind,
-      label: forward
-          ? l10n.videoPlayerForward(_seekStep.inSeconds)
-          : l10n.videoPlayerBack(_seekStep.inSeconds),
-      alignment: Alignment(forward ? 0.6 : -0.6, 0),
-    );
-  }
-
-  void _flashBadge({
-    required IconData icon,
-    required String label,
-    required Alignment alignment,
-    double? level,
-    bool hold = false,
-  }) {
-    _badgeTimer?.cancel();
-    setState(() {
-      _badgeIcon = icon;
-      _badgeLabel = label;
-      _badgeAlignment = alignment;
-      _badgeLevel = level;
-      _badgeVisible = true;
-    });
-    if (hold) return;
-    _badgeTimer = Timer(const Duration(milliseconds: 700), () {
-      if (mounted) setState(() => _badgeVisible = false);
-    });
-  }
-
-  /// Sides skip, the middle toggles playback.
-  void _onDoubleTap() {
-    final at = _doubleTapAt;
-    final width = context.size?.width ?? 0;
-    if (widget.live ||
-        _settings.doubleTap == VideoDoubleTap.playPause ||
-        at == null ||
-        width <= 0) {
-      unawaited(_togglePlay());
-      return;
-    }
-    final third = at.dx / width;
-    if (third < 1 / 3) {
-      _skip(forward: false);
-    } else if (third > 2 / 3) {
-      _skip(forward: true);
-    } else {
-      unawaited(_togglePlay());
-    }
-  }
-
-  /// Android's media volume unless the settings pick the player's own.
-  bool get _systemVolume =>
-      Platform.isAndroid && _settings.volumeTarget == VideoVolumeTarget.system;
-
-  Future<double> _readVolume() async {
-    if (!_systemVolume) return _backend.state.value.volume;
-    try {
-      return await _systemChannel.invokeMethod<double>('getVolume') ?? 0;
-    } catch (e) {
-      errorLog('[VideoPlayerPage] getVolume failed: $e');
-      return 0;
-    }
-  }
-
-  Future<void> _writeVolume(double volume) async {
-    if (!_systemVolume) return _backend.setVolume(volume);
-    try {
-      await _systemChannel.invokeMethod<void>('setVolume', {'value': volume});
-    } catch (e) {
-      errorLog('[VideoPlayerPage] setVolume failed: $e');
-    }
-  }
-
-  Future<double> _readBrightness() async {
-    try {
-      return await _systemChannel.invokeMethod<double>('getBrightness') ?? 0.5;
-    } catch (e) {
-      errorLog('[VideoPlayerPage] getBrightness failed: $e');
-      return 0.5;
-    }
-  }
-
-  /// A drag over 60 % of the height covers the whole range.
-  double? _draggedLevel() {
-    final start = _levelStart;
-    final height = context.size?.height ?? 0;
-    if (start == null || height <= 0) return null;
-    return (start - _dragTotal.dy / (height * 0.6)).clamp(0.0, 1.0);
-  }
-
-  void _dragBrightness() {
-    final brightness = _draggedLevel();
-    if (brightness == null) return;
-    _brightnessChanged = true;
-    unawaited(
-      _systemChannel
-          .invokeMethod<void>('setBrightness', {'value': brightness})
-          .catchError(
-            (Object e) =>
-                errorLog('[VideoPlayerPage] setBrightness failed: $e'),
-          ),
-    );
-    _flashBadge(
-      icon: Icons.brightness_6,
-      label: AppLocalizations.of(
-        context,
-      ).videoPlayerBrightness((brightness * 100).round()),
-      alignment: const Alignment(-0.6, 0),
-      level: brightness,
-    );
-  }
-
-  void _dragVolume() {
-    final volume = _draggedLevel();
-    if (volume == null) return;
-    unawaited(_writeVolume(volume));
-    _flashBadge(
-      icon: volume > 0 ? Icons.volume_up : Icons.volume_off,
-      label: AppLocalizations.of(
-        context,
-      ).videoPlayerVolume((volume * 100).round()),
-      alignment: Platform.isAndroid && _settings.swipeBrightness
-          ? const Alignment(0.6, 0)
-          : Alignment.center,
-      level: volume,
-    );
+  /// Unmuting restores the volume from before muting.
+  void _toggleMute() {
+    final volume = _backend.state.value.volume;
+    if (volume > 0) _unmutedVolume = volume;
+    unawaited(_backend.setVolume(volume > 0 ? 0 : _unmutedVolume));
   }
 
   Future<void> _setSpeed(double speed) async {
     await _backend.setSpeed(speed);
     if (!mounted) return;
-    _flashBadge(
+    _badge.flash(
       icon: Icons.speed,
-      label: speed == 1
-          ? AppLocalizations.of(context).videoPlayerSpeedNormal
-          : '${NumberFormat('0.##', Localizations.localeOf(context).toString()).format(speed)}×',
-      alignment: Alignment.center,
+      label: formatVideoSpeed(
+        speed,
+        l10n: AppLocalizations.of(context),
+        locale: Localizations.localeOf(context).toString(),
+      ),
     );
   }
 
@@ -836,6 +498,23 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     );
   }
 
+  Future<void> _copyFrame() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final copied = await copyVideoFrame(
+      backend: _backend,
+      frameKey: _frameKey,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+    );
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          copied ? l10n.widgetImageCopied : l10n.widgetImageCopyFailed,
+        ),
+      ),
+    );
+  }
+
   void _scheduleHide() {
     _hideTimer?.cancel();
     _hideTimer = Timer(_settings.hideDelay, () {
@@ -856,9 +535,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _scheduleHide();
   }
 
+  void _toggleControls() {
+    if (_controlsVisible) {
+      setState(() => _controlsVisible = false);
+    } else {
+      _showControls();
+    }
+  }
+
   Future<void> _togglePlay() async {
-    final state = _backend.state.value;
-    if (state.playing) {
+    if (_backend.state.value.playing) {
       await _backend.pause();
     } else {
       await _backend.play();
@@ -866,158 +552,77 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _showControls();
   }
 
-  /// Reads the video texture back through Flutter at the video's own size.
-  /// mpv's screenshot cannot convert VA-API GPU frames.
-  Future<void> _copyFrame() async {
-    final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-    var copied = false;
-    try {
-      final native = await _backend.nativeFrame();
-      final boundary =
-          _frameKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
-      if (native != null) {
-        copied = await ClipboardHelper.copyImageBytes(native);
-      } else if (boundary != null && boundary.size.width > 0) {
-        final videoWidth = _backend.state.value.videoWidth;
-        final ratio = videoWidth != null
-            ? videoWidth / boundary.size.width
-            : devicePixelRatio;
-        final image = await boundary.toImage(pixelRatio: ratio);
-        try {
-          final png = await image.toByteData(format: ui.ImageByteFormat.png);
-          if (png != null) {
-            copied = await ClipboardHelper.copyImageBytes(
-              png.buffer.asUint8List(),
-              decoded: image,
-            );
-          }
-        } finally {
-          image.dispose();
-        }
-      }
-    } catch (e) {
-      errorLog('[VideoPlayerPage] Frame capture failed: $e');
-    }
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          copied ? l10n.widgetImageCopied : l10n.widgetImageCopyFailed,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _seekBy(Duration delta) async {
-    if (widget.live) return;
-    final state = _backend.state.value;
-    var target = state.position + delta;
-    if (target < Duration.zero) target = Duration.zero;
-    if (state.duration > Duration.zero && target > state.duration) {
-      target = state.duration;
-    }
-    await _seekTo(target);
-  }
+  /// Runs the command after a control was used, so the controls stay up.
+  void Function(T) _keepingControls<T>(void Function(T) command) => (value) {
+    command(value);
+    _scheduleHide();
+  };
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-      return KeyEventResult.ignored;
-    }
-    final key = event.logicalKey;
-    if (key == LogicalKeyboardKey.mediaPlayPause ||
-        key == LogicalKeyboardKey.space ||
-        key == LogicalKeyboardKey.keyK) {
-      unawaited(_togglePlay());
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.mediaTrackNext ||
-        key == LogicalKeyboardKey.pageDown ||
-        (key == LogicalKeyboardKey.keyN && event is KeyDownEvent)) {
-      unawaited(_playAt(_playlistIndex + 1));
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.mediaTrackPrevious ||
-        key == LogicalKeyboardKey.pageUp ||
-        (key == LogicalKeyboardKey.keyP && event is KeyDownEvent)) {
-      unawaited(_playAt(_playlistIndex - 1));
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.mediaPlay) {
-      unawaited(_backend.play());
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.mediaPause) {
-      unawaited(_backend.pause());
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.mediaFastForward ||
-        key == LogicalKeyboardKey.keyL) {
-      unawaited(_seekBy(_seekStep));
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.mediaRewind ||
-        key == LogicalKeyboardKey.keyJ) {
-      unawaited(_seekBy(-_seekStep));
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.keyS && event is KeyDownEvent) {
-      unawaited(_copyFrame());
-      return KeyEventResult.handled;
-    }
-    if (!widget.live && event.character == '<') {
-      _stepSpeed(-1);
-      return KeyEventResult.handled;
-    }
-    if (!widget.live && event.character == '>') {
-      _stepSpeed(1);
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.keyM && event is KeyDownEvent) {
-      unawaited(_backend.setVolume(_backend.state.value.volume > 0 ? 0 : 1));
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.escape ||
-        key == LogicalKeyboardKey.backspace ||
-        key == LogicalKeyboardKey.browserBack) {
-      unawaited(Navigator.of(context).maybePop());
-      return KeyEventResult.handled;
-    }
-    // While playing, or with the controls hidden, arrows seek; a paused
-    // player leaves them to move between the controls.
-    final seeks =
-        !widget.live && (!_controlsVisible || _backend.state.value.playing);
-    if (seeks && key == LogicalKeyboardKey.arrowLeft) {
-      unawaited(_seekBy(-_settings.arrowSeek));
-      if (_controlsVisible) _scheduleHide();
-      return KeyEventResult.handled;
-    }
-    if (seeks && key == LogicalKeyboardKey.arrowRight) {
-      unawaited(_seekBy(_settings.arrowSeek));
-      if (_controlsVisible) _scheduleHide();
-      return KeyEventResult.handled;
-    }
+    final command = videoKeyCommand(event);
+    if (command == null) return KeyEventResult.ignored;
+    if (_runKey(command)) return KeyEventResult.handled;
     if (_controlsVisible) {
       _scheduleHide();
       return KeyEventResult.ignored;
     }
-    if (key == LogicalKeyboardKey.select ||
-        key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.gameButtonA) {
-      unawaited(_togglePlay());
-      return KeyEventResult.handled;
+    switch (command) {
+      case VideoKeyCommand.select:
+        unawaited(_togglePlay());
+      case VideoKeyCommand.systemBack:
+        return KeyEventResult.ignored;
+      default:
+        _showControls();
     }
-    if (key == LogicalKeyboardKey.goBack) return KeyEventResult.ignored;
-    _showControls();
     return KeyEventResult.handled;
+  }
+
+  /// False leaves the key to the controls: a paused player with the controls
+  /// up moves between them with the arrows.
+  bool _runKey(VideoKeyCommand command) {
+    final live = widget.live;
+    final arrowsSeek =
+        !live && (!_controlsVisible || _backend.state.value.playing);
+    switch (command) {
+      case VideoKeyCommand.togglePlay:
+        unawaited(_togglePlay());
+      case VideoKeyCommand.play:
+        unawaited(_backend.play());
+      case VideoKeyCommand.pause:
+        unawaited(_backend.pause());
+      case VideoKeyCommand.next:
+        unawaited(_playAt(_playlistIndex + 1));
+      case VideoKeyCommand.previous:
+        unawaited(_playAt(_playlistIndex - 1));
+      case VideoKeyCommand.skipForward:
+        unawaited(_seekBy(_seekStep));
+      case VideoKeyCommand.skipBack:
+        unawaited(_seekBy(-_seekStep));
+      case VideoKeyCommand.copyFrame:
+        unawaited(_copyFrame());
+      case VideoKeyCommand.slower when !live:
+        _stepSpeed(-1);
+      case VideoKeyCommand.faster when !live:
+        _stepSpeed(1);
+      case VideoKeyCommand.toggleMute:
+        _toggleMute();
+      case VideoKeyCommand.close:
+        unawaited(Navigator.of(context).maybePop());
+      case VideoKeyCommand.arrowBack || VideoKeyCommand.arrowForward
+          when arrowsSeek:
+        final back = command == VideoKeyCommand.arrowBack;
+        unawaited(_seekBy(back ? -_settings.arrowSeek : _settings.arrowSeek));
+        if (_controlsVisible) _scheduleHide();
+      default:
+        return false;
+    }
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final inPip = _pip?.active.value ?? false;
-    final doubleTap = _settings.doubleTap != VideoDoubleTap.off;
     return Theme(
       data: ThemeData.dark(useMaterial3: true),
       child: Scaffold(
@@ -1028,34 +633,23 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
           onKeyEvent: _onKey,
           child: MouseRegion(
             onHover: (_) => _showControls(),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (_controlsVisible) {
-                  setState(() => _controlsVisible = false);
-                } else {
-                  _showControls();
-                }
-              },
-              onDoubleTapDown: doubleTap
-                  ? (details) => _doubleTapAt = details.localPosition
-                  : null,
-              onDoubleTap: doubleTap ? _onDoubleTap : null,
-              onLongPressStart: _onLongPressStart,
-              onLongPressEnd: _onLongPressEnd,
-              onScaleStart: _onScaleStart,
-              onScaleUpdate: _onScaleUpdate,
-              onScaleEnd: _onScaleEnd,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
+            child: VideoGestureLayer(
+              backend: _backend,
+              settings: _settings,
+              live: widget.live,
+              badge: _badge,
+              zoomKey: _playlistIndex,
+              onTap: _toggleControls,
+              onTogglePlay: () => unawaited(_togglePlay()),
+              onSeekBy: (delta) => unawaited(_seekBy(delta)),
+              surface: (context, zoom, pan) =>
                   ValueListenableBuilder<VideoPlaybackState>(
                     valueListenable: _backend.state,
-                    builder: (context, state, view) => _VideoSurface(
+                    builder: (context, state, view) => VideoSurface(
                       frameKey: _frameKey,
                       state: state,
-                      zoom: inPip ? 1 : _zoom,
-                      pan: inPip ? Offset.zero : _pan,
+                      zoom: inPip ? 1 : zoom,
+                      pan: inPip ? Offset.zero : pan,
                       view: view!,
                       errorLabel: l10n.videoPlayerFailed,
                     ),
@@ -1064,89 +658,89 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                       child: _backend.buildView(context),
                     ),
                   ),
-                  if (!inPip)
-                    VideoGestureBadge(
-                      visible: _badgeVisible,
-                      alignment: _badgeAlignment,
-                      icon: _badgeIcon,
-                      label: _badgeLabel,
-                      level: _badgeLevel,
-                    ),
-                  if (!inPip)
-                    AnimatedOpacity(
-                      opacity: _controlsVisible ? 1 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: IgnorePointer(
-                        ignoring: !_controlsVisible,
-                        child: ExcludeFocus(
-                          excluding: !_controlsVisible,
-                          child: ValueListenableBuilder<VideoPlaybackState>(
-                            valueListenable: _backend.state,
-                            builder: (context, state, _) => VideoControls(
-                              state: state,
-                              title: _title,
-                              playFocusNode: _playFocus,
-                              actions: widget.actions,
-                              onTogglePlay: _togglePlay,
-                              onSeek: (position) {
-                                unawaited(_seekTo(position));
-                                _scheduleHide();
-                              },
-                              onSeekBy: (delta) {
-                                unawaited(_seekBy(delta));
-                                _scheduleHide();
-                              },
-                              onToggleMute: () =>
-                                  _backend.setVolume(state.volume > 0 ? 0 : 1),
-                              onClose: () => Navigator.of(context).maybePop(),
-                              seekStep: _seekStep,
-                              onCopyFrame: () {
-                                unawaited(_copyFrame());
-                                _scheduleHide();
-                              },
-                              onPictureInPicture: _pipSupported
-                                  ? () => unawaited(_enterPip())
-                                  : null,
-                              live: widget.live,
-                              qualities: widget.qualities,
-                              source: _source,
-                              onQuality: (q) {
-                                unawaited(_switchQuality(q));
-                                _scheduleHide();
-                              },
-                              speeds: _speeds,
-                              onSpeed: (speed) {
-                                unawaited(_setSpeed(speed));
-                                _scheduleHide();
-                              },
-                              onAudioTrack: (id) {
-                                unawaited(_backend.selectAudioTrack(id));
-                                _scheduleHide();
-                              },
-                              onSubtitleTrack: (id) {
-                                unawaited(_backend.selectSubtitleTrack(id));
-                                _scheduleHide();
-                              },
-                              onLoadSubtitles: () =>
-                                  unawaited(_loadSubtitles()),
-                              onInfo: _showInfo,
-                              onSettings: () => unawaited(_openSettings()),
-                              playlistLabel: _playlist.isEmpty
-                                  ? null
-                                  : '${_playlistIndex + 1} / ${_playlist.length}',
-                              onPrevious: _playlistIndex > 0
-                                  ? () => unawaited(_playAt(_playlistIndex - 1))
-                                  : null,
-                              onNext: _playlistIndex < _playlist.length - 1
-                                  ? () => unawaited(_playAt(_playlistIndex + 1))
-                                  : null,
+              overlay: inPip
+                  ? const SizedBox.shrink()
+                  : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        VideoGestureBadge(controller: _badge),
+                        AnimatedOpacity(
+                          opacity: _controlsVisible ? 1 : 0,
+                          duration: const Duration(milliseconds: 200),
+                          child: IgnorePointer(
+                            ignoring: !_controlsVisible,
+                            child: ExcludeFocus(
+                              excluding: !_controlsVisible,
+                              child: ValueListenableBuilder<VideoPlaybackState>(
+                                valueListenable: _backend.state,
+                                builder: (context, state, _) => VideoControls(
+                                  state: state,
+                                  title: _title,
+                                  playFocusNode: _playFocus,
+                                  actions: widget.actions,
+                                  onTogglePlay: _togglePlay,
+                                  onSeekStart: () => _hideTimer?.cancel(),
+                                  onSeek: _keepingControls(
+                                    (position) => unawaited(_seekTo(position)),
+                                  ),
+                                  onSeekBy: _keepingControls(
+                                    (delta) => unawaited(_seekBy(delta)),
+                                  ),
+                                  onToggleMute: _toggleMute,
+                                  onClose: () =>
+                                      Navigator.of(context).maybePop(),
+                                  seekStep: _seekStep,
+                                  onCopyFrame: () {
+                                    unawaited(_copyFrame());
+                                    _scheduleHide();
+                                  },
+                                  onPictureInPicture: _pipSupported
+                                      ? () => unawaited(_enterPip())
+                                      : null,
+                                  live: widget.live,
+                                  qualities: widget.qualities,
+                                  source: _source,
+                                  onQuality: _keepingControls(
+                                    (q) => unawaited(_switchQuality(q)),
+                                  ),
+                                  speeds: _speeds,
+                                  onSpeed: _keepingControls(
+                                    (speed) => unawaited(_setSpeed(speed)),
+                                  ),
+                                  onAudioTrack: _keepingControls(
+                                    (id) => unawaited(
+                                      _backend.selectAudioTrack(id),
+                                    ),
+                                  ),
+                                  onSubtitleTrack: _keepingControls<String?>(
+                                    (id) => unawaited(
+                                      _backend.selectSubtitleTrack(id),
+                                    ),
+                                  ),
+                                  onLoadSubtitles: () =>
+                                      unawaited(_loadSubtitles()),
+                                  onInfo: _showInfo,
+                                  onSettings: () => unawaited(_openSettings()),
+                                  playlistLabel: _playlist.isEmpty
+                                      ? null
+                                      : '${_playlistIndex + 1} / ${_playlist.length}',
+                                  onPrevious: _playlistIndex > 0
+                                      ? () => unawaited(
+                                          _playAt(_playlistIndex - 1),
+                                        )
+                                      : null,
+                                  onNext: _playlistIndex < _playlist.length - 1
+                                      ? () => unawaited(
+                                          _playAt(_playlistIndex + 1),
+                                        )
+                                      : null,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                ],
-              ),
             ),
           ),
         ),
@@ -1154,61 +748,3 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     );
   }
 }
-
-class _VideoSurface extends StatelessWidget {
-  final GlobalKey frameKey;
-  final VideoPlaybackState state;
-  final double zoom;
-  final Offset pan;
-  final Widget view;
-  final String errorLabel;
-
-  const _VideoSurface({
-    required this.frameKey,
-    required this.state,
-    required this.zoom,
-    required this.pan,
-    required this.view,
-    required this.errorLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (state.error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            errorLabel,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white70),
-          ),
-        ),
-      );
-    }
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ClipRect(
-          child: Transform.translate(
-            offset: pan,
-            child: Transform.scale(
-              scale: zoom,
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: state.aspectRatio,
-                  child: RepaintBoundary(key: frameKey, child: view),
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (!state.initialized || state.buffering)
-          const Center(child: CircularProgressIndicator()),
-      ],
-    );
-  }
-}
-
-/// What a one- or two-finger drag on the video is doing.
-enum _Drag { undecided, none, skip, volume, brightness, pan, zoom }

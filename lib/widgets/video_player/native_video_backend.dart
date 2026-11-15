@@ -12,6 +12,7 @@ import 'package:video_player/video_player.dart';
 import 'video_backend.dart';
 import 'video_player_settings.dart';
 import 'video_subtitle_style.dart';
+import 'video_system_channel.dart';
 
 class NativeVideoBackend implements VideoBackend {
   @override
@@ -30,10 +31,6 @@ class NativeVideoBackend implements VideoBackend {
   bool _audioTracksRetried = false;
   final List<_SubtitleFile> _subtitles = [];
   String? _subtitleId;
-
-  static const _systemChannel = MethodChannel(
-    'de.renier.tool_lab/video_system',
-  );
 
   @override
   Future<void> open(Uri source, {required bool loop, Duration? start}) async {
@@ -256,11 +253,12 @@ class NativeVideoBackend implements VideoBackend {
         (source.isScheme('file') || source.isScheme('content'));
     if (local) {
       try {
-        final tracks = await _systemChannel.invokeListMethod<Map>('tracks', {
-          'path': source.isScheme('file')
-              ? File.fromUri(source).path
-              : source.toString(),
-        });
+        final tracks = await VideoSystemChannel.channel
+            .invokeListMethod<Map>('tracks', {
+              'path': source.isScheme('file')
+                  ? File.fromUri(source).path
+                  : source.toString(),
+            });
         for (final t in tracks ?? const <Map>[]) {
           final mime = t['mime'] as String? ?? '';
           if (mime.startsWith('video/')) videoFormat ??= t;
@@ -273,7 +271,7 @@ class NativeVideoBackend implements VideoBackend {
     int? fileSize;
     if (source != null && source.isScheme('content')) {
       try {
-        fileSize = await _systemChannel.invokeMethod<int>('size', {
+        fileSize = await VideoSystemChannel.channel.invokeMethod<int>('size', {
           'uri': source.toString(),
         });
       } catch (e) {

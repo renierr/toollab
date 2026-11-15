@@ -7603,6 +7603,7 @@
   "videoPlayerToolDropSubtitle": "Drag & drop a video file here",
   "videoPlayerToolRecent": "Recent videos",
   "videoPlayerToolClearRecent": "Clear list",
+  "videoPlayerToolClearRecentMessage": "Remove all videos from the list? Saved positions are lost.",
   "videoPlayerToolRemoveRecent": "Remove from list",
   "videoPlayerToolWatched": "Watched",
   "videoPlayerToolProgress": "{position} of {duration}",

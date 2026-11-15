@@ -61,14 +61,16 @@ class VideoPlayerState extends ChangeNotifier implements VideoResumeStore {
       playedAt: DateTime.now().millisecondsSinceEpoch,
     );
     try {
-      await _db.save(entry);
-      final all = await _db.recent();
-      for (final old in all.skip(maxEntries)) {
-        await _db.delete(old.source);
-        await VideoSystemChannel.release(old.uri);
+      if (await _db.save(entry)) {
+        for (final source in await _db.prune(maxEntries)) {
+          await VideoSystemChannel.release(Uri.parse(source));
+        }
       }
       if (!_loaded) return;
-      _entries = all.take(maxEntries).toList();
+      _entries = [
+        entry,
+        ..._entries.where((e) => e.source != entry.source),
+      ].take(maxEntries).toList();
       notifyListeners();
     } catch (e) {
       errorLog('[VideoPlayerState] Saving position failed: $e');
@@ -87,8 +89,14 @@ class VideoPlayerState extends ChangeNotifier implements VideoResumeStore {
   }
 
   Future<void> clear() async {
-    for (final entry in List.of(_entries)) {
-      await remove(entry);
+    try {
+      for (final source in await _db.clear()) {
+        await VideoSystemChannel.release(Uri.parse(source));
+      }
+      _entries = const [];
+      notifyListeners();
+    } catch (e) {
+      errorLog('[VideoPlayerState] Clearing history failed: $e');
     }
   }
 }

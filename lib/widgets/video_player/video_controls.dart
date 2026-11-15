@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'video_backend.dart';
-import 'video_player_page.dart';
+import 'video_control_menus.dart';
+import 'video_player_types.dart';
+import 'video_seek_bar.dart';
 
 class VideoControls extends StatelessWidget {
   final VideoPlaybackState state;
@@ -12,6 +13,7 @@ class VideoControls extends StatelessWidget {
   final FocusNode playFocusNode;
   final List<VideoPlayerAction> actions;
   final VoidCallback onTogglePlay;
+  final VoidCallback onSeekStart;
   final ValueChanged<Duration> onSeek;
   final ValueChanged<Duration> onSeekBy;
   final VoidCallback onToggleMute;
@@ -47,6 +49,7 @@ class VideoControls extends StatelessWidget {
     required this.playFocusNode,
     required this.actions,
     required this.onTogglePlay,
+    required this.onSeekStart,
     required this.onSeek,
     required this.onSeekBy,
     required this.onToggleMute,
@@ -73,8 +76,6 @@ class VideoControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final durationMs = state.duration.inMilliseconds;
-    final positionMs = state.position.inMilliseconds.clamp(0, durationMs);
 
     return Column(
       children: [
@@ -151,22 +152,11 @@ class VideoControls extends StatelessWidget {
                   else
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Text(formatVideoTime(state.position)),
-                          Expanded(
-                            child: Slider(
-                              value: durationMs > 0 ? positionMs.toDouble() : 0,
-                              max: durationMs > 0 ? durationMs.toDouble() : 1,
-                              onChanged: durationMs > 0
-                                  ? (v) => onSeek(
-                                      Duration(milliseconds: v.round()),
-                                    )
-                                  : null,
-                            ),
-                          ),
-                          Text(formatVideoTime(state.duration)),
-                        ],
+                      child: VideoSeekBar(
+                        position: state.position,
+                        duration: state.duration,
+                        onSeekStart: onSeekStart,
+                        onSeek: onSeek,
                       ),
                     ),
                   Padding(
@@ -230,14 +220,14 @@ class VideoControls extends StatelessWidget {
                           onPressed: onToggleMute,
                         ),
                         if (!live)
-                          _SpeedButton(
+                          VideoSpeedButton(
                             speeds: speeds,
                             speed: state.speed,
                             onSelected: onSpeed,
                           ),
                       ],
                       end: [
-                        _TracksButton(
+                        VideoTracksButton(
                           audioTracks: state.audioTracks,
                           subtitleTracks: state.subtitleTracks,
                           onAudioTrack: onAudioTrack,
@@ -245,7 +235,7 @@ class VideoControls extends StatelessWidget {
                           onLoadSubtitles: onLoadSubtitles,
                         ),
                         if (qualities.length > 1)
-                          _QualityButton(
+                          VideoQualityButton(
                             qualities: qualities,
                             source: source,
                             onSelected: onQuality,
@@ -338,190 +328,6 @@ class _LiveBadge extends StatelessWidget {
   }
 }
 
-class _QualityButton extends StatelessWidget {
-  final List<VideoQuality> qualities;
-  final Uri source;
-  final ValueChanged<VideoQuality> onSelected;
-
-  const _QualityButton({
-    required this.qualities,
-    required this.source,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final current = qualities.where((q) => q.source == source).firstOrNull;
-    return PopupMenuButton<VideoQuality>(
-      tooltip: AppLocalizations.of(context).videoPlayerQuality,
-      onSelected: onSelected,
-      itemBuilder: (_) => [
-        for (final q in qualities)
-          CheckedPopupMenuItem(
-            value: q,
-            checked: q == current,
-            child: Text(q.label),
-          ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.high_quality_outlined, size: 28),
-            if (current != null) ...[
-              const SizedBox(width: 4),
-              Text(current.label),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SpeedButton extends StatelessWidget {
-  final List<double> speeds;
-  final double speed;
-  final ValueChanged<double> onSelected;
-
-  const _SpeedButton({
-    required this.speeds,
-    required this.speed,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final format = NumberFormat(
-      '0.##',
-      Localizations.localeOf(context).toString(),
-    );
-    String label(double value) =>
-        value == 1 ? l10n.videoPlayerSpeedNormal : '${format.format(value)}×';
-    return PopupMenuButton<double>(
-      tooltip: l10n.videoPlayerSpeed,
-      onSelected: onSelected,
-      itemBuilder: (_) => [
-        for (final value in speeds)
-          CheckedPopupMenuItem(
-            value: value,
-            checked: value == speed,
-            child: Text(label(value)),
-          ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.speed, size: 28),
-            if (speed != 1) ...[
-              const SizedBox(width: 4),
-              Text('${format.format(speed)}×'),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TracksButton extends StatelessWidget {
-  static const _off = 'off';
-  static const _load = 'load';
-  static const _audioPrefix = 'a:';
-  static const _subtitlePrefix = 's:';
-
-  final List<VideoTrackOption> audioTracks;
-  final List<VideoTrackOption> subtitleTracks;
-  final ValueChanged<String> onAudioTrack;
-  final ValueChanged<String?> onSubtitleTrack;
-  final VoidCallback onLoadSubtitles;
-
-  const _TracksButton({
-    required this.audioTracks,
-    required this.subtitleTracks,
-    required this.onAudioTrack,
-    required this.onSubtitleTrack,
-    required this.onLoadSubtitles,
-  });
-
-  void _onSelected(String value) {
-    if (value == _load) {
-      onLoadSubtitles();
-    } else if (value == _off) {
-      onSubtitleTrack(null);
-    } else if (value.startsWith(_audioPrefix)) {
-      onAudioTrack(value.substring(_audioPrefix.length));
-    } else if (value.startsWith(_subtitlePrefix)) {
-      onSubtitleTrack(value.substring(_subtitlePrefix.length));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final headerStyle = Theme.of(context).textTheme.labelMedium;
-    String label(VideoTrackOption track, int index) {
-      final parts = [
-        track.title,
-        track.language,
-      ].whereType<String>().where((part) => part.isNotEmpty).toSet();
-      return parts.isEmpty
-          ? l10n.videoPlayerTrack(index + 1)
-          : parts.join(' · ');
-    }
-
-    return PopupMenuButton<String>(
-      tooltip: l10n.videoPlayerTracks,
-      icon: const Icon(Icons.subtitles_outlined, size: 28),
-      onSelected: _onSelected,
-      itemBuilder: (_) => [
-        if (audioTracks.length > 1) ...[
-          PopupMenuItem(
-            enabled: false,
-            height: 32,
-            child: Text(l10n.videoPlayerAudio, style: headerStyle),
-          ),
-          for (final (index, track) in audioTracks.indexed)
-            CheckedPopupMenuItem(
-              value: '$_audioPrefix${track.id}',
-              checked: track.selected,
-              child: Text(label(track, index)),
-            ),
-          const PopupMenuDivider(),
-        ],
-        PopupMenuItem(
-          enabled: false,
-          height: 32,
-          child: Text(l10n.videoPlayerSubtitles, style: headerStyle),
-        ),
-        CheckedPopupMenuItem(
-          value: _off,
-          checked: !subtitleTracks.any((t) => t.selected),
-          child: Text(l10n.videoPlayerSubtitlesOff),
-        ),
-        for (final (index, track) in subtitleTracks.indexed)
-          CheckedPopupMenuItem(
-            value: '$_subtitlePrefix${track.id}',
-            checked: track.selected,
-            child: Text(label(track, index)),
-          ),
-        PopupMenuItem(
-          value: _load,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.file_open_outlined),
-            title: Text(l10n.videoPlayerLoadSubtitles),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Play/pause and the skips sit in the exact center; the other buttons go to
 /// the edges, or into a row of their own when they would crowd the center.
 class _ControlBar extends StatelessWidget {
@@ -583,13 +389,4 @@ class _ControlBar extends StatelessWidget {
       },
     );
   }
-}
-
-/// `m:ss`, or `h:mm:ss` from an hour on.
-String formatVideoTime(Duration d) {
-  final minutes = d.inMinutes;
-  final seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
-  if (minutes < 60) return '$minutes:$seconds';
-  final mm = (minutes % 60).toString().padLeft(2, '0');
-  return '${d.inHours}:$mm:$seconds';
 }

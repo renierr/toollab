@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/widgets/video_player/video_controls.dart';
+import 'package:tool_lab/widgets/video_player/video_format.dart';
 
 import '../video_history_entry.dart';
 

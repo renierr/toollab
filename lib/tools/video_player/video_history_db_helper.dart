@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
@@ -41,12 +40,11 @@ class VideoHistoryDbHelper {
     return _cachedDb!;
   }
 
+  static const String _newestFirst = 'played_at DESC, rowid DESC';
+
   Future<List<VideoHistoryEntry>> recent() async {
     final db = await _getDb();
-    final rows = await db.query(
-      tableName,
-      orderBy: 'played_at DESC, rowid DESC',
-    );
+    final rows = await db.query(tableName, orderBy: _newestFirst);
     return rows.map(VideoHistoryEntry.fromMap).toList();
   }
 
@@ -61,17 +59,46 @@ class VideoHistoryDbHelper {
     return rows.isEmpty ? null : VideoHistoryEntry.fromMap(rows.first);
   }
 
-  Future<void> save(VideoHistoryEntry entry) async {
+  /// True when the source was not in the list yet.
+  Future<bool> save(VideoHistoryEntry entry) async {
     final db = await _getDb();
-    await db.insert(
+    final updated = await db.update(
       tableName,
       entry.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      where: 'source = ?',
+      whereArgs: [entry.source],
     );
+    if (updated > 0) return false;
+    await db.insert(tableName, entry.toMap());
+    return true;
+  }
+
+  /// Deletes all but the newest [keep] entries and returns their sources.
+  Future<List<String>> prune(int keep) async {
+    final db = await _getDb();
+    final rows = await db.query(
+      tableName,
+      columns: ['source'],
+      orderBy: _newestFirst,
+      limit: -1,
+      offset: keep,
+    );
+    final sources = [for (final row in rows) row['source']! as String];
+    if (sources.isNotEmpty) {
+      await db.delete(
+        tableName,
+        where: 'source IN (${List.filled(sources.length, '?').join(',')})',
+        whereArgs: sources,
+      );
+    }
+    return sources;
   }
 
   Future<void> delete(String source) async {
     final db = await _getDb();
     await db.delete(tableName, where: 'source = ?', whereArgs: [source]);
   }
+
+  /// Returns the deleted sources.
+  Future<List<String>> clear() => prune(0);
 }

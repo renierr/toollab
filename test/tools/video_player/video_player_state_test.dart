@@ -70,6 +70,11 @@ void main() {
     }
     expect(state.entries, hasLength(VideoPlayerState.maxEntries));
     expect(state.entries.first.title, '${VideoPlayerState.maxEntries + 2}.mp4');
+    expect(await state.resumePosition(Uri.file('/videos/0.mp4')), isNull);
+
+    final reloaded = VideoPlayerState();
+    await reloaded.load();
+    expect(reloaded.entries, hasLength(VideoPlayerState.maxEntries));
     await state.clear();
   });
 }

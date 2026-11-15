@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -68,6 +70,20 @@ class _VideoPlayerToolPageState extends State<VideoPlayerToolPage>
     );
   }
 
+  Future<void> _confirmClear() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await ConfirmActionDialog.show(
+      context: context,
+      title: l10n.videoPlayerToolClearRecent,
+      message: l10n.videoPlayerToolClearRecentMessage,
+      cancelLabel: l10n.commonCancel,
+      confirmLabel: l10n.commonClear,
+      confirmColor: AppTheme.statusRed,
+    );
+    if (confirmed != true || !mounted) return;
+    await context.read<VideoPlayerState>().clear();
+  }
+
   // The Android picker hands back a content:// URI, so nothing is copied.
   static Uri _pickedSource(XFile file) => file.path.startsWith('content://')
       ? Uri.parse(file.path)
@@ -107,7 +123,7 @@ class _VideoPlayerToolPageState extends State<VideoPlayerToolPage>
             entries: entries,
             onPlay: (entry) => _play(entry.uri, entry.title),
             onRemove: state.remove,
-            onClear: state.clear,
+            onClear: _confirmClear,
           );
           if (constraints.canSplit) {
             return Row(

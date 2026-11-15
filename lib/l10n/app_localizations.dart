@@ -27958,6 +27958,12 @@ abstract class AppLocalizations {
   /// **'Clear list'**
   String get videoPlayerToolClearRecent;
 
+  /// No description provided for @videoPlayerToolClearRecentMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove all videos from the list? Saved positions are lost.'**
+  String get videoPlayerToolClearRecentMessage;
+
   /// No description provided for @videoPlayerToolRemoveRecent.
   ///
   /// In en, this message translates to:
