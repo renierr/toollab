@@ -25954,6 +25954,18 @@ abstract class AppLocalizations {
   /// **'Auto'**
   String get videoPlayerQualityAuto;
 
+  /// No description provided for @videoPlayerPictureInPicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture-in-picture'**
+  String get videoPlayerPictureInPicture;
+
+  /// No description provided for @videoPlayerNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get videoPlayerNotificationTitle;
+
   /// No description provided for @videoPlayerQualityFallback.
   ///
   /// In en, this message translates to:

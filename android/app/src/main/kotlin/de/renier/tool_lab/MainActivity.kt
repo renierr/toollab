@@ -35,6 +35,7 @@ open class MainActivity : FlutterFragmentActivity() {
     private var filePickerResult: MethodChannel.Result? = null
     private var filePickerTargetDir: String? = null
     private var selfUpdateInProgress = false
+    private val videoPip by lazy { VideoPipHelper(this) }
 
     /**
      * The foreground service living in this activity's process. Tool activities
@@ -225,7 +226,20 @@ open class MainActivity : FlutterFragmentActivity() {
         wakeLockHelper?.detach()
     }
 
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        videoPip.onUserLeaveHint()
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        // Closing the window stops the activity; expanding it keeps it started.
+        val stopped = !lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)
+        videoPip.onPipModeChanged(isInPictureInPictureMode, stopped)
+    }
+
     override fun onDestroy() {
+        videoPip.dispose()
         gpsInfoHelper?.stopGpsInfoUpdates()
         gpsInfoHelper = null
         super.onDestroy()
@@ -288,6 +302,8 @@ open class MainActivity : FlutterFragmentActivity() {
         TextToSpeechHelper.register(this, messenger)
 
         VideoFrameHelper.register(this, messenger)
+
+        videoPip.register(messenger)
 
         MethodChannel(messenger, TV_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
@@ -668,4 +684,7 @@ class DriftBloomActivity : MainActivity()
 class DepotActivity : MainActivity()
 class NewsActivity : MainActivity()
 class TotpAuthActivity : MainActivity()
-class XFeedActivity : MainActivity()
+class XFeedActivity : MainActivity() {
+    override val foregroundServiceClass: Class<out ToolLabForegroundService>
+        get() = XFeedForegroundService::class.java
+}

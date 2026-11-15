@@ -14744,6 +14744,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoPlayerQualityAuto => 'Auto';
 
   @override
+  String get videoPlayerPictureInPicture => 'Picture-in-picture';
+
+  @override
+  String get videoPlayerNotificationTitle => 'Video';
+
+  @override
   String videoPlayerQualityFallback(String quality) {
     return 'Not loading, switched to $quality';
   }

@@ -5703,6 +5703,8 @@
   "videoPlayerCopyFrame": "Bild in Zwischenablage kopieren",
   "videoPlayerQuality": "Qualität",
   "videoPlayerQualityAuto": "Automatisch",
+  "videoPlayerPictureInPicture": "Bild-im-Bild",
+  "videoPlayerNotificationTitle": "Video",
   "videoPlayerQualityFallback": "Lädt nicht, auf {quality} gewechselt",
   "toolNameXFeed": "X Feed",
   "toolDescXFeed": "Deine X-Timeline ohne Werbung, mit nativer Videowiedergabe und Teilen",

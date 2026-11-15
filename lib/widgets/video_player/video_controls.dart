@@ -19,6 +19,7 @@ class VideoControls extends StatelessWidget {
 
   /// Copies the bare video frame.
   final VoidCallback? onCopyFrame;
+  final VoidCallback? onPictureInPicture;
   final bool live;
   final List<VideoQuality> qualities;
   final Uri source;
@@ -37,6 +38,7 @@ class VideoControls extends StatelessWidget {
     required this.onClose,
     required this.seekStep,
     this.onCopyFrame,
+    this.onPictureInPicture,
     required this.live,
     required this.qualities,
     required this.source,
@@ -77,6 +79,12 @@ class VideoControls extends StatelessWidget {
                       icon: const Icon(Icons.photo_camera_outlined),
                       tooltip: l10n.videoPlayerCopyFrame,
                       onPressed: onCopyFrame,
+                    ),
+                  if (onPictureInPicture != null)
+                    IconButton(
+                      icon: const Icon(Icons.picture_in_picture_alt_outlined),
+                      tooltip: l10n.videoPlayerPictureInPicture,
+                      onPressed: onPictureInPicture,
                     ),
                   for (final action in actions)
                     IconButton(

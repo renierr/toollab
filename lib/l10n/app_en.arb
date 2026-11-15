@@ -7214,6 +7214,8 @@
   "videoPlayerCopyFrame": "Copy frame to clipboard",
   "videoPlayerQuality": "Quality",
   "videoPlayerQualityAuto": "Auto",
+  "videoPlayerPictureInPicture": "Picture-in-picture",
+  "videoPlayerNotificationTitle": "Video",
   "videoPlayerQualityFallback": "Not loading, switched to {quality}",
   "@videoPlayerQualityFallback": {
     "placeholders": {

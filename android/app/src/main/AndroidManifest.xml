@@ -128,6 +128,7 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
+            android:supportsPictureInPicture="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
@@ -228,6 +229,7 @@
             android:process=":file_manager"
             android:taskAffinity="de.renier.tool_lab.file_manager"
             android:theme="@style/LaunchTheme"
+            android:supportsPictureInPicture="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
@@ -388,6 +390,7 @@
             android:process=":x_feed"
             android:taskAffinity="de.renier.tool_lab.x_feed"
             android:theme="@style/LaunchTheme"
+            android:supportsPictureInPicture="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
@@ -1039,6 +1042,11 @@
             android:name=".FileManagerForegroundService"
             android:exported="false"
             android:process=":file_manager"
+            android:foregroundServiceType="mediaPlayback|dataSync|microphone" />
+        <service
+            android:name=".XFeedForegroundService"
+            android:exported="false"
+            android:process=":x_feed"
             android:foregroundServiceType="mediaPlayback|dataSync|microphone" />
         <!-- ML Kit Document Scanner module — fetched from Google Play at install/run
              time so scanDocument() doesn't fail with a null/PlatformException on

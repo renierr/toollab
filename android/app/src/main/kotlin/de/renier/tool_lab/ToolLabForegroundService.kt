@@ -48,6 +48,8 @@ open class ToolLabForegroundService : Service() {
         // Stop has no dedicated slot in Android 13+ system-drawn media
         // notifications, so it is exposed as a custom session action.
         const val CUSTOM_ACTION_STOP = "de.renier.tool_lab.media.STOP"
+        const val CUSTOM_ACTION_REWIND = "de.renier.tool_lab.media.REWIND"
+        const val CUSTOM_ACTION_FORWARD = "de.renier.tool_lab.media.FORWARD"
 
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_TEXT = "text"
@@ -424,10 +426,16 @@ open class ToolLabForegroundService : Service() {
             override fun onStop() = handleMediaAction("stop", fromSession = true)
             override fun onSkipToNext() = handleMediaAction("next", fromSession = true)
             override fun onSkipToPrevious() = handleMediaAction("previous", fromSession = true)
+            override fun onRewind() = handleMediaAction("rewind", fromSession = true)
+            override fun onFastForward() = handleMediaAction("forward", fromSession = true)
             override fun onSeekTo(pos: Long) =
                 handleMediaAction("seek:${pos.toInt()}", fromSession = true)
             override fun onCustomAction(action: String, extras: android.os.Bundle?) {
-                if (action == CUSTOM_ACTION_STOP) handleMediaAction("stop", fromSession = true)
+                when (action) {
+                    CUSTOM_ACTION_STOP -> handleMediaAction("stop", fromSession = true)
+                    CUSTOM_ACTION_REWIND -> handleMediaAction("rewind", fromSession = true)
+                    CUSTOM_ACTION_FORWARD -> handleMediaAction("forward", fromSession = true)
+                }
             }
 
             override fun onMediaButtonEvent(mediaButtonEvent: Intent?): Boolean {
@@ -445,6 +453,8 @@ open class ToolLabForegroundService : Service() {
                     KeyEvent.KEYCODE_MEDIA_STOP -> "stop"
                     KeyEvent.KEYCODE_MEDIA_NEXT -> "next"
                     KeyEvent.KEYCODE_MEDIA_PREVIOUS -> "previous"
+                    KeyEvent.KEYCODE_MEDIA_REWIND -> "rewind"
+                    KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> "forward"
                     else -> null
                 }
                 if (mapped != null) {
@@ -479,6 +489,8 @@ open class ToolLabForegroundService : Service() {
         if ("stop" in names) actions = actions or PlaybackStateCompat.ACTION_STOP
         if ("next" in names) actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
         if ("previous" in names) actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+        if ("rewind" in names) actions = actions or PlaybackStateCompat.ACTION_REWIND
+        if ("forward" in names) actions = actions or PlaybackStateCompat.ACTION_FAST_FORWARD
         if (lastSeekable) actions = actions or PlaybackStateCompat.ACTION_SEEK_TO
 
         val builder = PlaybackStateCompat.Builder()
@@ -492,6 +504,25 @@ open class ToolLabForegroundService : Service() {
                 lastPositionMs.coerceAtLeast(0),
                 if (lastPlaying) 1f else 0f,
             )
+        // Android 13+ fills the previous/next slots with custom actions in order.
+        if ("rewind" in names) {
+            builder.addCustomAction(
+                PlaybackStateCompat.CustomAction.Builder(
+                    CUSTOM_ACTION_REWIND,
+                    "Rewind",
+                    android.R.drawable.ic_media_rew,
+                ).build(),
+            )
+        }
+        if ("forward" in names) {
+            builder.addCustomAction(
+                PlaybackStateCompat.CustomAction.Builder(
+                    CUSTOM_ACTION_FORWARD,
+                    "Forward",
+                    android.R.drawable.ic_media_ff,
+                ).build(),
+            )
+        }
         if ("stop" in names) {
             builder.addCustomAction(
                 PlaybackStateCompat.CustomAction.Builder(
@@ -587,6 +618,8 @@ open class ToolLabForegroundService : Service() {
             "stop" -> android.R.drawable.ic_menu_close_clear_cancel to "Stop"
             "next" -> android.R.drawable.ic_media_next to "Next"
             "previous" -> android.R.drawable.ic_media_previous to "Previous"
+            "rewind" -> android.R.drawable.ic_media_rew to "Rewind"
+            "forward" -> android.R.drawable.ic_media_ff to "Forward"
             else -> return null
         }
         return icon to label
@@ -624,4 +657,10 @@ open class ToolLabForegroundService : Service() {
 class FileManagerForegroundService : ToolLabForegroundService() {
     override val notificationId: Int = 42002
     override val activityClass: Class<out MainActivity> = FileManagerActivity::class.java
+}
+
+/** Runs in the `:x_feed` process, where X Feed videos play. */
+class XFeedForegroundService : ToolLabForegroundService() {
+    override val notificationId: Int = 42003
+    override val activityClass: Class<out MainActivity> = XFeedActivity::class.java
 }

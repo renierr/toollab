@@ -13,6 +13,9 @@ import 'package:tool_lab/services/power_wake_lock_service.dart';
 
 import 'video_backend.dart';
 import 'video_controls.dart';
+import 'video_notification.dart';
+import 'video_pip.dart';
+import 'video_skip_indicator.dart';
 
 class VideoPlayerAction {
   final IconData icon;
@@ -44,6 +47,8 @@ class VideoQuality {
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
 /// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
 /// 10 s, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
+/// A horizontal swipe skips 10 s. On Android it adds a media notification and
+/// picture-in-picture while playing.
 class VideoPlayerPage extends StatefulWidget {
   static const String preferenceId = 'tool-lab-video-player';
 
@@ -100,6 +105,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   static const Duration _seekStep = Duration(seconds: 10);
   static const Duration _arrowSeekStep = Duration(seconds: 5);
   static const Duration _stallLimit = Duration(seconds: 8);
+  static const double _swipeDistance = 48;
+  static const double _swipeVelocity = 400;
 
   VideoBackend _backend = VideoBackend.create();
   late Uri _source = widget.source;
@@ -110,6 +117,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Timer? _hideTimer;
   bool _controlsVisible = false;
   Timer? _stallTimer;
+  VideoPip? _pip;
+  VideoNotification? _notification;
+  bool _pipSupported = false;
+  bool _closing = false;
+  double _swipeDx = 0;
+  Timer? _skipTimer;
+  bool _skipVisible = false;
+  bool _skipForward = true;
 
   /// Where playback should continue: X serves some replay segments only at
   /// lower qualities, so a seek can stall forever on the chosen one.
@@ -120,15 +135,49 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     super.initState();
     unawaited(_backend.open(widget.source, loop: widget.loop));
     _backend.state.addListener(_onState);
+    if (Platform.isAndroid) {
+      unawaited(
+        VideoPip.isSupported().then((supported) {
+          if (mounted && supported) setState(() => _pipSupported = true);
+        }),
+      );
+    }
     onDispose(() {
       _hideTimer?.cancel();
       _stallTimer?.cancel();
+      _skipTimer?.cancel();
+      _pip?.active.removeListener(_onPipChanged);
+      unawaited(_pip?.dispose());
+      unawaited(_notification?.dispose());
       _backend.state.removeListener(_onState);
       if (Platform.isAndroid) _screenOn.set(false);
       unawaited(_backend.dispose());
       _keyFocus.dispose();
       _playFocus.dispose();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!Platform.isAndroid || _pip != null) return;
+    final l10n = AppLocalizations.of(context);
+    final seconds = _seekStep.inSeconds;
+    _pip = VideoPip(
+      onAction: _onRemoteAction,
+      onDismissed: () => unawaited(_close()),
+      labels: {
+        'play': l10n.videoPlayerPlay,
+        'pause': l10n.videoPlayerPause,
+        'rewind': l10n.videoPlayerBack(seconds),
+        'forward': l10n.videoPlayerForward(seconds),
+      },
+    )..active.addListener(_onPipChanged);
+    _notification = VideoNotification(
+      title: widget.title ?? l10n.videoPlayerNotificationTitle,
+      live: widget.live,
+      onAction: _onRemoteAction,
+    );
   }
 
   /// A fresh backend per source: the old view leaves the tree before its
@@ -166,6 +215,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   void _onState() {
     final state = _backend.state.value;
     if (Platform.isAndroid) _screenOn.set(state.playing);
+    unawaited(
+      _pip?.update(
+        playing: state.playing,
+        seekable: !widget.live,
+        aspectRatio: state.aspectRatio,
+      ),
+    );
+    unawaited(_notification?.sync(state));
     _watchStall(state);
     if ((state.completed || state.error != null) && !_controlsVisible) {
       _showControls();
@@ -219,6 +276,78 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Future<void> _seekTo(Duration position) async {
     if (!widget.live) _resumeAt = position;
     await _backend.seek(position);
+    unawaited(
+      _notification?.seeked(position, playing: _backend.state.value.playing),
+    );
+  }
+
+  /// Notification, media key and picture-in-picture controls.
+  void _onRemoteAction(String action) {
+    switch (action) {
+      case 'play':
+        unawaited(_backend.play());
+      case 'pause':
+        unawaited(_backend.pause());
+      case 'play_pause':
+        unawaited(
+          _backend.state.value.playing ? _backend.pause() : _backend.play(),
+        );
+      case 'rewind':
+        unawaited(_seekBy(-_seekStep));
+      case 'forward':
+        unawaited(_seekBy(_seekStep));
+      case 'stop':
+        unawaited(_close());
+      case _ when action.startsWith('seek:'):
+        final ms = int.tryParse(action.substring('seek:'.length));
+        if (ms != null) unawaited(_seekTo(Duration(milliseconds: ms)));
+    }
+  }
+
+  void _onPipChanged() {
+    if (!mounted) return;
+    if (_pip!.active.value) {
+      _hideTimer?.cancel();
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      _controlsVisible = false;
+    }
+    setState(() {});
+  }
+
+  Future<void> _enterPip() async {
+    _hideTimer?.cancel();
+    setState(() => _controlsVisible = false);
+    await _pip?.enter();
+  }
+
+  /// Leaves picture-in-picture first, or the window would show the page below.
+  Future<void> _close() async {
+    if (_closing) return;
+    _closing = true;
+    await _backend.pause();
+    final pip = _pip;
+    if (pip != null && pip.active.value) await pip.leave();
+    if (!mounted) return;
+    await Navigator.of(context).maybePop();
+    _closing = false;
+  }
+
+  void _onSwipeEnd(DragEndDetails details) {
+    final dx = _swipeDx;
+    _swipeDx = 0;
+    final velocity = details.primaryVelocity ?? 0;
+    final far = dx.abs() >= _swipeDistance;
+    if (!far && velocity.abs() < _swipeVelocity) return;
+    final forward = far ? dx > 0 : velocity > 0;
+    unawaited(_seekBy(forward ? _seekStep : -_seekStep));
+    _skipTimer?.cancel();
+    setState(() {
+      _skipForward = forward;
+      _skipVisible = true;
+    });
+    _skipTimer = Timer(const Duration(milliseconds: 700), () {
+      if (mounted) setState(() => _skipVisible = false);
+    });
   }
 
   void _scheduleHide() {
@@ -381,6 +510,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final inPip = _pip?.active.value ?? false;
     return Theme(
       data: ThemeData.dark(useMaterial3: true),
       child: Scaffold(
@@ -401,6 +531,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                 }
               },
               onDoubleTap: _togglePlay,
+              onHorizontalDragStart: widget.live ? null : (_) => _swipeDx = 0,
+              onHorizontalDragUpdate: widget.live
+                  ? null
+                  : (details) => _swipeDx += details.delta.dx,
+              onHorizontalDragEnd: widget.live ? null : _onSwipeEnd,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -417,49 +552,61 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                       child: _backend.buildView(context),
                     ),
                   ),
-                  AnimatedOpacity(
-                    opacity: _controlsVisible ? 1 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: IgnorePointer(
-                      ignoring: !_controlsVisible,
-                      child: ExcludeFocus(
-                        excluding: !_controlsVisible,
-                        child: ValueListenableBuilder<VideoPlaybackState>(
-                          valueListenable: _backend.state,
-                          builder: (context, state, _) => VideoControls(
-                            state: state,
-                            title: widget.title,
-                            playFocusNode: _playFocus,
-                            actions: widget.actions,
-                            onTogglePlay: _togglePlay,
-                            onSeek: (position) {
-                              unawaited(_seekTo(position));
-                              _scheduleHide();
-                            },
-                            onSeekBy: (delta) {
-                              unawaited(_seekBy(delta));
-                              _scheduleHide();
-                            },
-                            onToggleMute: () =>
-                                _backend.setVolume(state.volume > 0 ? 0 : 1),
-                            onClose: () => Navigator.of(context).maybePop(),
-                            seekStep: _seekStep,
-                            onCopyFrame: () {
-                              unawaited(_copyFrame());
-                              _scheduleHide();
-                            },
-                            live: widget.live,
-                            qualities: widget.qualities,
-                            source: _source,
-                            onQuality: (q) {
-                              unawaited(_switchQuality(q));
-                              _scheduleHide();
-                            },
+                  if (!inPip)
+                    VideoSkipIndicator(
+                      visible: _skipVisible,
+                      forward: _skipForward,
+                      label: _skipForward
+                          ? l10n.videoPlayerForward(_seekStep.inSeconds)
+                          : l10n.videoPlayerBack(_seekStep.inSeconds),
+                    ),
+                  if (!inPip)
+                    AnimatedOpacity(
+                      opacity: _controlsVisible ? 1 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: IgnorePointer(
+                        ignoring: !_controlsVisible,
+                        child: ExcludeFocus(
+                          excluding: !_controlsVisible,
+                          child: ValueListenableBuilder<VideoPlaybackState>(
+                            valueListenable: _backend.state,
+                            builder: (context, state, _) => VideoControls(
+                              state: state,
+                              title: widget.title,
+                              playFocusNode: _playFocus,
+                              actions: widget.actions,
+                              onTogglePlay: _togglePlay,
+                              onSeek: (position) {
+                                unawaited(_seekTo(position));
+                                _scheduleHide();
+                              },
+                              onSeekBy: (delta) {
+                                unawaited(_seekBy(delta));
+                                _scheduleHide();
+                              },
+                              onToggleMute: () =>
+                                  _backend.setVolume(state.volume > 0 ? 0 : 1),
+                              onClose: () => Navigator.of(context).maybePop(),
+                              seekStep: _seekStep,
+                              onCopyFrame: () {
+                                unawaited(_copyFrame());
+                                _scheduleHide();
+                              },
+                              onPictureInPicture: _pipSupported
+                                  ? () => unawaited(_enterPip())
+                                  : null,
+                              live: widget.live,
+                              qualities: widget.qualities,
+                              source: _source,
+                              onQuality: (q) {
+                                unawaited(_switchQuality(q));
+                                _scheduleHide();
+                              },
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
