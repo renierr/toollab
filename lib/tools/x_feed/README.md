@@ -47,10 +47,10 @@ X's web app reports which posts were on screen through the `seenTweetIds` variab
 home timeline requests, and the For you ranking stops serving those again. Without it the
 same posts keep coming back after a refresh.
 
-A post counts as seen on For you or Following when at least half of it stays on screen
-for a second after scrolling settles, or when it scrolls out of view after at least half of
-it was on screen for half a second, so slow scrolling counts but a fling does not
-(`XTimelineView`). Opening a post from anywhere counts too (`XNavigation.openPost`), and so does opening its
+A post counts as seen on For you or Following when its bottom edge is on screen for a
+second after scrolling settles, or when it scrolls out past the top after at least half of
+it was on screen for half a second, so slow scrolling counts but a fling does not, and a
+post left at the bottom unread does not (`XTimelineView`). Opening a post from anywhere counts too (`XNavigation.openPost`), and so does opening its
 media or live broadcast (`XMediaActions.openMedia` / `openBroadcast`).
 A repost reports both its own id and the reposted post's (`XPost.seenIds`), since it is not
 known which one X's ranking keys on. `XFeedState` buffers the ids and sends the whole buffer with the
@@ -75,7 +75,9 @@ loaded posts, dropped when the tool closes.
 
 Under the avatar a post shows a single check while it is seen but still pending, and a
 double check once X got it (`XReadMark`). The marks have their own notifier
-(`XFeedState.readMarks`), so a change rebuilds only the icons, not the feed.
+(`XFeedState.readMarks`), so a change rebuilds only the icons, not the feed. A change
+during a frame (a scroll notification sent from layout) is delivered after it, with a new
+frame scheduled, or the icon would only update on the next input.
 
 ## Live broadcasts
 

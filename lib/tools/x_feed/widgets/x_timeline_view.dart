@@ -69,6 +69,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   Timer? _seenTimer;
   final Map<String, Duration> _visibleSince = {};
   Duration? _lastPassCheck;
+  double? _lastPassPixels;
   late int _refreshCount = widget.controller.refreshCount;
 
   @override
@@ -267,16 +268,23 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     _seenTimer = Timer(_seenDwell, _collectSeen);
   }
 
-  /// Posts at least half on screen once scrolling has settled count as seen.
+  /// Posts whose bottom is on screen once scrolling has settled count as seen.
   void _collectSeen() {
     final onSeen = widget.onSeen;
     if (onSeen == null || !mounted) return;
-    final seen = _visibleIds();
+    final layout = _rowLayout();
+    if (layout == null) return;
+    final seen = [
+      for (final MapEntry(key: id, value: rect) in layout.rects.entries)
+        if (rect.bottom > layout.bounds.top &&
+            rect.bottom <= layout.bounds.bottom + 1)
+          id,
+    ];
     if (seen.isNotEmpty) onSeen(_postsOf(seen));
   }
 
-  /// A post that leaves the screen while scrolling counts as seen when it was
-  /// at least half visible for [_passDwell].
+  /// A post scrolled past the top counts as seen when it was at least half
+  /// visible for [_passDwell]; one leaving at the bottom was not read.
   void _trackPassing({bool throttled = false}) {
     final onSeen = widget.onSeen;
     if (onSeen == null || !mounted) return;
@@ -284,11 +292,21 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     final last = _lastPassCheck;
     if (throttled && last != null && now - last < _passInterval) return;
     _lastPassCheck = now;
-    final visible = _visibleIds();
+    final layout = _rowLayout();
+    if (layout == null) return;
+    final pixels = _scroll.position.pixels;
+    final movedDown = pixels > (_lastPassPixels ?? pixels);
+    _lastPassPixels = pixels;
+    final visible = layout.halfVisible;
     final passed = <String>[];
     _visibleSince.removeWhere((id, since) {
       if (visible.contains(id)) return false;
-      if (now - since >= _passDwell) passed.add(id);
+      final rect = layout.rects[id];
+      // An unbuilt row left the built range in the direction of travel.
+      final above = rect == null
+          ? movedDown
+          : rect.bottom <= layout.bounds.top + rect.height / 2;
+      if (above && now - since >= _passDwell) passed.add(id);
       return true;
     });
     for (final id in visible) {
@@ -305,30 +323,25 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     ];
   }
 
-  /// Ids of the posts at least half on screen (or filling half of it).
-  Set<String> _visibleIds() {
-    if (!_scroll.hasClients) return const {};
+  /// Viewport-relative rects of the built rows and the viewport bounds.
+  _RowLayout? _rowLayout() {
+    if (!_scroll.hasClients) return null;
     final viewport = _scroll.position.context.notificationContext
         ?.findRenderObject();
     if (viewport is! RenderBox || !viewport.attached || !viewport.hasSize) {
-      return const {};
+      return null;
     }
-    final bounds = Offset.zero & viewport.size;
-    final visible = <String>{};
+    final rects = <String, Rect>{};
     for (final MapEntry(key: id, value: row) in _rows.entries) {
       if (!row.mounted) continue;
       final box = row.context.findRenderObject();
       if (box is! RenderBox || !box.attached || !box.hasSize) continue;
-      final rect = MatrixUtils.transformRect(
+      rects[id] = MatrixUtils.transformRect(
         box.getTransformTo(viewport),
         Offset.zero & box.size,
       );
-      final shown = rect.intersect(bounds);
-      if (shown.width <= 0 || shown.height <= 0) continue;
-      final needed = rect.height < bounds.height ? rect.height : bounds.height;
-      if (shown.height >= needed / 2) visible.add(id);
     }
-    return visible;
+    return _RowLayout(Offset.zero & viewport.size, rects);
   }
 
   @override
@@ -577,5 +590,25 @@ class _Footer extends StatelessWidget {
       padding: EdgeInsets.all(24),
       child: Center(child: CircularProgressIndicator()),
     );
+  }
+}
+
+class _RowLayout {
+  final Rect bounds;
+  final Map<String, Rect> rects;
+
+  const _RowLayout(this.bounds, this.rects);
+
+  /// Ids of the rows at least half on screen (or filling half of it).
+  Set<String> get halfVisible => {
+    for (final MapEntry(key: id, value: rect) in rects.entries)
+      if (_isHalfVisible(rect)) id,
+  };
+
+  bool _isHalfVisible(Rect rect) {
+    final shown = rect.intersect(bounds);
+    if (shown.width <= 0 || shown.height <= 0) return false;
+    final needed = rect.height < bounds.height ? rect.height : bounds.height;
+    return shown.height >= needed / 2;
   }
 }

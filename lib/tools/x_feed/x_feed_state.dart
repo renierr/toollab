@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -279,6 +280,7 @@ class XFeedState extends ChangeNotifier {
     }
     _engagement.clear();
     _read.clear();
+    _readMarks.ping();
     translator.clear();
     PaintingBinding.instance.imageCache.clear();
     await tempScope.cleanTracked();
@@ -289,8 +291,6 @@ class XFeedState extends ChangeNotifier {
       _saveSeen();
     } on XApiException catch (e) {
       debugLog('[XFeedState] Seen ids stay for the next launch: $e');
-    } finally {
-      _read.clear();
     }
   }
 
@@ -541,5 +541,22 @@ class XFeedState extends ChangeNotifier {
 }
 
 class _Signal extends ChangeNotifier {
-  void ping() => notifyListeners();
+  bool _queued = false;
+
+  /// A ping mid-frame (from a scroll notification during layout) would mark
+  /// widgets dirty after the build phase with no new frame scheduled.
+  void ping() {
+    final scheduler = SchedulerBinding.instance;
+    if (scheduler.schedulerPhase != SchedulerPhase.persistentCallbacks) {
+      notifyListeners();
+      return;
+    }
+    if (_queued) return;
+    _queued = true;
+    scheduler.addPostFrameCallback((_) {
+      _queued = false;
+      notifyListeners();
+    });
+    scheduler.scheduleFrame();
+  }
 }
