@@ -16,6 +16,12 @@ NULL entry, so mpv read past the buffer; it now holds one pointer per argument
 plus the terminating NULL. (The app's player copies frames through Flutter
 instead: mpv cannot convert VA-API GPU frames for `screenshot-raw`.)
 
+mpv sends a property event on every video frame (`time-pos`,
+`demuxer-cache-time`), and `_handler` runs on the UI thread. Upstream decoded
+the property name from native memory once per comparison (about 30 times per
+event) and built an unused log string for every event; the patch decodes the
+name once per event and builds the log message only for a failed event.
+
 Pubspec changes for the workspace: `resolution: workspace`, the SDK constraint,
 no `screenshots:` and no `dev_dependencies`. `example/`, `test/` and
 `screenshots/` are left out.

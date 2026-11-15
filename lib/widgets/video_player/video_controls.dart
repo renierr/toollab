@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/value_listenable_selector.dart';
 
 import 'video_backend.dart';
 import 'video_control_menus.dart';
@@ -8,7 +10,12 @@ import 'video_player_types.dart';
 import 'video_seek_bar.dart';
 
 class VideoControls extends StatelessWidget {
+  /// Without position and buffer; the seek bar follows [playback] itself.
   final VideoPlaybackState state;
+  final ValueListenable<VideoPlaybackState> playback;
+
+  /// False while hidden, so the seek bar stops following playback.
+  final bool tracking;
   final String? title;
   final FocusNode playFocusNode;
   final List<VideoPlayerAction> actions;
@@ -46,6 +53,8 @@ class VideoControls extends StatelessWidget {
   const VideoControls({
     super.key,
     required this.state,
+    required this.playback,
+    required this.tracking,
     required this.title,
     required this.playFocusNode,
     required this.actions,
@@ -154,10 +163,9 @@ class VideoControls extends StatelessWidget {
                   else
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: VideoSeekBar(
-                        position: state.position,
-                        duration: state.duration,
-                        buffered: state.buffered,
+                      child: _TrackedSeekBar(
+                        playback: playback,
+                        tracking: tracking,
                         onSeekStart: onSeekStart,
                         onSeek: onSeek,
                       ),
@@ -281,6 +289,39 @@ class VideoControls extends StatelessWidget {
     30 => Icons.forward_30,
     _ => Icons.fast_forward,
   };
+}
+
+class _TrackedSeekBar extends StatelessWidget {
+  final ValueListenable<VideoPlaybackState> playback;
+  final bool tracking;
+  final VoidCallback onSeekStart;
+  final ValueChanged<Duration> onSeek;
+
+  const _TrackedSeekBar({
+    required this.playback,
+    required this.tracking,
+    required this.onSeekStart,
+    required this.onSeek,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableSelector<VideoPlaybackState, VideoPlaybackState?>(
+      valueListenable: playback,
+      // A constant selection keeps the hidden bar from rebuilding.
+      selector: (s) => tracking ? s : null,
+      builder: (context, _, _) {
+        final s = playback.value;
+        return VideoSeekBar(
+          position: s.position,
+          duration: s.duration,
+          buffered: s.buffered,
+          onSeekStart: onSeekStart,
+          onSeek: onSeek,
+        );
+      },
+    );
+  }
 }
 
 /// A shade behind one control bar, dark at the screen edge and clear toward the

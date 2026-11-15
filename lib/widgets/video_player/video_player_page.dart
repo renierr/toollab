@@ -10,6 +10,7 @@ import 'package:tool_lab/pages/video_settings_page.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
+import 'package:tool_lab/widgets/value_listenable_selector.dart';
 
 import 'video_backend.dart';
 import 'video_controls.dart';
@@ -708,8 +709,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
               onTogglePlay: () => unawaited(_togglePlay()),
               onSeekBy: (delta) => unawaited(_seekBy(delta)),
               surface: (context, zoom, pan) =>
-                  ValueListenableBuilder<VideoPlaybackState>(
+                  ValueListenableSelector<
+                    VideoPlaybackState,
+                    VideoPlaybackState
+                  >(
                     valueListenable: _backend.state,
+                    selector: (s) => s.withoutProgress(),
                     builder: (context, state, view) => VideoSurface(
                       frameKey: _frameKey,
                       state: state,
@@ -736,72 +741,83 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                             ignoring: !_controlsVisible,
                             child: ExcludeFocus(
                               excluding: !_controlsVisible,
-                              child: ValueListenableBuilder<VideoPlaybackState>(
-                                valueListenable: _backend.state,
-                                builder: (context, state, _) => VideoControls(
-                                  state: state,
-                                  title: _title,
-                                  playFocusNode: _playFocus,
-                                  actions: _actions,
-                                  onTogglePlay: _togglePlay,
-                                  onSeekStart: () => _hideTimer?.cancel(),
-                                  onSeek: _keepingControls(
-                                    (position) => unawaited(_seekTo(position)),
-                                  ),
-                                  onSeekBy: _keepingControls(
-                                    (delta) => unawaited(_seekBy(delta)),
-                                  ),
-                                  onToggleMute: _toggleMute,
-                                  onClose: () =>
-                                      Navigator.of(context).maybePop(),
-                                  seekStep: _seekStep,
-                                  onCopyFrame: () {
-                                    unawaited(_copyFrame());
-                                    _scheduleHide();
-                                  },
-                                  onPictureInPicture: _pipSupported
-                                      ? () => unawaited(_enterPip())
-                                      : null,
-                                  live: widget.live,
-                                  qualities: widget.qualities,
-                                  source: _source,
-                                  onQuality: _keepingControls(
-                                    (q) => unawaited(_switchQuality(q)),
-                                  ),
-                                  speeds: _speeds,
-                                  onSpeed: _keepingControls(
-                                    (speed) => unawaited(_setSpeed(speed)),
-                                  ),
-                                  onAudioTrack: _keepingControls(
-                                    (id) => unawaited(
-                                      _backend.selectAudioTrack(id),
+                              child:
+                                  ValueListenableSelector<
+                                    VideoPlaybackState,
+                                    VideoPlaybackState
+                                  >(
+                                    valueListenable: _backend.state,
+                                    selector: (s) => s.withoutProgress(),
+                                    builder: (context, state, _) => VideoControls(
+                                      state: state,
+                                      playback: _backend.state,
+                                      tracking: _controlsVisible,
+                                      title: _title,
+                                      playFocusNode: _playFocus,
+                                      actions: _actions,
+                                      onTogglePlay: _togglePlay,
+                                      onSeekStart: () => _hideTimer?.cancel(),
+                                      onSeek: _keepingControls(
+                                        (position) =>
+                                            unawaited(_seekTo(position)),
+                                      ),
+                                      onSeekBy: _keepingControls(
+                                        (delta) => unawaited(_seekBy(delta)),
+                                      ),
+                                      onToggleMute: _toggleMute,
+                                      onClose: () =>
+                                          Navigator.of(context).maybePop(),
+                                      seekStep: _seekStep,
+                                      onCopyFrame: () {
+                                        unawaited(_copyFrame());
+                                        _scheduleHide();
+                                      },
+                                      onPictureInPicture: _pipSupported
+                                          ? () => unawaited(_enterPip())
+                                          : null,
+                                      live: widget.live,
+                                      qualities: widget.qualities,
+                                      source: _source,
+                                      onQuality: _keepingControls(
+                                        (q) => unawaited(_switchQuality(q)),
+                                      ),
+                                      speeds: _speeds,
+                                      onSpeed: _keepingControls(
+                                        (speed) => unawaited(_setSpeed(speed)),
+                                      ),
+                                      onAudioTrack: _keepingControls(
+                                        (id) => unawaited(
+                                          _backend.selectAudioTrack(id),
+                                        ),
+                                      ),
+                                      onSubtitleTrack:
+                                          _keepingControls<String?>(
+                                            (id) => unawaited(
+                                              _backend.selectSubtitleTrack(id),
+                                            ),
+                                          ),
+                                      onLoadSubtitles: () =>
+                                          unawaited(_loadSubtitles()),
+                                      onSync: _openSync,
+                                      onInfo: _showInfo,
+                                      onSettings: () =>
+                                          unawaited(_openSettings()),
+                                      playlistLabel: _playlist.isEmpty
+                                          ? null
+                                          : '${_playlistIndex + 1} / ${_playlist.length}',
+                                      onPrevious: _playlistIndex > 0
+                                          ? () => unawaited(
+                                              _playAt(_playlistIndex - 1),
+                                            )
+                                          : null,
+                                      onNext:
+                                          _playlistIndex < _playlist.length - 1
+                                          ? () => unawaited(
+                                              _playAt(_playlistIndex + 1),
+                                            )
+                                          : null,
                                     ),
                                   ),
-                                  onSubtitleTrack: _keepingControls<String?>(
-                                    (id) => unawaited(
-                                      _backend.selectSubtitleTrack(id),
-                                    ),
-                                  ),
-                                  onLoadSubtitles: () =>
-                                      unawaited(_loadSubtitles()),
-                                  onSync: _openSync,
-                                  onInfo: _showInfo,
-                                  onSettings: () => unawaited(_openSettings()),
-                                  playlistLabel: _playlist.isEmpty
-                                      ? null
-                                      : '${_playlistIndex + 1} / ${_playlist.length}',
-                                  onPrevious: _playlistIndex > 0
-                                      ? () => unawaited(
-                                          _playAt(_playlistIndex - 1),
-                                        )
-                                      : null,
-                                  onNext: _playlistIndex < _playlist.length - 1
-                                      ? () => unawaited(
-                                          _playAt(_playlistIndex + 1),
-                                        )
-                                      : null,
-                                ),
-                              ),
                             ),
                           ),
                         ),

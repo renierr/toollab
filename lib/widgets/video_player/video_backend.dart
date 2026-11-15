@@ -106,6 +106,58 @@ class VideoPlaybackState {
     this.subtitleTracks = const [],
     this.error,
   });
+
+  /// Everything but [position] and [buffered], which change on every frame.
+  VideoPlaybackState withoutProgress() => VideoPlaybackState(
+    initialized: initialized,
+    playing: playing,
+    buffering: buffering,
+    completed: completed,
+    duration: duration,
+    aspectRatio: aspectRatio,
+    videoWidth: videoWidth,
+    volume: volume,
+    speed: speed,
+    audioTracks: audioTracks,
+    subtitleTracks: subtitleTracks,
+    error: error,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is VideoPlaybackState &&
+      other.initialized == initialized &&
+      other.playing == playing &&
+      other.buffering == buffering &&
+      other.completed == completed &&
+      other.position == position &&
+      other.duration == duration &&
+      other.buffered == buffered &&
+      other.aspectRatio == aspectRatio &&
+      other.videoWidth == videoWidth &&
+      other.volume == volume &&
+      other.speed == speed &&
+      listEquals(other.audioTracks, audioTracks) &&
+      listEquals(other.subtitleTracks, subtitleTracks) &&
+      other.error == error;
+
+  @override
+  int get hashCode => Object.hash(
+    initialized,
+    playing,
+    buffering,
+    completed,
+    position,
+    duration,
+    buffered,
+    aspectRatio,
+    videoWidth,
+    volume,
+    speed,
+    Object.hashAll(audioTracks),
+    Object.hashAll(subtitleTracks),
+    error,
+  );
 }
 
 /// One playback engine per platform behind a single surface: ExoPlayer (via
