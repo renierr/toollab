@@ -119,7 +119,7 @@ Tool state providers declared via `stateProviders` are auto-collected into `main
 - Use `FileSaveHelper` (`lib/helpers/file_save_helper.dart`) to download/export files (such as database backups, reports, or JSON exports). For cross-platform file saving architecture, platform-specific providers, and implementation details, see [AGENTS.detail.md](AGENTS.detail.md#2-database-backup-export--file-downloading-specifications).
 
 ### 8. Launcher Shortcuts & App Drawer Icons (Android)
-For every tool added to the app, launcher entry points must be maintained. See [`docs/creating-a-tool.md`](docs/creating-a-tool.md) Step 4 for the `AndroidManifest.xml` activity-alias, `MainActivity.kt` and `ShortcutHelper.kt` wiring.
+For every tool added to the app, launcher entry points must be maintained. Each tool needs an `AndroidManifest.xml` activity-alias; `MainActivity.kt` and `ShortcutHelper.kt` derive the alias and route from the tool ID, so they need no per-tool change. See [`docs/creating-a-tool.md`](docs/creating-a-tool.md) Step 4.
 
 ### 9. Background Tasks (Android)
 Work that must happen while the app is closed goes through `BackgroundTaskService` — never add a scheduler, plugin or timer of your own. See [`docs/creating-a-tool.md`](docs/creating-a-tool.md) §9 for the registration pattern and the constraints on a scheduled run.
