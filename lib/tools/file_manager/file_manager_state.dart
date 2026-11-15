@@ -29,6 +29,8 @@ import 'package:tool_lab/tools/file_manager/services/file_manager_entry_loaders.
 import 'package:tool_lab/tools/file_manager/services/file_manager_image_scanner.dart';
 import 'package:tool_lab/tools/file_manager/services/file_manager_smb_transfer.dart';
 import 'package:tool_lab/tools/file_manager/services/file_manager_system_loader.dart';
+import 'package:tool_lab/widgets/video_player/video_backend.dart';
+import 'package:tool_lab/widgets/video_player/video_player_page.dart';
 
 enum FileManagerLocationType { local, ftp, smb }
 
@@ -61,6 +63,7 @@ class FileManagerState extends ChangeNotifier {
   static const _imageTileSizeKey = 'image_tile_size';
   static const _cropImagePreviewsKey = 'crop_image_previews';
   static const _openToolPrefix = 'open_tool_';
+  static const _openChooserId = 'chooser';
   static const _secureStorage = FlutterSecureStorage();
 
   List<FileManagerEntry> _entries = [];
@@ -345,6 +348,11 @@ class FileManagerState extends ChangeNotifier {
   String? openToolId(FileManagerOpenCategory category) =>
       _openToolIds[category];
 
+  static String? _defaultOpenToolId(FileManagerOpenCategory category) =>
+      category == FileManagerOpenCategory.video && VideoBackend.isSupported
+      ? VideoPlayerPage.preferenceId
+      : null;
+
   ValueListenable<FileStat?> metadataFor(FileManagerEntry entry) =>
       _entryLoaders.metadataFor(
         entry,
@@ -444,7 +452,12 @@ class FileManagerState extends ChangeNotifier {
             .clamp(minImageTileSize, maxImageTileSize)
             .toDouble();
     for (final category in FileManagerOpenCategory.values) {
-      _openToolIds[category] = settings['$_openToolPrefix${category.name}'];
+      final stored = settings['$_openToolPrefix${category.name}'];
+      _openToolIds[category] = switch (stored) {
+        null => _defaultOpenToolId(category),
+        _openChooserId => null,
+        _ => stored,
+      };
     }
     await _loadDrives();
     _hasAllFilesAccess = await FileManagerStorageAccess.hasAllFilesAccess();
@@ -1620,7 +1633,7 @@ class FileManagerState extends ChangeNotifier {
   ) async {
     _openToolIds[category] = toolId;
     final key = '$_openToolPrefix${category.name}';
-    if (toolId == null) {
+    if (toolId == _defaultOpenToolId(category)) {
       await DatabaseService.instance.deleteSetting(
         FileManagerTool.config.id,
         key,
@@ -1629,7 +1642,7 @@ class FileManagerState extends ChangeNotifier {
       await DatabaseService.instance.setSetting(
         FileManagerTool.config.id,
         key,
-        toolId,
+        toolId ?? _openChooserId,
       );
     }
     notifyListeners();
