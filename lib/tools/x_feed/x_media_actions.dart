@@ -12,6 +12,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 import 'package:tool_lab/widgets/video_player/video_backend.dart';
 import 'package:tool_lab/widgets/video_player/video_player_page.dart';
+import 'package:tool_lab/widgets/video_player/video_playlist.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'api/x_api.dart';
@@ -50,30 +51,54 @@ class XMediaActions {
       return;
     }
     final l10n = AppLocalizations.of(context);
+    final quoted = post.quoted;
+    VideoPlaylistItem playlistItem(int i) {
+      final clip = media[i];
+      final owner = i < post.media.length || quoted == null ? post : quoted;
+      return VideoPlaylistItem(
+        source: Uri.parse(clip.videoUrl!),
+        title: '@${owner.author.screenName}',
+        loop: clip.type == XMediaType.gif,
+        actions: _videoActions(l10n, owner, clip),
+      );
+    }
+
+    final playlist = [
+      for (var i = 0; i < media.length; i++)
+        if (media[i].videoUrl != null) playlistItem(i),
+    ];
+    final current = playlistItem(index);
     await VideoPlayerPage.open(
       context,
-      source: Uri.parse(video),
-      title: '@${post.author.screenName}',
-      loop: item.type == XMediaType.gif,
-      actions: [
-        VideoPlayerAction(
-          icon: Icons.share_outlined,
-          label: l10n.xFeedShareMedia,
-          onPressed: (c) => shareMedia(c, post, item),
-        ),
-        VideoPlayerAction(
-          icon: Icons.download_outlined,
-          label: l10n.xFeedSaveMedia,
-          onPressed: (c) => saveMedia(c, post, item),
-        ),
-        VideoPlayerAction(
-          icon: Icons.link,
-          label: l10n.xFeedCopyMediaLink,
-          onPressed: (c) => copyText(c, video, l10n.xFeedLinkCopied),
-        ),
-      ],
+      source: current.source,
+      title: current.title,
+      loop: current.loop,
+      actions: current.actions!,
+      playlist: playlist,
     );
   }
+
+  static List<VideoPlayerAction> _videoActions(
+    AppLocalizations l10n,
+    XPost post,
+    XMedia item,
+  ) => [
+    VideoPlayerAction(
+      icon: Icons.share_outlined,
+      label: l10n.xFeedShareMedia,
+      onPressed: (c) => shareMedia(c, post, item),
+    ),
+    VideoPlayerAction(
+      icon: Icons.download_outlined,
+      label: l10n.xFeedSaveMedia,
+      onPressed: (c) => saveMedia(c, post, item),
+    ),
+    VideoPlayerAction(
+      icon: Icons.link,
+      label: l10n.xFeedCopyMediaLink,
+      onPressed: (c) => copyText(c, item.videoUrl!, l10n.xFeedLinkCopied),
+    ),
+  ];
 
   static Future<void> openBroadcast(BuildContext context, XPost post) async {
     final broadcast = post.broadcast;

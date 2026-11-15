@@ -57,6 +57,9 @@ class VideoPlayerPage extends StatefulWidget {
   /// Offers previous / next over the other videos in a local file's folder.
   final bool browseFolder;
 
+  /// Offers previous / next over these; [source] should be one of them.
+  final List<VideoPlaylistItem> playlist;
+
   const VideoPlayerPage({
     super.key,
     required this.source,
@@ -68,6 +71,7 @@ class VideoPlayerPage extends StatefulWidget {
     this.settings = const VideoPlayerSettings(),
     this.resumeStore,
     this.browseFolder = false,
+    this.playlist = const [],
   });
 
   /// Loads the settings first: the backend needs them before it starts.
@@ -81,6 +85,7 @@ class VideoPlayerPage extends StatefulWidget {
     bool live = false,
     VideoResumeStore? resumeStore,
     bool browseFolder = false,
+    List<VideoPlaylistItem> playlist = const [],
   }) async {
     final settings = await SettingsService.videoPlayerSettings();
     if (!context.mounted) return;
@@ -96,6 +101,7 @@ class VideoPlayerPage extends StatefulWidget {
           settings: settings,
           resumeStore: resumeStore,
           browseFolder: browseFolder,
+          playlist: playlist,
         ),
       ),
     );
@@ -112,6 +118,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   late VideoBackend _backend = _createBackend();
   late Uri _source = widget.source;
   late String? _title = widget.title;
+  late bool _loop = widget.loop;
+  late List<VideoPlayerAction> _actions = widget.actions;
   List<VideoPlaylistItem> _playlist = const [];
   int _playlistIndex = -1;
   late final VideoProgressSaver? _saver =
@@ -143,6 +151,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   @override
   void initState() {
     super.initState();
+    _usePlaylist();
     unawaited(_open());
     _backend.state.addListener(_onState);
     if (widget.browseFolder) unawaited(_scanFolder());
@@ -174,11 +183,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Future<void> _open() async {
     final start = await _resumeStart(widget.source);
     if (!mounted) return;
-    final opening = _backend.open(
-      widget.source,
-      loop: widget.loop,
-      start: start,
-    );
+    final opening = _backend.open(widget.source, loop: _loop, start: start);
     // Android builds its view from the controller that open() just created.
     setState(() {});
     await opening;
@@ -211,6 +216,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     });
   }
 
+  void _usePlaylist() {
+    final items = widget.playlist;
+    if (items.length < 2) return;
+    final index = items.indexWhere((i) => i.source == widget.source);
+    if (index < 0) return;
+    _playlist = items;
+    _playlistIndex = index;
+  }
+
   Future<void> _playAt(int index) async {
     if (index < 0 || index >= _playlist.length || index == _playlistIndex) {
       return;
@@ -222,6 +236,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     setState(() {
       _playlistIndex = index;
       _title = item.title;
+      _loop = item.loop;
+      _actions = item.actions ?? widget.actions;
       _subtitleDelay = Duration.zero;
       _audioDelay = Duration.zero;
     });
@@ -313,7 +329,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     final next = _createBackend();
     // Opening first: the Android backend builds its view from the controller
     // that open() creates synchronously.
-    final opening = next.open(source, loop: widget.loop, start: position);
+    final opening = next.open(source, loop: _loop, start: position);
     next.state.addListener(_onState);
     setState(() {
       _source = source;
@@ -726,7 +742,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                                   state: state,
                                   title: _title,
                                   playFocusNode: _playFocus,
-                                  actions: widget.actions,
+                                  actions: _actions,
                                   onTogglePlay: _togglePlay,
                                   onSeekStart: () => _hideTimer?.cancel(),
                                   onSeek: _keepingControls(

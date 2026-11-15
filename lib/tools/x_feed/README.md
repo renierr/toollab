@@ -13,7 +13,7 @@ on x.com never reaches this UI at all.
 | Never autoplay | Nothing plays until it is opened |
 | Video buttons (copy link, download mp4) | Post menu and player: share, save, copy video link |
 | Copy image | Post menu and photo viewer: image bytes go to the clipboard |
-| Keyboard: arrows, Space, F | Left/right (keyboard) or up/down step post to post; Down enters a post's media, Space or Play opens it, OK opens the thread, long OK opens the menu; letter keys below |
+| Keyboard: arrows, Space, F | Left/right (keyboard) or up/down step post to post; Down enters a post's media (quoted media included), where left/right walk the tiles and step on to the next post past the last; Space or Play opens it, and a post's other videos are previous / next in the player; OK opens the thread, long OK opens the menu; letter keys below |
 
 ## How it talks to X
 

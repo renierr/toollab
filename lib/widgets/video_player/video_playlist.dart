@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:tool_lab/helpers/debug_log.dart';
 
+import 'video_player_types.dart';
+
 const List<String> videoFileExtensions = [
   'mp4',
   'm4v',
@@ -24,8 +26,17 @@ const List<String> videoFileExtensions = [
 class VideoPlaylistItem {
   final Uri source;
   final String title;
+  final bool loop;
 
-  const VideoPlaylistItem({required this.source, required this.title});
+  /// Replaces the page's actions while this item plays.
+  final List<VideoPlayerAction>? actions;
+
+  const VideoPlaylistItem({
+    required this.source,
+    required this.title,
+    this.loop = false,
+    this.actions,
+  });
 }
 
 /// The videos in the folder of a local file, sorted by name; empty otherwise.

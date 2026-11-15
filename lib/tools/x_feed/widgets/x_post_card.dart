@@ -57,10 +57,15 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
   final FocusNode _cardNode = FocusNode(debugLabel: 'XPostCard');
   late List<FocusNode> _mediaNodes = _createMediaNodes();
 
+  /// The post's own tiles come first, then the quoted post's.
   List<FocusNode> _createMediaNodes() => [
-    for (var i = 0; i < widget.post.media.length.clamp(0, 4); i++)
+    for (var i = 0; i < _ownMediaCount + _quotedMediaCount; i++)
       FocusNode(debugLabel: 'XPostMedia$i'),
   ];
+
+  int get _ownMediaCount => widget.post.media.length.clamp(0, 4);
+  int get _quotedMediaCount =>
+      (widget.post.quoted?.media.length ?? 0).clamp(0, 4);
 
   @override
   void initState() {
@@ -101,8 +106,8 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
 
   void _menu() => unawaited(XPostMenu.show(context, widget.post));
 
-  void _focusFirstMedia() {
-    final target = _mediaNodes.first;
+  void _focusMedia(int index) {
+    final target = _mediaNodes[index];
     target.requestFocus();
     final context = target.context;
     if (context == null || !context.mounted) return;
@@ -117,16 +122,32 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
     final key = event.logicalKey;
     if (_mediaNodes.isNotEmpty && !HardwareKeyboard.instance.isShiftPressed) {
       if (key == LogicalKeyboardKey.arrowDown && _cardNode.hasPrimaryFocus) {
-        _focusFirstMedia();
+        _focusMedia(0);
         return KeyEventResult.handled;
       }
-      if (key == LogicalKeyboardKey.arrowUp) {
+      final focused = _mediaNodes.indexWhere((n) => n.hasPrimaryFocus);
+      // Left / right walk the tiles in order; past either end they step posts.
+      if (focused >= 0 &&
+          key == LogicalKeyboardKey.arrowRight &&
+          focused + 1 < _mediaNodes.length) {
+        _focusMedia(focused + 1);
+        return KeyEventResult.handled;
+      }
+      if (focused > 0 && key == LogicalKeyboardKey.arrowLeft) {
+        _focusMedia(focused - 1);
+        return KeyEventResult.handled;
+      }
+      if (focused >= 0 && key == LogicalKeyboardKey.arrowUp) {
+        final own = _ownMediaCount;
+        final inQuoted = focused >= own;
         // The top row is tile 0 and tile 1 in every grid layout.
-        for (var i = 0; i < _mediaNodes.length && i < 2; i++) {
-          if (_mediaNodes[i].hasPrimaryFocus) {
+        if ((inQuoted ? focused - own : focused) < 2) {
+          if (inQuoted && own > 0) {
+            _focusMedia(0);
+          } else {
             _cardNode.requestFocus();
-            return KeyEventResult.handled;
           }
+          return KeyEventResult.handled;
         }
       }
     }
@@ -242,23 +263,19 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
             child: XMediaGrid(
               media: post.media,
               maxHeight: widget.focal ? 640 : 420,
-              focusNodes: _mediaNodes,
+              focusNodes: _mediaNodes.sublist(0, _ownMediaCount),
               onOpen: (i) => XMediaActions.openMedia(context, post, i),
             ),
           ),
         if (quoted != null)
           Padding(
             padding: const EdgeInsets.only(top: 10),
-            child: ExcludeFocus(
-              child: XQuotedPost(
-                post: quoted,
-                onTap: () => XNavigation.openPost(context, quoted),
-                onOpenMedia: (i) => XMediaActions.openMedia(
-                  context,
-                  post,
-                  post.media.length + i,
-                ),
-              ),
+            child: XQuotedPost(
+              post: quoted,
+              mediaFocusNodes: _mediaNodes.sublist(_ownMediaCount),
+              onTap: () => XNavigation.openPost(context, quoted),
+              onOpenMedia: (i) =>
+                  XMediaActions.openMedia(context, post, post.media.length + i),
             ),
           ),
         if (broadcast != null)

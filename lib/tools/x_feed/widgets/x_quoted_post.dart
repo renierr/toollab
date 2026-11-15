@@ -10,11 +10,15 @@ class XQuotedPost extends StatelessWidget {
   final VoidCallback onTap;
   final ValueChanged<int> onOpenMedia;
 
+  /// The only focus stops inside; the quote itself opens by tap.
+  final List<FocusNode> mediaFocusNodes;
+
   const XQuotedPost({
     super.key,
     required this.post,
     required this.onTap,
     required this.onOpenMedia,
+    required this.mediaFocusNodes,
   });
 
   @override
@@ -28,6 +32,7 @@ class XQuotedPost extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
+        canRequestFocus: false,
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -58,6 +63,7 @@ class XQuotedPost extends StatelessWidget {
                     media: post.media,
                     onOpen: onOpenMedia,
                     maxHeight: 240,
+                    focusNodes: mediaFocusNodes,
                   ),
                 ),
             ],
