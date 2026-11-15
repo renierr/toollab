@@ -26008,6 +26008,12 @@ abstract class AppLocalizations {
   /// **'Play/pause anywhere'**
   String get videoSettingsDoubleTapPlayPause;
 
+  /// No description provided for @videoSettingsDoubleTapOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off (tap shows the controls without delay)'**
+  String get videoSettingsDoubleTapOff;
+
   /// No description provided for @videoSettingsPip.
   ///
   /// In en, this message translates to:
@@ -26068,6 +26074,18 @@ abstract class AppLocalizations {
   /// **'Swipe up or down on the video'**
   String get videoSettingsSwipeVolumeHint;
 
+  /// No description provided for @videoSettingsSwipeBrightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe for brightness'**
+  String get videoSettingsSwipeBrightness;
+
+  /// No description provided for @videoSettingsSwipeBrightnessHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up or down on the left half; volume moves to the right half'**
+  String get videoSettingsSwipeBrightnessHint;
+
   /// No description provided for @videoSettingsVolumeTarget.
   ///
   /// In en, this message translates to:
@@ -26085,6 +26103,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Player volume only'**
   String get videoSettingsVolumePlayer;
+
+  /// No description provided for @videoSettingsSectionGestures.
+  ///
+  /// In en, this message translates to:
+  /// **'Gestures'**
+  String get videoSettingsSectionGestures;
+
+  /// No description provided for @videoSettingsSectionPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get videoSettingsSectionPlayback;
+
+  /// No description provided for @videoSettingsSectionSubtitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles & audio'**
+  String get videoSettingsSectionSubtitles;
+
+  /// No description provided for @videoSettingsSectionSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get videoSettingsSectionSystem;
+
+  /// No description provided for @videoSettingsArrowSeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow key step'**
+  String get videoSettingsArrowSeek;
+
+  /// No description provided for @videoSettingsArrowSeekHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Left and right arrow keys and the TV remote'**
+  String get videoSettingsArrowSeekHint;
+
+  /// No description provided for @videoSettingsHideDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide controls after'**
+  String get videoSettingsHideDelay;
+
+  /// No description provided for @videoSettingsSubtitleSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle size'**
+  String get videoSettingsSubtitleSize;
+
+  /// No description provided for @videoSettingsSubtitleBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle background'**
+  String get videoSettingsSubtitleBackground;
+
+  /// No description provided for @videoSettingsSubtitleBackgroundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark box behind the text instead of an outline'**
+  String get videoSettingsSubtitleBackgroundHint;
+
+  /// No description provided for @videoSettingsSidecar.
+  ///
+  /// In en, this message translates to:
+  /// **'Load subtitle files automatically'**
+  String get videoSettingsSidecar;
+
+  /// No description provided for @videoSettingsSidecarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle files next to the video with the same name, like movie.en.srt'**
+  String get videoSettingsSidecarHint;
+
+  /// No description provided for @videoSettingsAudioLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred audio language'**
+  String get videoSettingsAudioLanguage;
+
+  /// No description provided for @videoSettingsSubtitleLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred subtitle language'**
+  String get videoSettingsSubtitleLanguage;
+
+  /// No description provided for @videoSettingsLanguageDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'As in the file'**
+  String get videoSettingsLanguageDefault;
+
+  /// No description provided for @videoSettingsLongPressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press the video to play at 2× while held, pinch to zoom'**
+  String get videoSettingsLongPressHint;
+
+  /// No description provided for @videoSettingsReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to defaults'**
+  String get videoSettingsReset;
+
+  /// No description provided for @videoSettingsResetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all video player settings to their defaults?'**
+  String get videoSettingsResetMessage;
+
+  /// No description provided for @videoSettingsPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} %'**
+  String videoSettingsPercent(int percent);
 
   /// No description provided for @videoPlayerSpeed.
   ///
@@ -26145,6 +26277,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent} %'**
   String videoPlayerVolume(int percent);
+
+  /// No description provided for @videoPlayerBrightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness {percent} %'**
+  String videoPlayerBrightness(int percent);
+
+  /// No description provided for @videoPlayerZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom {percent} %'**
+  String videoPlayerZoom(int percent);
+
+  /// No description provided for @videoPlayerHoldSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'{speed}× while held'**
+  String videoPlayerHoldSpeed(int speed);
 
   /// No description provided for @videoPlayerInfo.
   ///

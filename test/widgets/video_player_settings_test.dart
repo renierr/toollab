@@ -7,6 +7,8 @@ void main() {
       'video_skip_seconds': '7',
       'video_default_speed': 'fast',
       'video_double_tap': 'unknown',
+      'video_hide_delay_seconds': '4',
+      'video_audio_language': 'xx',
     });
     expect(settings.skipSeconds, 10);
     expect(settings.defaultSpeed, 1);
@@ -17,29 +19,65 @@ void main() {
     expect(settings.swipeSkip, isTrue);
     expect(settings.swipeVolume, isTrue);
     expect(settings.volumeTarget, VideoVolumeTarget.system);
+    expect(settings.swipeBrightness, isTrue);
+    expect(settings.arrowSeekSeconds, 5);
+    expect(settings.hideDelaySeconds, 3);
+    expect(settings.subtitleScale, 1);
+    expect(settings.subtitleBackground, isTrue);
+    expect(settings.sidecarSubtitles, isTrue);
+    expect(settings.audioLanguage, '');
+    expect(settings.subtitleLanguage, '');
   });
 
   test('stored values survive a round trip', () {
     const stored = VideoPlayerSettings(
       skipSeconds: 30,
       defaultSpeed: 1.5,
-      doubleTap: VideoDoubleTap.playPause,
+      doubleTap: VideoDoubleTap.off,
       pipOnLeave: false,
       mediaControls: false,
       hardwareDecoding: false,
       swipeSkip: false,
       swipeVolume: false,
       volumeTarget: VideoVolumeTarget.player,
+      swipeBrightness: false,
+      arrowSeekSeconds: 15,
+      hideDelaySeconds: 8,
+      subtitleScale: 1.5,
+      subtitleBackground: false,
+      sidecarSubtitles: false,
+      audioLanguage: 'ja',
+      subtitleLanguage: 'de',
     );
     final loaded = VideoPlayerSettings.fromSettings(stored.toSettings());
     expect(loaded.skipSeconds, 30);
     expect(loaded.defaultSpeed, 1.5);
-    expect(loaded.doubleTap, VideoDoubleTap.playPause);
+    expect(loaded.doubleTap, VideoDoubleTap.off);
     expect(loaded.pipOnLeave, isFalse);
     expect(loaded.mediaControls, isFalse);
     expect(loaded.hardwareDecoding, isFalse);
     expect(loaded.swipeSkip, isFalse);
     expect(loaded.swipeVolume, isFalse);
     expect(loaded.volumeTarget, VideoVolumeTarget.player);
+    expect(loaded.swipeBrightness, isFalse);
+    expect(loaded.arrowSeekSeconds, 15);
+    expect(loaded.hideDelaySeconds, 8);
+    expect(loaded.subtitleScale, 1.5);
+    expect(loaded.subtitleBackground, isFalse);
+    expect(loaded.sidecarSubtitles, isFalse);
+    expect(loaded.audioLanguage, 'ja');
+    expect(loaded.subtitleLanguage, 'de');
+  });
+
+  test('track languages match in both code forms', () {
+    expect(videoLanguageMatches('en', 'en'), isTrue);
+    expect(videoLanguageMatches('eng', 'en'), isTrue);
+    expect(videoLanguageMatches('ger', 'de'), isTrue);
+    expect(videoLanguageMatches('en-US', 'en'), isTrue);
+    expect(videoLanguageMatches('fre', 'en'), isFalse);
+    expect(videoLanguageMatches(null, 'en'), isFalse);
+    expect(videoLanguageMatches('en', ''), isFalse);
+    expect(videoLanguageCodes('de'), ['de', 'ger', 'deu']);
+    expect(videoLanguageCodes(''), isEmpty);
   });
 }

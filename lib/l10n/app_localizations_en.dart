@@ -14775,6 +14775,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoSettingsDoubleTapPlayPause => 'Play/pause anywhere';
 
   @override
+  String get videoSettingsDoubleTapOff =>
+      'Off (tap shows the controls without delay)';
+
+  @override
   String get videoSettingsPip => 'Picture-in-picture when leaving';
 
   @override
@@ -14808,6 +14812,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoSettingsSwipeVolumeHint => 'Swipe up or down on the video';
 
   @override
+  String get videoSettingsSwipeBrightness => 'Swipe for brightness';
+
+  @override
+  String get videoSettingsSwipeBrightnessHint =>
+      'Swipe up or down on the left half; volume moves to the right half';
+
+  @override
   String get videoSettingsVolumeTarget => 'Volume swipe changes';
 
   @override
@@ -14815,6 +14826,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoSettingsVolumePlayer => 'Player volume only';
+
+  @override
+  String get videoSettingsSectionGestures => 'Gestures';
+
+  @override
+  String get videoSettingsSectionPlayback => 'Playback';
+
+  @override
+  String get videoSettingsSectionSubtitles => 'Subtitles & audio';
+
+  @override
+  String get videoSettingsSectionSystem => 'System';
+
+  @override
+  String get videoSettingsArrowSeek => 'Arrow key step';
+
+  @override
+  String get videoSettingsArrowSeekHint =>
+      'Left and right arrow keys and the TV remote';
+
+  @override
+  String get videoSettingsHideDelay => 'Hide controls after';
+
+  @override
+  String get videoSettingsSubtitleSize => 'Subtitle size';
+
+  @override
+  String get videoSettingsSubtitleBackground => 'Subtitle background';
+
+  @override
+  String get videoSettingsSubtitleBackgroundHint =>
+      'Dark box behind the text instead of an outline';
+
+  @override
+  String get videoSettingsSidecar => 'Load subtitle files automatically';
+
+  @override
+  String get videoSettingsSidecarHint =>
+      'Subtitle files next to the video with the same name, like movie.en.srt';
+
+  @override
+  String get videoSettingsAudioLanguage => 'Preferred audio language';
+
+  @override
+  String get videoSettingsSubtitleLanguage => 'Preferred subtitle language';
+
+  @override
+  String get videoSettingsLanguageDefault => 'As in the file';
+
+  @override
+  String get videoSettingsLongPressHint =>
+      'Long-press the video to play at 2× while held, pinch to zoom';
+
+  @override
+  String get videoSettingsReset => 'Reset to defaults';
+
+  @override
+  String get videoSettingsResetMessage =>
+      'Reset all video player settings to their defaults?';
+
+  @override
+  String videoSettingsPercent(int percent) {
+    return '$percent %';
+  }
 
   @override
   String get videoPlayerSpeed => 'Playback speed';
@@ -14848,6 +14923,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String videoPlayerVolume(int percent) {
     return '$percent %';
+  }
+
+  @override
+  String videoPlayerBrightness(int percent) {
+    return 'Brightness $percent %';
+  }
+
+  @override
+  String videoPlayerZoom(int percent) {
+    return 'Zoom $percent %';
+  }
+
+  @override
+  String videoPlayerHoldSpeed(int speed) {
+    return '$speed× while held';
   }
 
   @override

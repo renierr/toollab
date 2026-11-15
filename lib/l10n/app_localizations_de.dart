@@ -14888,6 +14888,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get videoSettingsDoubleTapPlayPause => 'Überall starten/pausieren';
 
   @override
+  String get videoSettingsDoubleTapOff =>
+      'Aus (Tippen zeigt die Steuerung ohne Verzögerung)';
+
+  @override
   String get videoSettingsPip => 'Bild-im-Bild beim Verlassen';
 
   @override
@@ -14923,6 +14927,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Auf dem Video nach oben oder unten wischen';
 
   @override
+  String get videoSettingsSwipeBrightness => 'Wischen für Helligkeit';
+
+  @override
+  String get videoSettingsSwipeBrightnessHint =>
+      'Auf der linken Hälfte nach oben oder unten wischen; Lautstärke wandert auf die rechte Hälfte';
+
+  @override
   String get videoSettingsVolumeTarget => 'Lautstärke-Wischen ändert';
 
   @override
@@ -14930,6 +14941,70 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get videoSettingsVolumePlayer => 'Nur Player-Lautstärke';
+
+  @override
+  String get videoSettingsSectionGestures => 'Gesten';
+
+  @override
+  String get videoSettingsSectionPlayback => 'Wiedergabe';
+
+  @override
+  String get videoSettingsSectionSubtitles => 'Untertitel & Audio';
+
+  @override
+  String get videoSettingsSectionSystem => 'System';
+
+  @override
+  String get videoSettingsArrowSeek => 'Sprungweite der Pfeiltasten';
+
+  @override
+  String get videoSettingsArrowSeekHint =>
+      'Pfeiltasten links und rechts sowie TV-Fernbedienung';
+
+  @override
+  String get videoSettingsHideDelay => 'Steuerung ausblenden nach';
+
+  @override
+  String get videoSettingsSubtitleSize => 'Untertitelgröße';
+
+  @override
+  String get videoSettingsSubtitleBackground => 'Untertitel-Hintergrund';
+
+  @override
+  String get videoSettingsSubtitleBackgroundHint =>
+      'Dunkler Kasten hinter dem Text statt einer Kontur';
+
+  @override
+  String get videoSettingsSidecar => 'Untertiteldateien automatisch laden';
+
+  @override
+  String get videoSettingsSidecarHint =>
+      'Untertiteldateien neben dem Video mit gleichem Namen, z. B. film.de.srt';
+
+  @override
+  String get videoSettingsAudioLanguage => 'Bevorzugte Audiosprache';
+
+  @override
+  String get videoSettingsSubtitleLanguage => 'Bevorzugte Untertitelsprache';
+
+  @override
+  String get videoSettingsLanguageDefault => 'Wie in der Datei';
+
+  @override
+  String get videoSettingsLongPressHint =>
+      'Video lange drücken für 2× solange gedrückt, mit zwei Fingern zoomen';
+
+  @override
+  String get videoSettingsReset => 'Auf Standard zurücksetzen';
+
+  @override
+  String get videoSettingsResetMessage =>
+      'Alle Videoplayer-Einstellungen auf den Standard zurücksetzen?';
+
+  @override
+  String videoSettingsPercent(int percent) {
+    return '$percent %';
+  }
 
   @override
   String get videoPlayerSpeed => 'Wiedergabegeschwindigkeit';
@@ -14964,6 +15039,21 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String videoPlayerVolume(int percent) {
     return '$percent %';
+  }
+
+  @override
+  String videoPlayerBrightness(int percent) {
+    return 'Helligkeit $percent %';
+  }
+
+  @override
+  String videoPlayerZoom(int percent) {
+    return 'Zoom $percent %';
+  }
+
+  @override
+  String videoPlayerHoldSpeed(int speed) {
+    return '$speed× solange gedrückt';
   }
 
   @override

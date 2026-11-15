@@ -10,12 +10,19 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:video_player/video_player.dart';
 
 import 'video_backend.dart';
+import 'video_player_settings.dart';
+import 'video_subtitle_style.dart';
 
 class NativeVideoBackend implements VideoBackend {
   @override
   final ValueNotifier<VideoPlaybackState> state = ValueNotifier(
     const VideoPlaybackState(),
   );
+
+  @override
+  VideoPlayerSettings settings;
+
+  NativeVideoBackend(this.settings);
 
   VideoPlayerController? _controller;
   Uri? _source;
@@ -52,7 +59,10 @@ class NativeVideoBackend implements VideoBackend {
     try {
       await controller.initialize();
       await _loadAudioTracks();
-      if (source.isScheme('file')) await _loadSidecarSubtitles(source);
+      await _preferAudioLanguage();
+      if (source.isScheme('file') && settings.sidecarSubtitles) {
+        await _loadSidecarSubtitles(source);
+      }
       await controller.setLooping(loop);
       if (start != null && start > Duration.zero) {
         await controller.seekTo(start);
@@ -86,6 +96,20 @@ class NativeVideoBackend implements VideoBackend {
     }
   }
 
+  Future<void> _preferAudioLanguage() async {
+    final wanted = settings.audioLanguage;
+    if (wanted.isEmpty ||
+        _audioTracks.any(
+          (t) => t.selected && videoLanguageMatches(t.language, wanted),
+        )) {
+      return;
+    }
+    final match = _audioTracks
+        .where((t) => videoLanguageMatches(t.language, wanted))
+        .firstOrNull;
+    if (match != null) await selectAudioTrack(match.id);
+  }
+
   /// Subtitles next to the video that share its name, like `movie.en.srt`.
   Future<void> _loadSidecarSubtitles(Uri source) async {
     try {
@@ -106,7 +130,18 @@ class NativeVideoBackend implements VideoBackend {
       for (final path in candidates) {
         await _addSubtitle(p.basename(path), await File(path).readAsBytes());
       }
-      if (_subtitles.isNotEmpty) await selectSubtitleTrack(_subtitles.first.id);
+      final wanted = settings.subtitleLanguage;
+      final preferred = _subtitles
+          .where(
+            (s) => p
+                .basenameWithoutExtension(s.name)
+                .split('.')
+                .skip(1)
+                .any((part) => videoLanguageMatches(part, wanted)),
+          )
+          .firstOrNull;
+      final first = preferred ?? _subtitles.firstOrNull;
+      if (first != null) await selectSubtitleTrack(first.id);
     } catch (e) {
       debugLog('[NativeVideoBackend] No sidecar subtitles: $e');
     }
@@ -281,7 +316,7 @@ class NativeVideoBackend implements VideoBackend {
       fit: StackFit.expand,
       children: [
         VideoPlayer(controller),
-        _Captions(controller: controller),
+        _Captions(controller: controller, settings: settings),
       ],
     );
   }
@@ -323,8 +358,9 @@ class _SubtitleFile {
 /// video_player only knows external caption files; it draws none itself.
 class _Captions extends StatelessWidget {
   final VideoPlayerController controller;
+  final VideoPlayerSettings settings;
 
-  const _Captions({required this.controller});
+  const _Captions({required this.controller, required this.settings});
 
   @override
   Widget build(BuildContext context) {
@@ -333,10 +369,21 @@ class _Captions extends StatelessWidget {
         final fontSize = (constraints.maxHeight / 18).clamp(12.0, 32.0);
         return ValueListenableBuilder<VideoPlayerValue>(
           valueListenable: controller,
-          builder: (context, value, _) => ClosedCaption(
-            text: value.caption.text,
-            textStyle: TextStyle(fontSize: fontSize, color: Colors.white),
-          ),
+          builder: (context, value, _) {
+            final text = value.caption.text;
+            if (text.isEmpty) return const SizedBox.shrink();
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                child: Text(
+                  text,
+                  textAlign: TextAlign.center,
+                  style: videoSubtitleStyle(settings, fontSize),
+                ),
+              ),
+            );
+          },
         );
       },
     );

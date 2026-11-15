@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 
 import 'media_kit_video_backend.dart';
 import 'native_video_backend.dart';
+import 'video_player_settings.dart';
 
 /// An audio or subtitle track the viewer can pick.
 @immutable
@@ -108,6 +109,9 @@ class VideoPlaybackState {
 abstract class VideoBackend {
   ValueNotifier<VideoPlaybackState> get state;
 
+  /// Subtitle style applies on the next build; the rest on the next [open].
+  abstract VideoPlayerSettings settings;
+
   Future<void> open(Uri source, {required bool loop, Duration? start});
   Future<void> play();
   Future<void> pause();
@@ -132,9 +136,7 @@ abstract class VideoBackend {
   static bool get isSupported =>
       Platform.isAndroid || Platform.isWindows || Platform.isLinux;
 
-  /// [hardwareDecoding] applies to desktop; Android picks its decoder itself.
-  static VideoBackend create({bool hardwareDecoding = true}) =>
-      Platform.isAndroid
-      ? NativeVideoBackend()
-      : MediaKitVideoBackend(hardwareDecoding: hardwareDecoding);
+  static VideoBackend create(VideoPlayerSettings settings) => Platform.isAndroid
+      ? NativeVideoBackend(settings)
+      : MediaKitVideoBackend(settings);
 }

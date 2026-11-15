@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:file_selector/file_selector.dart';
@@ -52,10 +53,11 @@ class VideoQuality {
 }
 
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
-/// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
+/// Space / K / Play toggles playback, left/right seek by the arrow step, J / L
 /// skip, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
-/// < / > change the speed. A tap toggles playback; a horizontal swipe or a side double tap skips,
-/// a vertical swipe sets the volume. Skips use the video settings' length.
+/// < / > change the speed. A tap shows the controls; a double tap follows the settings, a horizontal swipe skips,
+/// a vertical swipe sets the volume (brightness on the left half on Android), a long press plays
+/// at 2× and a pinch zooms. Skips use the video settings' length.
 /// The system media controls follow playback; Android adds picture-in-picture.
 class VideoPlayerPage extends StatefulWidget {
   static const String preferenceId = 'tool-lab-video-player';
@@ -116,11 +118,11 @@ class VideoPlayerPage extends StatefulWidget {
 }
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
-  static const Duration _hideDelay = Duration(seconds: 3);
-  static const Duration _arrowSeekStep = Duration(seconds: 5);
   static const Duration _stallLimit = Duration(seconds: 8);
   static const double _swipeDistance = 48;
   static const double _swipeVelocity = 400;
+  static const double _maxZoom = 4;
+  static const double _holdSpeed = 2;
   static const List<double> _speeds = VideoPlayerSettings.speedOptions;
   static const MethodChannel _systemChannel = MethodChannel(
     'de.renier.tool_lab/video_system',
@@ -140,10 +142,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   VideoMediaSession? _session;
   bool _pipSupported = false;
   bool _closing = false;
-  double _swipeDx = 0;
   Offset? _doubleTapAt;
-  double? _volumeStart;
-  double _volumeDy = 0;
+  _Drag _drag = _Drag.undecided;
+  Offset _dragStart = Offset.zero;
+  Offset _dragTotal = Offset.zero;
+  double? _levelStart;
+  double _zoom = 1;
+  double _zoomStart = 1;
+  Offset _pan = Offset.zero;
+  bool _brightnessChanged = false;
+  double? _heldSpeed;
   Timer? _badgeTimer;
   bool _badgeVisible = false;
   IconData _badgeIcon = Icons.fast_forward;
@@ -178,14 +186,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       unawaited(_session?.dispose());
       _backend.state.removeListener(_onState);
       if (Platform.isAndroid) _screenOn.set(false);
+      if (_brightnessChanged) {
+        unawaited(_systemChannel.invokeMethod<void>('setBrightness'));
+      }
       unawaited(_backend.dispose());
       _keyFocus.dispose();
       _playFocus.dispose();
     });
   }
 
-  VideoBackend _createBackend() =>
-      VideoBackend.create(hardwareDecoding: _settings.hardwareDecoding);
+  VideoBackend _createBackend() => VideoBackend.create(_settings);
 
   Future<void> _open() async {
     await _backend.open(widget.source, loop: widget.loop);
@@ -226,7 +236,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     final next = await SettingsService.videoPlayerSettings();
     if (!mounted) return;
     final old = _settings;
-    setState(() => _settings = next);
+    setState(() {
+      _settings = next;
+      _backend.settings = next;
+    });
     if (next.mediaControls != old.mediaControls) {
       if (next.mediaControls) {
         _startSession();
@@ -409,14 +422,123 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _closing = false;
   }
 
-  void _onSwipeEnd(DragEndDetails details) {
-    final dx = _swipeDx;
-    _swipeDx = 0;
-    final velocity = details.primaryVelocity ?? 0;
+  void _onScaleStart(ScaleStartDetails details) {
+    _drag = details.pointerCount > 1 ? _Drag.zoom : _Drag.undecided;
+    _dragStart = details.localFocalPoint;
+    _dragTotal = Offset.zero;
+    _zoomStart = _zoom;
+    _levelStart = null;
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails details) {
+    if (details.pointerCount > 1 && _drag != _Drag.zoom) {
+      _drag = _Drag.zoom;
+      _zoomStart = _zoom / details.scale;
+    }
+    _dragTotal += details.focalPointDelta;
+    if (_drag == _Drag.undecided) {
+      if (_dragTotal.distance < 4) return;
+      _drag = _pickDrag();
+      if (_drag == _Drag.volume || _drag == _Drag.brightness) {
+        final brightness = _drag == _Drag.brightness;
+        unawaited(
+          (brightness ? _readBrightness() : _readVolume()).then(
+            (level) => _levelStart = level,
+          ),
+        );
+      }
+    }
+    switch (_drag) {
+      case _Drag.zoom:
+        _setZoom(_zoomStart * details.scale, details.focalPointDelta);
+      case _Drag.pan:
+        _setZoom(_zoom, details.focalPointDelta);
+      case _Drag.volume:
+        _dragVolume();
+      case _Drag.brightness:
+        _dragBrightness();
+      case _Drag.undecided || _Drag.skip || _Drag.none:
+        break;
+    }
+  }
+
+  void _onScaleEnd(ScaleEndDetails details) {
+    final drag = _drag;
+    _drag = _Drag.undecided;
+    if (drag == _Drag.zoom && _zoom < 1.05) _setZoom(1, Offset.zero);
+    if (drag != _Drag.skip) return;
+    final dx = _dragTotal.dx;
+    final velocity = details.velocity.pixelsPerSecond.dx;
     final far = dx.abs() >= _swipeDistance;
     if (!far && velocity.abs() < _swipeVelocity) return;
-    final forward = far ? dx > 0 : velocity > 0;
-    _skip(forward: forward);
+    _skip(forward: far ? dx > 0 : velocity > 0);
+  }
+
+  /// A zoomed video pans; otherwise the direction and side pick the gesture.
+  _Drag _pickDrag() {
+    if (_zoom > 1) return _Drag.pan;
+    if (_dragTotal.dx.abs() > _dragTotal.dy.abs()) {
+      return !widget.live && _settings.swipeSkip ? _Drag.skip : _Drag.none;
+    }
+    final width = context.size?.width ?? 0;
+    final left = width > 0 && _dragStart.dx < width / 2;
+    if (Platform.isAndroid && _settings.swipeBrightness && left) {
+      return _Drag.brightness;
+    }
+    return _settings.swipeVolume ? _Drag.volume : _Drag.none;
+  }
+
+  /// Keeps the zoomed video covering the screen where it can.
+  void _setZoom(double zoom, Offset delta) {
+    final box = context.size;
+    if (box == null || box.isEmpty) return;
+    final next = zoom.clamp(1.0, _maxZoom);
+    final aspect = _backend.state.value.aspectRatio;
+    final fitted = box.aspectRatio > aspect
+        ? Size(box.height * aspect, box.height)
+        : Size(box.width, box.width / aspect);
+    final limitX = math.max(0.0, (fitted.width * next - box.width) / 2);
+    final limitY = math.max(0.0, (fitted.height * next - box.height) / 2);
+    final pan = _pan + delta;
+    setState(() {
+      _zoom = next;
+      _pan = Offset(
+        pan.dx.clamp(-limitX, limitX),
+        pan.dy.clamp(-limitY, limitY),
+      );
+    });
+    if (_drag == _Drag.zoom) {
+      _flashBadge(
+        icon: Icons.zoom_in,
+        label: AppLocalizations.of(
+          context,
+        ).videoPlayerZoom((next * 100).round()),
+        alignment: Alignment.center,
+      );
+    }
+  }
+
+  void _onLongPressStart(LongPressStartDetails _) {
+    final state = _backend.state.value;
+    if (widget.live || !state.playing || state.speed >= _holdSpeed) return;
+    _heldSpeed = state.speed;
+    unawaited(_backend.setSpeed(_holdSpeed));
+    _flashBadge(
+      icon: Icons.fast_forward,
+      label: AppLocalizations.of(
+        context,
+      ).videoPlayerHoldSpeed(_holdSpeed.round()),
+      alignment: const Alignment(0, -0.8),
+      hold: true,
+    );
+  }
+
+  void _onLongPressEnd(LongPressEndDetails _) {
+    final speed = _heldSpeed;
+    if (speed == null) return;
+    _heldSpeed = null;
+    unawaited(_backend.setSpeed(speed));
+    setState(() => _badgeVisible = false);
   }
 
   void _skip({required bool forward}) {
@@ -436,6 +558,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     required String label,
     required Alignment alignment,
     double? level,
+    bool hold = false,
   }) {
     _badgeTimer?.cancel();
     setState(() {
@@ -445,6 +568,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       _badgeLevel = level;
       _badgeVisible = true;
     });
+    if (hold) return;
     _badgeTimer = Timer(const Duration(milliseconds: 700), () {
       if (mounted) setState(() => _badgeVisible = false);
     });
@@ -494,26 +618,57 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     }
   }
 
-  void _onVolumeStart(DragStartDetails _) {
-    _volumeDy = 0;
-    _volumeStart = null;
-    unawaited(_readVolume().then((volume) => _volumeStart = volume));
+  Future<double> _readBrightness() async {
+    try {
+      return await _systemChannel.invokeMethod<double>('getBrightness') ?? 0.5;
+    } catch (e) {
+      errorLog('[VideoPlayerPage] getBrightness failed: $e');
+      return 0.5;
+    }
   }
 
   /// A drag over 60 % of the height covers the whole range.
-  void _onVolumeUpdate(DragUpdateDetails details) {
-    _volumeDy -= details.delta.dy;
-    final start = _volumeStart;
+  double? _draggedLevel() {
+    final start = _levelStart;
     final height = context.size?.height ?? 0;
-    if (start == null || height <= 0) return;
-    final volume = (start + _volumeDy / (height * 0.6)).clamp(0.0, 1.0);
+    if (start == null || height <= 0) return null;
+    return (start - _dragTotal.dy / (height * 0.6)).clamp(0.0, 1.0);
+  }
+
+  void _dragBrightness() {
+    final brightness = _draggedLevel();
+    if (brightness == null) return;
+    _brightnessChanged = true;
+    unawaited(
+      _systemChannel
+          .invokeMethod<void>('setBrightness', {'value': brightness})
+          .catchError(
+            (Object e) =>
+                errorLog('[VideoPlayerPage] setBrightness failed: $e'),
+          ),
+    );
+    _flashBadge(
+      icon: Icons.brightness_6,
+      label: AppLocalizations.of(
+        context,
+      ).videoPlayerBrightness((brightness * 100).round()),
+      alignment: const Alignment(-0.6, 0),
+      level: brightness,
+    );
+  }
+
+  void _dragVolume() {
+    final volume = _draggedLevel();
+    if (volume == null) return;
     unawaited(_writeVolume(volume));
     _flashBadge(
       icon: volume > 0 ? Icons.volume_up : Icons.volume_off,
       label: AppLocalizations.of(
         context,
       ).videoPlayerVolume((volume * 100).round()),
-      alignment: Alignment.center,
+      alignment: Platform.isAndroid && _settings.swipeBrightness
+          ? const Alignment(0.6, 0)
+          : Alignment.center,
       level: volume,
     );
   }
@@ -590,7 +745,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
 
   void _scheduleHide() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(_hideDelay, () {
+    _hideTimer = Timer(_settings.hideDelay, () {
       if (!mounted || !_backend.state.value.playing) return;
       setState(() => _controlsVisible = false);
       _keyFocus.requestFocus();
@@ -729,12 +884,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     final seeks =
         !widget.live && (!_controlsVisible || _backend.state.value.playing);
     if (seeks && key == LogicalKeyboardKey.arrowLeft) {
-      unawaited(_seekBy(-_arrowSeekStep));
+      unawaited(_seekBy(-_settings.arrowSeek));
       if (_controlsVisible) _scheduleHide();
       return KeyEventResult.handled;
     }
     if (seeks && key == LogicalKeyboardKey.arrowRight) {
-      unawaited(_seekBy(_arrowSeekStep));
+      unawaited(_seekBy(_settings.arrowSeek));
       if (_controlsVisible) _scheduleHide();
       return KeyEventResult.handled;
     }
@@ -757,8 +912,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final inPip = _pip?.active.value ?? false;
-    final swipeSkip = !widget.live && _settings.swipeSkip;
-    final swipeVolume = _settings.swipeVolume;
+    final doubleTap = _settings.doubleTap != VideoDoubleTap.off;
     return Theme(
       data: ThemeData.dark(useMaterial3: true),
       child: Scaffold(
@@ -771,17 +925,22 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
             onHover: (_) => _showControls(),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => unawaited(_togglePlay()),
-              onDoubleTapDown: (details) =>
-                  _doubleTapAt = details.localPosition,
-              onDoubleTap: _onDoubleTap,
-              onVerticalDragStart: swipeVolume ? _onVolumeStart : null,
-              onVerticalDragUpdate: swipeVolume ? _onVolumeUpdate : null,
-              onHorizontalDragStart: swipeSkip ? (_) => _swipeDx = 0 : null,
-              onHorizontalDragUpdate: swipeSkip
-                  ? (details) => _swipeDx += details.delta.dx
+              onTap: () {
+                if (_controlsVisible) {
+                  setState(() => _controlsVisible = false);
+                } else {
+                  _showControls();
+                }
+              },
+              onDoubleTapDown: doubleTap
+                  ? (details) => _doubleTapAt = details.localPosition
                   : null,
-              onHorizontalDragEnd: swipeSkip ? _onSwipeEnd : null,
+              onDoubleTap: doubleTap ? _onDoubleTap : null,
+              onLongPressStart: _onLongPressStart,
+              onLongPressEnd: _onLongPressEnd,
+              onScaleStart: _onScaleStart,
+              onScaleUpdate: _onScaleUpdate,
+              onScaleEnd: _onScaleEnd,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -790,6 +949,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                     builder: (context, state, view) => _VideoSurface(
                       frameKey: _frameKey,
                       state: state,
+                      zoom: inPip ? 1 : _zoom,
+                      pan: inPip ? Offset.zero : _pan,
                       view: view!,
                       errorLabel: l10n.videoPlayerFailed,
                     ),
@@ -883,12 +1044,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
 class _VideoSurface extends StatelessWidget {
   final GlobalKey frameKey;
   final VideoPlaybackState state;
+  final double zoom;
+  final Offset pan;
   final Widget view;
   final String errorLabel;
 
   const _VideoSurface({
     required this.frameKey,
     required this.state,
+    required this.zoom,
+    required this.pan,
     required this.view,
     required this.errorLabel,
   });
@@ -910,10 +1075,18 @@ class _VideoSurface extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Center(
-          child: AspectRatio(
-            aspectRatio: state.aspectRatio,
-            child: RepaintBoundary(key: frameKey, child: view),
+        ClipRect(
+          child: Transform.translate(
+            offset: pan,
+            child: Transform.scale(
+              scale: zoom,
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: state.aspectRatio,
+                  child: RepaintBoundary(key: frameKey, child: view),
+                ),
+              ),
+            ),
           ),
         ),
         if (!state.initialized || state.buffering)
@@ -922,3 +1095,6 @@ class _VideoSurface extends StatelessWidget {
     );
   }
 }
+
+/// What a one- or two-finger drag on the video is doing.
+enum _Drag { undecided, none, skip, volume, brightness, pan, zoom }

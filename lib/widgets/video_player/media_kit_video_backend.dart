@@ -8,6 +8,8 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import 'video_backend.dart';
+import 'video_player_settings.dart';
+import 'video_subtitle_style.dart';
 
 class MediaKitVideoBackend implements VideoBackend {
   static bool _initialized = false;
@@ -17,12 +19,15 @@ class MediaKitVideoBackend implements VideoBackend {
     const VideoPlaybackState(),
   );
 
+  @override
+  VideoPlayerSettings settings;
+
   late final Player _player;
   late final VideoController _video;
   final List<StreamSubscription<Object?>> _subscriptions = [];
   bool _loop = false;
 
-  MediaKitVideoBackend({bool hardwareDecoding = true}) {
+  MediaKitVideoBackend(this.settings) {
     if (!_initialized) {
       MediaKit.ensureInitialized();
       _initialized = true;
@@ -31,7 +36,7 @@ class MediaKitVideoBackend implements VideoBackend {
     _video = VideoController(
       _player,
       configuration: VideoControllerConfiguration(
-        hwdec: hardwareDecoding ? null : 'no',
+        hwdec: settings.hardwareDecoding ? null : 'no',
       ),
     );
     final streams = _player.stream;
@@ -137,8 +142,20 @@ class MediaKitVideoBackend implements VideoBackend {
     _loop = loop;
     final platform = _player.platform;
     final device = Platform.isLinux ? _resolveVaapiDevice() : null;
-    if (device != null && platform is NativePlayer) {
-      await platform.setProperty('vaapi-device', device);
+    if (platform is NativePlayer) {
+      if (device != null) await platform.setProperty('vaapi-device', device);
+      await platform.setProperty(
+        'sub-auto',
+        settings.sidecarSubtitles ? 'exact' : 'no',
+      );
+      await platform.setProperty(
+        'alang',
+        videoLanguageCodes(settings.audioLanguage).join(','),
+      );
+      await platform.setProperty(
+        'slang',
+        videoLanguageCodes(settings.subtitleLanguage).join(','),
+      );
     }
     await _player.setPlaylistMode(
       loop ? PlaylistMode.single : PlaylistMode.none,
@@ -217,8 +234,13 @@ class MediaKitVideoBackend implements VideoBackend {
   Future<Uint8List?> nativeFrame() async => null;
 
   @override
-  Widget buildView(BuildContext context) =>
-      Video(controller: _video, controls: NoVideoControls);
+  Widget buildView(BuildContext context) => Video(
+    controller: _video,
+    controls: NoVideoControls,
+    subtitleViewConfiguration: SubtitleViewConfiguration(
+      style: videoSubtitleStyle(settings, 32),
+    ),
+  );
 
   @override
   Future<void> dispose() async {

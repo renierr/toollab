@@ -1,5 +1,6 @@
 package de.renier.tool_lab
 
+import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
 import android.media.MediaExtractor
@@ -8,11 +9,13 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.provider.OpenableColumns
+import android.provider.Settings
+import android.view.WindowManager
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import kotlin.math.roundToInt
 
-/** Media volume and stream details for the Flutter video player. */
+/** Media volume, window brightness and stream details for the Flutter video player. */
 object VideoSystemHelper {
     private const val CHANNEL = "de.renier.tool_lab/video_system"
 
@@ -30,6 +33,25 @@ object VideoSystemHelper {
                     val value = (call.argument<Double>("value") ?: 0.0).coerceIn(0.0, 1.0)
                     val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
                     audio.setStreamVolume(AudioManager.STREAM_MUSIC, (value * max).roundToInt(), 0)
+                    result.success(null)
+                }
+                "getBrightness" -> {
+                    val window = (context as? Activity)?.window
+                    val own = window?.attributes?.screenBrightness ?: -1f
+                    result.success(if (own >= 0) own.toDouble() else systemBrightness(appContext))
+                }
+                "setBrightness" -> {
+                    val window = (context as? Activity)?.window
+                    if (window == null) {
+                        result.success(null)
+                        return@setMethodCallHandler
+                    }
+                    // No value hands brightness back to the system.
+                    val value = call.argument<Double>("value")
+                    window.attributes = window.attributes.apply {
+                        screenBrightness = value?.coerceIn(0.01, 1.0)?.toFloat()
+                            ?: WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                    }
                     result.success(null)
                 }
                 "tracks" -> {
@@ -65,6 +87,13 @@ object VideoSystemHelper {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    // Assumes the classic 0..255 range; some devices map it non-linearly.
+    private fun systemBrightness(context: Context): Double = try {
+        Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS) / 255.0
+    } catch (e: Settings.SettingNotFoundException) {
+        0.5
     }
 
     private fun readTracks(context: Context, path: String): List<Map<String, Any?>> {
