@@ -14933,14 +14933,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String videoPlayerResumed(String time) {
-    return 'Continuing at $time';
-  }
-
-  @override
-  String get videoPlayerStartOver => 'Start over';
-
-  @override
   String get videoPlayerPrevious => 'Previous video';
 
   @override

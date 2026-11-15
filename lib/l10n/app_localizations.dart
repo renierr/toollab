@@ -26290,18 +26290,6 @@ abstract class AppLocalizations {
   /// **'{percent} %'**
   String videoPlayerVolume(int percent);
 
-  /// No description provided for @videoPlayerResumed.
-  ///
-  /// In en, this message translates to:
-  /// **'Continuing at {time}'**
-  String videoPlayerResumed(String time);
-
-  /// No description provided for @videoPlayerStartOver.
-  ///
-  /// In en, this message translates to:
-  /// **'Start over'**
-  String get videoPlayerStartOver;
-
   /// No description provided for @videoPlayerPrevious.
   ///
   /// In en, this message translates to:

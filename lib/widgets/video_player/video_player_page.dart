@@ -232,27 +232,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     await opening;
     final speed = _settings.defaultSpeed;
     if (!widget.live && speed != 1 && mounted) await _backend.setSpeed(speed);
-    if (start != null) _announceResume(start);
   }
 
   Future<Duration?> _resumeStart(Uri source) async {
     final store = widget.resumeStore;
     if (store == null || widget.live || !_settings.resumePlayback) return null;
     return store.resumePosition(source);
-  }
-
-  void _announceResume(Duration start) {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.videoPlayerResumed(formatVideoTime(start))),
-        action: SnackBarAction(
-          label: l10n.videoPlayerStartOver,
-          onPressed: () => unawaited(_seekTo(Duration.zero)),
-        ),
-      ),
-    );
   }
 
   /// Throttled while playing; immediate on pause, end and close.
@@ -309,7 +294,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _lastSave = DateTime(0);
     _session?.retitle(item.title);
     await _reopen(item.source, start: start ?? Duration.zero);
-    if (start != null) _announceResume(start);
   }
 
   @override

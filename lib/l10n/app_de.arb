@@ -5759,8 +5759,6 @@
   "videoPlayerSubtitleFailed": "Untertiteldatei konnte nicht geladen werden",
   "videoPlayerTrack": "Spur {number}",
   "videoPlayerVolume": "{percent} %",
-  "videoPlayerResumed": "Weiter bei {time}",
-  "videoPlayerStartOver": "Von vorn",
   "videoPlayerPrevious": "Vorheriges Video",
   "videoPlayerNext": "Nächstes Video",
   "videoPlayerBrightness": "Helligkeit {percent} %",
