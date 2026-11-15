@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 /// A video played in the ToolLab player and where it was left.
 class VideoHistoryEntry {
   final String source;
@@ -6,12 +8,16 @@ class VideoHistoryEntry {
   final int durationMs;
   final int playedAt;
 
+  /// A small JPEG of the frame where it was left.
+  final Uint8List? thumbnail;
+
   const VideoHistoryEntry({
     required this.source,
     required this.title,
     required this.positionMs,
     required this.durationMs,
     required this.playedAt,
+    this.thumbnail,
   });
 
   factory VideoHistoryEntry.fromMap(Map<String, Object?> map) =>
@@ -21,8 +27,10 @@ class VideoHistoryEntry {
         positionMs: map['position_ms'] as int,
         durationMs: map['duration_ms'] as int,
         playedAt: map['played_at'] as int,
+        thumbnail: map['thumbnail'] as Uint8List?,
       );
 
+  /// Without the thumbnail, so saving a position keeps the stored one.
   Map<String, Object?> toMap() => {
     'source': source,
     'title': title,

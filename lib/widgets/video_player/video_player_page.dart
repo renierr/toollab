@@ -28,6 +28,8 @@ import 'video_progress_saver.dart';
 import 'video_resume_store.dart';
 import 'video_stall_watchdog.dart';
 import 'video_surface.dart';
+import 'video_sync_dialog.dart';
+import 'video_thumbnailer.dart';
 
 export 'video_player_types.dart';
 
@@ -116,6 +118,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       widget.resumeStore == null || widget.live
       ? null
       : VideoProgressSaver(widget.resumeStore!);
+  late final VideoThumbnailer? _thumbnailer =
+      widget.resumeStore == null || widget.live
+      ? null
+      : VideoThumbnailer(widget.resumeStore!);
   late final VideoStallWatchdog _stall = VideoStallWatchdog(onStall: _fallBack);
   final VideoBadgeController _badge = VideoBadgeController();
   final GlobalKey _frameKey = GlobalKey(debugLabel: 'VideoFrame');
@@ -129,6 +135,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   bool _pipSupported = false;
   bool _closing = false;
   double _unmutedVolume = 1;
+  Duration _subtitleDelay = Duration.zero;
+  Duration _audioDelay = Duration.zero;
 
   Duration get _seekStep => _settings.skip;
 
@@ -214,8 +222,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     setState(() {
       _playlistIndex = index;
       _title = item.title;
+      _subtitleDelay = Duration.zero;
+      _audioDelay = Duration.zero;
     });
     _saver?.reset();
+    _thumbnailer?.reset();
     _session?.retitle(item.title);
     await _reopen(item.source, start: start ?? Duration.zero);
   }
@@ -315,6 +326,16 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     await opening;
     if (previous.speed != 1) await next.setSpeed(previous.speed);
     if (previous.volume != 1) await next.setVolume(previous.volume);
+    await _applyDelays(next);
+  }
+
+  Future<void> _applyDelays(VideoBackend backend) async {
+    if (_subtitleDelay != Duration.zero) {
+      await backend.setSubtitleDelay(_subtitleDelay);
+    }
+    if (_audioDelay != Duration.zero && backend.supportsAudioDelay) {
+      await backend.setAudioDelay(_audioDelay);
+    }
   }
 
   /// Controls appear on interaction only, plus at the end and on an error.
@@ -331,6 +352,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     unawaited(_session?.sync(state));
     _stall.watch(state);
     _saveProgress();
+    _thumbnailer?.watch(
+      source: _source,
+      state: state,
+      capture: () =>
+          captureVideoThumbnail(backend: _backend, frameKey: _frameKey),
+    );
     if ((state.completed || state.error != null) && !_controlsVisible) {
       _showControls();
     }
@@ -483,6 +510,28 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       );
     }
     if (wasPlaying && mounted) await _backend.play();
+  }
+
+  void _openSync() {
+    _hideTimer?.cancel();
+    final backend = _backend;
+    unawaited(
+      VideoSyncDialog.show(
+        context,
+        subtitleDelay: _subtitleDelay,
+        audioDelay: _audioDelay,
+        onSubtitleDelay: (delay) {
+          _subtitleDelay = delay;
+          unawaited(_backend.setSubtitleDelay(delay));
+        },
+        onAudioDelay: backend.supportsAudioDelay
+            ? (delay) {
+                _audioDelay = delay;
+                unawaited(_backend.setAudioDelay(delay));
+              }
+            : null,
+      ).then((_) => _scheduleHide()),
+    );
   }
 
   void _showInfo() {
@@ -719,6 +768,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                                   ),
                                   onLoadSubtitles: () =>
                                       unawaited(_loadSubtitles()),
+                                  onSync: _openSync,
                                   onInfo: _showInfo,
                                   onSettings: () => unawaited(_openSettings()),
                                   playlistLabel: _playlist.isEmpty

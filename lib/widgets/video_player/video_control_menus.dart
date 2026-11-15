@@ -97,6 +97,7 @@ class VideoSpeedButton extends StatelessWidget {
 class VideoTracksButton extends StatelessWidget {
   static const _off = 'off';
   static const _load = 'load';
+  static const _sync = 'sync';
   static const _audioPrefix = 'a:';
   static const _subtitlePrefix = 's:';
 
@@ -105,6 +106,7 @@ class VideoTracksButton extends StatelessWidget {
   final ValueChanged<String> onAudioTrack;
   final ValueChanged<String?> onSubtitleTrack;
   final VoidCallback onLoadSubtitles;
+  final VoidCallback onSync;
 
   const VideoTracksButton({
     super.key,
@@ -113,11 +115,14 @@ class VideoTracksButton extends StatelessWidget {
     required this.onAudioTrack,
     required this.onSubtitleTrack,
     required this.onLoadSubtitles,
+    required this.onSync,
   });
 
   void _onSelected(String value) {
     if (value == _load) {
       onLoadSubtitles();
+    } else if (value == _sync) {
+      onSync();
     } else if (value == _off) {
       onSubtitleTrack(null);
     } else if (value.startsWith(_audioPrefix)) {
@@ -182,6 +187,14 @@ class VideoTracksButton extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.file_open_outlined),
             title: Text(l10n.videoPlayerLoadSubtitles),
+          ),
+        ),
+        PopupMenuItem(
+          value: _sync,
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.av_timer),
+            title: Text(l10n.videoPlayerSync),
           ),
         ),
       ],

@@ -34,6 +34,7 @@ class VideoControls extends StatelessWidget {
   /// Null turns subtitles off.
   final ValueChanged<String?> onSubtitleTrack;
   final VoidCallback onLoadSubtitles;
+  final VoidCallback onSync;
   final VoidCallback onInfo;
   final VoidCallback onSettings;
 
@@ -66,6 +67,7 @@ class VideoControls extends StatelessWidget {
     required this.onAudioTrack,
     required this.onSubtitleTrack,
     required this.onLoadSubtitles,
+    required this.onSync,
     required this.onInfo,
     required this.onSettings,
     this.playlistLabel,
@@ -155,6 +157,7 @@ class VideoControls extends StatelessWidget {
                       child: VideoSeekBar(
                         position: state.position,
                         duration: state.duration,
+                        buffered: state.buffered,
                         onSeekStart: onSeekStart,
                         onSeek: onSeek,
                       ),
@@ -233,6 +236,7 @@ class VideoControls extends StatelessWidget {
                           onAudioTrack: onAudioTrack,
                           onSubtitleTrack: onSubtitleTrack,
                           onLoadSubtitles: onLoadSubtitles,
+                          onSync: onSync,
                         ),
                         if (qualities.length > 1)
                           VideoQualityButton(

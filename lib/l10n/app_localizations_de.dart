@@ -15035,6 +15035,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String get videoPlayerLoadSubtitles => 'Untertiteldatei laden…';
 
   @override
+  String get videoPlayerSync => 'Synchronisieren…';
+
+  @override
+  String get videoPlayerSyncTitle => 'Ton- & Untertitel-Sync';
+
+  @override
+  String get videoPlayerSubtitleDelay => 'Untertitel-Verzögerung';
+
+  @override
+  String get videoPlayerAudioDelay => 'Ton-Verzögerung';
+
+  @override
+  String get videoPlayerDelayEarlier => 'Früher';
+
+  @override
+  String get videoPlayerDelayLater => 'Später';
+
+  @override
   String get videoPlayerSubtitleFailed =>
       'Untertiteldatei konnte nicht geladen werden';
 
@@ -16028,6 +16046,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get videoPlayerToolWatched => 'Angesehen';
+
+  @override
+  String get videoPlayerToolMissing => 'Datei nicht gefunden';
 
   @override
   String videoPlayerToolProgress(String position, String duration) {

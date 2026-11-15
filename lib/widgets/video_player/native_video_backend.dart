@@ -171,6 +171,7 @@ class NativeVideoBackend implements VideoBackend {
       completed: value.isCompleted,
       position: value.position,
       duration: value.duration,
+      buffered: _bufferedEnd(value),
       aspectRatio: value.isInitialized ? value.aspectRatio : 16 / 9,
       volume: value.volume,
       speed: value.playbackSpeed,
@@ -186,6 +187,15 @@ class NativeVideoBackend implements VideoBackend {
       ],
       error: value.hasError ? value.errorDescription : null,
     );
+  }
+
+  /// The end of the loaded range that holds the position.
+  static Duration _bufferedEnd(VideoPlayerValue value) {
+    var end = Duration.zero;
+    for (final range in value.buffered) {
+      if (range.start <= value.position && range.end > end) end = range.end;
+    }
+    return end;
   }
 
   @override
@@ -226,6 +236,17 @@ class NativeVideoBackend implements VideoBackend {
     );
     _sync();
   }
+
+  @override
+  bool get supportsAudioDelay => false;
+
+  @override
+  Future<void> setSubtitleDelay(Duration delay) async {
+    _controller?.setCaptionOffset(delay);
+  }
+
+  @override
+  Future<void> setAudioDelay(Duration delay) async {}
 
   @override
   Future<void> addSubtitleFile(XFile file) async {
@@ -298,11 +319,14 @@ class NativeVideoBackend implements VideoBackend {
   static const _frameChannel = MethodChannel('de.renier.tool_lab/video_frame');
 
   @override
-  Future<Uint8List?> nativeFrame() {
+  Future<Uint8List?> nativeFrame({int? width}) {
     final size = _controller?.value.size;
+    final scale = width != null && size != null && size.width > 0
+        ? width / size.width
+        : 1.0;
     return _frameChannel.invokeMethod<Uint8List>('capture', {
-      'width': size?.width.round(),
-      'height': size?.height.round(),
+      'width': size == null ? null : (size.width * scale).round(),
+      'height': size == null ? null : (size.height * scale).round(),
     });
   }
 

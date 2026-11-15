@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
@@ -19,7 +21,7 @@ class VideoHistoryDbHelper {
     );
     try {
       await _cachedDb!.migrate(
-        currentVersion: 1,
+        currentVersion: 2,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -31,6 +33,11 @@ class VideoHistoryDbHelper {
                 played_at INTEGER NOT NULL
               )
             ''');
+          }
+          if (oldVersion < 2) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(tableName)} ADD COLUMN thumbnail BLOB',
+            );
           }
         },
       );
@@ -92,6 +99,16 @@ class VideoHistoryDbHelper {
       );
     }
     return sources;
+  }
+
+  Future<void> saveThumbnail(String source, Uint8List jpeg) async {
+    final db = await _getDb();
+    await db.update(
+      tableName,
+      {'thumbnail': jpeg},
+      where: 'source = ?',
+      whereArgs: [source],
+    );
   }
 
   Future<void> delete(String source) async {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +16,7 @@ import 'package:tool_lab/widgets/video_player/video_player_page.dart';
 import 'package:tool_lab/widgets/video_player/video_system_channel.dart';
 
 import 'config.dart';
+import 'video_history_entry.dart';
 import 'video_player_state.dart';
 import 'widgets/video_recent_list.dart';
 
@@ -70,6 +73,18 @@ class _VideoPlayerToolPageState extends State<VideoPlayerToolPage>
     );
   }
 
+  void _playRecent(VideoHistoryEntry entry) {
+    if (context.read<VideoPlayerState>().isMissing(entry)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).videoPlayerToolMissing),
+        ),
+      );
+      return;
+    }
+    unawaited(_play(entry.uri, entry.title));
+  }
+
   Future<void> _confirmClear() async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmActionDialog.show(
@@ -121,7 +136,8 @@ class _VideoPlayerToolPageState extends State<VideoPlayerToolPage>
           if (entries.isEmpty) return dropZone;
           final recent = VideoRecentList(
             entries: entries,
-            onPlay: (entry) => _play(entry.uri, entry.title),
+            isMissing: state.isMissing,
+            onPlay: _playRecent,
             onRemove: state.remove,
             onClear: _confirmClear,
           );

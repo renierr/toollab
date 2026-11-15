@@ -5756,6 +5756,12 @@
   "videoPlayerSubtitles": "Untertitel",
   "videoPlayerSubtitlesOff": "Aus",
   "videoPlayerLoadSubtitles": "Untertiteldatei laden…",
+  "videoPlayerSync": "Synchronisieren…",
+  "videoPlayerSyncTitle": "Ton- & Untertitel-Sync",
+  "videoPlayerSubtitleDelay": "Untertitel-Verzögerung",
+  "videoPlayerAudioDelay": "Ton-Verzögerung",
+  "videoPlayerDelayEarlier": "Früher",
+  "videoPlayerDelayLater": "Später",
   "videoPlayerSubtitleFailed": "Untertiteldatei konnte nicht geladen werden",
   "videoPlayerTrack": "Spur {number}",
   "videoPlayerVolume": "{percent} %",
@@ -6040,5 +6046,6 @@
   "videoPlayerToolClearRecentMessage": "Alle Videos aus der Liste entfernen? Gespeicherte Positionen gehen verloren.",
   "videoPlayerToolRemoveRecent": "Aus der Liste entfernen",
   "videoPlayerToolWatched": "Angesehen",
+  "videoPlayerToolMissing": "Datei nicht gefunden",
   "videoPlayerToolProgress": "{position} von {duration}"
 }

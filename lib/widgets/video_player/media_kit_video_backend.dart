@@ -51,6 +51,7 @@ class MediaKitVideoBackend implements VideoBackend {
       streams.completed.listen((_) => _sync()),
       streams.position.listen((_) => _sync()),
       streams.duration.listen((_) => _sync()),
+      streams.buffer.listen((_) => _sync()),
       streams.width.listen((_) => _sync()),
       streams.volume.listen((_) => _sync()),
       streams.rate.listen((_) => _sync()),
@@ -100,6 +101,7 @@ class MediaKitVideoBackend implements VideoBackend {
       completed: s.completed && !_loop,
       position: s.position,
       duration: s.duration,
+      buffered: s.buffer,
       aspectRatio: width > 0 && height > 0 ? width / height : 16 / 9,
       videoWidth: width > 0 ? width : null,
       volume: s.volume / 100,
@@ -233,6 +235,26 @@ class MediaKitVideoBackend implements VideoBackend {
   }
 
   @override
+  bool get supportsAudioDelay => true;
+
+  @override
+  Future<void> setSubtitleDelay(Duration delay) =>
+      _setSeconds('sub-delay', delay);
+
+  @override
+  Future<void> setAudioDelay(Duration delay) =>
+      _setSeconds('audio-delay', delay);
+
+  Future<void> _setSeconds(String property, Duration value) async {
+    final platform = _player.platform;
+    if (platform is! NativePlayer) return;
+    await platform.setProperty(
+      property,
+      (value.inMilliseconds / 1000).toStringAsFixed(3),
+    );
+  }
+
+  @override
   Future<void> addSubtitleFile(XFile file) =>
       _player.setSubtitleTrack(SubtitleTrack.uri(file.path, title: file.name));
 
@@ -266,7 +288,7 @@ class MediaKitVideoBackend implements VideoBackend {
   }
 
   @override
-  Future<Uint8List?> nativeFrame() async => null;
+  Future<Uint8List?> nativeFrame({int? width}) async => null;
 
   @override
   Widget buildView(BuildContext context) => Video(

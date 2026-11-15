@@ -26272,6 +26272,42 @@ abstract class AppLocalizations {
   /// **'Load subtitle file…'**
   String get videoPlayerLoadSubtitles;
 
+  /// No description provided for @videoPlayerSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync…'**
+  String get videoPlayerSync;
+
+  /// No description provided for @videoPlayerSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio & subtitle sync'**
+  String get videoPlayerSyncTitle;
+
+  /// No description provided for @videoPlayerSubtitleDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle delay'**
+  String get videoPlayerSubtitleDelay;
+
+  /// No description provided for @videoPlayerAudioDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio delay'**
+  String get videoPlayerAudioDelay;
+
+  /// No description provided for @videoPlayerDelayEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get videoPlayerDelayEarlier;
+
+  /// No description provided for @videoPlayerDelayLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get videoPlayerDelayLater;
+
   /// No description provided for @videoPlayerSubtitleFailed.
   ///
   /// In en, this message translates to:
@@ -27975,6 +28011,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watched'**
   String get videoPlayerToolWatched;
+
+  /// No description provided for @videoPlayerToolMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'File not found'**
+  String get videoPlayerToolMissing;
 
   /// No description provided for @videoPlayerToolProgress.
   ///

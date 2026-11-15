@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/widgets/video_player/video_resume_store.dart';
@@ -12,6 +14,7 @@ class VideoPlayerState extends ChangeNotifier implements VideoResumeStore {
 
   final VideoHistoryDbHelper _db;
   List<VideoHistoryEntry> _entries = const [];
+  Set<String> _missing = const {};
   bool _loaded = false;
 
   VideoPlayerState({VideoHistoryDbHelper? db})
@@ -19,9 +22,21 @@ class VideoPlayerState extends ChangeNotifier implements VideoResumeStore {
 
   List<VideoHistoryEntry> get entries => _entries;
 
+  /// A local file that is gone; content URIs are not checked.
+  bool isMissing(VideoHistoryEntry entry) => _missing.contains(entry.source);
+
   Future<void> load() async {
     try {
-      _entries = await _db.recent();
+      final entries = await _db.recent();
+      final missing = <String>{};
+      for (final entry in entries) {
+        final uri = entry.uri;
+        if (uri.isScheme('file') && !await File.fromUri(uri).exists()) {
+          missing.add(entry.source);
+        }
+      }
+      _entries = entries;
+      _missing = missing;
       _loaded = true;
       notifyListeners();
     } catch (e) {
@@ -32,6 +47,7 @@ class VideoPlayerState extends ChangeNotifier implements VideoResumeStore {
   /// Frees the list after the tool closes; the database keeps it.
   void release() {
     _entries = const [];
+    _missing = const {};
     _loaded = false;
   }
 
@@ -53,12 +69,14 @@ class VideoPlayerState extends ChangeNotifier implements VideoResumeStore {
     required Duration position,
     required Duration duration,
   }) async {
+    final key = source.toString();
     final entry = VideoHistoryEntry(
-      source: source.toString(),
+      source: key,
       title: title,
       positionMs: position.inMilliseconds,
       durationMs: duration.inMilliseconds,
       playedAt: DateTime.now().millisecondsSinceEpoch,
+      thumbnail: _entries.where((e) => e.source == key).firstOrNull?.thumbnail,
     );
     try {
       if (await _db.save(entry)) {
@@ -67,6 +85,7 @@ class VideoPlayerState extends ChangeNotifier implements VideoResumeStore {
         }
       }
       if (!_loaded) return;
+      _missing = _missing.difference({key});
       _entries = [
         entry,
         ..._entries.where((e) => e.source != entry.source),
@@ -74,6 +93,31 @@ class VideoPlayerState extends ChangeNotifier implements VideoResumeStore {
       notifyListeners();
     } catch (e) {
       errorLog('[VideoPlayerState] Saving position failed: $e');
+    }
+  }
+
+  @override
+  Future<void> saveThumbnail(Uri source, Uint8List jpeg) async {
+    final key = source.toString();
+    try {
+      await _db.saveThumbnail(key, jpeg);
+      if (!_loaded) return;
+      _entries = [
+        for (final e in _entries)
+          e.source == key
+              ? VideoHistoryEntry(
+                  source: e.source,
+                  title: e.title,
+                  positionMs: e.positionMs,
+                  durationMs: e.durationMs,
+                  playedAt: e.playedAt,
+                  thumbnail: jpeg,
+                )
+              : e,
+      ];
+      notifyListeners();
+    } catch (e) {
+      errorLog('[VideoPlayerState] Saving thumbnail failed: $e');
     }
   }
 

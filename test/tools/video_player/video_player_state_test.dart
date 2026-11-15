@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -77,4 +79,22 @@ void main() {
     expect(reloaded.entries, hasLength(VideoPlayerState.maxEntries));
     await state.clear();
   });
+
+  test(
+    'keeps the thumbnail across position saves and flags missing files',
+    () async {
+      final state = VideoPlayerState();
+      await state.load();
+      await save(state, movie, 60);
+      await state.saveThumbnail(movie, Uint8List.fromList([1, 2, 3]));
+      await save(state, movie, 90);
+      expect(state.entries.first.thumbnail, [1, 2, 3]);
+
+      final reloaded = VideoPlayerState();
+      await reloaded.load();
+      expect(reloaded.entries.first.thumbnail, [1, 2, 3]);
+      expect(reloaded.isMissing(reloaded.entries.first), isTrue);
+      await state.clear();
+    },
+  );
 }

@@ -14920,6 +14920,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoPlayerLoadSubtitles => 'Load subtitle file…';
 
   @override
+  String get videoPlayerSync => 'Sync…';
+
+  @override
+  String get videoPlayerSyncTitle => 'Audio & subtitle sync';
+
+  @override
+  String get videoPlayerSubtitleDelay => 'Subtitle delay';
+
+  @override
+  String get videoPlayerAudioDelay => 'Audio delay';
+
+  @override
+  String get videoPlayerDelayEarlier => 'Earlier';
+
+  @override
+  String get videoPlayerDelayLater => 'Later';
+
+  @override
   String get videoPlayerSubtitleFailed => 'Could not load the subtitle file';
 
   @override
@@ -15906,6 +15924,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoPlayerToolWatched => 'Watched';
+
+  @override
+  String get videoPlayerToolMissing => 'File not found';
 
   @override
   String videoPlayerToolProgress(String position, String duration) {

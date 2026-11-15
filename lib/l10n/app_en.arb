@@ -7269,6 +7269,12 @@
   "videoPlayerSubtitles": "Subtitles",
   "videoPlayerSubtitlesOff": "Off",
   "videoPlayerLoadSubtitles": "Load subtitle file…",
+  "videoPlayerSync": "Sync…",
+  "videoPlayerSyncTitle": "Audio & subtitle sync",
+  "videoPlayerSubtitleDelay": "Subtitle delay",
+  "videoPlayerAudioDelay": "Audio delay",
+  "videoPlayerDelayEarlier": "Earlier",
+  "videoPlayerDelayLater": "Later",
   "videoPlayerSubtitleFailed": "Could not load the subtitle file",
   "videoPlayerTrack": "Track {number}",
   "@videoPlayerTrack": {"placeholders": {"number": {"type": "int"}}},
@@ -7606,6 +7612,7 @@
   "videoPlayerToolClearRecentMessage": "Remove all videos from the list? Saved positions are lost.",
   "videoPlayerToolRemoveRecent": "Remove from list",
   "videoPlayerToolWatched": "Watched",
+  "videoPlayerToolMissing": "File not found",
   "videoPlayerToolProgress": "{position} of {duration}",
   "@videoPlayerToolProgress": {"placeholders": {"position": {"type": "String"}, "duration": {"type": "String"}}}
 }

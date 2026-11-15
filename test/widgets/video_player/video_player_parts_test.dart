@@ -7,7 +7,10 @@ import 'package:tool_lab/widgets/video_player/video_player_types.dart';
 import 'package:tool_lab/widgets/video_player/video_progress_saver.dart';
 import 'package:tool_lab/widgets/video_player/video_resume_store.dart';
 import 'package:tool_lab/widgets/video_player/video_seek_bar.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/video_player/video_stall_watchdog.dart';
+import 'package:tool_lab/widgets/video_player/video_sync_dialog.dart';
+import 'package:tool_lab/widgets/video_player/video_thumbnailer.dart';
 
 class _Store implements VideoResumeStore {
   final List<Duration> saved = [];
@@ -22,6 +25,12 @@ class _Store implements VideoResumeStore {
     required Duration position,
     required Duration duration,
   }) async => saved.add(position);
+
+  @override
+  Future<void> saveThumbnail(Uri source, Uint8List jpeg) async =>
+      thumbnails.add(jpeg);
+
+  final List<Uint8List> thumbnails = [];
 }
 
 KeyEvent _down(LogicalKeyboardKey key, {String? character}) => KeyDownEvent(
@@ -175,5 +184,90 @@ void main() {
     expect(seeks, hasLength(1));
     expect(seeks.single, greaterThan(const Duration(minutes: 5)));
     await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('thumbnailer takes a frame on pause and when due', (
+    tester,
+  ) async {
+    final store = _Store();
+    final thumbnailer = VideoThumbnailer(store);
+    var captures = 0;
+    Future<Uint8List?> capture() async {
+      captures++;
+      return Uint8List(1);
+    }
+
+    VideoPlaybackState at(int s, {bool playing = true}) => VideoPlaybackState(
+      initialized: true,
+      playing: playing,
+      position: Duration(seconds: s),
+      duration: const Duration(minutes: 10),
+    );
+    final source = Uri.file('/v.mp4');
+    thumbnailer.watch(source: source, state: at(1), capture: capture);
+    expect(captures, 0);
+    thumbnailer.watch(source: source, state: at(5), capture: capture);
+    await tester.pump();
+    expect(captures, 1);
+    thumbnailer.watch(source: source, state: at(6), capture: capture);
+    await tester.pump();
+    expect(captures, 1);
+    thumbnailer.watch(
+      source: source,
+      state: at(7, playing: false),
+      capture: capture,
+    );
+    await tester.pump();
+    expect(captures, 2);
+    expect(store.thumbnails, hasLength(2));
+  });
+
+  testWidgets('seek bar shows the buffered range', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VideoSeekBar(
+            position: const Duration(minutes: 1),
+            duration: const Duration(minutes: 10),
+            buffered: const Duration(minutes: 3),
+            onSeekStart: () {},
+            onSeek: (_) {},
+          ),
+        ),
+      ),
+    );
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(
+      slider.secondaryTrackValue,
+      const Duration(minutes: 3).inMilliseconds,
+    );
+  });
+
+  testWidgets('sync dialog steps and resets the delays', (tester) async {
+    Duration? subtitle;
+    Duration? audio;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: VideoSyncDialog(
+            subtitleDelay: Duration.zero,
+            audioDelay: Duration.zero,
+            onSubtitleDelay: (d) => subtitle = d,
+            onAudioDelay: (d) => audio = d,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.add).first);
+    await tester.tap(find.byIcon(Icons.remove).last);
+    await tester.pump();
+    expect(subtitle, VideoSyncDialog.step);
+    expect(audio, -VideoSyncDialog.step);
+    await tester.tap(find.text('Reset'));
+    await tester.pump();
+    expect(subtitle, Duration.zero);
+    expect(audio, Duration.zero);
   });
 }

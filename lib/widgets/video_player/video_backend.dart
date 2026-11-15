@@ -77,6 +77,9 @@ class VideoPlaybackState {
   final bool completed;
   final Duration position;
   final Duration duration;
+
+  /// How far ahead of the start the media is loaded.
+  final Duration buffered;
   final double aspectRatio;
 
   /// The decoded frame's width in pixels, when the backend knows it.
@@ -94,6 +97,7 @@ class VideoPlaybackState {
     this.completed = false,
     this.position = Duration.zero,
     this.duration = Duration.zero,
+    this.buffered = Duration.zero,
     this.aspectRatio = 16 / 9,
     this.videoWidth,
     this.volume = 1,
@@ -123,13 +127,23 @@ abstract class VideoBackend {
   /// Null turns subtitles off.
   Future<void> selectSubtitleTrack(String? id);
 
+  /// False where the engine cannot shift the audio (ExoPlayer).
+  bool get supportsAudioDelay;
+
+  /// Positive shows subtitles later.
+  Future<void> setSubtitleDelay(Duration delay);
+
+  /// Positive plays the audio later.
+  Future<void> setAudioDelay(Duration delay);
+
   /// Adds an SRT or WebVTT file as a subtitle track and selects it.
   Future<void> addSubtitleFile(XFile file);
   Future<VideoStreamInfo> streamInfo();
 
   /// PNG of the current frame when the view is not a Flutter texture (Android's
-  /// SurfaceView); null means the page reads the frame back from Flutter.
-  Future<Uint8List?> nativeFrame();
+  /// SurfaceView), scaled to [width] if given; null means the page reads the
+  /// frame back from Flutter.
+  Future<Uint8List?> nativeFrame({int? width});
   Widget buildView(BuildContext context);
   Future<void> dispose();
 

@@ -1,7 +1,9 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:image/image.dart' as img;
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 
@@ -18,9 +20,8 @@ Future<bool> copyVideoFrame({
   try {
     final native = await backend.nativeFrame();
     if (native != null) return await ClipboardHelper.copyImageBytes(native);
-    final boundary =
-        frameKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null || boundary.size.width <= 0) return false;
+    final boundary = _boundary(frameKey);
+    if (boundary == null) return false;
     final videoWidth = backend.state.value.videoWidth;
     final ratio = videoWidth != null
         ? videoWidth / boundary.size.width
@@ -40,4 +41,61 @@ Future<bool> copyVideoFrame({
     errorLog('[VideoFrameCapture] Frame capture failed: $e');
     return false;
   }
+}
+
+/// A small JPEG of the current frame for the recent list.
+Future<Uint8List?> captureVideoThumbnail({
+  required VideoBackend backend,
+  required GlobalKey frameKey,
+  int width = 320,
+}) async {
+  try {
+    final native = await backend.nativeFrame(width: width);
+    if (native != null) return await compute(_pngToJpeg, native);
+    final boundary = _boundary(frameKey);
+    if (boundary == null) return null;
+    final image = await boundary.toImage(
+      pixelRatio: width / boundary.size.width,
+    );
+    try {
+      final rgba = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (rgba == null) return null;
+      return await compute(_rgbaToJpeg, (
+        rgba.buffer.asUint8List(),
+        image.width,
+        image.height,
+      ));
+    } finally {
+      image.dispose();
+    }
+  } catch (e) {
+    debugLog('[VideoFrameCapture] Thumbnail failed: $e');
+    return null;
+  }
+}
+
+RenderRepaintBoundary? _boundary(GlobalKey key) {
+  final boundary =
+      key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+  return boundary != null && boundary.size.width > 0 ? boundary : null;
+}
+
+const int _jpegQuality = 75;
+
+Uint8List? _pngToJpeg(Uint8List png) {
+  final image = img.decodePng(png);
+  return image == null ? null : img.encodeJpg(image, quality: _jpegQuality);
+}
+
+Uint8List _rgbaToJpeg((Uint8List, int, int) frame) {
+  final (bytes, width, height) = frame;
+  final image = img.Image.fromBytes(
+    width: width,
+    height: height,
+    bytes: bytes.buffer,
+    bytesOffset: bytes.offsetInBytes,
+    numChannels: 4,
+    order: img.ChannelOrder.rgba,
+  );
+  return img.encodeJpg(image, quality: _jpegQuality);
 }
