@@ -54,7 +54,7 @@ class VideoInfoDialog extends StatelessWidget {
           final info = snapshot.data;
           final rows = <(String, String?)>[
             (l10n.videoPlayerInfoSource, _source()),
-            (l10n.videoPlayerInfoFileSize, _fileSize(number)),
+            (l10n.videoPlayerInfoFileSize, _fileSize(info?.fileSize, number)),
             (
               l10n.videoPlayerInfoDuration,
               duration > Duration.zero ? _duration(duration) : null,
@@ -119,12 +119,14 @@ class VideoInfoDialog extends StatelessWidget {
 
   String _source() => source.isScheme('file')
       ? File.fromUri(source).path
+      : source.isScheme('content')
+      ? Uri.decodeComponent(source.pathSegments.lastOrNull ?? source.path)
       : '${source.host}${source.path}';
 
-  String? _fileSize(NumberFormat number) {
-    if (!source.isScheme('file')) return null;
+  String? _fileSize(int? known, NumberFormat number) {
+    if (known == null && !source.isScheme('file')) return null;
     try {
-      final bytes = File.fromUri(source).lengthSync();
+      final bytes = known ?? File.fromUri(source).lengthSync();
       const units = ['B', 'KB', 'MB', 'GB'];
       var value = bytes.toDouble();
       var unit = 0;

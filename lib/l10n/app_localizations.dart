@@ -27729,6 +27729,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign out of DeepSeek on this device? To chat with DeepSeek again you need to sign in or set the token.'**
   String get chatAiDeepSeekSignOutConfirm;
+
+  /// No description provided for @toolNameVideoPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Video Player'**
+  String get toolNameVideoPlayer;
+
+  /// No description provided for @toolDescVideoPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Play video files with gestures, speed and subtitles'**
+  String get toolDescVideoPlayer;
+
+  /// No description provided for @videoPlayerToolTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get videoPlayerToolTypeLabel;
+
+  /// No description provided for @videoPlayerToolDropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a Video'**
+  String get videoPlayerToolDropTitle;
+
+  /// No description provided for @videoPlayerToolDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag & drop a video file here'**
+  String get videoPlayerToolDropSubtitle;
+
+  /// No description provided for @videoPlayerToolPlayAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Play {name} again'**
+  String videoPlayerToolPlayAgain(String name);
 }
 
 class _AppLocalizationsDelegate

@@ -27,10 +27,10 @@ class VideoPip {
   final ValueNotifier<bool> active = ValueNotifier(false);
   final void Function(String action) onAction;
   final VoidCallback onDismissed;
-  final Map<String, String> labels;
+  Map<String, String> labels;
 
   /// Enter on leaving the app while playing; the button works either way.
-  final bool autoEnter;
+  bool autoEnter;
 
   ({bool playing, bool seekable, double aspectRatio})? _sent;
 
@@ -77,6 +77,16 @@ class VideoPip {
       'aspectRatio': aspectRatio,
       if (first) 'labels': labels,
     });
+  }
+
+  /// Takes effect with the next [update].
+  void reconfigure({
+    required bool autoEnter,
+    required Map<String, String> labels,
+  }) {
+    this.autoEnter = autoEnter;
+    this.labels = labels;
+    _sent = null;
   }
 
   Future<bool> enter() async {

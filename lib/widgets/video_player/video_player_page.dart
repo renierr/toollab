@@ -11,6 +11,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/pages/video_settings_page.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
@@ -53,7 +54,7 @@ class VideoQuality {
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
 /// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
 /// skip, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
-/// < / > change the speed. A horizontal swipe or a side double tap skips,
+/// < / > change the speed. A tap toggles playback; a horizontal swipe or a side double tap skips,
 /// a vertical swipe sets the volume. Skips use the video settings' length.
 /// The system media controls follow playback; Android adds picture-in-picture.
 class VideoPlayerPage extends StatefulWidget {
@@ -125,6 +126,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     'de.renier.tool_lab/video_system',
   );
 
+  late VideoPlayerSettings _settings = widget.settings;
   late VideoBackend _backend = _createBackend();
   late Uri _source = widget.source;
   final GlobalKey _frameKey = GlobalKey(debugLabel: 'VideoFrame');
@@ -149,7 +151,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Alignment _badgeAlignment = Alignment.center;
   double? _badgeLevel;
 
-  Duration get _seekStep => widget.settings.skip;
+  Duration get _seekStep => _settings.skip;
 
   /// Where playback should continue: X serves some replay segments only at
   /// lower qualities, so a seek can stall forever on the chosen one.
@@ -183,11 +185,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   }
 
   VideoBackend _createBackend() =>
-      VideoBackend.create(hardwareDecoding: widget.settings.hardwareDecoding);
+      VideoBackend.create(hardwareDecoding: _settings.hardwareDecoding);
 
   Future<void> _open() async {
     await _backend.open(widget.source, loop: widget.loop);
-    final speed = widget.settings.defaultSpeed;
+    final speed = _settings.defaultSpeed;
     if (!widget.live && speed != 1 && mounted) await _backend.setSpeed(speed);
   }
 
@@ -195,21 +197,51 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_pip != null || _session != null) return;
-    final l10n = AppLocalizations.of(context);
-    if (widget.settings.mediaControls) {
-      _session = VideoMediaSession(
-        title: widget.title ?? l10n.videoPlayerNotificationTitle,
-        live: widget.live,
-        onAction: _onRemoteAction,
-      );
-    }
+    if (_settings.mediaControls) _startSession();
     if (!Platform.isAndroid) return;
     _pip = VideoPip(
       onAction: _onRemoteAction,
       onDismissed: () => unawaited(_close()),
       labels: _pipLabels(),
-      autoEnter: widget.settings.pipOnLeave,
+      autoEnter: _settings.pipOnLeave,
     )..active.addListener(_onPipChanged);
+  }
+
+  void _startSession() {
+    _session = VideoMediaSession(
+      title:
+          widget.title ??
+          AppLocalizations.of(context).videoPlayerNotificationTitle,
+      live: widget.live,
+      onAction: _onRemoteAction,
+    );
+  }
+
+  /// Applies changed settings to the open video.
+  Future<void> _openSettings() async {
+    _hideTimer?.cancel();
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const VideoSettingsPage()));
+    final next = await SettingsService.videoPlayerSettings();
+    if (!mounted) return;
+    final old = _settings;
+    setState(() => _settings = next);
+    if (next.mediaControls != old.mediaControls) {
+      if (next.mediaControls) {
+        _startSession();
+      } else {
+        final session = _session;
+        _session = null;
+        unawaited(session?.dispose());
+      }
+    }
+    _pip?.reconfigure(autoEnter: next.pipOnLeave, labels: _pipLabels());
+    _onState();
+    if (next.hardwareDecoding != old.hardwareDecoding && !Platform.isAndroid) {
+      await _reopen(_source);
+    }
+    _scheduleHide();
   }
 
   Map<String, String> _pipLabels() {
@@ -223,10 +255,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     };
   }
 
-  /// A fresh backend per source: the old view leaves the tree before its
-  /// controller is disposed.
   Future<void> _switchQuality(VideoQuality quality, {Duration? start}) async {
     if (quality.source == _source) return;
+    await _reopen(quality.source, start: start);
+  }
+
+  /// A fresh backend per source: the old view leaves the tree before its
+  /// controller is disposed.
+  Future<void> _reopen(Uri source, {Duration? start}) async {
     final old = _backend;
     final position = widget.live
         ? null
@@ -238,14 +274,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     final next = _createBackend();
     // Opening first: the Android backend builds its view from the controller
     // that open() creates synchronously.
-    final opening = next.open(
-      quality.source,
-      loop: widget.loop,
-      start: position,
-    );
+    final opening = next.open(source, loop: widget.loop, start: position);
     next.state.addListener(_onState);
     setState(() {
-      _source = quality.source;
+      _source = source;
       _backend = next;
     });
     WidgetsBinding.instance.addPostFrameCallback(
@@ -423,7 +455,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     final at = _doubleTapAt;
     final width = context.size?.width ?? 0;
     if (widget.live ||
-        widget.settings.doubleTap == VideoDoubleTap.playPause ||
+        _settings.doubleTap == VideoDoubleTap.playPause ||
         at == null ||
         width <= 0) {
       unawaited(_togglePlay());
@@ -441,8 +473,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
 
   /// Android's media volume unless the settings pick the player's own.
   bool get _systemVolume =>
-      Platform.isAndroid &&
-      widget.settings.volumeTarget == VideoVolumeTarget.system;
+      Platform.isAndroid && _settings.volumeTarget == VideoVolumeTarget.system;
 
   Future<double> _readVolume() async {
     if (!_systemVolume) return _backend.state.value.volume;
@@ -726,8 +757,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final inPip = _pip?.active.value ?? false;
-    final swipeSkip = !widget.live && widget.settings.swipeSkip;
-    final swipeVolume = widget.settings.swipeVolume;
+    final swipeSkip = !widget.live && _settings.swipeSkip;
+    final swipeVolume = _settings.swipeVolume;
     return Theme(
       data: ThemeData.dark(useMaterial3: true),
       child: Scaffold(
@@ -740,13 +771,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
             onHover: (_) => _showControls(),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (_controlsVisible) {
-                  setState(() => _controlsVisible = false);
-                } else {
-                  _showControls();
-                }
-              },
+              onTap: () => unawaited(_togglePlay()),
               onDoubleTapDown: (details) =>
                   _doubleTapAt = details.localPosition,
               onDoubleTap: _onDoubleTap,
@@ -839,6 +864,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                               onLoadSubtitles: () =>
                                   unawaited(_loadSubtitles()),
                               onInfo: _showInfo,
+                              onSettings: () => unawaited(_openSettings()),
                             ),
                           ),
                         ),

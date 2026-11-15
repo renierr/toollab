@@ -34,6 +34,7 @@ open class MainActivity : FlutterFragmentActivity() {
     private var launchRoute: String? = null
     private var filePickerResult: MethodChannel.Result? = null
     private var filePickerTargetDir: String? = null
+    private var filePickerCopy = true
     private var selfUpdateInProgress = false
     private val videoPip by lazy { VideoPipHelper(this) }
 
@@ -162,6 +163,11 @@ open class MainActivity : FlutterFragmentActivity() {
         }
         val targetDir = filePickerTargetDir
         filePickerTargetDir = null
+        if (!filePickerCopy) {
+            filePickerCopy = true
+            result.success(uris.map(::pickedUriEntry))
+            return
+        }
         Thread {
             try {
                 val files = uris.map { uri -> copyPickedFileToCache(uri, targetDir) }
@@ -170,6 +176,19 @@ open class MainActivity : FlutterFragmentActivity() {
                 runOnUiThread { result.error("PICK_ERROR", e.message, null) }
             }
         }.start()
+    }
+
+    // The read grant lasts as long as this activity, enough for streaming.
+    private fun pickedUriEntry(uri: android.net.Uri): Map<String, String> {
+        var name = "file"
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) name = cursor.getString(0) ?: name
+        }
+        return mapOf(
+            "uri" to uri.toString(),
+            "name" to name,
+            "mimeType" to (contentResolver.getType(uri) ?: "application/octet-stream"),
+        )
     }
 
     // Writes into the Dart-side temp session dir when one is supplied, so the
@@ -323,6 +342,7 @@ open class MainActivity : FlutterFragmentActivity() {
                     }
                     filePickerResult = result
                     filePickerTargetDir = call.argument<String>("targetDir")
+                    filePickerCopy = call.argument<Boolean>("copy") ?: true
                     val allowMultiple = call.argument<Boolean>("multiple") ?: false
                     val mimeTypes = call.argument<List<String>>("mimeTypes") ?: emptyList()
                     startActivityForResult(
@@ -418,7 +438,7 @@ open class MainActivity : FlutterFragmentActivity() {
         systemAudio.activity = this
 
         // Register custom helpers
-        SharingHelper.registerChannel(messenger)
+        SharingHelper.registerChannel(this, messenger)
 
         val wakeLock = wakeLockHelper
             ?: WakeLockHelper(applicationContext).also {

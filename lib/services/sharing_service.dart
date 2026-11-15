@@ -93,6 +93,36 @@ class SharingService {
     return null;
   }
 
+  /// Copies streamed shares for tools that need a local file.
+  Future<SharedData> materialize(SharedData data) async {
+    if (!data.files.any((f) => f.needsCopy)) return data;
+    final files = <SharedFile>[];
+    for (final file in data.files) {
+      if (!file.needsCopy) {
+        files.add(file);
+        continue;
+      }
+      try {
+        final path = await _channel.invokeMethod<String>('materialize', {
+          'uri': file.contentUri,
+          'name': file.name,
+        });
+        if (path == null) continue;
+        files.add(
+          SharedFile(
+            path: path,
+            name: file.name,
+            mimeType: file.mimeType,
+            origin: file.origin,
+          ),
+        );
+      } catch (e) {
+        errorLog('[SharingService] Failed to copy ${file.name}: $e');
+      }
+    }
+    return SharedData(files, text: data.text);
+  }
+
   Future<SharedFile?> getInitialSharedFile() async {
     final data = await getInitialSharedData();
     return data?.firstFile;

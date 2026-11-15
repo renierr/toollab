@@ -24,6 +24,10 @@ class FileDropZone extends StatefulWidget {
   final bool multiple;
   final bool useAndroidStreamingPicker;
 
+  /// Android: hands back the picked `content://` URI as the [XFile] path
+  /// instead of copying the file, for consumers that can stream it.
+  final bool androidContentUris;
+
   /// When the Android streaming picker is used, its cache copies are written
   /// into this scope's temp session dir and tracked here, so the owning page
   /// removes them on dispose.
@@ -46,6 +50,7 @@ class FileDropZone extends StatefulWidget {
     this.compact = false,
     this.multiple = false,
     this.useAndroidStreamingPicker = false,
+    this.androidContentUris = false,
     this.tempScope,
   }) : assert(
          onFileSelected != null || onFilesSelected != null,
@@ -91,12 +96,14 @@ class _FileDropZoneState extends State<FileDropZone> {
             : null,
         mimeTypes: widget.allowedMimeTypes,
       );
-      if (Platform.isAndroid && widget.useAndroidStreamingPicker) {
+      if (Platform.isAndroid &&
+          (widget.useAndroidStreamingPicker || widget.androidContentUris)) {
         final scope = widget.tempScope;
         final result = await _filePickerChannel
             .invokeMethod<List<dynamic>>('pickFiles', {
               'multiple': widget.multiple,
               'mimeTypes': widget.allowedMimeTypes ?? const <String>[],
+              'copy': !widget.androidContentUris,
               if (scope != null)
                 'targetDir': (await TempFileManager.sessionDir).path,
             });
@@ -110,7 +117,7 @@ class _FileDropZoneState extends State<FileDropZone> {
         final files = entries
             .map(
               (entry) => XFile(
-                entry['path']! as String,
+                (entry['path'] ?? entry['uri'])! as String,
                 name: entry['name']! as String,
                 mimeType: entry['mimeType']! as String,
               ),

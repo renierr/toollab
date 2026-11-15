@@ -37,6 +37,11 @@ class NativeVideoBackend implements VideoBackend {
             File.fromUri(source),
             viewType: VideoViewType.platformView,
           )
+        : source.isScheme('content')
+        ? VideoPlayerController.contentUri(
+            source,
+            viewType: VideoViewType.platformView,
+          )
         : VideoPlayerController.networkUrl(
             source,
             viewType: VideoViewType.platformView,
@@ -211,10 +216,15 @@ class NativeVideoBackend implements VideoBackend {
     Map<Object?, Object?>? videoFormat;
     Map<Object?, Object?>? audioFormat;
     final source = _source;
-    if (source != null && source.isScheme('file')) {
+    final local =
+        source != null &&
+        (source.isScheme('file') || source.isScheme('content'));
+    if (local) {
       try {
         final tracks = await _systemChannel.invokeListMethod<Map>('tracks', {
-          'path': File.fromUri(source).path,
+          'path': source.isScheme('file')
+              ? File.fromUri(source).path
+              : source.toString(),
         });
         for (final t in tracks ?? const <Map>[]) {
           final mime = t['mime'] as String? ?? '';
@@ -223,6 +233,16 @@ class NativeVideoBackend implements VideoBackend {
         }
       } catch (e) {
         errorLog('[NativeVideoBackend] Track info failed: $e');
+      }
+    }
+    int? fileSize;
+    if (source != null && source.isScheme('content')) {
+      try {
+        fileSize = await _systemChannel.invokeMethod<int>('size', {
+          'uri': source.toString(),
+        });
+      } catch (e) {
+        errorLog('[NativeVideoBackend] Size query failed: $e');
       }
     }
     String? codec(Map<Object?, Object?>? format) =>
@@ -238,6 +258,7 @@ class NativeVideoBackend implements VideoBackend {
       sampleRate: audio?.sampleRate ?? audioFormat?['sampleRate'] as int?,
       channels: audio?.channelCount ?? audioFormat?['channels'] as int?,
       audioBitrate: audio?.bitrate ?? audioFormat?['bitrate'] as int?,
+      fileSize: fileSize,
     );
   }
 

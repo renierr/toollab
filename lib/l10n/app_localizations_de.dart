@@ -15887,4 +15887,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get chatAiDeepSeekSignOutConfirm =>
       'Auf diesem Gerät von DeepSeek abmelden? Um wieder mit DeepSeek zu chatten, musst du dich neu anmelden oder den Token setzen.';
+
+  @override
+  String get toolNameVideoPlayer => 'Videoplayer';
+
+  @override
+  String get toolDescVideoPlayer =>
+      'Videodateien mit Gesten, Geschwindigkeit und Untertiteln abspielen';
+
+  @override
+  String get videoPlayerToolTypeLabel => 'Videos';
+
+  @override
+  String get videoPlayerToolDropTitle => 'Video öffnen';
+
+  @override
+  String get videoPlayerToolDropSubtitle => 'Videodatei hier ablegen';
+
+  @override
+  String videoPlayerToolPlayAgain(String name) {
+    return '$name erneut abspielen';
+  }
 }

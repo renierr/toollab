@@ -583,6 +583,19 @@
         </activity-alias>
 
         <activity-alias
+            android:name="de.renier.tool_lab.VideoPlayerAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="Video Player"
+            android:icon="@mipmap/ic_launcher_video_player"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
             android:name="de.renier.tool_lab.FastDropAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Fast Drop"

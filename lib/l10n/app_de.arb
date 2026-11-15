@@ -5998,5 +5998,11 @@
   "chatAiDeepSeekCopyToken": "Token kopieren",
   "chatAiDeepSeekSetToken": "Token setzen",
   "chatAiDeepSeekTokenCopied": "Token kopiert. Halte ihn geheim: Er gibt vollen Zugriff auf dein DeepSeek-Konto.",
-  "chatAiDeepSeekSignOutConfirm": "Auf diesem Gerät von DeepSeek abmelden? Um wieder mit DeepSeek zu chatten, musst du dich neu anmelden oder den Token setzen."
+  "chatAiDeepSeekSignOutConfirm": "Auf diesem Gerät von DeepSeek abmelden? Um wieder mit DeepSeek zu chatten, musst du dich neu anmelden oder den Token setzen.",
+  "toolNameVideoPlayer": "Videoplayer",
+  "toolDescVideoPlayer": "Videodateien mit Gesten, Geschwindigkeit und Untertiteln abspielen",
+  "videoPlayerToolTypeLabel": "Videos",
+  "videoPlayerToolDropTitle": "Video öffnen",
+  "videoPlayerToolDropSubtitle": "Videodatei hier ablegen",
+  "videoPlayerToolPlayAgain": "{name} erneut abspielen"
 }

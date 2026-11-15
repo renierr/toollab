@@ -15765,4 +15765,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatAiDeepSeekSignOutConfirm =>
       'Sign out of DeepSeek on this device? To chat with DeepSeek again you need to sign in or set the token.';
+
+  @override
+  String get toolNameVideoPlayer => 'Video Player';
+
+  @override
+  String get toolDescVideoPlayer =>
+      'Play video files with gestures, speed and subtitles';
+
+  @override
+  String get videoPlayerToolTypeLabel => 'Videos';
+
+  @override
+  String get videoPlayerToolDropTitle => 'Open a Video';
+
+  @override
+  String get videoPlayerToolDropSubtitle => 'Drag & drop a video file here';
+
+  @override
+  String videoPlayerToolPlayAgain(String name) {
+    return 'Play $name again';
+  }
 }

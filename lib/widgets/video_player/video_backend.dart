@@ -50,6 +50,9 @@ class VideoStreamInfo {
   final int? channels;
   final int? audioBitrate;
 
+  /// Only for sources that are not plain files.
+  final int? fileSize;
+
   const VideoStreamInfo({
     this.width,
     this.height,
@@ -61,6 +64,7 @@ class VideoStreamInfo {
     this.sampleRate,
     this.channels,
     this.audioBitrate,
+    this.fileSize,
   });
 }
 

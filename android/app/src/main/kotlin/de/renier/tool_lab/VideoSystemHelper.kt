@@ -4,8 +4,10 @@ import android.content.Context
 import android.media.AudioManager
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.provider.OpenableColumns
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import kotlin.math.roundToInt
@@ -39,7 +41,7 @@ object VideoSystemHelper {
                     val main = Handler(Looper.getMainLooper())
                     Thread {
                         val tracks = try {
-                            readTracks(path)
+                            readTracks(appContext, path)
                         } catch (e: Exception) {
                             android.util.Log.w("VideoSystem", "tracks failed: ${e.message}")
                             emptyList()
@@ -47,15 +49,32 @@ object VideoSystemHelper {
                         main.post { result.success(tracks) }
                     }.start()
                 }
+                "size" -> {
+                    val uri = call.argument<String>("uri")?.let(Uri::parse)
+                    val size = uri?.let {
+                        try {
+                            appContext.contentResolver.query(it, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
+                                if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) else null
+                            }
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                    result.success(size)
+                }
                 else -> result.notImplemented()
             }
         }
     }
 
-    private fun readTracks(path: String): List<Map<String, Any?>> {
+    private fun readTracks(context: Context, path: String): List<Map<String, Any?>> {
         val extractor = MediaExtractor()
         try {
-            extractor.setDataSource(path)
+            if (path.startsWith("content://")) {
+                extractor.setDataSource(context, Uri.parse(path), null)
+            } else {
+                extractor.setDataSource(path)
+            }
             return (0 until extractor.trackCount).map { index ->
                 val format = extractor.getTrackFormat(index)
                 mapOf(

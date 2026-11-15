@@ -49,6 +49,7 @@ import 'package:tool_lab/tools/sudoku/config.dart';
 import 'package:tool_lab/tools/news/config.dart';
 import 'package:tool_lab/tools/x_feed/config.dart';
 import 'package:tool_lab/tools/translator/config.dart';
+import 'package:tool_lab/tools/video_player/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -86,6 +87,7 @@ class ToolRegistry {
     GroceryListTool.config,
     MarkdownViewerTool.config,
     ImageViewerTool.config,
+    VideoPlayerTool.config,
     FastDropTool.config,
     ImagesToPdfTool.config,
     ChiptuneTool.config,

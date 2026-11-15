@@ -50,11 +50,16 @@ class SharedFile {
   final String mimeType;
   final SharedFileOrigin? origin;
 
+  /// Android: a streamable `content://` URI that was not copied; [path] is
+  /// empty until [SharingService.materialize] copies it.
+  final String? contentUri;
+
   SharedFile({
     required this.path,
     required this.name,
     required String mimeType,
     this.origin,
+    this.contentUri,
   }) : mimeType = _resolveMimeType(path, name, mimeType);
 
   static String _resolveMimeType(String path, String name, String mimeType) {
@@ -77,6 +82,7 @@ class SharedFile {
       origin: map['origin'] is Map
           ? SharedFileOrigin.fromMap(map['origin'])
           : null,
+      contentUri: map['contentUri'] as String?,
     );
   }
 
@@ -85,7 +91,13 @@ class SharedFile {
     'name': name,
     'mimeType': mimeType,
     if (origin != null) 'origin': origin!.toMap(),
+    if (contentUri != null) 'contentUri': contentUri,
   };
+
+  bool get needsCopy => path.isEmpty && contentUri != null;
+
+  /// Where the content lives, for playback and duplicate checks.
+  Uri get uri => contentUri != null ? Uri.parse(contentUri!) : Uri.file(path);
 }
 
 class SharedData {

@@ -7560,5 +7560,12 @@
   "chatAiDeepSeekCopyToken": "Copy token",
   "chatAiDeepSeekSetToken": "Set token",
   "chatAiDeepSeekTokenCopied": "Token copied. Keep it secret: it gives full access to your DeepSeek account.",
-  "chatAiDeepSeekSignOutConfirm": "Sign out of DeepSeek on this device? To chat with DeepSeek again you need to sign in or set the token."
+  "chatAiDeepSeekSignOutConfirm": "Sign out of DeepSeek on this device? To chat with DeepSeek again you need to sign in or set the token.",
+  "toolNameVideoPlayer": "Video Player",
+  "toolDescVideoPlayer": "Play video files with gestures, speed and subtitles",
+  "videoPlayerToolTypeLabel": "Videos",
+  "videoPlayerToolDropTitle": "Open a Video",
+  "videoPlayerToolDropSubtitle": "Drag & drop a video file here",
+  "videoPlayerToolPlayAgain": "Play {name} again",
+  "@videoPlayerToolPlayAgain": {"placeholders": {"name": {"type": "String"}}}
 }

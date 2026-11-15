@@ -191,12 +191,12 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
     if (firstFile == null) return;
 
     final now = DateTime.now();
-    if (_lastSharedFilePath == firstFile.path &&
+    if (_lastSharedFilePath == firstFile.uri.toString() &&
         _lastSharedTime != null &&
         now.difference(_lastSharedTime!) < const Duration(seconds: 2)) {
       return;
     }
-    _lastSharedFilePath = firstFile.path;
+    _lastSharedFilePath = firstFile.uri.toString();
     _lastSharedTime = now;
 
     final matchingTools = SharingService.instance.getMatchingTools(firstFile);
@@ -213,7 +213,7 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
 
     if (matchingTools.length == 1) {
       final tool = matchingTools.first;
-      _router.go(tool.route, extra: data);
+      await _openShared(tool, data);
       return;
     }
 
@@ -227,7 +227,7 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
         orElse: () => null,
       );
       if (defaultTool != null) {
-        _router.go(defaultTool.route, extra: data);
+        await _openShared(defaultTool, data);
         return;
       }
     }
@@ -249,8 +249,16 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
           selectedTool.id,
         );
       }
-      _router.go(selectedTool.route, extra: data);
+      await _openShared(selectedTool, data);
     }
+  }
+
+  Future<void> _openShared(ToolModel tool, SharedData data) async {
+    final shared = tool.acceptsContentUris
+        ? data
+        : await SharingService.instance.materialize(data);
+    if (!mounted || shared.isEmpty) return;
+    _router.go(tool.route, extra: shared);
   }
 
   @override

@@ -70,6 +70,10 @@ class ToolModel {
 
   final bool androidProcessIsolated;
 
+  /// Takes shared files as `content://` URIs ([SharedFile.contentUri])
+  /// without a local copy.
+  final bool acceptsContentUris;
+
   ToolModel({
     required this.id,
     required this.name,
@@ -88,6 +92,7 @@ class ToolModel {
     this.nameL10n,
     this.descriptionL10n,
     this.androidProcessIsolated = false,
+    this.acceptsContentUris = false,
     Widget Function(SharedData? sharedData)? createPage,
   }) : createPage = createPage ?? ((_) => const SizedBox.shrink());
 

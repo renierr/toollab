@@ -33,6 +33,7 @@ class VideoControls extends StatelessWidget {
   final ValueChanged<String?> onSubtitleTrack;
   final VoidCallback onLoadSubtitles;
   final VoidCallback onInfo;
+  final VoidCallback onSettings;
 
   const VideoControls({
     super.key,
@@ -58,6 +59,7 @@ class VideoControls extends StatelessWidget {
     required this.onSubtitleTrack,
     required this.onLoadSubtitles,
     required this.onInfo,
+    required this.onSettings,
   });
 
   @override
@@ -223,6 +225,12 @@ class VideoControls extends StatelessWidget {
                           icon: const Icon(Icons.info_outline),
                           tooltip: l10n.videoPlayerInfo,
                           onPressed: onInfo,
+                        ),
+                        IconButton(
+                          iconSize: 28,
+                          icon: const Icon(Icons.settings_outlined),
+                          tooltip: l10n.videoSettingsTitle,
+                          onPressed: onSettings,
                         ),
                       ],
                     ),
