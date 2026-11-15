@@ -394,7 +394,9 @@ class SqliteViewerState extends ChangeNotifier {
       errorLog('SqliteViewer: reopen writable failed: $e');
       try {
         await _inspector.open(path);
-      } catch (_) {}
+      } catch (e) {
+        debugLog('SqliteViewer: read-only reopen failed: $e');
+      }
       _editMode = false;
       return false;
     } finally {
@@ -568,7 +570,9 @@ class SqliteViewerState extends ChangeNotifier {
     if (path == null || !await File(path).exists()) return null;
     try {
       await _inspector.runSql('PRAGMA wal_checkpoint(TRUNCATE)');
-    } catch (_) {}
+    } catch (e) {
+      debugLog('SqliteViewer: WAL checkpoint before export failed: $e');
+    }
     return path;
   }
 

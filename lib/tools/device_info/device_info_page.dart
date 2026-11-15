@@ -342,7 +342,9 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       SystemSpecsService.getSystemDiagnostics(),
     ).wait;
     if (mounted) {
-      final mediaQuery = MediaQuery.of(context);
+      final size = MediaQuery.sizeOf(context);
+      final dpr = MediaQuery.devicePixelRatioOf(context);
+      final orientation = MediaQuery.orientationOf(context);
       if (diagnostics['cpuModel'] case final String cpuModel
           when cpuModel.isNotEmpty) {
         _hardwareInfo[l10n.miscDeviceInfoCpuModel] = cpuModel;
@@ -364,16 +366,14 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
           l10n.miscDeviceInfoWindowsDisplayResolution:
               '${display['width']} x ${display['height']} px',
         l10n.miscDeviceInfoAppViewSize:
-            '${mediaQuery.size.width.round()} x ${mediaQuery.size.height.round()} pt',
+            '${size.width.round()} x ${size.height.round()} pt',
         l10n.miscDeviceInfoAppViewPixels:
-            '${(mediaQuery.size.width * mediaQuery.devicePixelRatio).round()} x ${(mediaQuery.size.height * mediaQuery.devicePixelRatio).round()} px',
-        l10n.miscDeviceInfoDisplayScale:
-            'x${mediaQuery.devicePixelRatio.toStringAsFixed(2)}',
+            '${(size.width * dpr).round()} x ${(size.height * dpr).round()} px',
+        l10n.miscDeviceInfoDisplayScale: 'x${dpr.toStringAsFixed(2)}',
         if (display['refreshRate'] case final int refreshRate
             when refreshRate > 0)
           l10n.miscDeviceInfoRefreshRate: '$refreshRate Hz',
-        l10n.miscDeviceInfoOrientation: mediaQuery.orientation.name
-            .toUpperCase(),
+        l10n.miscDeviceInfoOrientation: orientation.name.toUpperCase(),
       };
 
       final now = DateTime.now();

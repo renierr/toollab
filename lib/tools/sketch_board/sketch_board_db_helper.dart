@@ -66,7 +66,9 @@ class SketchBoardDbHelper {
     if (raw is String && raw.isNotEmpty) {
       try {
         return base64Decode(raw);
-      } catch (_) {}
+      } catch (e) {
+        debugLog('[SketchBoardDbHelper] Failed to decode base64 blob: $e');
+      }
     }
     return null;
   }

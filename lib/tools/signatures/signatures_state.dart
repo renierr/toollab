@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -86,7 +87,9 @@ class SignaturesState extends ChangeNotifier {
         _settings = SignatureSettings.fromJson(
           Map<String, dynamic>.from(jsonDecode(stored) as Map),
         );
-      } catch (_) {}
+      } catch (e) {
+        debugLog('[SignaturesState] Failed to decode settings: $e');
+      }
     }
     final bg = await DatabaseService.instance.getSetting(
       SignaturesTool.config.id,

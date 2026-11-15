@@ -728,7 +728,9 @@ class TreadmillControlState extends ChangeNotifier {
         // Best-effort on Windows, which already negotiates a large MTU.
         try {
           await UniversalBle.requestMtu(deviceId, 247);
-        } catch (_) {}
+        } catch (e) {
+          debugLog('[TreadmillControl] requestMtu failed: $e');
+        }
 
         final profile = resolveTreadmillGatt(services);
         _actualTreadmillService = profile.service;
@@ -781,7 +783,11 @@ class TreadmillControlState extends ChangeNotifier {
                 _actualTreadmillService!,
                 _actualTreadmillControlPointChar!,
               );
-            } catch (_) {}
+            } catch (e) {
+              debugLog(
+                '[TreadmillControl] Control point indication subscribe failed: $e',
+              );
+            }
           }
 
           try {
@@ -811,7 +817,9 @@ class TreadmillControlState extends ChangeNotifier {
               rscServiceDiscovered.uuid,
               rscCharDiscovered.uuid,
             );
-          } catch (_) {}
+          } catch (e) {
+            debugLog('[TreadmillControl] RSC cadence subscribe failed: $e');
+          }
         }
       } else if (state == BleConnectionState.disconnected) {
         _dropTreadmillLink();
@@ -865,7 +873,9 @@ class TreadmillControlState extends ChangeNotifier {
           if (bat.isNotEmpty) {
             batteryLevel = bat[0];
           }
-        } catch (_) {}
+        } catch (e) {
+          debugLog('[TreadmillControl] Battery read failed: $e');
+        }
       } else if (state == BleConnectionState.disconnected) {
         _dropHrmLink();
       }
@@ -1299,7 +1309,9 @@ class TreadmillControlState extends ChangeNotifier {
           _wakeLockLease = await PowerWakeLockService.acquireFull();
           wakeLockEnabled = true;
           notifyListeners();
-        } catch (_) {}
+        } catch (e) {
+          debugLog('[TreadmillControl] Wakelock acquire failed: $e');
+        }
       }
     } else {
       if (_wakeLockLease != null) {

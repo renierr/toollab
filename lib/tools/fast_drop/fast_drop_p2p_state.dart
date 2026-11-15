@@ -241,7 +241,9 @@ class FastDropP2pState extends ChangeNotifier {
           ),
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      debugLog('[FastDropP2p] rejecting incoming request failed: $e');
+    }
   }
 
   // ---------------------------------------------------------------------

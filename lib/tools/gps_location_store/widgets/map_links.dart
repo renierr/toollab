@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 class MapLinks extends StatelessWidget {
@@ -19,7 +20,9 @@ class MapLinks extends StatelessWidget {
   Future<void> _open(Uri uri) async {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {}
+    } catch (e) {
+      debugLog('MapLinks: launching $uri failed: $e');
+    }
   }
 
   @override

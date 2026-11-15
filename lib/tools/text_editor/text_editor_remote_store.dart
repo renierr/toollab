@@ -164,7 +164,11 @@ class TextEditorRemoteStore {
         );
         if (profile.id == id) return profile;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugLog(
+        '[TextEditorRemoteStore] Failed to decode connection profiles: $e',
+      );
+    }
     return null;
   }
 }

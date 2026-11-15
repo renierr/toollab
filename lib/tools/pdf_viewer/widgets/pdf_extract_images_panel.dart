@@ -48,8 +48,8 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_didInitControlsExpanded) {
-      final media = MediaQuery.of(context);
-      final isCompactScreen = media.size.width < 600 || media.size.height < 760;
+      final size = MediaQuery.sizeOf(context);
+      final isCompactScreen = size.width < 600 || size.height < 760;
       _controlsExpanded = !isCompactScreen;
       _didInitControlsExpanded = true;
     }
@@ -348,8 +348,8 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final media = MediaQuery.of(context);
-    final isCompactScreen = media.size.width < 600 || media.size.height < 760;
+    final size = MediaQuery.sizeOf(context);
+    final isCompactScreen = size.width < 600 || size.height < 760;
 
     return Scaffold(
       appBar: AppBar(

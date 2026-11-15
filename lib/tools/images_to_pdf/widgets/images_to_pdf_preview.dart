@@ -51,7 +51,7 @@ class ImagesToPdfPreview extends StatelessWidget {
                 fit: BoxFit.contain,
                 cacheWidth:
                     (MediaQuery.sizeOf(context).width *
-                            MediaQuery.of(context).devicePixelRatio *
+                            MediaQuery.devicePixelRatioOf(context) *
                             2)
                         .round(),
                 filterQuality: FilterQuality.medium,

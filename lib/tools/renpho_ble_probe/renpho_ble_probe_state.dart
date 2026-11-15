@@ -664,7 +664,9 @@ class RenphoBleProbeState extends ChangeNotifier {
     // than that and would arrive truncated.
     try {
       await UniversalBle.requestMtu(id, 247);
-    } catch (_) {}
+    } catch (e) {
+      debugLog('[RenphoScale] requestMtu failed: $e');
+    }
 
     final services = await UniversalBle.discoverServices(id);
     final control = services

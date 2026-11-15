@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/calculator/config.dart';
 
@@ -67,7 +68,9 @@ class HistoryManager {
         _storageKey,
         json,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugLog('CalculatorHistory: save failed: $e');
+    }
   }
 
   Future<HistoryItem> addItem(String expression, String result) async {

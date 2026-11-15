@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 class SystemSpecsService {
   SystemSpecsService._();
@@ -17,7 +18,9 @@ class SystemSpecsService {
             'total': res['total'] as int? ?? 0,
           };
         }
-      } catch (_) {}
+      } catch (e) {
+        debugLog('SystemSpecsService: getStorageInfo failed: $e');
+      }
     } else if (Platform.isLinux) {
       return _getLinuxStorageInfo();
     }
@@ -83,7 +86,9 @@ class SystemSpecsService {
           }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugLog('SystemSpecsService: df storage probe failed: $e');
+    }
     return {'free': 0, 'total': 0};
   }
 
@@ -110,7 +115,9 @@ class SystemSpecsService {
             return {'free': free, 'total': total};
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        debugLog('SystemSpecsService: reading /proc/meminfo failed: $e');
+      }
     }
     return {'free': 0, 'total': 0};
   }
@@ -128,7 +135,9 @@ class SystemSpecsService {
           'refreshRate': res['refreshRate'] as int? ?? 0,
         };
       }
-    } catch (_) {}
+    } catch (e) {
+      debugLog('SystemSpecsService: getDisplayInfo failed: $e');
+    }
     return {};
   }
 
@@ -218,7 +227,9 @@ class SystemSpecsService {
               }
             }
           }
-        } catch (_) {}
+        } catch (e) {
+          debugLog('SystemSpecsService: sysfs GPU probe failed: $e');
+        }
       }
 
       return {
@@ -366,7 +377,9 @@ class SystemSpecsService {
             'light': res['light'] as bool? ?? false,
           };
         }
-      } catch (_) {}
+      } catch (e) {
+        debugLog('SystemSpecsService: getSensorInfo failed: $e');
+      }
     }
     return {
       'accelerometer': false,

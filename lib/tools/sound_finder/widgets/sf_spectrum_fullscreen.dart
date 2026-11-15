@@ -127,7 +127,7 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
     final RenderRepaintBoundary? boundary =
         _shotKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (boundary == null) return null;
-    final double ratio = MediaQuery.of(context).devicePixelRatio;
+    final double ratio = MediaQuery.devicePixelRatioOf(context);
     final ui.Image image = await boundary.toImage(pixelRatio: ratio);
     try {
       final ByteData? data = await image.toByteData(

@@ -739,7 +739,9 @@ class SleepSessionStore {
         } else {
           await f.rename(target.path);
         }
-      } catch (_) {}
+      } catch (e) {
+        debugLog('$_logPrefix migrating legacy file ${f.path}: $e');
+      }
     }
   }
 

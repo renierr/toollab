@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/external_activity.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -212,7 +213,9 @@ class _TvFilePickerDialogState extends State<TvFilePickerDialog>
           files.add(entity);
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugLog('TvFilePickerDialog: listing $path failed: $e');
+    }
 
     int compareByName(FileSystemEntity a, FileSystemEntity b) => p
         .basename(a.path)

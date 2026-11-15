@@ -77,7 +77,9 @@ class GameAudioService {
   void _raiseVoiceCeiling() {
     try {
       SoLoud.instance.setMaxActiveVoiceCount(_voiceCeiling);
-    } catch (_) {}
+    } catch (e) {
+      debugLog('[$logTag] setMaxActiveVoiceCount failed: $e');
+    }
   }
 
   String? _currentLoopKey;
@@ -170,7 +172,9 @@ class GameAudioService {
         volume: (volume * _masterVolume).clamp(0.0, 1.0),
         looping: true,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugLog('[$logTag] playLoop("$key") failed: $e');
+    }
   }
 
   /// Stops the active background loop.

@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -230,7 +231,9 @@ class SketchBoardState extends ChangeNotifier {
         _fillColor = j['fillColor'] as String?;
         _strokeWidth = (j['strokeWidth'] as num?)?.toDouble() ?? _strokeWidth;
         _fontSize = (j['fontSize'] as num?)?.toDouble() ?? _fontSize;
-      } catch (_) {}
+      } catch (e) {
+        debugLog('[SketchBoardState] Failed to decode settings: $e');
+      }
     }
     final bg = await DatabaseService.instance.getSetting(
       SketchBoardTool.config.id,

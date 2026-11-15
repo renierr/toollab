@@ -186,7 +186,11 @@ class P2pDiscoveryService {
       if (maxLen != null && maxLen > 8) {
         chunkSize = P2pProtocol.safePayloadSize(maxLen);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugLog(
+        '[P2pDiscovery] getMaximumNotifyLength failed, using default chunk size: $e',
+      );
+    }
 
     // Tell the sender what this link looks like from here, so it does not
     // write more per chunk than this stack can take in. Always reported, and

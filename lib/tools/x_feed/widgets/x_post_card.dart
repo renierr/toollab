@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/focus_outline.dart';
+import 'package:tool_lab/widgets/text_scale_multiplier.dart';
 
 import '../models/x_post.dart';
 import '../x_feed_state.dart';
@@ -360,14 +361,7 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
     );
 
     final textScale = context.select<XFeedState, double>((s) => s.textScale);
-    if (textScale == 1.0) return content;
-    final media = MediaQuery.of(context);
-    return MediaQuery(
-      data: media.copyWith(
-        textScaler: TextScaler.linear(media.textScaler.scale(1) * textScale),
-      ),
-      child: content,
-    );
+    return TextScaleMultiplier(scale: textScale, child: content);
   }
 }
 

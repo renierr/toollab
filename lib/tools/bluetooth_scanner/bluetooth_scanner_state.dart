@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'config.dart';
 import 'data/device_parser.dart';
 import 'data/scanned_device.dart';
@@ -199,7 +200,11 @@ class BluetoothScannerState extends ChangeNotifier {
       }
       _deviceCount = _devices.length;
       notifyListeners();
-    } catch (_) {}
+    } catch (e) {
+      debugLog(
+        'BluetoothScannerState: loading paired classic devices failed: $e',
+      );
+    }
   }
 
   void _onDeviceDiscovered(BleDevice bleDevice) {
@@ -312,7 +317,9 @@ class BluetoothScannerState extends ChangeNotifier {
         final parsed = _parseHistoryJson(raw);
         _history.addAll(parsed);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugLog('BluetoothScannerState: loading history failed: $e');
+    }
   }
 
   Map<String, DeviceHistoryEntry> _parseHistoryJson(String raw) {
@@ -338,7 +345,9 @@ class BluetoothScannerState extends ChangeNotifier {
         'history',
         jsonEncode(json),
       );
-    } catch (_) {}
+    } catch (e) {
+      debugLog('BluetoothScannerState: persisting history failed: $e');
+    }
   }
 
   @override

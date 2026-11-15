@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 class WorkoutDataPoint {
   final int timestamp; // seconds since workout start
@@ -200,7 +201,9 @@ class TreadmillSession {
         dps = decoded
             .map((x) => WorkoutDataPoint.fromMap(x as Map<String, dynamic>))
             .toList();
-      } catch (_) {}
+      } catch (e) {
+        debugLog('TreadmillSession: Failed to decode data points: $e');
+      }
     }
     return TreadmillSession(
       id: map['id'] as int?,

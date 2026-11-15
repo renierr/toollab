@@ -125,7 +125,9 @@ class MicAnalyzer {
     if (!_recording || _paused) return;
     try {
       await _recorder.pause();
-    } catch (_) {}
+    } catch (e) {
+      debugLog('[MicAnalyzer] pause failed: $e');
+    }
     _paused = true;
   }
 
@@ -133,7 +135,9 @@ class MicAnalyzer {
     if (!_recording || !_paused) return;
     try {
       await _recorder.resume();
-    } catch (_) {}
+    } catch (e) {
+      debugLog('[MicAnalyzer] resume failed: $e');
+    }
     _paused = false;
   }
 

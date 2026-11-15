@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'memo_settings.dart';
 import 'memo_transcript.dart';
@@ -54,7 +55,9 @@ class MemoClip {
       } finally {
         await raf.close();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugLog('MemoClip: reading header of ${file.path} failed: $e');
+    }
 
     return MemoClip(
       path: file.path,
