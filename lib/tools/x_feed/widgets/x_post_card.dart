@@ -386,14 +386,24 @@ class _ReadMark extends StatelessWidget {
         final l10n = AppLocalizations.of(context);
         final scheme = Theme.of(context).colorScheme;
         final sent = mark == XReadMark.sent;
+        final color = sent ? scheme.primary : scheme.onSurfaceVariant;
         return Padding(
-          padding: const EdgeInsets.only(top: 6),
+          padding: const EdgeInsets.only(top: 8),
           child: Tooltip(
             message: sent ? l10n.xFeedSeenSent : l10n.xFeedSeenPending,
-            child: Icon(
-              sent ? Icons.done_all : Icons.done,
-              size: 16,
-              color: sent ? scheme.primary : scheme.onSurfaceVariant,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: sent ? color : color.withValues(alpha: 0.15),
+                border: Border.all(color: color, width: 1.5),
+              ),
+              child: Icon(
+                sent ? Icons.done_all : Icons.done,
+                size: 20,
+                color: sent ? scheme.onPrimary : color,
+              ),
             ),
           ),
         );
