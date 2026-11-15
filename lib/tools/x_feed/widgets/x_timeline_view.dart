@@ -27,7 +27,7 @@ class XTimelineView extends StatefulWidget {
   final String? emptyMessage;
 
   /// Receives the ids of posts that stayed on screen for a moment.
-  final ValueChanged<List<String>>? onSeen;
+  final ValueChanged<List<XPost>>? onSeen;
 
   const XTimelineView({
     super.key,
@@ -272,7 +272,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     final onSeen = widget.onSeen;
     if (onSeen == null || !mounted) return;
     final seen = _visibleIds();
-    if (seen.isNotEmpty) onSeen(seen.toList());
+    if (seen.isNotEmpty) onSeen(_postsOf(seen));
   }
 
   /// A post that leaves the screen while scrolling counts as seen when it was
@@ -294,7 +294,15 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     for (final id in visible) {
       _visibleSince.putIfAbsent(id, () => now);
     }
-    if (passed.isNotEmpty) onSeen(passed);
+    if (passed.isNotEmpty) onSeen(_postsOf(passed));
+  }
+
+  List<XPost> _postsOf(Iterable<String> ids) {
+    final wanted = ids.toSet();
+    return [
+      for (final post in _shown)
+        if (wanted.contains(post.id)) post,
+    ];
   }
 
   /// Ids of the posts at least half on screen (or filling half of it).

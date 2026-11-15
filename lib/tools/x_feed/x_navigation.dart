@@ -11,7 +11,7 @@ class XNavigation {
 
   /// An opened post counts as seen, as on x.com.
   static Future<void> openPost(BuildContext context, XPost post) {
-    context.read<XFeedState>().markSeen([post.id]);
+    context.read<XFeedState>().markSeen(post.seenIds);
     return Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => XPostDetailPage(post: post)),
     );

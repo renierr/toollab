@@ -199,6 +199,7 @@ void main() {
   test('unwraps reposts and picks the best mp4', () {
     final post = XTimelineParser.parse(json).posts[1];
     expect(post.repostedBy?.screenName, 'user4');
+    expect(post.seenIds, ['5', '4']);
     expect(post.author.screenName, 'user5');
     expect(post.text, 'clip');
     final media = post.media.single;

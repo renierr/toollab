@@ -439,7 +439,10 @@ void _seenTests() {
     await _pump(
       tester,
       Scaffold(
-        body: XTimelineView(controller: controller, onSeen: seen.addAll),
+        body: XTimelineView(
+          controller: controller,
+          onSeen: (posts) => seen.addAll(posts.map((p) => p.id)),
+        ),
       ),
     );
     await tester.pump(const Duration(milliseconds: 600));

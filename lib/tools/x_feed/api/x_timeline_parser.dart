@@ -164,6 +164,7 @@ class XTimelineParser {
           engagement: inner.engagement,
           quoted: inner.quoted,
           repostedBy: author,
+          repostId: (result['rest_id'] ?? legacy['id_str']) as String?,
           replyToScreenName: inner.replyToScreenName,
           replyToId: inner.replyToId,
           card: inner.card,

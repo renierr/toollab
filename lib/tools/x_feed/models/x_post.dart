@@ -74,6 +74,9 @@ class XPost {
   final List<XMedia> media;
   final XPost? quoted;
   final XUser? repostedBy;
+
+  /// The repost's own id, while [id] is the reposted post's.
+  final String? repostId;
   final String? replyToScreenName;
   final String? replyToId;
   final XLinkCard? card;
@@ -100,6 +103,7 @@ class XPost {
     required this.engagement,
     this.quoted,
     this.repostedBy,
+    this.repostId,
     this.replyToScreenName,
     this.replyToId,
     this.card,
@@ -115,6 +119,9 @@ class XPost {
   String get url => 'https://x.com/${author.screenName}/status/$id';
 
   bool get isRepost => repostedBy != null;
+
+  /// Ids reported to X as seen; a repost reports itself and the original.
+  List<String> get seenIds => [id, ?repostId];
   bool get isReply => replyToScreenName != null;
 
   /// English and German posts are never offered for translation. X's flag

@@ -50,7 +50,9 @@ same posts keep coming back after a refresh.
 A post counts as seen on For you or Following when at least half of it stays on screen
 for a second after scrolling settles, or when it scrolls out of view after at least half of
 it was on screen for half a second, so slow scrolling counts but a fling does not
-(`XTimelineView`). Opening a post from anywhere counts too (`XNavigation.openPost`). `XFeedState` buffers the ids and sends the whole buffer with the
+(`XTimelineView`). Opening a post from anywhere counts too (`XNavigation.openPost`).
+A repost reports both its own id and the reposted post's (`XPost.seenIds`), since it is not
+known which one X's ranking keys on. `XFeedState` buffers the ids and sends the whole buffer with the
 next home request — launch, refresh or next page — then clears what was sent; a failed
 request keeps them for the next one. Nothing is dropped, and like x.com a request with
 seen ids is a POST, so the batch size is not bound by URL length. Unlike x.com, ids already

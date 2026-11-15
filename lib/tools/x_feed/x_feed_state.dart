@@ -189,6 +189,9 @@ class XFeedState extends ChangeNotifier {
     if (changed) _scheduleSeenSave();
   }
 
+  void markPostsSeen(Iterable<XPost> posts) =>
+      markSeen(posts.expand((p) => p.seenIds));
+
   /// Stores the pending seen ids now instead of after the save delay, for
   /// when the app is backgrounded and may be killed.
   void persistSeen() {

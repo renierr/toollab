@@ -233,7 +233,7 @@ class _TabContent extends StatelessWidget {
             : XTimelineView(
                 controller: state.controllerFor(tab),
                 applyFilters: home,
-                onSeen: home ? state.markSeen : null,
+                onSeen: home ? state.markPostsSeen : null,
                 emptyMessage: tab == XFeedTab.bookmarks
                     ? AppLocalizations.of(context).xFeedBookmarksEmpty
                     : null,
