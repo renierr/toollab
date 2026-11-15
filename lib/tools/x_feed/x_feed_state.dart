@@ -14,12 +14,16 @@ import 'api/x_session.dart';
 import 'api/x_web_config.dart';
 import 'config.dart';
 import 'models/x_post.dart';
+import 'x_read_db.dart';
 import 'x_timeline_controller.dart';
 import 'x_translator.dart';
 
 enum XFeedTab { forYou, following, bookmarks, search }
 
 enum XSessionStatus { unknown, loggedOut, loggedIn }
+
+/// [seen]: marked here, still pending; [sent]: X got it, now or earlier.
+enum XReadMark { none, seen, sent }
 
 class XFeedState extends ChangeNotifier {
   static const String _hideRepostsKey = 'hide_reposts';
@@ -30,6 +34,10 @@ class XFeedState extends ChangeNotifier {
 
   /// Only bounds the memory of what was already sent; pending ids never drop.
   static const int _seenSentMemory = 5000;
+
+  /// Like x.com's background polling, pending seen ids go out this long after
+  /// the first one, not only with the next page.
+  static const Duration _seenFlushDelay = Duration(seconds: 60);
 
   static const List<double> textScales = [0.9, 1.0, 1.15, 1.3, 1.5, 1.75, 2.0];
 
@@ -67,6 +75,15 @@ class XFeedState extends ChangeNotifier {
   /// Ids riding on a home request still in flight, so a parallel one skips them.
   final Set<String> _seenInFlight = {};
   Timer? _seenSave;
+  Timer? _seenFlush;
+
+  /// Read ids among the loaded posts only; the full history stays in [XReadDb].
+  final Set<String> _read = {};
+
+  final _Signal _readMarks = _Signal();
+
+  /// Fires on read mark changes only, so the feed does not rebuild for them.
+  Listenable get readMarks => _readMarks;
 
   late final XTimelineController forYou = _timeline(
     (cursor) => _homeTimeline(following: false, cursor: cursor),
@@ -104,7 +121,42 @@ class XFeedState extends ChangeNotifier {
   XTimelineController timeline(XTimelineFetch fetch) => _timeline(fetch);
 
   XTimelineController _timeline(XTimelineFetch fetch) =>
-      XTimelineController(fetch, onError: _onApiError);
+      XTimelineController((cursor) async {
+        final page = await fetch(cursor);
+        await _loadRead(page.posts);
+        return page;
+      }, onError: _onApiError);
+
+  XReadMark readMarkOf(XPost post) {
+    final ids = post.seenIds;
+    if (ids.any(_read.contains)) return XReadMark.sent;
+    if (ids.any(_seenPending.contains)) return XReadMark.seen;
+    return XReadMark.none;
+  }
+
+  Future<void> _loadRead(List<XPost> posts) async {
+    final ids = {
+      for (final p in posts)
+        for (final id in p.seenIds)
+          if (!_read.contains(id)) id,
+    };
+    try {
+      final found = await XReadDb.instance.readAmong(ids);
+      if (found.isEmpty) return;
+      _read.addAll(found);
+      _readMarks.ping();
+    } catch (e) {
+      errorLog('[XFeedState] Read lookup failed: $e');
+    }
+  }
+
+  void _storeRead(List<String> ids) {
+    _read.addAll(ids);
+    _readMarks.ping();
+    XReadDb.instance.markRead(ids).catchError((Object e) {
+      errorLog('[XFeedState] Storing read ids failed: $e');
+    });
+  }
 
   XTimelineController controllerFor(XFeedTab tab) => switch (tab) {
     XFeedTab.forYou || XFeedTab.search => forYou,
@@ -133,6 +185,7 @@ class XFeedState extends ChangeNotifier {
     );
     _tab = _startTab == XFeedTab.search ? XFeedTab.forYou : _startTab;
     _restoreSeen(await db.getSetting(id, _seenKey));
+    unawaited(_pruneRead());
 
     final session = await XSessionStore.read();
     if (session == null) {
@@ -171,6 +224,7 @@ class XFeedState extends ChangeNotifier {
     if (seen.isNotEmpty) {
       _seenPending.removeAll(seen);
       _seenSent.addAll(seen);
+      _storeRead(seen);
       while (_seenSent.length > _seenSentMemory) {
         _seenSent.remove(_seenSent.first);
       }
@@ -186,7 +240,22 @@ class XFeedState extends ChangeNotifier {
     for (final id in postIds) {
       if (!_seenSent.contains(id) && _seenPending.add(id)) changed = true;
     }
-    if (changed) _scheduleSeenSave();
+    if (!changed) return;
+    _scheduleSeenSave();
+    _readMarks.ping();
+    if (_initialized) _seenFlush ??= Timer(_seenFlushDelay, _flushSeen);
+  }
+
+  Future<void> _flushSeen() async {
+    _seenFlush = null;
+    if (_seenPending.isEmpty || _api == null || _sessionExpired) return;
+    try {
+      // X takes seen ids only on a home request; the posts are thrown away.
+      await _homeTimeline(following: false, count: 1);
+    } on XApiException catch (e) {
+      debugLog('[XFeedState] Seen flush failed, ids stay pending: $e');
+      _onApiError(e);
+    }
   }
 
   void markPostsSeen(Iterable<XPost> posts) =>
@@ -202,11 +271,14 @@ class XFeedState extends ChangeNotifier {
   /// small home request, and the feeds, translations, downloads and decoded
   /// images are let go. Login, settings and the API config stay.
   Future<void> release() async {
+    _seenFlush?.cancel();
+    _seenFlush = null;
     _saveSeen();
     for (final t in [forYou, following, bookmarks]) {
       t.reset();
     }
     _engagement.clear();
+    _read.clear();
     translator.clear();
     PaintingBinding.instance.imageCache.clear();
     await tempScope.cleanTracked();
@@ -217,6 +289,17 @@ class XFeedState extends ChangeNotifier {
       _saveSeen();
     } on XApiException catch (e) {
       debugLog('[XFeedState] Seen ids stay for the next launch: $e');
+    } finally {
+      _read.clear();
+    }
+  }
+
+  Future<void> _pruneRead() async {
+    try {
+      final removed = await XReadDb.instance.prune();
+      if (removed > 0) debugLog('[XFeedState] Pruned $removed read ids');
+    } catch (e) {
+      errorLog('[XFeedState] Pruning read ids failed: $e');
     }
   }
 
@@ -231,6 +314,8 @@ class XFeedState extends ChangeNotifier {
   }
 
   void _clearSeen() {
+    _seenFlush?.cancel();
+    _seenFlush = null;
     _seenPending.clear();
     _seenSent.clear();
     _saveSeen();
@@ -300,6 +385,12 @@ class XFeedState extends ChangeNotifier {
     _engagement.clear();
     translator.clear();
     _clearSeen();
+    _read.clear();
+    unawaited(
+      XReadDb.instance.clear().catchError((Object e) {
+        errorLog('[XFeedState] Clearing read ids failed: $e');
+      }),
+    );
     for (final t in [forYou, following, bookmarks]) {
       t.reset();
     }
@@ -438,11 +529,17 @@ class XFeedState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _seenFlush?.cancel();
     if (_seenSave != null) _saveSeen();
     forYou.dispose();
     following.dispose();
     bookmarks.dispose();
+    _readMarks.dispose();
     unawaited(tempScope.cleanTracked());
     super.dispose();
   }
+}
+
+class _Signal extends ChangeNotifier {
+  void ping() => notifyListeners();
 }

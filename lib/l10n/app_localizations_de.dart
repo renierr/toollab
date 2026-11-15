@@ -15226,6 +15226,12 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get xFeedSeenSent => 'Gesehen, an X gemeldet';
+
+  @override
+  String get xFeedSeenPending => 'Gesehen, noch nicht an X gesendet';
+
+  @override
   String xFeedReposted(String name) {
     return '$name hat repostet';
   }

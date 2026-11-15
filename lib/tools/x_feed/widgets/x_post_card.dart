@@ -340,12 +340,17 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        GestureDetector(
-                          onTap: () => XNavigation.openUser(
-                            context,
-                            post.author.screenName,
-                          ),
-                          child: XAvatar(url: post.author.avatarUrl),
+                        Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () => XNavigation.openUser(
+                                context,
+                                post.author.screenName,
+                              ),
+                              child: XAvatar(url: post.author.avatarUrl),
+                            ),
+                            _ReadMark(post: post),
+                          ],
                         ),
                         const SizedBox(width: 12),
                         Expanded(child: body),
@@ -362,6 +367,38 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
 
     final textScale = context.select<XFeedState, double>((s) => s.textScale);
     return TextScaleMultiplier(scale: textScale, child: content);
+  }
+}
+
+class _ReadMark extends StatelessWidget {
+  final XPost post;
+
+  const _ReadMark({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.read<XFeedState>();
+    return ListenableBuilder(
+      listenable: state.readMarks,
+      builder: (context, _) {
+        final mark = state.readMarkOf(post);
+        if (mark == XReadMark.none) return const SizedBox.shrink();
+        final l10n = AppLocalizations.of(context);
+        final scheme = Theme.of(context).colorScheme;
+        final sent = mark == XReadMark.sent;
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Tooltip(
+            message: sent ? l10n.xFeedSeenSent : l10n.xFeedSeenPending,
+            child: Icon(
+              sent ? Icons.done_all : Icons.done,
+              size: 16,
+              color: sent ? scheme.primary : scheme.onSurfaceVariant,
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

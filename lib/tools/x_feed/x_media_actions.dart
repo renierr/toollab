@@ -32,6 +32,7 @@ class XMediaActions {
   ) async {
     final media = post.allMedia;
     if (index < 0 || index >= media.length) return;
+    context.read<XFeedState>().markSeen(post.seenIds);
     final item = media[index];
     final video = item.videoUrl;
     if (video == null) {
@@ -77,6 +78,7 @@ class XMediaActions {
   static Future<void> openBroadcast(BuildContext context, XPost post) async {
     final broadcast = post.broadcast;
     if (broadcast == null) return;
+    context.read<XFeedState>().markSeen(post.seenIds);
     final pageUrl = Uri.https('x.com', '/i/broadcasts/${broadcast.id}');
     if (!VideoBackend.isSupported) {
       await openUrl(context, pageUrl);

@@ -50,7 +50,8 @@ same posts keep coming back after a refresh.
 A post counts as seen on For you or Following when at least half of it stays on screen
 for a second after scrolling settles, or when it scrolls out of view after at least half of
 it was on screen for half a second, so slow scrolling counts but a fling does not
-(`XTimelineView`). Opening a post from anywhere counts too (`XNavigation.openPost`).
+(`XTimelineView`). Opening a post from anywhere counts too (`XNavigation.openPost`), and so does opening its
+media or live broadcast (`XMediaActions.openMedia` / `openBroadcast`).
 A repost reports both its own id and the reposted post's (`XPost.seenIds`), since it is not
 known which one X's ranking keys on. `XFeedState` buffers the ids and sends the whole buffer with the
 next home request — launch, refresh or next page — then clears what was sent; a failed
@@ -59,6 +60,22 @@ seen ids is a POST, so the batch size is not bound by URL length. Unlike x.com, 
 sent this session (the last 5000) are not sent again, so each batch holds only new ones.
 Closing the tool sends what is left with one small home request (`XFeedState.release`). The buffer is
 kept in the tool's settings so ids that could not go out are sent on the next launch.
+
+### Read marks
+
+Besides the next page, refresh and close, pending ids go out 60 s after the first one was
+marked (`XFeedState._flushSeen`), the way x.com's background polling carries them, with
+the same one-post home request as on close.
+
+An id counts as read once a home request carrying it succeeded. `XReadDb` stores those
+ids with their time in the `read_posts` table; rows older than 30 days are pruned at
+startup and sign-out clears the table. Nothing is loaded in bulk: each fetched page asks
+the table for its own ids (`XFeedState._loadRead`), so memory holds only the read ids of
+loaded posts, dropped when the tool closes.
+
+Under the avatar a post shows a single check while it is seen but still pending, and a
+double check once X got it (`XReadMark`). The marks have their own notifier
+(`XFeedState.readMarks`), so a change rebuilds only the icons, not the feed.
 
 ## Live broadcasts
 

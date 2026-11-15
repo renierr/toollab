@@ -5812,6 +5812,8 @@
   "xFeedBroadcastGeoblocked": "Diese Übertragung ist in deiner Region nicht verfügbar",
   "xFeedGifBadge": "GIF",
   "xFeedReplyingTo": "Antwort an @{handle}",
+  "xFeedSeenSent": "Gesehen, an X gemeldet",
+  "xFeedSeenPending": "Gesehen, noch nicht an X gesendet",
   "xFeedReposted": "{name} hat repostet",
   "xFeedFollowingCount": "{count} Folge ich",
   "xFeedFollowersCount": "{count} Follower",

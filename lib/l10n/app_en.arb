@@ -7338,6 +7338,8 @@
   "xFeedGifBadge": "GIF",
   "xFeedReplyingTo": "Replying to @{handle}",
   "@xFeedReplyingTo": {"placeholders": {"handle": {"type": "String"}}},
+  "xFeedSeenSent": "Seen, reported to X",
+  "xFeedSeenPending": "Seen, not yet sent to X",
   "xFeedReposted": "{name} reposted",
   "@xFeedReposted": {"placeholders": {"name": {"type": "String"}}},
   "xFeedFollowingCount": "{count} following",

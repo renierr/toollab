@@ -26608,6 +26608,18 @@ abstract class AppLocalizations {
   /// **'Replying to @{handle}'**
   String xFeedReplyingTo(String handle);
 
+  /// No description provided for @xFeedSeenSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen, reported to X'**
+  String get xFeedSeenSent;
+
+  /// No description provided for @xFeedSeenPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen, not yet sent to X'**
+  String get xFeedSeenPending;
+
   /// No description provided for @xFeedReposted.
   ///
   /// In en, this message translates to:

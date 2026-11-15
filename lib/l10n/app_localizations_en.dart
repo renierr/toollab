@@ -15108,6 +15108,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get xFeedSeenSent => 'Seen, reported to X';
+
+  @override
+  String get xFeedSeenPending => 'Seen, not yet sent to X';
+
+  @override
   String xFeedReposted(String name) {
     return '$name reposted';
   }
