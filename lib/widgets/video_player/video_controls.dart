@@ -153,14 +153,12 @@ class VideoControls extends StatelessWidget {
                     ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 12,
-                      children: [
+                    child: _ControlBar(
+                      transport: [
                         if (!live)
                           IconButton(
                             iconSize: 32,
-                            icon: const Icon(Icons.replay_10),
+                            icon: Icon(_rewindIcon(seekStep)),
                             tooltip: l10n.videoPlayerBack(seekStep.inSeconds),
                             onPressed: () => onSeekBy(-seekStep),
                           ),
@@ -179,12 +177,14 @@ class VideoControls extends StatelessWidget {
                         if (!live)
                           IconButton(
                             iconSize: 32,
-                            icon: const Icon(Icons.forward_10),
+                            icon: Icon(_forwardIcon(seekStep)),
                             tooltip: l10n.videoPlayerForward(
                               seekStep.inSeconds,
                             ),
                             onPressed: () => onSeekBy(seekStep),
                           ),
+                      ],
+                      start: [
                         IconButton(
                           iconSize: 28,
                           icon: Icon(
@@ -203,6 +203,8 @@ class VideoControls extends StatelessWidget {
                             speed: state.speed,
                             onSelected: onSpeed,
                           ),
+                      ],
+                      end: [
                         _TracksButton(
                           audioTracks: state.audioTracks,
                           subtitleTracks: state.subtitleTracks,
@@ -233,6 +235,20 @@ class VideoControls extends StatelessWidget {
       ],
     );
   }
+
+  static IconData _rewindIcon(Duration step) => switch (step.inSeconds) {
+    5 => Icons.replay_5,
+    10 => Icons.replay_10,
+    30 => Icons.replay_30,
+    _ => Icons.fast_rewind,
+  };
+
+  static IconData _forwardIcon(Duration step) => switch (step.inSeconds) {
+    5 => Icons.forward_5,
+    10 => Icons.forward_10,
+    30 => Icons.forward_30,
+    _ => Icons.fast_forward,
+  };
 
   static String _format(Duration d) {
     final minutes = d.inMinutes;
@@ -472,6 +488,69 @@ class _TracksButton extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Play/pause and the skips sit in the exact center; the other buttons go to
+/// the edges, or into a row of their own when they would crowd the center.
+class _ControlBar extends StatelessWidget {
+  final List<Widget> transport;
+  final List<Widget> start;
+  final List<Widget> end;
+
+  const _ControlBar({
+    required this.transport,
+    required this.start,
+    required this.end,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final center = Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 12,
+      children: transport,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cramped = constraints.maxWidth < 520;
+        if (cramped) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              center,
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                children: [...start, ...end],
+              ),
+            ],
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Wrap(
+                  alignment: WrapAlignment.start,
+                  spacing: 8,
+                  children: start,
+                ),
+              ),
+              center,
+              Expanded(
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  children: end,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

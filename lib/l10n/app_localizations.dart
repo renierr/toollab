@@ -25954,6 +25954,138 @@ abstract class AppLocalizations {
   /// **'Auto'**
   String get videoPlayerQualityAuto;
 
+  /// No description provided for @videoSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Video player'**
+  String get videoSettingsTitle;
+
+  /// No description provided for @coreSettingsDialogVideoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipping, speed, gestures and playback options'**
+  String get coreSettingsDialogVideoSubtitle;
+
+  /// No description provided for @videoSettingsSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip length'**
+  String get videoSettingsSkip;
+
+  /// No description provided for @videoSettingsSkipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip buttons, swipes, double-tap, notification and media keys'**
+  String get videoSettingsSkipHint;
+
+  /// No description provided for @videoSettingsSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String videoSettingsSeconds(int seconds);
+
+  /// No description provided for @videoSettingsSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Default speed'**
+  String get videoSettingsSpeed;
+
+  /// No description provided for @videoSettingsDoubleTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-tap'**
+  String get videoSettingsDoubleTap;
+
+  /// No description provided for @videoSettingsDoubleTapSides.
+  ///
+  /// In en, this message translates to:
+  /// **'Sides skip, middle plays/pauses'**
+  String get videoSettingsDoubleTapSides;
+
+  /// No description provided for @videoSettingsDoubleTapPlayPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Play/pause anywhere'**
+  String get videoSettingsDoubleTapPlayPause;
+
+  /// No description provided for @videoSettingsPip.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture-in-picture when leaving'**
+  String get videoSettingsPip;
+
+  /// No description provided for @videoSettingsPipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep playing in a floating window when you leave the app'**
+  String get videoSettingsPipHint;
+
+  /// No description provided for @videoSettingsMediaControls.
+  ///
+  /// In en, this message translates to:
+  /// **'Media controls'**
+  String get videoSettingsMediaControls;
+
+  /// No description provided for @videoSettingsMediaControlsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback notification, media keys and system media controls'**
+  String get videoSettingsMediaControlsHint;
+
+  /// No description provided for @videoSettingsHardwareDecoding.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware decoding'**
+  String get videoSettingsHardwareDecoding;
+
+  /// No description provided for @videoSettingsHardwareDecodingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off if videos show artifacts or stay black'**
+  String get videoSettingsHardwareDecodingHint;
+
+  /// No description provided for @videoSettingsSwipeSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe to skip'**
+  String get videoSettingsSwipeSkip;
+
+  /// No description provided for @videoSettingsSwipeSkipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left or right on the video'**
+  String get videoSettingsSwipeSkipHint;
+
+  /// No description provided for @videoSettingsSwipeVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe for volume'**
+  String get videoSettingsSwipeVolume;
+
+  /// No description provided for @videoSettingsSwipeVolumeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up or down on the video'**
+  String get videoSettingsSwipeVolumeHint;
+
+  /// No description provided for @videoSettingsVolumeTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume swipe changes'**
+  String get videoSettingsVolumeTarget;
+
+  /// No description provided for @videoSettingsVolumeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Media volume of the device'**
+  String get videoSettingsVolumeSystem;
+
+  /// No description provided for @videoSettingsVolumePlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Player volume only'**
+  String get videoSettingsVolumePlayer;
+
   /// No description provided for @videoPlayerSpeed.
   ///
   /// In en, this message translates to:

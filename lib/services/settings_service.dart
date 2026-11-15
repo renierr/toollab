@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/tv_service.dart';
+import 'package:tool_lab/widgets/video_player/video_player_settings.dart';
 
 class SettingsService {
   static const String _toolId = '_app';
@@ -123,6 +124,23 @@ class SettingsService {
       _keyLowLatencyAudio,
       str,
     );
+  }
+
+  VideoPlayerSettings getVideoPlayerSettings() =>
+      VideoPlayerSettings.fromSettings(_cache);
+
+  /// Read fresh: tool processes keep their own cache from startup.
+  static Future<VideoPlayerSettings> videoPlayerSettings() async =>
+      VideoPlayerSettings.fromSettings(
+        await DatabaseService.instance.getAllSettings(_toolId),
+      );
+
+  Future<void> setVideoPlayerSettings(VideoPlayerSettings settings) async {
+    for (final MapEntry(:key, :value) in settings.toSettings().entries) {
+      if (_cache[key] == value) continue;
+      _cache[key] = value;
+      await DatabaseService.instance.setSetting(_toolId, key, value);
+    }
   }
 
   TvMode getTvMode() => TvMode.fromStorage(_cache[_keyTvMode]);

@@ -14856,6 +14856,82 @@ class AppLocalizationsDe extends AppLocalizations {
   String get videoPlayerQualityAuto => 'Automatisch';
 
   @override
+  String get videoSettingsTitle => 'Videoplayer';
+
+  @override
+  String get coreSettingsDialogVideoSubtitle =>
+      'Springen, Geschwindigkeit, Gesten und Wiedergabe';
+
+  @override
+  String get videoSettingsSkip => 'Sprungweite';
+
+  @override
+  String get videoSettingsSkipHint =>
+      'Sprungtasten, Wischen, Doppeltippen, Benachrichtigung und Medientasten';
+
+  @override
+  String videoSettingsSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get videoSettingsSpeed => 'Standardgeschwindigkeit';
+
+  @override
+  String get videoSettingsDoubleTap => 'Doppeltippen';
+
+  @override
+  String get videoSettingsDoubleTapSides =>
+      'Seiten springen, Mitte startet/pausiert';
+
+  @override
+  String get videoSettingsDoubleTapPlayPause => 'Überall starten/pausieren';
+
+  @override
+  String get videoSettingsPip => 'Bild-im-Bild beim Verlassen';
+
+  @override
+  String get videoSettingsPipHint =>
+      'In einem schwebenden Fenster weiterspielen, wenn du die App verlässt';
+
+  @override
+  String get videoSettingsMediaControls => 'Mediensteuerung';
+
+  @override
+  String get videoSettingsMediaControlsHint =>
+      'Wiedergabe-Benachrichtigung, Medientasten und System-Mediensteuerung';
+
+  @override
+  String get videoSettingsHardwareDecoding => 'Hardware-Dekodierung';
+
+  @override
+  String get videoSettingsHardwareDecodingHint =>
+      'Ausschalten, wenn Videos Bildfehler zeigen oder schwarz bleiben';
+
+  @override
+  String get videoSettingsSwipeSkip => 'Wischen zum Springen';
+
+  @override
+  String get videoSettingsSwipeSkipHint =>
+      'Auf dem Video nach links oder rechts wischen';
+
+  @override
+  String get videoSettingsSwipeVolume => 'Wischen für Lautstärke';
+
+  @override
+  String get videoSettingsSwipeVolumeHint =>
+      'Auf dem Video nach oben oder unten wischen';
+
+  @override
+  String get videoSettingsVolumeTarget => 'Lautstärke-Wischen ändert';
+
+  @override
+  String get videoSettingsVolumeSystem => 'Medienlautstärke des Geräts';
+
+  @override
+  String get videoSettingsVolumePlayer => 'Nur Player-Lautstärke';
+
+  @override
   String get videoPlayerSpeed => 'Wiedergabegeschwindigkeit';
 
   @override

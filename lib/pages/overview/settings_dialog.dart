@@ -99,6 +99,17 @@ class OverviewSettingsDialog extends StatelessWidget {
               ),
               const Divider(height: 1),
               ListTile(
+                leading: const Icon(Icons.smart_display_outlined),
+                title: Text(l10n.videoSettingsTitle),
+                subtitle: Text(l10n.coreSettingsDialogVideoSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/video-settings');
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading: const Icon(Icons.info_outline),
                 title: Text(l10n.coreAboutTitle),
                 subtitle: Text(l10n.coreSettingsDialogAboutSubtitle),

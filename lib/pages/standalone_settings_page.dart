@@ -5,7 +5,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 /// Settings hub for standalone single-tool builds. Mirrors the entries of the
 /// full app's settings sheet that make sense without an overview: Appearance,
-/// Maintenance, About, and Sync (only when the bundled tool has a sync
+/// Maintenance, Video player, About, and Sync (only when the bundled tool has a sync
 /// delegate). Each entry pushes an existing settings page.
 class StandaloneSettingsPage extends StatelessWidget {
   const StandaloneSettingsPage({super.key});
@@ -45,6 +45,14 @@ class StandaloneSettingsPage extends StatelessWidget {
               subtitle: Text(l10n.coreSettingsDialogAppearanceSubtitle),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/appearance-settings'),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.smart_display_outlined),
+              title: Text(l10n.videoSettingsTitle),
+              subtitle: Text(l10n.coreSettingsDialogVideoSubtitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/video-settings'),
             ),
             const Divider(height: 1),
             ListTile(

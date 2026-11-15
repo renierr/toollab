@@ -31,6 +31,7 @@ class VideoPipHelper(private val activity: Activity) {
 
     private var channel: MethodChannel? = null
     private var enabled = false
+    private var autoEnter = true
     private var playing = false
     private var seekable = false
     private var aspect = Rational(16, 9)
@@ -77,6 +78,7 @@ class VideoPipHelper(private val activity: Activity) {
             "isSupported" -> result.success(isSupported)
             "update" -> {
                 enabled = call.argument<Boolean>("enabled") ?: false
+                autoEnter = call.argument<Boolean>("autoEnter") ?: false
                 playing = call.argument<Boolean>("playing") ?: false
                 seekable = call.argument<Boolean>("seekable") ?: false
                 call.argument<Double>("aspectRatio")?.let { aspect = toRational(it) }
@@ -95,7 +97,7 @@ class VideoPipHelper(private val activity: Activity) {
 
     /** Before Android 12 the activity enters PiP itself when the user leaves it. */
     fun onUserLeaveHint() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && enabled && playing) enter()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S && enabled && autoEnter && playing) enter()
     }
 
     /** [stopped]: the user closed the window rather than expanding it. */
@@ -128,7 +130,7 @@ class VideoPipHelper(private val activity: Activity) {
             .setAspectRatio(aspect)
             .setActions(if (enabled) remoteActions() else emptyList())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            builder.setAutoEnterEnabled(enabled && playing)
+            builder.setAutoEnterEnabled(enabled && autoEnter && playing)
             builder.setSeamlessResizeEnabled(false)
         }
         return builder.build()

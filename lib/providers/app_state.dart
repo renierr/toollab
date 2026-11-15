@@ -7,6 +7,7 @@ import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/services/background_work_lease.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
+import 'package:tool_lab/widgets/video_player/video_player_settings.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/services/tv_service.dart';
@@ -26,6 +27,7 @@ class AppState extends ChangeNotifier {
     _systemNotificationsEnabled = _settingsService
         .getSystemNotificationsEnabled();
     _lowLatencyAudio = _settingsService.getLowLatencyAudio();
+    _videoPlayerSettings = _settingsService.getVideoPlayerSettings();
     _tvModeSetting = _settingsService.getTvMode();
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();
@@ -69,6 +71,7 @@ class AppState extends ChangeNotifier {
   bool _syncEnabled = false;
   bool _systemNotificationsEnabled = true;
   bool _lowLatencyAudio = true;
+  VideoPlayerSettings _videoPlayerSettings = const VideoPlayerSettings();
   TvMode _tvModeSetting = TvMode.auto;
   bool _isTelevision = false;
   String _syncServerUrl = '';
@@ -94,6 +97,7 @@ class AppState extends ChangeNotifier {
   bool get syncEnabled => _syncEnabled;
   bool get systemNotificationsEnabled => _systemNotificationsEnabled;
   bool get lowLatencyAudio => _lowLatencyAudio;
+  VideoPlayerSettings get videoPlayerSettings => _videoPlayerSettings;
   TvMode get tvModeSetting => _tvModeSetting;
 
   /// Whether remote-control navigation rules apply.
@@ -245,6 +249,12 @@ class AppState extends ChangeNotifier {
   Future<void> setLowLatencyAudio(bool value) async {
     _lowLatencyAudio = value;
     await _settingsService.setLowLatencyAudio(value);
+    notifyListeners();
+  }
+
+  Future<void> setVideoPlayerSettings(VideoPlayerSettings settings) async {
+    _videoPlayerSettings = settings;
+    await _settingsService.setVideoPlayerSettings(settings);
     notifyListeners();
   }
 
@@ -433,6 +443,7 @@ class AppState extends ChangeNotifier {
     _systemNotificationsEnabled = _settingsService
         .getSystemNotificationsEnabled();
     _lowLatencyAudio = _settingsService.getLowLatencyAudio();
+    _videoPlayerSettings = _settingsService.getVideoPlayerSettings();
     _tvModeSetting = _settingsService.getTvMode();
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();

@@ -29,12 +29,16 @@ class VideoPip {
   final VoidCallback onDismissed;
   final Map<String, String> labels;
 
+  /// Enter on leaving the app while playing; the button works either way.
+  final bool autoEnter;
+
   ({bool playing, bool seekable, double aspectRatio})? _sent;
 
   VideoPip({
     required this.onAction,
     required this.onDismissed,
     required this.labels,
+    required this.autoEnter,
   }) {
     if (Platform.isAndroid) _channel.setMethodCallHandler(_onCall);
   }
@@ -67,6 +71,7 @@ class VideoPip {
     _sent = next;
     await _invoke('update', {
       'enabled': true,
+      'autoEnter': autoEnter,
       'playing': playing,
       'seekable': seekable,
       'aspectRatio': aspectRatio,

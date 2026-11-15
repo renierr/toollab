@@ -27,6 +27,7 @@ import 'package:tool_lab/widgets/tv_navigation_scope.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
 import 'package:tool_lab/tools/gps_location_store/gps_info_page.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_history_page.dart';
+import 'package:tool_lab/pages/video_settings_page.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_settings_page.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_settings_page.dart';
 
@@ -76,6 +77,11 @@ final _router = GoRouter(
       path: '/appearance-settings',
       name: 'appearance-settings',
       builder: (_, _) => const AppearanceSettingsPage(),
+    ),
+    GoRoute(
+      path: '/video-settings',
+      name: 'video-settings',
+      builder: (_, _) => const VideoSettingsPage(),
     ),
     GoRoute(
       path: '/about',

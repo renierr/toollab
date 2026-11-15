@@ -22,13 +22,18 @@ class MediaKitVideoBackend implements VideoBackend {
   final List<StreamSubscription<Object?>> _subscriptions = [];
   bool _loop = false;
 
-  MediaKitVideoBackend() {
+  MediaKitVideoBackend({bool hardwareDecoding = true}) {
     if (!_initialized) {
       MediaKit.ensureInitialized();
       _initialized = true;
     }
     _player = Player();
-    _video = VideoController(_player);
+    _video = VideoController(
+      _player,
+      configuration: VideoControllerConfiguration(
+        hwdec: hardwareDecoding ? null : 'no',
+      ),
+    );
     final streams = _player.stream;
     _subscriptions.addAll([
       streams.playing.listen((_) => _sync()),

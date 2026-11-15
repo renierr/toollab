@@ -12,6 +12,7 @@ import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
+import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import 'video_backend.dart';
@@ -20,6 +21,7 @@ import 'video_gesture_badge.dart';
 import 'video_info_dialog.dart';
 import 'video_media_session.dart';
 import 'video_pip.dart';
+import 'video_player_settings.dart';
 
 class VideoPlayerAction {
   final IconData icon;
@@ -50,10 +52,10 @@ class VideoQuality {
 
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
 /// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
-/// 10 s, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
-/// < / > change the speed. A horizontal swipe or a double tap on either side
-/// skips 10 s, a vertical swipe sets the volume. The system media controls
-/// follow playback; Android adds picture-in-picture.
+/// skip, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
+/// < / > change the speed. A horizontal swipe or a side double tap skips,
+/// a vertical swipe sets the volume. Skips use the video settings' length.
+/// The system media controls follow playback; Android adds picture-in-picture.
 class VideoPlayerPage extends StatefulWidget {
   static const String preferenceId = 'tool-lab-video-player';
 
@@ -67,6 +69,7 @@ class VideoPlayerPage extends StatefulWidget {
 
   /// A live stream: no seek bar, no seeking.
   final bool live;
+  final VideoPlayerSettings settings;
 
   const VideoPlayerPage({
     super.key,
@@ -76,7 +79,10 @@ class VideoPlayerPage extends StatefulWidget {
     this.actions = const [],
     this.qualities = const [],
     this.live = false,
+    this.settings = const VideoPlayerSettings(),
   });
+
+  /// Loads the settings first: the backend needs them before it starts.
 
   static Future<void> open(
     BuildContext context, {
@@ -86,8 +92,10 @@ class VideoPlayerPage extends StatefulWidget {
     List<VideoPlayerAction> actions = const [],
     List<VideoQuality> qualities = const [],
     bool live = false,
-  }) {
-    return Navigator.of(context).push(
+  }) async {
+    final settings = await SettingsService.videoPlayerSettings();
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => VideoPlayerPage(
           source: source,
@@ -96,6 +104,7 @@ class VideoPlayerPage extends StatefulWidget {
           actions: actions,
           qualities: qualities,
           live: live,
+          settings: settings,
         ),
       ),
     );
@@ -107,17 +116,16 @@ class VideoPlayerPage extends StatefulWidget {
 
 class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   static const Duration _hideDelay = Duration(seconds: 3);
-  static const Duration _seekStep = Duration(seconds: 10);
   static const Duration _arrowSeekStep = Duration(seconds: 5);
   static const Duration _stallLimit = Duration(seconds: 8);
   static const double _swipeDistance = 48;
   static const double _swipeVelocity = 400;
-  static const List<double> _speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+  static const List<double> _speeds = VideoPlayerSettings.speedOptions;
   static const MethodChannel _systemChannel = MethodChannel(
     'de.renier.tool_lab/video_system',
   );
 
-  VideoBackend _backend = VideoBackend.create();
+  late VideoBackend _backend = _createBackend();
   late Uri _source = widget.source;
   final GlobalKey _frameKey = GlobalKey(debugLabel: 'VideoFrame');
   final FocusNode _keyFocus = FocusNode(debugLabel: 'VideoPlayerKeys');
@@ -141,6 +149,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Alignment _badgeAlignment = Alignment.center;
   double? _badgeLevel;
 
+  Duration get _seekStep => widget.settings.skip;
+
   /// Where playback should continue: X serves some replay segments only at
   /// lower qualities, so a seek can stall forever on the chosen one.
   Duration? _resumeAt;
@@ -148,7 +158,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   @override
   void initState() {
     super.initState();
-    unawaited(_backend.open(widget.source, loop: widget.loop));
+    unawaited(_open());
     _backend.state.addListener(_onState);
     if (Platform.isAndroid) {
       unawaited(
@@ -172,28 +182,45 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     });
   }
 
+  VideoBackend _createBackend() =>
+      VideoBackend.create(hardwareDecoding: widget.settings.hardwareDecoding);
+
+  Future<void> _open() async {
+    await _backend.open(widget.source, loop: widget.loop);
+    final speed = widget.settings.defaultSpeed;
+    if (!widget.live && speed != 1 && mounted) await _backend.setSpeed(speed);
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_session != null) return;
+    if (_pip != null || _session != null) return;
     final l10n = AppLocalizations.of(context);
-    _session = VideoMediaSession(
-      title: widget.title ?? l10n.videoPlayerNotificationTitle,
-      live: widget.live,
-      onAction: _onRemoteAction,
-    );
+    if (widget.settings.mediaControls) {
+      _session = VideoMediaSession(
+        title: widget.title ?? l10n.videoPlayerNotificationTitle,
+        live: widget.live,
+        onAction: _onRemoteAction,
+      );
+    }
     if (!Platform.isAndroid) return;
-    final seconds = _seekStep.inSeconds;
     _pip = VideoPip(
       onAction: _onRemoteAction,
       onDismissed: () => unawaited(_close()),
-      labels: {
-        'play': l10n.videoPlayerPlay,
-        'pause': l10n.videoPlayerPause,
-        'rewind': l10n.videoPlayerBack(seconds),
-        'forward': l10n.videoPlayerForward(seconds),
-      },
+      labels: _pipLabels(),
+      autoEnter: widget.settings.pipOnLeave,
     )..active.addListener(_onPipChanged);
+  }
+
+  Map<String, String> _pipLabels() {
+    final l10n = AppLocalizations.of(context);
+    final seconds = _seekStep.inSeconds;
+    return {
+      'play': l10n.videoPlayerPlay,
+      'pause': l10n.videoPlayerPause,
+      'rewind': l10n.videoPlayerBack(seconds),
+      'forward': l10n.videoPlayerForward(seconds),
+    };
   }
 
   /// A fresh backend per source: the old view leaves the tree before its
@@ -208,7 +235,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     _stallTimer = null;
     _resumeAt = position;
     old.state.removeListener(_onState);
-    final next = VideoBackend.create();
+    final next = _createBackend();
     // Opening first: the Android backend builds its view from the controller
     // that open() creates synchronously.
     final opening = next.open(
@@ -395,7 +422,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   void _onDoubleTap() {
     final at = _doubleTapAt;
     final width = context.size?.width ?? 0;
-    if (widget.live || at == null || width <= 0) {
+    if (widget.live ||
+        widget.settings.doubleTap == VideoDoubleTap.playPause ||
+        at == null ||
+        width <= 0) {
       unawaited(_togglePlay());
       return;
     }
@@ -409,9 +439,13 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     }
   }
 
-  /// The system media volume on Android, the player's own on desktop.
+  /// Android's media volume unless the settings pick the player's own.
+  bool get _systemVolume =>
+      Platform.isAndroid &&
+      widget.settings.volumeTarget == VideoVolumeTarget.system;
+
   Future<double> _readVolume() async {
-    if (!Platform.isAndroid) return _backend.state.value.volume;
+    if (!_systemVolume) return _backend.state.value.volume;
     try {
       return await _systemChannel.invokeMethod<double>('getVolume') ?? 0;
     } catch (e) {
@@ -421,7 +455,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   }
 
   Future<void> _writeVolume(double volume) async {
-    if (!Platform.isAndroid) return _backend.setVolume(volume);
+    if (!_systemVolume) return _backend.setVolume(volume);
     try {
       await _systemChannel.invokeMethod<void>('setVolume', {'value': volume});
     } catch (e) {
@@ -692,6 +726,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final inPip = _pip?.active.value ?? false;
+    final swipeSkip = !widget.live && widget.settings.swipeSkip;
+    final swipeVolume = widget.settings.swipeVolume;
     return Theme(
       data: ThemeData.dark(useMaterial3: true),
       child: Scaffold(
@@ -714,13 +750,13 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
               onDoubleTapDown: (details) =>
                   _doubleTapAt = details.localPosition,
               onDoubleTap: _onDoubleTap,
-              onVerticalDragStart: _onVolumeStart,
-              onVerticalDragUpdate: _onVolumeUpdate,
-              onHorizontalDragStart: widget.live ? null : (_) => _swipeDx = 0,
-              onHorizontalDragUpdate: widget.live
-                  ? null
-                  : (details) => _swipeDx += details.delta.dx,
-              onHorizontalDragEnd: widget.live ? null : _onSwipeEnd,
+              onVerticalDragStart: swipeVolume ? _onVolumeStart : null,
+              onVerticalDragUpdate: swipeVolume ? _onVolumeUpdate : null,
+              onHorizontalDragStart: swipeSkip ? (_) => _swipeDx = 0 : null,
+              onHorizontalDragUpdate: swipeSkip
+                  ? (details) => _swipeDx += details.delta.dx
+                  : null,
+              onHorizontalDragEnd: swipeSkip ? _onSwipeEnd : null,
               child: Stack(
                 fit: StackFit.expand,
                 children: [

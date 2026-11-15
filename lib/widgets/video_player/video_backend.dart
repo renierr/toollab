@@ -128,6 +128,9 @@ abstract class VideoBackend {
   static bool get isSupported =>
       Platform.isAndroid || Platform.isWindows || Platform.isLinux;
 
-  static VideoBackend create() =>
-      Platform.isAndroid ? NativeVideoBackend() : MediaKitVideoBackend();
+  /// [hardwareDecoding] applies to desktop; Android picks its decoder itself.
+  static VideoBackend create({bool hardwareDecoding = true}) =>
+      Platform.isAndroid
+      ? NativeVideoBackend()
+      : MediaKitVideoBackend(hardwareDecoding: hardwareDecoding);
 }

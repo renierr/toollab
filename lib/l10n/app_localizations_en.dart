@@ -14744,6 +14744,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoPlayerQualityAuto => 'Auto';
 
   @override
+  String get videoSettingsTitle => 'Video player';
+
+  @override
+  String get coreSettingsDialogVideoSubtitle =>
+      'Skipping, speed, gestures and playback options';
+
+  @override
+  String get videoSettingsSkip => 'Skip length';
+
+  @override
+  String get videoSettingsSkipHint =>
+      'Skip buttons, swipes, double-tap, notification and media keys';
+
+  @override
+  String videoSettingsSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get videoSettingsSpeed => 'Default speed';
+
+  @override
+  String get videoSettingsDoubleTap => 'Double-tap';
+
+  @override
+  String get videoSettingsDoubleTapSides => 'Sides skip, middle plays/pauses';
+
+  @override
+  String get videoSettingsDoubleTapPlayPause => 'Play/pause anywhere';
+
+  @override
+  String get videoSettingsPip => 'Picture-in-picture when leaving';
+
+  @override
+  String get videoSettingsPipHint =>
+      'Keep playing in a floating window when you leave the app';
+
+  @override
+  String get videoSettingsMediaControls => 'Media controls';
+
+  @override
+  String get videoSettingsMediaControlsHint =>
+      'Playback notification, media keys and system media controls';
+
+  @override
+  String get videoSettingsHardwareDecoding => 'Hardware decoding';
+
+  @override
+  String get videoSettingsHardwareDecodingHint =>
+      'Turn off if videos show artifacts or stay black';
+
+  @override
+  String get videoSettingsSwipeSkip => 'Swipe to skip';
+
+  @override
+  String get videoSettingsSwipeSkipHint => 'Swipe left or right on the video';
+
+  @override
+  String get videoSettingsSwipeVolume => 'Swipe for volume';
+
+  @override
+  String get videoSettingsSwipeVolumeHint => 'Swipe up or down on the video';
+
+  @override
+  String get videoSettingsVolumeTarget => 'Volume swipe changes';
+
+  @override
+  String get videoSettingsVolumeSystem => 'Media volume of the device';
+
+  @override
+  String get videoSettingsVolumePlayer => 'Player volume only';
+
+  @override
   String get videoPlayerSpeed => 'Playback speed';
 
   @override
