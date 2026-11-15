@@ -7309,6 +7309,8 @@
   "xFeedFollowing": "Following",
   "xFeedBookmarks": "Bookmarks",
   "xFeedBookmarksEmpty": "No bookmarks yet",
+  "xFeedNoMorePosts": "No more posts",
+  "xFeedLoadMoreAgain": "Try loading more",
   "xFeedEmpty": "Nothing here yet",
   "xFeedRefresh": "Refresh",
   "xFeedMoreActions": "More actions",

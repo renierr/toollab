@@ -75,6 +75,27 @@ bool _focusIn(WidgetTester tester, String postId) {
 void main() {
   _seenTests();
 
+  testWidgets('the end offers a retry only while X hands out a cursor', (
+    tester,
+  ) async {
+    final controller = XTimelineController(
+      (_) async =>
+          XTimelinePage(posts: [_post('p', 'post')], bottomCursor: 'c'),
+    );
+    addTearDown(controller.dispose);
+    await _pump(tester, Scaffold(body: XTimelineView(controller: controller)));
+    expect(find.text('No more posts'), findsOneWidget);
+    expect(find.text('Try loading more'), findsOneWidget);
+
+    final noCursor = XTimelineController(
+      (_) async => XTimelinePage(posts: [_post('q', 'post')]),
+    );
+    addTearDown(noCursor.dispose);
+    await _pump(tester, Scaffold(body: XTimelineView(controller: noCursor)));
+    expect(find.text('No more posts'), findsOneWidget);
+    expect(find.text('Try loading more'), findsNothing);
+  });
+
   testWidgets('a refresh shows the very top even when the new posts are '
       'taller than the old ones', (tester) async {
     var round = 0;

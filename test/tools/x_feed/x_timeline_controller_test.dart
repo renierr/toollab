@@ -57,4 +57,48 @@ void main() {
     expect(controller.error?.kind, XApiErrorKind.server);
     expect(controller.isLoadingMore, isFalse);
   });
+
+  test('pages without new posts are skipped before the end', () async {
+    final controller = XTimelineController((cursor) async {
+      return switch (cursor) {
+        null => _page(['a'], 'c1'),
+        'c1' => _page(['a'], 'c2'),
+        'c2' => _page([], 'c3'),
+        _ => _page(['b'], 'c4'),
+      };
+    });
+    await controller.refresh();
+    await controller.loadMore();
+    expect(controller.posts.map((p) => p.id), ['a', 'b']);
+    expect(controller.endReached, isFalse);
+  });
+
+  test('the end after empty pages can be retried', () async {
+    var calls = 0;
+    var dry = true;
+    final controller = XTimelineController((cursor) async {
+      calls++;
+      if (cursor == null) return _page(['a'], 'c0');
+      return dry ? _page(['a'], 'c$calls') : _page(['b'], 'cx');
+    });
+    await controller.refresh();
+    await controller.loadMore();
+    expect(calls, 4);
+    expect(controller.endReached, isTrue);
+    expect(controller.canRetryEnd, isTrue);
+
+    dry = false;
+    await controller.retryEnd();
+    expect(controller.posts.map((p) => p.id), ['a', 'b']);
+    expect(controller.endReached, isFalse);
+  });
+
+  test('a missing cursor is a real end without retry', () async {
+    final controller = XTimelineController(
+      (cursor) async => XTimelinePage(posts: [_post('a')]),
+    );
+    await controller.refresh();
+    expect(controller.endReached, isTrue);
+    expect(controller.canRetryEnd, isFalse);
+  });
 }

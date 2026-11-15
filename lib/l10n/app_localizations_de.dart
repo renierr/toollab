@@ -15139,6 +15139,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get xFeedBookmarksEmpty => 'Noch keine Lesezeichen';
 
   @override
+  String get xFeedNoMorePosts => 'Keine weiteren Posts';
+
+  @override
+  String get xFeedLoadMoreAgain => 'Erneut nachladen';
+
+  @override
   String get xFeedEmpty => 'Hier ist noch nichts';
 
   @override

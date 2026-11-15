@@ -5786,6 +5786,8 @@
   "xFeedFollowing": "Folge ich",
   "xFeedBookmarks": "Lesezeichen",
   "xFeedBookmarksEmpty": "Noch keine Lesezeichen",
+  "xFeedNoMorePosts": "Keine weiteren Posts",
+  "xFeedLoadMoreAgain": "Erneut nachladen",
   "xFeedEmpty": "Hier ist noch nichts",
   "xFeedRefresh": "Aktualisieren",
   "xFeedMoreActions": "Weitere Aktionen",

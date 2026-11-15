@@ -26452,6 +26452,18 @@ abstract class AppLocalizations {
   /// **'No bookmarks yet'**
   String get xFeedBookmarksEmpty;
 
+  /// No description provided for @xFeedNoMorePosts.
+  ///
+  /// In en, this message translates to:
+  /// **'No more posts'**
+  String get xFeedNoMorePosts;
+
+  /// No description provided for @xFeedLoadMoreAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try loading more'**
+  String get xFeedLoadMoreAgain;
+
   /// No description provided for @xFeedEmpty.
   ///
   /// In en, this message translates to:

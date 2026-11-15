@@ -15023,6 +15023,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get xFeedBookmarksEmpty => 'No bookmarks yet';
 
   @override
+  String get xFeedNoMorePosts => 'No more posts';
+
+  @override
+  String get xFeedLoadMoreAgain => 'Try loading more';
+
+  @override
   String get xFeedEmpty => 'Nothing here yet';
 
   @override

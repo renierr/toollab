@@ -8,6 +8,10 @@ typedef XTimelineFetch = Future<XTimelinePage> Function(String? cursor);
 
 /// One paged list of posts: a home tab, a profile, a search or a thread.
 class XTimelineController extends ChangeNotifier {
+  /// Pages without a new post fetched in a row before the end is assumed;
+  /// For you serves pages of duplicates or filtered ads mid-feed.
+  static const int _emptyPageAttempts = 3;
+
   final XTimelineFetch _fetch;
   final void Function(XApiException error)? onError;
 
@@ -31,6 +35,9 @@ class XTimelineController extends ChangeNotifier {
   bool get isLoading => _loading;
   bool get isLoadingMore => _loadingMore;
   bool get endReached => _endReached;
+
+  /// The end may be a false one: X still handed out a cursor.
+  bool get canRetryEnd => _endReached && _cursor != null;
   bool get isLoaded => _loaded;
   XApiException? get error => _error;
 
@@ -72,14 +79,21 @@ class XTimelineController extends ChangeNotifier {
     _error = null;
     _notify();
     try {
-      final page = await _fetch(cursor);
-      if (generation != _generation) return;
       final known = {for (final p in _posts) p.id};
-      final fresh = page.posts.where((p) => !known.contains(p.id)).toList();
+      String? next = cursor;
+      var fresh = <XPost>[];
+      for (var attempt = 0; attempt < _emptyPageAttempts; attempt++) {
+        final page = await _fetch(next);
+        if (generation != _generation) return;
+        final previous = next;
+        next = page.bottomCursor;
+        fresh = page.posts.where((p) => !known.contains(p.id)).toList();
+        if (fresh.isNotEmpty || next == null || next == previous) break;
+      }
       _posts = [..._posts, ...fresh];
-      _cursor = page.bottomCursor;
-      // X keeps handing out cursors at the end; an empty page means done.
-      _endReached = page.bottomCursor == null || fresh.isEmpty;
+      _cursor = next;
+      // X keeps handing out cursors at the end; empty pages mean done.
+      _endReached = next == null || fresh.isEmpty;
     } catch (e) {
       if (generation != _generation) return;
       _fail(e);
@@ -92,6 +106,13 @@ class XTimelineController extends ChangeNotifier {
   }
 
   /// Parser bugs surface as errors too; otherwise the footer spins forever.
+  /// Tries again past an end that [canRetryEnd] says may be a false one.
+  Future<void> retryEnd() {
+    if (!canRetryEnd) return Future.value();
+    _endReached = false;
+    return loadMore();
+  }
+
   void _fail(Object e) {
     errorLog('[XTimeline] Load failed: $e');
     final error = e is XApiException

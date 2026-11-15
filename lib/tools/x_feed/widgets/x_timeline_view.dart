@@ -539,7 +539,32 @@ class _Footer extends StatelessWidget {
         compact: true,
       );
     }
-    if (controller.endReached) return const SizedBox(height: 48);
+    if (controller.endReached) {
+      final l10n = AppLocalizations.of(context);
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 48),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.xFeedNoMorePosts,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (controller.canRetryEnd) ...[
+              const SizedBox(height: 12),
+              FilledButton.tonalIcon(
+                onPressed: controller.retryEnd,
+                icon: const Icon(Icons.refresh),
+                label: Text(l10n.xFeedLoadMoreAgain),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
     return const Padding(
       padding: EdgeInsets.all(24),
       child: Center(child: CircularProgressIndicator()),
