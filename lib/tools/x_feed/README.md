@@ -54,8 +54,8 @@ next home request — launch, refresh or next page — then clears what was sent
 request keeps them for the next one. Nothing is dropped, and like x.com a request with
 seen ids is a POST, so the batch size is not bound by URL length. Unlike x.com, ids already
 sent this session (the last 5000) are not sent again, so each batch holds only new ones.
-No request is ever made just for seen ids. The buffer is kept in the tool's settings so ids seen right
-before the app closes go out on the next launch.
+Closing the tool sends what is left with one small home request (`XFeedState.release`). The buffer is
+kept in the tool's settings so ids that could not go out are sent on the next launch.
 
 ## Live broadcasts
 

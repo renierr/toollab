@@ -41,6 +41,8 @@ class XTimelineController extends ChangeNotifier {
   Future<void> refresh() async {
     final generation = ++_generation;
     _loading = true;
+    // An in-flight loadMore is dropped by the generation bump and never clears this.
+    _loadingMore = false;
     _error = null;
     _notify();
     try {
@@ -51,7 +53,7 @@ class XTimelineController extends ChangeNotifier {
       _endReached = page.bottomCursor == null || page.posts.isEmpty;
       _loaded = true;
       _refreshes++;
-    } on XApiException catch (e) {
+    } catch (e) {
       if (generation != _generation) return;
       _fail(e);
     } finally {
@@ -78,7 +80,7 @@ class XTimelineController extends ChangeNotifier {
       _cursor = page.bottomCursor;
       // X keeps handing out cursors at the end; an empty page means done.
       _endReached = page.bottomCursor == null || fresh.isEmpty;
-    } on XApiException catch (e) {
+    } catch (e) {
       if (generation != _generation) return;
       _fail(e);
     } finally {
@@ -89,10 +91,14 @@ class XTimelineController extends ChangeNotifier {
     }
   }
 
-  void _fail(XApiException e) {
+  /// Parser bugs surface as errors too; otherwise the footer spins forever.
+  void _fail(Object e) {
     errorLog('[XTimeline] Load failed: $e');
-    _error = e;
-    onError?.call(e);
+    final error = e is XApiException
+        ? e
+        : XApiException(XApiErrorKind.server, '$e');
+    _error = error;
+    onError?.call(error);
   }
 
   void reset() {
