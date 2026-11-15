@@ -1,13 +1,19 @@
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/video_player/video_player_page.dart';
+import 'package:tool_lab/widgets/video_player/video_system_channel.dart';
 
 import 'config.dart';
+import 'video_player_state.dart';
+import 'widgets/video_recent_list.dart';
 
 class VideoPlayerToolPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -18,13 +24,15 @@ class VideoPlayerToolPage extends StatefulWidget {
   State<VideoPlayerToolPage> createState() => _VideoPlayerToolPageState();
 }
 
-class _VideoPlayerToolPageState extends State<VideoPlayerToolPage> {
-  ({Uri source, String name})? _last;
-
+class _VideoPlayerToolPageState extends State<VideoPlayerToolPage>
+    with DisposeCleanup {
   @override
   void initState() {
     super.initState();
     _playShared();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<VideoPlayerState>().load();
+    });
   }
 
   @override
@@ -45,9 +53,19 @@ class _VideoPlayerToolPageState extends State<VideoPlayerToolPage> {
     });
   }
 
+  /// A content URI becomes its file when possible; otherwise its read grant
+  /// is kept so the recent list can reopen it.
   Future<void> _play(Uri source, String name) async {
-    setState(() => _last = (source: source, name: name));
-    await VideoPlayerPage.open(context, source: source, title: name);
+    final resolved = await VideoSystemChannel.preferFile(source);
+    await VideoSystemChannel.persist(resolved);
+    if (!mounted) return;
+    await VideoPlayerPage.open(
+      context,
+      source: resolved,
+      title: name,
+      resumeStore: context.read<VideoPlayerState>(),
+      browseFolder: true,
+    );
   }
 
   // The Android picker hands back a content:// URI, so nothing is copied.
@@ -59,7 +77,8 @@ class _VideoPlayerToolPageState extends State<VideoPlayerToolPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final config = VideoPlayerTool.config;
-    final last = _last;
+    final state = context.watch<VideoPlayerState>();
+    final entries = state.entries;
     return ToolLayout(
       title: config.localizedName(l10n),
       actions: [
@@ -69,30 +88,46 @@ class _VideoPlayerToolPageState extends State<VideoPlayerToolPage> {
           onPressed: () => context.push('/video-settings'),
         ),
       ],
-      child: FileDropZone(
-        onFileSelected: (file) => _play(_pickedSource(file), file.name),
-        allowedExtensions: config.fileExtensions,
-        allowedMimeTypes: const ['video/*'],
-        typeLabel: l10n.videoPlayerToolTypeLabel,
-        accentColor: config.accentColor,
-        icon: config.icon,
-        title: l10n.videoPlayerToolDropTitle,
-        subtitle: l10n.videoPlayerToolDropSubtitle,
-        androidContentUris: true,
-        extraButtons: [
-          if (last != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: TextButton.icon(
-                onPressed: () => _play(last.source, last.name),
-                icon: const Icon(Icons.replay),
-                label: Text(
-                  l10n.videoPlayerToolPlayAgain(last.name),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final dropZone = FileDropZone(
+            onFileSelected: (file) => _play(_pickedSource(file), file.name),
+            allowedExtensions: config.fileExtensions,
+            allowedMimeTypes: const ['video/*'],
+            typeLabel: l10n.videoPlayerToolTypeLabel,
+            accentColor: config.accentColor,
+            icon: config.icon,
+            title: l10n.videoPlayerToolDropTitle,
+            subtitle: l10n.videoPlayerToolDropSubtitle,
+            androidContentUris: true,
+            compact: entries.isNotEmpty && !constraints.canSplit,
+          );
+          if (entries.isEmpty) return dropZone;
+          final recent = VideoRecentList(
+            entries: entries,
+            onPlay: (entry) => _play(entry.uri, entry.title),
+            onRemove: state.remove,
+            onClear: state.clear,
+          );
+          if (constraints.canSplit) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: dropZone),
+                const SizedBox(width: 16),
+                Expanded(child: recent),
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 200, child: dropZone),
+              const Divider(height: 1),
+              Expanded(child: recent),
+            ],
+          );
+        },
       ),
     );
   }

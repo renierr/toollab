@@ -229,6 +229,7 @@ class MyNewTool {
     shareTarget: ShareTargetConfig(       // for incoming shared files
       accept: ['application/octet-stream'],
     ),
+    acceptsContentUris: false,            // true: shared videos arrive as content:// URIs, see "Receiving Files"
     createPage: (sf) => const MyNewToolPage(),  // route auto-wired
     syncDelegateFactory: MyNewToolSyncDelegate.new,  // if sync needed
     backgroundTasks: () => [MyNewToolBackground.task],  // if it runs on a schedule
@@ -243,6 +244,13 @@ class MyNewTool {
 ```
 
 > **Localization:** names, descriptions, and section titles are localized per-tool — no central switch. Set `nameL10n` / `descriptionL10n` (and `titleL10n` on a `ToolSection`), add the matching keys to both `app_en.arb` and `app_de.arb`, then run `flutter gen-l10n`. The raw `name` / `description` stay as fallbacks. UI must read `tool.localizedName(l10n)` / `tool.localizedDescription(l10n)` / `section.localizedTitle(l10n)` — including the tool's own `ToolLayout(title: MyNewTool.config.localizedName(l10n))`. Never render `.name` / `.description` / `.title` directly.
+
+### Receiving Files (Share Target & Picker)
+`createPage` receives the shared files as `SharedData`. By default every shared file is copied into the app cache first, so `SharedFile.path` is a readable file on every platform.
+
+On Android a shared **video** is not copied up front: copying a large file is slow and doubles its storage. A tool that can stream from a `content://` URI sets `acceptsContentUris: true` and reads `SharedFile.uri`, which is either `Uri.file(path)` or the content URI (`SharedFile.contentUri`, with an empty `path`). For every other tool `lib/app.dart` calls `SharingService.materialize()` before opening it, so the copy still happens and `path` stays valid.
+
+The same applies to picking: `FileDropZone(androidContentUris: true)` hands back the picker's `content://` URI in `XFile.path` instead of a cached copy. The read grant lasts while the app runs; keep it across restarts only through a persisted permission (see `VideoSystemChannel.persist` in the Video Player tool).
 
 ### Step 2: Write `<name>_page.dart`
 ```dart
@@ -291,10 +299,10 @@ The script creates legacy PNG fallbacks and Android 8+ adaptive-icon resources.
 The latter prevents Pixel Launcher from applying legacy-icon normalization that
 makes drawer icons look smaller.
 
-For every tool added to the app, launcher entry points must also be maintained:
-- **AndroidManifest.xml**: Define a corresponding `<activity-alias>` under `<application>` pointing to `.MainActivity`, named `de.renier.tool_lab.<ToolNamePascalCase>Alias`, marked `android:enabled="false"` (disabled by default) with standard launcher intent-filters.
-- **MainActivity.kt**: Map the alias class name to the tool's GoRouter route in `handleIntent` (e.g., `de.renier.tool_lab.CalculatorAlias` maps to `/calculator`).
-- **ShortcutHelper.kt**: Add the tool mapping in `setDrawerIconEnabled` to enable/disable the activity-alias component.
+For every tool added to the app, the launcher entry point must also be declared:
+- **AndroidManifest.xml**: Define a corresponding `<activity-alias>` under `<application>` pointing to `.MainActivity`, named `de.renier.tool_lab.<ToolIdPascalCase>Alias` (`video-player` → `VideoPlayerAlias`), marked `android:enabled="false"` (disabled by default) with standard launcher intent-filters and `android:icon="@mipmap/ic_launcher_<tool_id_snake_case>"`.
+
+No Kotlin mapping is needed: `ShortcutHelper.kt` derives the alias name from the tool ID, and `MainActivity.kt` derives the route back from the alias name (`VideoPlayerAlias` → `/video-player`). So the tool's `route` must be `/` + its ID. Only tools that run in their own process are listed by hand (see §10).
 
 ### Step 5: Verify & Clean
 Before committing, always run:

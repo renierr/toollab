@@ -5746,6 +5746,8 @@
   "videoSettingsLongPressHint": "Video lange drücken für 2× solange gedrückt, mit zwei Fingern zoomen",
   "videoSettingsReset": "Auf Standard zurücksetzen",
   "videoSettingsResetMessage": "Alle Videoplayer-Einstellungen auf den Standard zurücksetzen?",
+  "videoSettingsResume": "Dort fortsetzen, wo du aufgehört hast",
+  "videoSettingsResumeHint": "Videos aus dem Videoplayer und der Dateiverwaltung starten an der letzten Stelle",
   "videoSettingsPercent": "{percent} %",
   "videoPlayerSpeed": "Wiedergabegeschwindigkeit",
   "videoPlayerSpeedNormal": "Normal",
@@ -5757,6 +5759,10 @@
   "videoPlayerSubtitleFailed": "Untertiteldatei konnte nicht geladen werden",
   "videoPlayerTrack": "Spur {number}",
   "videoPlayerVolume": "{percent} %",
+  "videoPlayerResumed": "Weiter bei {time}",
+  "videoPlayerStartOver": "Von vorn",
+  "videoPlayerPrevious": "Vorheriges Video",
+  "videoPlayerNext": "Nächstes Video",
   "videoPlayerBrightness": "Helligkeit {percent} %",
   "videoPlayerZoom": "Zoom {percent} %",
   "videoPlayerHoldSpeed": "{speed}× solange gedrückt",
@@ -6029,5 +6035,9 @@
   "videoPlayerToolTypeLabel": "Videos",
   "videoPlayerToolDropTitle": "Video öffnen",
   "videoPlayerToolDropSubtitle": "Videodatei hier ablegen",
-  "videoPlayerToolPlayAgain": "{name} erneut abspielen"
+  "videoPlayerToolRecent": "Zuletzt angesehen",
+  "videoPlayerToolClearRecent": "Liste leeren",
+  "videoPlayerToolRemoveRecent": "Aus der Liste entfernen",
+  "videoPlayerToolWatched": "Angesehen",
+  "videoPlayerToolProgress": "{position} von {duration}"
 }

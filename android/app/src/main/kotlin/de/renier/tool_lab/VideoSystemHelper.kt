@@ -1,18 +1,24 @@
 package de.renier.tool_lab
 
 import android.app.Activity
+import android.content.ContentUris
 import android.content.Context
+import android.content.Intent
 import android.media.AudioManager
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.net.Uri
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.view.WindowManager
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 import kotlin.math.roundToInt
 
 /** Media volume, window brightness and stream details for the Flutter video player. */
@@ -71,6 +77,24 @@ object VideoSystemHelper {
                         main.post { result.success(tracks) }
                     }.start()
                 }
+                "resolvePath" -> {
+                    val uri = call.argument<String>("uri")?.let(Uri::parse)
+                    result.success(uri?.let { resolvePath(appContext, it) })
+                }
+                "persistUri", "releaseUri" -> {
+                    val uri = call.argument<String>("uri")?.let(Uri::parse)
+                    val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    try {
+                        if (uri != null && call.method == "persistUri") {
+                            appContext.contentResolver.takePersistableUriPermission(uri, flags)
+                        } else if (uri != null) {
+                            appContext.contentResolver.releasePersistableUriPermission(uri, flags)
+                        }
+                    } catch (e: SecurityException) {
+                        // Shared URIs come without a persistable grant.
+                    }
+                    result.success(null)
+                }
                 "size" -> {
                     val uri = call.argument<String>("uri")?.let(Uri::parse)
                     val size = uri?.let {
@@ -95,6 +119,42 @@ object VideoSystemHelper {
     } catch (e: Settings.SettingNotFoundException) {
         0.5
     }
+
+    /** The file behind a document or media URI, if this app may read it directly. */
+    private fun resolvePath(context: Context, uri: Uri): String? {
+        val path = try {
+            val document = DocumentsContract.isDocumentUri(context, uri)
+            val id = if (document) DocumentsContract.getDocumentId(uri) else null
+            when {
+                id != null && id.startsWith("raw:") -> id.removePrefix("raw:")
+                id != null && uri.authority == "com.android.externalstorage.documents" -> {
+                    val volume = id.substringBefore(':')
+                    val rest = id.substringAfter(':', "")
+                    if (volume.equals("primary", ignoreCase = true)) {
+                        File(Environment.getExternalStorageDirectory(), rest).path
+                    } else {
+                        "/storage/$volume/$rest"
+                    }
+                }
+                id != null && uri.authority == "com.android.providers.media.documents" ->
+                    id.substringAfter(':').toLongOrNull()?.let {
+                        dataColumn(context, ContentUris.withAppendedId(MediaStore.Files.getContentUri("external"), it))
+                    }
+                document -> null
+                uri.authority == MediaStore.AUTHORITY -> dataColumn(context, uri)
+                else -> null
+            }
+        } catch (e: Exception) {
+            null
+        }
+        return path?.takeIf { File(it).let { file -> file.isFile && file.canRead() } }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun dataColumn(context: Context, uri: Uri): String? =
+        context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DATA), null, null, null)?.use { c ->
+            if (c.moveToFirst() && !c.isNull(0)) c.getString(0) else null
+        }
 
     private fun readTracks(context: Context, path: String): List<Map<String, Any?>> {
         val extractor = MediaExtractor()

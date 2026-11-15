@@ -35,6 +35,11 @@ class VideoControls extends StatelessWidget {
   final VoidCallback onInfo;
   final VoidCallback onSettings;
 
+  /// Shown with the playlist buttons, like `3 / 12`; null without a playlist.
+  final String? playlistLabel;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
   const VideoControls({
     super.key,
     required this.state,
@@ -60,6 +65,9 @@ class VideoControls extends StatelessWidget {
     required this.onLoadSubtitles,
     required this.onInfo,
     required this.onSettings,
+    this.playlistLabel,
+    this.onPrevious,
+    this.onNext,
   });
 
   @override
@@ -91,6 +99,14 @@ class VideoControls extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
+                  if (playlistLabel != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        playlistLabel!,
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                    ),
                   if (onCopyFrame != null)
                     IconButton(
                       icon: const Icon(Icons.photo_camera_outlined),
@@ -137,7 +153,7 @@ class VideoControls extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          Text(_format(state.position)),
+                          Text(formatVideoTime(state.position)),
                           Expanded(
                             child: Slider(
                               value: durationMs > 0 ? positionMs.toDouble() : 0,
@@ -149,7 +165,7 @@ class VideoControls extends StatelessWidget {
                                   : null,
                             ),
                           ),
-                          Text(_format(state.duration)),
+                          Text(formatVideoTime(state.duration)),
                         ],
                       ),
                     ),
@@ -157,6 +173,13 @@ class VideoControls extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: _ControlBar(
                       transport: [
+                        if (playlistLabel != null)
+                          IconButton(
+                            iconSize: 32,
+                            icon: const Icon(Icons.skip_previous),
+                            tooltip: l10n.videoPlayerPrevious,
+                            onPressed: onPrevious,
+                          ),
                         if (!live)
                           IconButton(
                             iconSize: 32,
@@ -184,6 +207,13 @@ class VideoControls extends StatelessWidget {
                               seekStep.inSeconds,
                             ),
                             onPressed: () => onSeekBy(seekStep),
+                          ),
+                        if (playlistLabel != null)
+                          IconButton(
+                            iconSize: 32,
+                            icon: const Icon(Icons.skip_next),
+                            tooltip: l10n.videoPlayerNext,
+                            onPressed: onNext,
                           ),
                       ],
                       start: [
@@ -257,14 +287,6 @@ class VideoControls extends StatelessWidget {
     30 => Icons.forward_30,
     _ => Icons.fast_forward,
   };
-
-  static String _format(Duration d) {
-    final minutes = d.inMinutes;
-    final seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
-    if (minutes < 60) return '$minutes:$seconds';
-    final mm = (minutes % 60).toString().padLeft(2, '0');
-    return '${d.inHours}:$mm:$seconds';
-  }
 }
 
 /// A shade behind one control bar, dark at the screen edge and clear toward the
@@ -561,4 +583,13 @@ class _ControlBar extends StatelessWidget {
       },
     );
   }
+}
+
+/// `m:ss`, or `h:mm:ss` from an hour on.
+String formatVideoTime(Duration d) {
+  final minutes = d.inMinutes;
+  final seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
+  if (minutes < 60) return '$minutes:$seconds';
+  final mm = (minutes % 60).toString().padLeft(2, '0');
+  return '${d.inHours}:$mm:$seconds';
 }

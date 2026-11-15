@@ -1,26 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/video_player/video_playlist.dart';
 
+import 'video_player_state.dart';
 import 'video_player_tool_page.dart';
-
-const List<String> videoPlayerExtensions = [
-  'mp4',
-  'm4v',
-  'mkv',
-  'webm',
-  'mov',
-  'avi',
-  '3gp',
-  'ts',
-  'mts',
-  'm2ts',
-  'mpg',
-  'mpeg',
-  'ogv',
-  'wmv',
-  'flv',
-];
 
 class VideoPlayerTool {
   VideoPlayerTool._();
@@ -36,8 +21,14 @@ class VideoPlayerTool {
     nameL10n: (l10n) => l10n.toolNameVideoPlayer,
     descriptionL10n: (l10n) => l10n.toolDescVideoPlayer,
     shareTarget: ShareTargetConfig(accept: ['video/*']),
-    fileExtensions: videoPlayerExtensions,
+    fileExtensions: videoFileExtensions,
     acceptsContentUris: true,
     createPage: (sd) => VideoPlayerToolPage(sharedFile: sd?.firstFile),
+    stateProviders: () => [
+      ChangeNotifierProvider<VideoPlayerState>(
+        create: (_) => VideoPlayerState(),
+      ),
+    ],
+    onClose: (context) => context.read<VideoPlayerState>().release(),
   );
 }

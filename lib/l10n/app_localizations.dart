@@ -26212,6 +26212,18 @@ abstract class AppLocalizations {
   /// **'Reset all video player settings to their defaults?'**
   String get videoSettingsResetMessage;
 
+  /// No description provided for @videoSettingsResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume where you left off'**
+  String get videoSettingsResume;
+
+  /// No description provided for @videoSettingsResumeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos from the Video Player and the file manager continue at the last position'**
+  String get videoSettingsResumeHint;
+
   /// No description provided for @videoSettingsPercent.
   ///
   /// In en, this message translates to:
@@ -26277,6 +26289,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent} %'**
   String videoPlayerVolume(int percent);
+
+  /// No description provided for @videoPlayerResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Continuing at {time}'**
+  String videoPlayerResumed(String time);
+
+  /// No description provided for @videoPlayerStartOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get videoPlayerStartOver;
+
+  /// No description provided for @videoPlayerPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous video'**
+  String get videoPlayerPrevious;
+
+  /// No description provided for @videoPlayerNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next video'**
+  String get videoPlayerNext;
 
   /// No description provided for @videoPlayerBrightness.
   ///
@@ -27910,11 +27946,35 @@ abstract class AppLocalizations {
   /// **'Drag & drop a video file here'**
   String get videoPlayerToolDropSubtitle;
 
-  /// No description provided for @videoPlayerToolPlayAgain.
+  /// No description provided for @videoPlayerToolRecent.
   ///
   /// In en, this message translates to:
-  /// **'Play {name} again'**
-  String videoPlayerToolPlayAgain(String name);
+  /// **'Recent videos'**
+  String get videoPlayerToolRecent;
+
+  /// No description provided for @videoPlayerToolClearRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear list'**
+  String get videoPlayerToolClearRecent;
+
+  /// No description provided for @videoPlayerToolRemoveRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from list'**
+  String get videoPlayerToolRemoveRecent;
+
+  /// No description provided for @videoPlayerToolWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Watched'**
+  String get videoPlayerToolWatched;
+
+  /// No description provided for @videoPlayerToolProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{position} of {duration}'**
+  String videoPlayerToolProgress(String position, String duration);
 }
 
 class _AppLocalizationsDelegate

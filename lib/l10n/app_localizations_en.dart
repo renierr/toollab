@@ -14887,6 +14887,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reset all video player settings to their defaults?';
 
   @override
+  String get videoSettingsResume => 'Resume where you left off';
+
+  @override
+  String get videoSettingsResumeHint =>
+      'Videos from the Video Player and the file manager continue at the last position';
+
+  @override
   String videoSettingsPercent(int percent) {
     return '$percent %';
   }
@@ -14924,6 +14931,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String videoPlayerVolume(int percent) {
     return '$percent %';
   }
+
+  @override
+  String videoPlayerResumed(String time) {
+    return 'Continuing at $time';
+  }
+
+  @override
+  String get videoPlayerStartOver => 'Start over';
+
+  @override
+  String get videoPlayerPrevious => 'Previous video';
+
+  @override
+  String get videoPlayerNext => 'Next video';
 
   @override
   String videoPlayerBrightness(int percent) {
@@ -15873,7 +15894,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoPlayerToolDropSubtitle => 'Drag & drop a video file here';
 
   @override
-  String videoPlayerToolPlayAgain(String name) {
-    return 'Play $name again';
+  String get videoPlayerToolRecent => 'Recent videos';
+
+  @override
+  String get videoPlayerToolClearRecent => 'Clear list';
+
+  @override
+  String get videoPlayerToolRemoveRecent => 'Remove from list';
+
+  @override
+  String get videoPlayerToolWatched => 'Watched';
+
+  @override
+  String videoPlayerToolProgress(String position, String duration) {
+    return '$position of $duration';
   }
 }

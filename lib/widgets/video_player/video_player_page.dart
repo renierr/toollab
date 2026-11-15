@@ -24,6 +24,9 @@ import 'video_info_dialog.dart';
 import 'video_media_session.dart';
 import 'video_pip.dart';
 import 'video_player_settings.dart';
+import 'video_playlist.dart';
+import 'video_resume_store.dart';
+import 'video_system_channel.dart';
 
 class VideoPlayerAction {
   final IconData icon;
@@ -54,7 +57,8 @@ class VideoQuality {
 
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
 /// Space / K / Play toggles playback, left/right seek by the arrow step, J / L
-/// skip, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
+/// skip, N / P or Page Down / Up step through the folder, M mutes, S copies the frame,
+/// Esc / Backspace close, any other key shows the controls.
 /// < / > change the speed. A tap shows the controls; a double tap follows the settings, a horizontal swipe skips,
 /// a vertical swipe sets the volume (brightness on the left half on Android), a long press plays
 /// at 2× and a pinch zooms. Skips use the video settings' length.
@@ -74,6 +78,12 @@ class VideoPlayerPage extends StatefulWidget {
   final bool live;
   final VideoPlayerSettings settings;
 
+  /// Saves where the video was left and continues there next time.
+  final VideoResumeStore? resumeStore;
+
+  /// Offers previous / next over the other videos in a local file's folder.
+  final bool browseFolder;
+
   const VideoPlayerPage({
     super.key,
     required this.source,
@@ -83,6 +93,8 @@ class VideoPlayerPage extends StatefulWidget {
     this.qualities = const [],
     this.live = false,
     this.settings = const VideoPlayerSettings(),
+    this.resumeStore,
+    this.browseFolder = false,
   });
 
   /// Loads the settings first: the backend needs them before it starts.
@@ -95,6 +107,8 @@ class VideoPlayerPage extends StatefulWidget {
     List<VideoPlayerAction> actions = const [],
     List<VideoQuality> qualities = const [],
     bool live = false,
+    VideoResumeStore? resumeStore,
+    bool browseFolder = false,
   }) async {
     final settings = await SettingsService.videoPlayerSettings();
     if (!context.mounted) return;
@@ -108,6 +122,8 @@ class VideoPlayerPage extends StatefulWidget {
           qualities: qualities,
           live: live,
           settings: settings,
+          resumeStore: resumeStore,
+          browseFolder: browseFolder,
         ),
       ),
     );
@@ -124,13 +140,17 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   static const double _maxZoom = 4;
   static const double _holdSpeed = 2;
   static const List<double> _speeds = VideoPlayerSettings.speedOptions;
-  static const MethodChannel _systemChannel = MethodChannel(
-    'de.renier.tool_lab/video_system',
-  );
+  static const MethodChannel _systemChannel = VideoSystemChannel.channel;
+  static const Duration _saveInterval = Duration(seconds: 5);
 
   late VideoPlayerSettings _settings = widget.settings;
   late VideoBackend _backend = _createBackend();
   late Uri _source = widget.source;
+  late String? _title = widget.title;
+  List<VideoPlaylistItem> _playlist = const [];
+  int _playlistIndex = -1;
+  DateTime _lastSave = DateTime(0);
+  bool _savedPlaying = false;
   final GlobalKey _frameKey = GlobalKey(debugLabel: 'VideoFrame');
   final FocusNode _keyFocus = FocusNode(debugLabel: 'VideoPlayerKeys');
   final FocusNode _playFocus = FocusNode(debugLabel: 'VideoPlayerPlay');
@@ -170,6 +190,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     super.initState();
     unawaited(_open());
     _backend.state.addListener(_onState);
+    if (widget.browseFolder) unawaited(_scanFolder());
     if (Platform.isAndroid) {
       unawaited(
         VideoPip.isSupported().then((supported) {
@@ -185,6 +206,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       unawaited(_pip?.dispose());
       unawaited(_session?.dispose());
       _backend.state.removeListener(_onState);
+      _saveProgress();
       if (Platform.isAndroid) _screenOn.set(false);
       if (_brightnessChanged) {
         unawaited(_systemChannel.invokeMethod<void>('setBrightness'));
@@ -198,9 +220,96 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   VideoBackend _createBackend() => VideoBackend.create(_settings);
 
   Future<void> _open() async {
-    await _backend.open(widget.source, loop: widget.loop);
+    final start = await _resumeStart(widget.source);
+    if (!mounted) return;
+    final opening = _backend.open(
+      widget.source,
+      loop: widget.loop,
+      start: start,
+    );
+    // Android builds its view from the controller that open() just created.
+    setState(() {});
+    await opening;
     final speed = _settings.defaultSpeed;
     if (!widget.live && speed != 1 && mounted) await _backend.setSpeed(speed);
+    if (start != null) _announceResume(start);
+  }
+
+  Future<Duration?> _resumeStart(Uri source) async {
+    final store = widget.resumeStore;
+    if (store == null || widget.live || !_settings.resumePlayback) return null;
+    return store.resumePosition(source);
+  }
+
+  void _announceResume(Duration start) {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.videoPlayerResumed(formatVideoTime(start))),
+        action: SnackBarAction(
+          label: l10n.videoPlayerStartOver,
+          onPressed: () => unawaited(_seekTo(Duration.zero)),
+        ),
+      ),
+    );
+  }
+
+  /// Throttled while playing; immediate on pause, end and close.
+  void _saveProgress({VideoPlaybackState? state}) {
+    final store = widget.resumeStore;
+    final s = state ?? _backend.state.value;
+    if (store == null || widget.live || !s.initialized) return;
+    if (s.duration <= Duration.zero) return;
+    final now = DateTime.now();
+    if (state != null &&
+        s.playing == _savedPlaying &&
+        !s.completed &&
+        now.difference(_lastSave) < _saveInterval) {
+      return;
+    }
+    _lastSave = now;
+    _savedPlaying = s.playing;
+    unawaited(
+      store.savePosition(
+        source: _source,
+        title: _title ?? _source.pathSegments.lastOrNull ?? '',
+        position: s.completed ? s.duration : s.position,
+        duration: s.duration,
+      ),
+    );
+  }
+
+  Future<void> _scanFolder() async {
+    final items = await videoFolderPlaylist(widget.source);
+    if (items.length < 2) return;
+    final path = widget.source.toFilePath();
+    final index = items.indexWhere((i) => i.source.toFilePath() == path);
+    if (!mounted || index < 0) return;
+    setState(() {
+      _playlist = items;
+      _playlistIndex = index;
+    });
+  }
+
+  Future<void> _playAt(int index) async {
+    if (index < 0 || index >= _playlist.length || index == _playlistIndex) {
+      return;
+    }
+    _saveProgress();
+    final item = _playlist[index];
+    final start = await _resumeStart(item.source);
+    if (!mounted) return;
+    setState(() {
+      _playlistIndex = index;
+      _title = item.title;
+      _zoom = 1;
+      _pan = Offset.zero;
+    });
+    _lastSave = DateTime(0);
+    _session?.retitle(item.title);
+    await _reopen(item.source, start: start ?? Duration.zero);
+    if (start != null) _announceResume(start);
   }
 
   @override
@@ -220,8 +329,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   void _startSession() {
     _session = VideoMediaSession(
       title:
-          widget.title ??
-          AppLocalizations.of(context).videoPlayerNotificationTitle,
+          _title ?? AppLocalizations.of(context).videoPlayerNotificationTitle,
       live: widget.live,
       onAction: _onRemoteAction,
     );
@@ -314,6 +422,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     );
     unawaited(_session?.sync(state));
     _watchStall(state);
+    _saveProgress(state: state);
     if ((state.completed || state.error != null) && !_controlsVisible) {
       _showControls();
     }
@@ -735,7 +844,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     unawaited(
       VideoInfoDialog.show(
         context,
-        title: widget.title,
+        title: _title,
         source: _source,
         duration: _backend.state.value.duration,
         info: _backend.streamInfo(),
@@ -837,6 +946,18 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
         key == LogicalKeyboardKey.space ||
         key == LogicalKeyboardKey.keyK) {
       unawaited(_togglePlay());
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.mediaTrackNext ||
+        key == LogicalKeyboardKey.pageDown ||
+        (key == LogicalKeyboardKey.keyN && event is KeyDownEvent)) {
+      unawaited(_playAt(_playlistIndex + 1));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.mediaTrackPrevious ||
+        key == LogicalKeyboardKey.pageUp ||
+        (key == LogicalKeyboardKey.keyP && event is KeyDownEvent)) {
+      unawaited(_playAt(_playlistIndex - 1));
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.mediaPlay) {
@@ -979,7 +1100,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                             valueListenable: _backend.state,
                             builder: (context, state, _) => VideoControls(
                               state: state,
-                              title: widget.title,
+                              title: _title,
                               playFocusNode: _playFocus,
                               actions: widget.actions,
                               onTogglePlay: _togglePlay,
@@ -1026,6 +1147,15 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                                   unawaited(_loadSubtitles()),
                               onInfo: _showInfo,
                               onSettings: () => unawaited(_openSettings()),
+                              playlistLabel: _playlist.isEmpty
+                                  ? null
+                                  : '${_playlistIndex + 1} / ${_playlist.length}',
+                              onPrevious: _playlistIndex > 0
+                                  ? () => unawaited(_playAt(_playlistIndex - 1))
+                                  : null,
+                              onNext: _playlistIndex < _playlist.length - 1
+                                  ? () => unawaited(_playAt(_playlistIndex + 1))
+                                  : null,
                             ),
                           ),
                         ),

@@ -7258,6 +7258,8 @@
   "videoSettingsLongPressHint": "Long-press the video to play at 2× while held, pinch to zoom",
   "videoSettingsReset": "Reset to defaults",
   "videoSettingsResetMessage": "Reset all video player settings to their defaults?",
+  "videoSettingsResume": "Resume where you left off",
+  "videoSettingsResumeHint": "Videos from the Video Player and the file manager continue at the last position",
   "videoSettingsPercent": "{percent} %",
   "@videoSettingsPercent": {"placeholders": {"percent": {"type": "int"}}},
   "videoPlayerSpeed": "Playback speed",
@@ -7272,6 +7274,11 @@
   "@videoPlayerTrack": {"placeholders": {"number": {"type": "int"}}},
   "videoPlayerVolume": "{percent} %",
   "@videoPlayerVolume": {"placeholders": {"percent": {"type": "int"}}},
+  "videoPlayerResumed": "Continuing at {time}",
+  "@videoPlayerResumed": {"placeholders": {"time": {"type": "String"}}},
+  "videoPlayerStartOver": "Start over",
+  "videoPlayerPrevious": "Previous video",
+  "videoPlayerNext": "Next video",
   "videoPlayerBrightness": "Brightness {percent} %",
   "@videoPlayerBrightness": {"placeholders": {"percent": {"type": "int"}}},
   "videoPlayerZoom": "Zoom {percent} %",
@@ -7595,6 +7602,10 @@
   "videoPlayerToolTypeLabel": "Videos",
   "videoPlayerToolDropTitle": "Open a Video",
   "videoPlayerToolDropSubtitle": "Drag & drop a video file here",
-  "videoPlayerToolPlayAgain": "Play {name} again",
-  "@videoPlayerToolPlayAgain": {"placeholders": {"name": {"type": "String"}}}
+  "videoPlayerToolRecent": "Recent videos",
+  "videoPlayerToolClearRecent": "Clear list",
+  "videoPlayerToolRemoveRecent": "Remove from list",
+  "videoPlayerToolWatched": "Watched",
+  "videoPlayerToolProgress": "{position} of {duration}",
+  "@videoPlayerToolProgress": {"placeholders": {"position": {"type": "String"}, "duration": {"type": "String"}}}
 }

@@ -55,6 +55,7 @@ class VideoPlayerSettings {
   static const String _keySidecarSubtitles = 'video_sidecar_subtitles';
   static const String _keyAudioLanguage = 'video_audio_language';
   static const String _keySubtitleLanguage = 'video_subtitle_language';
+  static const String _keyResume = 'video_resume_playback';
 
   final int skipSeconds;
   final double defaultSpeed;
@@ -88,6 +89,9 @@ class VideoPlayerSettings {
   final String audioLanguage;
   final String subtitleLanguage;
 
+  /// Continue where a remembered video was left.
+  final bool resumePlayback;
+
   const VideoPlayerSettings({
     this.skipSeconds = 10,
     this.defaultSpeed = 1,
@@ -106,6 +110,7 @@ class VideoPlayerSettings {
     this.sidecarSubtitles = true,
     this.audioLanguage = '',
     this.subtitleLanguage = '',
+    this.resumePlayback = true,
   });
 
   Duration get skip => Duration(seconds: skipSeconds);
@@ -163,6 +168,7 @@ class VideoPlayerSettings {
       sidecarSubtitles: settings[_keySidecarSubtitles] != 'false',
       audioLanguage: language(_keyAudioLanguage),
       subtitleLanguage: language(_keySubtitleLanguage),
+      resumePlayback: settings[_keyResume] != 'false',
     );
   }
 
@@ -184,6 +190,7 @@ class VideoPlayerSettings {
     _keySidecarSubtitles: '$sidecarSubtitles',
     _keyAudioLanguage: audioLanguage,
     _keySubtitleLanguage: subtitleLanguage,
+    _keyResume: '$resumePlayback',
   };
 
   VideoPlayerSettings copyWith({
@@ -204,6 +211,7 @@ class VideoPlayerSettings {
     bool? sidecarSubtitles,
     String? audioLanguage,
     String? subtitleLanguage,
+    bool? resumePlayback,
   }) => VideoPlayerSettings(
     skipSeconds: skipSeconds ?? this.skipSeconds,
     defaultSpeed: defaultSpeed ?? this.defaultSpeed,
@@ -222,6 +230,7 @@ class VideoPlayerSettings {
     sidecarSubtitles: sidecarSubtitles ?? this.sidecarSubtitles,
     audioLanguage: audioLanguage ?? this.audioLanguage,
     subtitleLanguage: subtitleLanguage ?? this.subtitleLanguage,
+    resumePlayback: resumePlayback ?? this.resumePlayback,
   );
 }
 

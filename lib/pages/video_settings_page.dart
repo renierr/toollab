@@ -161,6 +161,14 @@ class VideoSettingsPage extends StatelessWidget {
                   },
                   onChanged: (v) => update(settings.copyWith(defaultSpeed: v)),
                 ),
+                _SwitchTile(
+                  icon: Icons.history,
+                  title: l10n.videoSettingsResume,
+                  subtitle: l10n.videoSettingsResumeHint,
+                  value: settings.resumePlayback,
+                  onChanged: (v) =>
+                      update(settings.copyWith(resumePlayback: v)),
+                ),
                 _ChoiceTile<int>(
                   icon: Icons.visibility_off_outlined,
                   title: l10n.videoSettingsHideDelay,

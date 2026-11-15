@@ -9,7 +9,7 @@ import 'video_backend.dart';
 /// The open video in the system's media controls: the Android media
 /// notification, MPRIS on Linux and the media overlay on Windows.
 class VideoMediaSession {
-  final String title;
+  String _title;
   final bool live;
 
   /// `play`, `pause`, `play_pause`, `rewind`, `forward`, `stop` or `seek:<ms>`.
@@ -23,10 +23,18 @@ class VideoMediaSession {
   VideoPlaybackState? _latest;
 
   VideoMediaSession({
-    required this.title,
+    required this._title,
     required this.live,
     required this.onAction,
   });
+
+  String get title => _title;
+
+  /// Resent with the next [sync].
+  void retitle(String value) {
+    _title = value;
+    _sent = null;
+  }
 
   /// Refreshes the controls when play state or length changes; the system
   /// extrapolates the position in between.

@@ -31,6 +31,7 @@ import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
+import 'package:tool_lab/tools/video_player/video_player_state.dart';
 import 'package:tool_lab/widgets/video_player/video_player_page.dart';
 
 class FileManagerPage extends StatefulWidget {
@@ -105,10 +106,14 @@ class _FileManagerPageState extends State<FileManagerPage>
         return;
       }
       if (toolId == VideoPlayerPage.preferenceId) {
+        // Remote files and archive entries are temporary copies.
+        final local = path == entry.path;
         await VideoPlayerPage.open(
           context,
           source: Uri.file(path),
           title: entry.name,
+          resumeStore: local ? context.read<VideoPlayerState>() : null,
+          browseFolder: local,
         );
         return;
       }

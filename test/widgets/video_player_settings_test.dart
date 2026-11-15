@@ -27,6 +27,7 @@ void main() {
     expect(settings.sidecarSubtitles, isTrue);
     expect(settings.audioLanguage, '');
     expect(settings.subtitleLanguage, '');
+    expect(settings.resumePlayback, isTrue);
   });
 
   test('stored values survive a round trip', () {
@@ -48,6 +49,7 @@ void main() {
       sidecarSubtitles: false,
       audioLanguage: 'ja',
       subtitleLanguage: 'de',
+      resumePlayback: false,
     );
     final loaded = VideoPlayerSettings.fromSettings(stored.toSettings());
     expect(loaded.skipSeconds, 30);
@@ -67,6 +69,7 @@ void main() {
     expect(loaded.sidecarSubtitles, isFalse);
     expect(loaded.audioLanguage, 'ja');
     expect(loaded.subtitleLanguage, 'de');
+    expect(loaded.resumePlayback, isFalse);
   });
 
   test('track languages match in both code forms', () {
