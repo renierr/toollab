@@ -8,6 +8,8 @@ import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/video_player/video_backend.dart';
+import 'package:tool_lab/widgets/video_player/video_player_page.dart';
 
 class FileManagerSettingsPage extends StatelessWidget {
   const FileManagerSettingsPage({super.key});
@@ -108,6 +110,12 @@ class FileManagerSettingsPage extends StatelessWidget {
                       value: null,
                       child: Text(l10n.fileManagerOpenChooser),
                     ),
+                    if (VideoBackend.isSupported &&
+                        category == FileManagerOpenCategory.video)
+                      DropdownMenuItem(
+                        value: VideoPlayerPage.preferenceId,
+                        child: Text(l10n.fileManagerOpenVideoPlayer),
+                      ),
                     if (NativeMediaPlayer.isSupported &&
                         (category == FileManagerOpenCategory.audio ||
                             category == FileManagerOpenCategory.video))

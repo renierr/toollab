@@ -31,6 +31,7 @@ import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
+import 'package:tool_lab/widgets/video_player/video_player_page.dart';
 
 class FileManagerPage extends StatefulWidget {
   const FileManagerPage({super.key});
@@ -101,6 +102,14 @@ class _FileManagerPageState extends State<FileManagerPage>
       final toolId = category == null ? null : state.openToolId(category);
       if (toolId == NativeMediaPlayer.preferenceId) {
         await NativeMediaPlayer.open(path: path, mimeType: mimeType);
+        return;
+      }
+      if (toolId == VideoPlayerPage.preferenceId) {
+        await VideoPlayerPage.open(
+          context,
+          source: Uri.file(path),
+          title: entry.name,
+        );
         return;
       }
       final tool = toolId == null

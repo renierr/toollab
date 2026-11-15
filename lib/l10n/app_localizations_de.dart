@@ -7384,7 +7384,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fileManagerOpenVideo => 'Video öffnen mit';
 
   @override
-  String get fileManagerOpenInternalPlayer => 'Interner Player';
+  String get fileManagerOpenInternalPlayer => 'Android-Systemplayer';
+
+  @override
+  String get fileManagerOpenVideoPlayer => 'ToolLab-Videoplayer';
 
   @override
   String get fileManagerOpenMarkdown => 'Markdown öffnen mit';

@@ -45,6 +45,8 @@ class VideoQuality {
 /// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
 /// 10 s, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
 class VideoPlayerPage extends StatefulWidget {
+  static const String preferenceId = 'tool-lab-video-player';
+
   final Uri source;
   final String? title;
   final bool loop;

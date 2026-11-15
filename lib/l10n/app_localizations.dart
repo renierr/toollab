@@ -13136,8 +13136,14 @@ abstract class AppLocalizations {
   /// No description provided for @fileManagerOpenInternalPlayer.
   ///
   /// In en, this message translates to:
-  /// **'Internal player'**
+  /// **'Android system player'**
   String get fileManagerOpenInternalPlayer;
+
+  /// No description provided for @fileManagerOpenVideoPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'ToolLab video player'**
+  String get fileManagerOpenVideoPlayer;
 
   /// No description provided for @fileManagerOpenMarkdown.
   ///
