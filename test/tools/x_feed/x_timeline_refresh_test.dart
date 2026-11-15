@@ -73,6 +73,8 @@ bool _focusIn(WidgetTester tester, String postId) {
 }
 
 void main() {
+  _seenTests();
+
   testWidgets('a refresh shows the very top even when the new posts are '
       'taller than the old ones', (tester) async {
     var round = 0;
@@ -397,5 +399,54 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
     await tester.pumpAndSettle();
     expect(find.byType(TextField), findsNothing);
+  });
+}
+
+void _seenTests() {
+  Future<List<String>> scroll(
+    WidgetTester tester, {
+    required double step,
+    required Duration pause,
+  }) async {
+    final seen = <String>[];
+    final controller = XTimelineController(
+      (cursor) async => XTimelinePage(
+        posts: [for (var i = 0; i < 40; i++) _post('p$i', 'post $i')],
+      ),
+    );
+    addTearDown(controller.dispose);
+    await _pump(
+      tester,
+      Scaffold(
+        body: XTimelineView(controller: controller, onSeen: seen.addAll),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    final gesture = await tester.startGesture(const Offset(400, 500));
+    for (var i = 0; i < 20; i++) {
+      await gesture.moveBy(Offset(0, -step));
+      await tester.pump(pause);
+    }
+    await gesture.up();
+    await tester.pump();
+    return seen;
+  }
+
+  testWidgets('posts scrolled out slowly count as seen', (tester) async {
+    final seen = await scroll(
+      tester,
+      step: 40,
+      pause: const Duration(milliseconds: 100),
+    );
+    expect(seen, containsAll(['p0', 'p1', 'p5']));
+  });
+
+  testWidgets('posts flung past do not count as seen', (tester) async {
+    final seen = await scroll(
+      tester,
+      step: 40,
+      pause: const Duration(milliseconds: 5),
+    );
+    expect(seen, isNot(contains('p5')));
   });
 }

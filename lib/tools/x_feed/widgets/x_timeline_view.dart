@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -46,6 +47,11 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   static const int _prefetchDistance = 5;
   static const Duration _seenDwell = Duration(seconds: 1);
 
+  /// How long a post scrolled out of view must have been on screen to count;
+  /// a fling passes faster.
+  static const Duration _passDwell = Duration(milliseconds: 500);
+  static const Duration _passInterval = Duration(milliseconds: 100);
+
   final ScrollController _scroll = ScrollController();
   final FocusNode _listFocus = FocusNode(
     debugLabel: 'XTimelineList',
@@ -61,6 +67,8 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   bool _aligningPost = false;
   double? _nudgeTarget;
   Timer? _seenTimer;
+  final Map<String, Duration> _visibleSince = {};
+  Duration? _lastPassCheck;
   late int _refreshCount = widget.controller.refreshCount;
 
   @override
@@ -91,8 +99,10 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     final count = widget.controller.refreshCount;
     if (count != _refreshCount) {
       _refreshCount = count;
+      _visibleSince.clear();
       _showTop();
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _trackPassing());
     _scheduleSeenCheck();
   }
 
@@ -242,7 +252,10 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
     if (notification.depth != 0) return false;
     if (notification is ScrollStartNotification) {
       _seenTimer?.cancel();
+    } else if (notification is ScrollUpdateNotification) {
+      _trackPassing(throttled: true);
     } else if (notification is ScrollEndNotification) {
+      _trackPassing();
       _scheduleSeenCheck();
     }
     return false;
@@ -257,14 +270,43 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   /// Posts at least half on screen once scrolling has settled count as seen.
   void _collectSeen() {
     final onSeen = widget.onSeen;
-    if (onSeen == null || !mounted || !_scroll.hasClients) return;
+    if (onSeen == null || !mounted) return;
+    final seen = _visibleIds();
+    if (seen.isNotEmpty) onSeen(seen.toList());
+  }
+
+  /// A post that leaves the screen while scrolling counts as seen when it was
+  /// at least half visible for [_passDwell].
+  void _trackPassing({bool throttled = false}) {
+    final onSeen = widget.onSeen;
+    if (onSeen == null || !mounted) return;
+    final now = SchedulerBinding.instance.currentSystemFrameTimeStamp;
+    final last = _lastPassCheck;
+    if (throttled && last != null && now - last < _passInterval) return;
+    _lastPassCheck = now;
+    final visible = _visibleIds();
+    final passed = <String>[];
+    _visibleSince.removeWhere((id, since) {
+      if (visible.contains(id)) return false;
+      if (now - since >= _passDwell) passed.add(id);
+      return true;
+    });
+    for (final id in visible) {
+      _visibleSince.putIfAbsent(id, () => now);
+    }
+    if (passed.isNotEmpty) onSeen(passed);
+  }
+
+  /// Ids of the posts at least half on screen (or filling half of it).
+  Set<String> _visibleIds() {
+    if (!_scroll.hasClients) return const {};
     final viewport = _scroll.position.context.notificationContext
         ?.findRenderObject();
     if (viewport is! RenderBox || !viewport.attached || !viewport.hasSize) {
-      return;
+      return const {};
     }
     final bounds = Offset.zero & viewport.size;
-    final seen = <String>[];
+    final visible = <String>{};
     for (final MapEntry(key: id, value: row) in _rows.entries) {
       if (!row.mounted) continue;
       final box = row.context.findRenderObject();
@@ -273,12 +315,12 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
         box.getTransformTo(viewport),
         Offset.zero & box.size,
       );
-      final visible = rect.intersect(bounds);
-      if (visible.width <= 0 || visible.height <= 0) continue;
+      final shown = rect.intersect(bounds);
+      if (shown.width <= 0 || shown.height <= 0) continue;
       final needed = rect.height < bounds.height ? rect.height : bounds.height;
-      if (visible.height >= needed / 2) seen.add(id);
+      if (shown.height >= needed / 2) visible.add(id);
     }
-    if (seen.isNotEmpty) onSeen(seen);
+    return visible;
   }
 
   @override
