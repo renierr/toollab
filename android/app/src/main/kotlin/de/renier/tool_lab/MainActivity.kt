@@ -305,6 +305,8 @@ open class MainActivity : FlutterFragmentActivity() {
 
         videoPip.register(messenger)
 
+        VideoSystemHelper.register(this, messenger)
+
         MethodChannel(messenger, TV_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "isTelevision" -> result.success(isTelevisionDisplay())

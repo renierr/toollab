@@ -1,10 +1,68 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'media_kit_video_backend.dart';
 import 'native_video_backend.dart';
+
+/// An audio or subtitle track the viewer can pick.
+@immutable
+class VideoTrackOption {
+  final String id;
+  final String? title;
+  final String? language;
+  final String? codec;
+  final bool selected;
+
+  const VideoTrackOption({
+    required this.id,
+    this.title,
+    this.language,
+    this.codec,
+    this.selected = false,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      other is VideoTrackOption &&
+      other.id == id &&
+      other.title == title &&
+      other.language == language &&
+      other.codec == codec &&
+      other.selected == selected;
+
+  @override
+  int get hashCode => Object.hash(id, title, language, codec, selected);
+}
+
+/// Stream details for the info dialog; null where the backend cannot tell.
+class VideoStreamInfo {
+  final int? width;
+  final int? height;
+  final String? videoCodec;
+  final String? decoder;
+  final double? frameRate;
+  final int? videoBitrate;
+  final String? audioCodec;
+  final int? sampleRate;
+  final int? channels;
+  final int? audioBitrate;
+
+  const VideoStreamInfo({
+    this.width,
+    this.height,
+    this.videoCodec,
+    this.decoder,
+    this.frameRate,
+    this.videoBitrate,
+    this.audioCodec,
+    this.sampleRate,
+    this.channels,
+    this.audioBitrate,
+  });
+}
 
 @immutable
 class VideoPlaybackState {
@@ -19,6 +77,9 @@ class VideoPlaybackState {
   /// The decoded frame's width in pixels, when the backend knows it.
   final int? videoWidth;
   final double volume;
+  final double speed;
+  final List<VideoTrackOption> audioTracks;
+  final List<VideoTrackOption> subtitleTracks;
   final String? error;
 
   const VideoPlaybackState({
@@ -31,6 +92,9 @@ class VideoPlaybackState {
     this.aspectRatio = 16 / 9,
     this.videoWidth,
     this.volume = 1,
+    this.speed = 1,
+    this.audioTracks = const [],
+    this.subtitleTracks = const [],
     this.error,
   });
 }
@@ -45,6 +109,15 @@ abstract class VideoBackend {
   Future<void> pause();
   Future<void> seek(Duration position);
   Future<void> setVolume(double volume);
+  Future<void> setSpeed(double speed);
+  Future<void> selectAudioTrack(String id);
+
+  /// Null turns subtitles off.
+  Future<void> selectSubtitleTrack(String? id);
+
+  /// Adds an SRT or WebVTT file as a subtitle track and selects it.
+  Future<void> addSubtitleFile(XFile file);
+  Future<VideoStreamInfo> streamInfo();
 
   /// PNG of the current frame when the view is not a Flutter texture (Android's
   /// SurfaceView); null means the page reads the frame back from Flutter.

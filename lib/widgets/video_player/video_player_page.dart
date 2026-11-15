@@ -2,20 +2,24 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
+import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 
 import 'video_backend.dart';
 import 'video_controls.dart';
-import 'video_notification.dart';
+import 'video_gesture_badge.dart';
+import 'video_info_dialog.dart';
+import 'video_media_session.dart';
 import 'video_pip.dart';
-import 'video_skip_indicator.dart';
 
 class VideoPlayerAction {
   final IconData icon;
@@ -47,8 +51,9 @@ class VideoQuality {
 /// Full-screen player with touch, mouse, keyboard and TV-remote controls.
 /// Space / K / Play toggles playback, left/right seek 5 s while playing, J / L
 /// 10 s, M mutes, S copies the frame, Esc / Backspace close, any other key shows the controls.
-/// A horizontal swipe skips 10 s. On Android it adds a media notification and
-/// picture-in-picture while playing.
+/// < / > change the speed. A horizontal swipe or a double tap on either side
+/// skips 10 s, a vertical swipe sets the volume. The system media controls
+/// follow playback; Android adds picture-in-picture.
 class VideoPlayerPage extends StatefulWidget {
   static const String preferenceId = 'tool-lab-video-player';
 
@@ -107,6 +112,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   static const Duration _stallLimit = Duration(seconds: 8);
   static const double _swipeDistance = 48;
   static const double _swipeVelocity = 400;
+  static const List<double> _speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+  static const MethodChannel _systemChannel = MethodChannel(
+    'de.renier.tool_lab/video_system',
+  );
 
   VideoBackend _backend = VideoBackend.create();
   late Uri _source = widget.source;
@@ -118,13 +127,19 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   bool _controlsVisible = false;
   Timer? _stallTimer;
   VideoPip? _pip;
-  VideoNotification? _notification;
+  VideoMediaSession? _session;
   bool _pipSupported = false;
   bool _closing = false;
   double _swipeDx = 0;
-  Timer? _skipTimer;
-  bool _skipVisible = false;
-  bool _skipForward = true;
+  Offset? _doubleTapAt;
+  double? _volumeStart;
+  double _volumeDy = 0;
+  Timer? _badgeTimer;
+  bool _badgeVisible = false;
+  IconData _badgeIcon = Icons.fast_forward;
+  String _badgeLabel = '';
+  Alignment _badgeAlignment = Alignment.center;
+  double? _badgeLevel;
 
   /// Where playback should continue: X serves some replay segments only at
   /// lower qualities, so a seek can stall forever on the chosen one.
@@ -145,10 +160,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     onDispose(() {
       _hideTimer?.cancel();
       _stallTimer?.cancel();
-      _skipTimer?.cancel();
+      _badgeTimer?.cancel();
       _pip?.active.removeListener(_onPipChanged);
       unawaited(_pip?.dispose());
-      unawaited(_notification?.dispose());
+      unawaited(_session?.dispose());
       _backend.state.removeListener(_onState);
       if (Platform.isAndroid) _screenOn.set(false);
       unawaited(_backend.dispose());
@@ -160,8 +175,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!Platform.isAndroid || _pip != null) return;
+    if (_session != null) return;
     final l10n = AppLocalizations.of(context);
+    _session = VideoMediaSession(
+      title: widget.title ?? l10n.videoPlayerNotificationTitle,
+      live: widget.live,
+      onAction: _onRemoteAction,
+    );
+    if (!Platform.isAndroid) return;
     final seconds = _seekStep.inSeconds;
     _pip = VideoPip(
       onAction: _onRemoteAction,
@@ -173,11 +194,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
         'forward': l10n.videoPlayerForward(seconds),
       },
     )..active.addListener(_onPipChanged);
-    _notification = VideoNotification(
-      title: widget.title ?? l10n.videoPlayerNotificationTitle,
-      live: widget.live,
-      onAction: _onRemoteAction,
-    );
   }
 
   /// A fresh backend per source: the old view leaves the tree before its
@@ -209,6 +225,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       (_) => unawaited(old.dispose()),
     );
     await opening;
+    final speed = old.state.value.speed;
+    if (speed != 1) await next.setSpeed(speed);
   }
 
   /// Controls appear on interaction only, plus at the end and on an error.
@@ -222,7 +240,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
         aspectRatio: state.aspectRatio,
       ),
     );
-    unawaited(_notification?.sync(state));
+    unawaited(_session?.sync(state));
     _watchStall(state);
     if ((state.completed || state.error != null) && !_controlsVisible) {
       _showControls();
@@ -277,7 +295,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     if (!widget.live) _resumeAt = position;
     await _backend.seek(position);
     unawaited(
-      _notification?.seeked(position, playing: _backend.state.value.playing),
+      _session?.seeked(position, playing: _backend.state.value.playing),
     );
   }
 
@@ -339,15 +357,170 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     final far = dx.abs() >= _swipeDistance;
     if (!far && velocity.abs() < _swipeVelocity) return;
     final forward = far ? dx > 0 : velocity > 0;
+    _skip(forward: forward);
+  }
+
+  void _skip({required bool forward}) {
     unawaited(_seekBy(forward ? _seekStep : -_seekStep));
-    _skipTimer?.cancel();
+    final l10n = AppLocalizations.of(context);
+    _flashBadge(
+      icon: forward ? Icons.fast_forward : Icons.fast_rewind,
+      label: forward
+          ? l10n.videoPlayerForward(_seekStep.inSeconds)
+          : l10n.videoPlayerBack(_seekStep.inSeconds),
+      alignment: Alignment(forward ? 0.6 : -0.6, 0),
+    );
+  }
+
+  void _flashBadge({
+    required IconData icon,
+    required String label,
+    required Alignment alignment,
+    double? level,
+  }) {
+    _badgeTimer?.cancel();
     setState(() {
-      _skipForward = forward;
-      _skipVisible = true;
+      _badgeIcon = icon;
+      _badgeLabel = label;
+      _badgeAlignment = alignment;
+      _badgeLevel = level;
+      _badgeVisible = true;
     });
-    _skipTimer = Timer(const Duration(milliseconds: 700), () {
-      if (mounted) setState(() => _skipVisible = false);
+    _badgeTimer = Timer(const Duration(milliseconds: 700), () {
+      if (mounted) setState(() => _badgeVisible = false);
     });
+  }
+
+  /// Sides skip, the middle toggles playback.
+  void _onDoubleTap() {
+    final at = _doubleTapAt;
+    final width = context.size?.width ?? 0;
+    if (widget.live || at == null || width <= 0) {
+      unawaited(_togglePlay());
+      return;
+    }
+    final third = at.dx / width;
+    if (third < 1 / 3) {
+      _skip(forward: false);
+    } else if (third > 2 / 3) {
+      _skip(forward: true);
+    } else {
+      unawaited(_togglePlay());
+    }
+  }
+
+  /// The system media volume on Android, the player's own on desktop.
+  Future<double> _readVolume() async {
+    if (!Platform.isAndroid) return _backend.state.value.volume;
+    try {
+      return await _systemChannel.invokeMethod<double>('getVolume') ?? 0;
+    } catch (e) {
+      errorLog('[VideoPlayerPage] getVolume failed: $e');
+      return 0;
+    }
+  }
+
+  Future<void> _writeVolume(double volume) async {
+    if (!Platform.isAndroid) return _backend.setVolume(volume);
+    try {
+      await _systemChannel.invokeMethod<void>('setVolume', {'value': volume});
+    } catch (e) {
+      errorLog('[VideoPlayerPage] setVolume failed: $e');
+    }
+  }
+
+  void _onVolumeStart(DragStartDetails _) {
+    _volumeDy = 0;
+    _volumeStart = null;
+    unawaited(_readVolume().then((volume) => _volumeStart = volume));
+  }
+
+  /// A drag over 60 % of the height covers the whole range.
+  void _onVolumeUpdate(DragUpdateDetails details) {
+    _volumeDy -= details.delta.dy;
+    final start = _volumeStart;
+    final height = context.size?.height ?? 0;
+    if (start == null || height <= 0) return;
+    final volume = (start + _volumeDy / (height * 0.6)).clamp(0.0, 1.0);
+    unawaited(_writeVolume(volume));
+    _flashBadge(
+      icon: volume > 0 ? Icons.volume_up : Icons.volume_off,
+      label: AppLocalizations.of(
+        context,
+      ).videoPlayerVolume((volume * 100).round()),
+      alignment: Alignment.center,
+      level: volume,
+    );
+  }
+
+  Future<void> _setSpeed(double speed) async {
+    await _backend.setSpeed(speed);
+    if (!mounted) return;
+    _flashBadge(
+      icon: Icons.speed,
+      label: speed == 1
+          ? AppLocalizations.of(context).videoPlayerSpeedNormal
+          : '${NumberFormat('0.##', Localizations.localeOf(context).toString()).format(speed)}×',
+      alignment: Alignment.center,
+    );
+  }
+
+  void _stepSpeed(int direction) {
+    final current = _speeds.indexWhere((s) => s >= _backend.state.value.speed);
+    final index = (current < 0 ? _speeds.length - 1 : current) + direction;
+    if (index < 0 || index >= _speeds.length) return;
+    unawaited(_setSpeed(_speeds[index]));
+  }
+
+  /// Pauses first: leaving for the system picker would open picture-in-picture.
+  Future<void> _loadSubtitles() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final state = _backend.state.value;
+    final wasPlaying = state.playing;
+    if (wasPlaying) {
+      await _backend.pause();
+      await _pip?.update(
+        playing: false,
+        seekable: !widget.live,
+        aspectRatio: state.aspectRatio,
+      );
+    }
+    if (!mounted) return;
+    try {
+      final file = await TvFilePickerDialog.openSingleFile(
+        context,
+        acceptedTypeGroups: [
+          XTypeGroup(
+            label: l10n.videoPlayerSubtitles,
+            extensions: Platform.isAndroid
+                ? null
+                : const ['srt', 'vtt', 'ass', 'ssa'],
+            mimeTypes: Platform.isAndroid ? const ['*/*'] : null,
+          ),
+        ],
+      );
+      if (file != null) await _backend.addSubtitleFile(file);
+    } catch (e) {
+      errorLog('[VideoPlayerPage] Subtitle load failed: $e');
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.videoPlayerSubtitleFailed)),
+      );
+    }
+    if (wasPlaying && mounted) await _backend.play();
+  }
+
+  void _showInfo() {
+    _hideTimer?.cancel();
+    unawaited(
+      VideoInfoDialog.show(
+        context,
+        title: widget.title,
+        source: _source,
+        duration: _backend.state.value.duration,
+        info: _backend.streamInfo(),
+      ).then((_) => _scheduleHide()),
+    );
   }
 
   void _scheduleHide() {
@@ -468,6 +641,14 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       unawaited(_copyFrame());
       return KeyEventResult.handled;
     }
+    if (!widget.live && event.character == '<') {
+      _stepSpeed(-1);
+      return KeyEventResult.handled;
+    }
+    if (!widget.live && event.character == '>') {
+      _stepSpeed(1);
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.keyM && event is KeyDownEvent) {
       unawaited(_backend.setVolume(_backend.state.value.volume > 0 ? 0 : 1));
       return KeyEventResult.handled;
@@ -530,7 +711,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                   _showControls();
                 }
               },
-              onDoubleTap: _togglePlay,
+              onDoubleTapDown: (details) =>
+                  _doubleTapAt = details.localPosition,
+              onDoubleTap: _onDoubleTap,
+              onVerticalDragStart: _onVolumeStart,
+              onVerticalDragUpdate: _onVolumeUpdate,
               onHorizontalDragStart: widget.live ? null : (_) => _swipeDx = 0,
               onHorizontalDragUpdate: widget.live
                   ? null
@@ -553,12 +738,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                     ),
                   ),
                   if (!inPip)
-                    VideoSkipIndicator(
-                      visible: _skipVisible,
-                      forward: _skipForward,
-                      label: _skipForward
-                          ? l10n.videoPlayerForward(_seekStep.inSeconds)
-                          : l10n.videoPlayerBack(_seekStep.inSeconds),
+                    VideoGestureBadge(
+                      visible: _badgeVisible,
+                      alignment: _badgeAlignment,
+                      icon: _badgeIcon,
+                      label: _badgeLabel,
+                      level: _badgeLevel,
                     ),
                   if (!inPip)
                     AnimatedOpacity(
@@ -602,6 +787,22 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
                                 unawaited(_switchQuality(q));
                                 _scheduleHide();
                               },
+                              speeds: _speeds,
+                              onSpeed: (speed) {
+                                unawaited(_setSpeed(speed));
+                                _scheduleHide();
+                              },
+                              onAudioTrack: (id) {
+                                unawaited(_backend.selectAudioTrack(id));
+                                _scheduleHide();
+                              },
+                              onSubtitleTrack: (id) {
+                                unawaited(_backend.selectSubtitleTrack(id));
+                                _scheduleHide();
+                              },
+                              onLoadSubtitles: () =>
+                                  unawaited(_loadSubtitles()),
+                              onInfo: _showInfo,
                             ),
                           ),
                         ),

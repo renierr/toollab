@@ -25954,6 +25954,144 @@ abstract class AppLocalizations {
   /// **'Auto'**
   String get videoPlayerQualityAuto;
 
+  /// No description provided for @videoPlayerSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get videoPlayerSpeed;
+
+  /// No description provided for @videoPlayerSpeedNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get videoPlayerSpeedNormal;
+
+  /// No description provided for @videoPlayerTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio & subtitles'**
+  String get videoPlayerTracks;
+
+  /// No description provided for @videoPlayerAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get videoPlayerAudio;
+
+  /// No description provided for @videoPlayerSubtitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles'**
+  String get videoPlayerSubtitles;
+
+  /// No description provided for @videoPlayerSubtitlesOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get videoPlayerSubtitlesOff;
+
+  /// No description provided for @videoPlayerLoadSubtitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Load subtitle file…'**
+  String get videoPlayerLoadSubtitles;
+
+  /// No description provided for @videoPlayerSubtitleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the subtitle file'**
+  String get videoPlayerSubtitleFailed;
+
+  /// No description provided for @videoPlayerTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track {number}'**
+  String videoPlayerTrack(int number);
+
+  /// No description provided for @videoPlayerVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} %'**
+  String videoPlayerVolume(int percent);
+
+  /// No description provided for @videoPlayerInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video info'**
+  String get videoPlayerInfo;
+
+  /// No description provided for @videoPlayerInfoSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get videoPlayerInfoSource;
+
+  /// No description provided for @videoPlayerInfoFileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'File size'**
+  String get videoPlayerInfoFileSize;
+
+  /// No description provided for @videoPlayerInfoResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution'**
+  String get videoPlayerInfoResolution;
+
+  /// No description provided for @videoPlayerInfoDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get videoPlayerInfoDuration;
+
+  /// No description provided for @videoPlayerInfoVideoCodec.
+  ///
+  /// In en, this message translates to:
+  /// **'Video codec'**
+  String get videoPlayerInfoVideoCodec;
+
+  /// No description provided for @videoPlayerInfoDecoder.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoder'**
+  String get videoPlayerInfoDecoder;
+
+  /// No description provided for @videoPlayerInfoFrameRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame rate'**
+  String get videoPlayerInfoFrameRate;
+
+  /// No description provided for @videoPlayerInfoVideoBitrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Video bitrate'**
+  String get videoPlayerInfoVideoBitrate;
+
+  /// No description provided for @videoPlayerInfoAudioCodec.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio codec'**
+  String get videoPlayerInfoAudioCodec;
+
+  /// No description provided for @videoPlayerInfoSampleRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample rate'**
+  String get videoPlayerInfoSampleRate;
+
+  /// No description provided for @videoPlayerInfoChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio channels'**
+  String get videoPlayerInfoChannels;
+
+  /// No description provided for @videoPlayerInfoAudioBitrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio bitrate'**
+  String get videoPlayerInfoAudioBitrate;
+
   /// No description provided for @videoPlayerPictureInPicture.
   ///
   /// In en, this message translates to:

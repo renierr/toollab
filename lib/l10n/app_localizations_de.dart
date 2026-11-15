@@ -14856,6 +14856,80 @@ class AppLocalizationsDe extends AppLocalizations {
   String get videoPlayerQualityAuto => 'Automatisch';
 
   @override
+  String get videoPlayerSpeed => 'Wiedergabegeschwindigkeit';
+
+  @override
+  String get videoPlayerSpeedNormal => 'Normal';
+
+  @override
+  String get videoPlayerTracks => 'Audio & Untertitel';
+
+  @override
+  String get videoPlayerAudio => 'Audio';
+
+  @override
+  String get videoPlayerSubtitles => 'Untertitel';
+
+  @override
+  String get videoPlayerSubtitlesOff => 'Aus';
+
+  @override
+  String get videoPlayerLoadSubtitles => 'Untertiteldatei laden…';
+
+  @override
+  String get videoPlayerSubtitleFailed =>
+      'Untertiteldatei konnte nicht geladen werden';
+
+  @override
+  String videoPlayerTrack(int number) {
+    return 'Spur $number';
+  }
+
+  @override
+  String videoPlayerVolume(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String get videoPlayerInfo => 'Videoinfo';
+
+  @override
+  String get videoPlayerInfoSource => 'Quelle';
+
+  @override
+  String get videoPlayerInfoFileSize => 'Dateigröße';
+
+  @override
+  String get videoPlayerInfoResolution => 'Auflösung';
+
+  @override
+  String get videoPlayerInfoDuration => 'Dauer';
+
+  @override
+  String get videoPlayerInfoVideoCodec => 'Videocodec';
+
+  @override
+  String get videoPlayerInfoDecoder => 'Decoder';
+
+  @override
+  String get videoPlayerInfoFrameRate => 'Bildrate';
+
+  @override
+  String get videoPlayerInfoVideoBitrate => 'Video-Bitrate';
+
+  @override
+  String get videoPlayerInfoAudioCodec => 'Audiocodec';
+
+  @override
+  String get videoPlayerInfoSampleRate => 'Abtastrate';
+
+  @override
+  String get videoPlayerInfoChannels => 'Audiokanäle';
+
+  @override
+  String get videoPlayerInfoAudioBitrate => 'Audio-Bitrate';
+
+  @override
   String get videoPlayerPictureInPicture => 'Bild-im-Bild';
 
   @override

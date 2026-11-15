@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:media_kit/media_kit.dart';
@@ -37,6 +38,9 @@ class MediaKitVideoBackend implements VideoBackend {
       streams.duration.listen((_) => _sync()),
       streams.width.listen((_) => _sync()),
       streams.volume.listen((_) => _sync()),
+      streams.rate.listen((_) => _sync()),
+      streams.tracks.listen((_) => _sync()),
+      streams.track.listen((_) => _sync()),
       streams.error.listen((e) => _sync(error: e)),
     ]);
   }
@@ -56,8 +60,38 @@ class MediaKitVideoBackend implements VideoBackend {
       aspectRatio: width > 0 && height > 0 ? width / height : 16 / 9,
       videoWidth: width > 0 ? width : null,
       volume: s.volume / 100,
+      speed: s.rate,
+      audioTracks: [
+        for (final t in s.tracks.audio.where((t) => _isReal(t.id)))
+          VideoTrackOption(
+            id: t.id,
+            title: t.title,
+            language: t.language,
+            codec: t.codec,
+            selected: t.id == s.track.audio.id,
+          ),
+      ],
+      subtitleTracks: [
+        for (final t in s.tracks.subtitle.where((t) => _isReal(t.id)))
+          VideoTrackOption(
+            id: t.id,
+            title: t.title,
+            language: t.language,
+            codec: t.codec,
+            selected: t.id == s.track.subtitle.id,
+          ),
+      ],
       error: error ?? state.value.error,
     );
+  }
+
+  /// mpv lists `auto` and `no` next to the real tracks.
+  static bool _isReal(String id) => id != 'auto' && id != 'no';
+
+  /// The selected track, or the first real one while mpv still says `auto`.
+  static T? _current<T>(List<T> tracks, T selected, String Function(T) id) {
+    final real = tracks.where((t) => _isReal(id(t)));
+    return real.where((t) => t == selected).firstOrNull ?? real.firstOrNull;
   }
 
   static String? _vaapiDevice;
@@ -121,6 +155,58 @@ class MediaKitVideoBackend implements VideoBackend {
 
   @override
   Future<void> setVolume(double volume) => _player.setVolume(volume * 100);
+
+  @override
+  Future<void> setSpeed(double speed) => _player.setRate(speed);
+
+  @override
+  Future<void> selectAudioTrack(String id) async {
+    final track = _player.state.tracks.audio.where((t) => t.id == id);
+    if (track.isNotEmpty) await _player.setAudioTrack(track.first);
+  }
+
+  @override
+  Future<void> selectSubtitleTrack(String? id) async {
+    if (id == null) {
+      await _player.setSubtitleTrack(SubtitleTrack.no());
+      return;
+    }
+    final track = _player.state.tracks.subtitle.where((t) => t.id == id);
+    if (track.isNotEmpty) await _player.setSubtitleTrack(track.first);
+  }
+
+  @override
+  Future<void> addSubtitleFile(XFile file) =>
+      _player.setSubtitleTrack(SubtitleTrack.uri(file.path, title: file.name));
+
+  @override
+  Future<VideoStreamInfo> streamInfo() async {
+    final s = _player.state;
+    final video = _current(s.tracks.video, s.track.video, (t) => t.id);
+    final audio = _current(s.tracks.audio, s.track.audio, (t) => t.id);
+    String? hwdec;
+    final platform = _player.platform;
+    if (platform is NativePlayer) {
+      try {
+        hwdec = await platform.getProperty('hwdec-current');
+      } catch (_) {}
+    }
+    final decoder = video?.decoder;
+    return VideoStreamInfo(
+      width: s.videoParams.w ?? s.width,
+      height: s.videoParams.h ?? s.height,
+      videoCodec: video?.codec,
+      decoder: hwdec == null || hwdec.isEmpty || hwdec == 'no'
+          ? decoder
+          : '${decoder ?? video?.codec ?? ''} ($hwdec)'.trim(),
+      frameRate: video?.fps,
+      videoBitrate: video?.bitrate,
+      audioCodec: audio?.codec,
+      sampleRate: s.audioParams.sampleRate ?? audio?.samplerate,
+      channels: s.audioParams.channelCount ?? audio?.channelscount,
+      audioBitrate: s.audioBitrate?.round() ?? audio?.bitrate,
+    );
+  }
 
   @override
   Future<Uint8List?> nativeFrame() async => null;
