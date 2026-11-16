@@ -451,18 +451,57 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
     TraversalDirection direction,
     FocusNode fallbackFocusNode,
   ) {
+    final rows = _RowSnapshot.take(primary, direction, fallbackFocusNode);
     if (!primary.focusInDirection(direction)) return false;
-    final next = FocusManager.instance.primaryFocus;
-    if (next != null && !_isContainerOrRegionFocus(next, fallbackFocusNode)) {
-      return true;
+    if (_isContainerOrRegionFocus(primary, fallbackFocusNode)) {
+      return _focusOutOfBandTarget(primary, direction, fallbackFocusNode);
     }
-    if (_focusOutOfBandTarget(primary, direction, fallbackFocusNode)) {
-      return true;
+    // Focus changes otherwise land in a microtask, after these checks.
+    FocusManager.instance.applyFocusChangesIfNeeded();
+    var next = FocusManager.instance.primaryFocus;
+    if (next != null && _isInertTile(next)) {
+      next = _enterInertTile(next, fallbackFocusNode) ?? next;
     }
-    if (!identical(primary, next) && primary.canRequestFocus) {
-      primary.requestFocus();
+    if (next != null) rows?.focusSkippedRow(next);
+    return true;
+  }
+
+  /// A tile without a tap action (a [ListTile] holding a trailing dropdown)
+  /// still takes focus; the control inside it is the real target.
+  static FocusNode? _enterInertTile(
+    FocusNode tile,
+    FocusNode fallbackFocusNode,
+  ) {
+    for (final node in tile.traversalDescendants) {
+      if (!node.canRequestFocus ||
+          _isContainerOrRegionFocus(node, fallbackFocusNode)) {
+        continue;
+      }
+      node.requestFocus();
+      FocusManager.instance.applyFocusChangesIfNeeded();
+      return node;
     }
-    return false;
+    return null;
+  }
+
+  static bool _isInertTile(FocusNode node) {
+    final context = node.context;
+    if (context == null || !context.mounted) return false;
+    InkResponse? owner;
+    context.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is InkResponse) {
+        owner = widget;
+        return false;
+      }
+      return widget is! Focus;
+    });
+    final ink = owner;
+    return ink != null &&
+        ink.onTap == null &&
+        ink.onLongPress == null &&
+        ink.onDoubleTap == null &&
+        ink.onTapDown == null;
   }
 
   static bool _hasVisibleFocusableInScrollable(
@@ -930,4 +969,87 @@ bool _containsScrollable(BuildContext context) {
 
   context.visitChildElements(visit);
   return found;
+}
+
+/// Flutter's up/down prefers targets overlapping the focus horizontally, so
+/// it jumps over right-aligned controls (trailing dropdowns) to the next
+/// full-width row. Positions are taken before the move scrolls the page.
+class _RowSnapshot {
+  final FocusNode primary;
+  final Rect primaryRect;
+  final bool down;
+  final Map<FocusNode, Rect> rects;
+
+  const _RowSnapshot(this.primary, this.primaryRect, this.down, this.rects);
+
+  static _RowSnapshot? take(
+    FocusNode primary,
+    TraversalDirection direction,
+    FocusNode fallbackFocusNode,
+  ) {
+    if (direction != TraversalDirection.up &&
+        direction != TraversalDirection.down) {
+      return null;
+    }
+    final primaryContext = primary.context;
+    final primaryRect = _MoveFocusAction._nodeGlobalRect(primary);
+    if (primaryContext == null || primaryRect == null) return null;
+    final primaryIsOverlay = ModalRoute.of(primaryContext) == null;
+    final rects = <FocusNode, Rect>{};
+    for (final node in _MoveFocusAction._collectFocusableLeaves(
+      primary,
+      fallbackFocusNode,
+    )) {
+      final nodeContext = node.context!;
+      if ((ModalRoute.of(nodeContext) == null) != primaryIsOverlay ||
+          _MoveFocusAction._isDescendantOf(nodeContext, primaryContext) ||
+          _MoveFocusAction._isDescendantOf(primaryContext, nodeContext)) {
+        continue;
+      }
+      final rect = _MoveFocusAction._nodeGlobalRect(node);
+      if (rect != null && !rect.isEmpty) rects[node] = rect;
+    }
+    return _RowSnapshot(
+      primary,
+      primaryRect,
+      direction == TraversalDirection.down,
+      rects,
+    );
+  }
+
+  /// Moves on to the nearest control lying wholly between the old focus and
+  /// [next], the one Flutter picked.
+  void focusSkippedRow(FocusNode next) {
+    if (identical(next, primary)) return;
+    final nextRect = rects[next];
+    if (nextRect == null) return;
+
+    FocusNode? best;
+    var bestPrimaryDist = double.infinity;
+    var bestCrossDist = double.infinity;
+    for (final MapEntry(key: node, value: rect) in rects.entries) {
+      if (identical(node, next) || !node.canRequestFocus) continue;
+      final double primaryDist;
+      if (down) {
+        if (rect.top < primaryRect.bottom - 2.0) continue;
+        if (rect.bottom > nextRect.top + 2.0) continue;
+        primaryDist = rect.top - primaryRect.bottom;
+      } else {
+        if (rect.bottom > primaryRect.top + 2.0) continue;
+        if (rect.top < nextRect.bottom - 2.0) continue;
+        primaryDist = primaryRect.top - rect.bottom;
+      }
+      final crossDist = (rect.center.dx - primaryRect.center.dx).abs();
+      if (primaryDist < bestPrimaryDist - 1.0 ||
+          ((primaryDist - bestPrimaryDist).abs() <= 1.0 &&
+              crossDist < bestCrossDist)) {
+        best = node;
+        bestPrimaryDist = primaryDist;
+        bestCrossDist = crossDist;
+      }
+    }
+    if (best == null) return;
+    best.requestFocus();
+    FocusManager.instance.applyFocusChangesIfNeeded();
+  }
 }
