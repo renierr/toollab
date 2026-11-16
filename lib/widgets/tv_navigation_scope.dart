@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
@@ -453,16 +454,26 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
   ) {
     final rows = _RowSnapshot.take(primary, direction, fallbackFocusNode);
     if (!primary.focusInDirection(direction)) return false;
-    if (_isContainerOrRegionFocus(primary, fallbackFocusNode)) {
-      return _focusOutOfBandTarget(primary, direction, fallbackFocusNode);
-    }
     // Focus changes otherwise land in a microtask, after these checks.
     FocusManager.instance.applyFocusChangesIfNeeded();
     var next = FocusManager.instance.primaryFocus;
     if (next != null && _isInertTile(next)) {
       next = _enterInertTile(next, fallbackFocusNode) ?? next;
     }
-    if (next != null) rows?.focusSkippedRow(next);
+    if (next == null ||
+        identical(next, primary) ||
+        _isContainerOrRegionFocus(primary, fallbackFocusNode) &&
+            _isContainerOrRegionFocus(next, fallbackFocusNode)) {
+      if (_focusOutOfBandTarget(primary, direction, fallbackFocusNode)) {
+        return true;
+      }
+      if (!identical(next, primary) && primary.canRequestFocus) {
+        primary.requestFocus();
+        FocusManager.instance.applyFocusChangesIfNeeded();
+      }
+      return false;
+    }
+    rows?.focusSkippedRow(next);
     return true;
   }
 
@@ -700,6 +711,7 @@ class _MoveFocusAction extends Action<_MoveFocusIntent> {
 
     if (best == null) return false;
     best.requestFocus();
+    FocusManager.instance.applyFocusChangesIfNeeded();
     return true;
   }
 
@@ -1024,11 +1036,15 @@ class _RowSnapshot {
     final nextRect = rects[next];
     if (nextRect == null) return;
 
+    // Only the column the move happens in; a side panel is not a skipped row.
+    final left = math.min(primaryRect.left, nextRect.left);
+    final right = math.max(primaryRect.right, nextRect.right);
     FocusNode? best;
     var bestPrimaryDist = double.infinity;
     var bestCrossDist = double.infinity;
     for (final MapEntry(key: node, value: rect) in rects.entries) {
       if (identical(node, next) || !node.canRequestFocus) continue;
+      if (rect.right <= left || rect.left >= right) continue;
       final double primaryDist;
       if (down) {
         if (rect.top < primaryRect.bottom - 2.0) continue;

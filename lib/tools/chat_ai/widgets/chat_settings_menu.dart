@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 import 'package:tool_lab/widgets/text_size_sheet.dart';
 
 import '../chat_ai_state.dart';
@@ -46,18 +47,16 @@ class ChatSettingsMenu extends StatelessWidget {
       itemBuilder: (context) => [
         PopupMenuItem(
           value: _ChatSetting.textSize,
-          child: ListTile(
+          child: PopupMenuTile(
             leading: const Icon(Icons.format_size),
             title: Text(l10n.chatAiTextSize),
-            contentPadding: EdgeInsets.zero,
           ),
         ),
         PopupMenuItem(
           value: _ChatSetting.systemPrompt,
-          child: ListTile(
+          child: PopupMenuTile(
             leading: const Icon(Icons.tune),
             title: Text(l10n.chatAiSystemPromptTitle),
-            contentPadding: EdgeInsets.zero,
           ),
         ),
       ],

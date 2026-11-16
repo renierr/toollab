@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -17,7 +18,7 @@ import 'fast_drop_progress_indicator.dart';
 /// Composes the Nearby (BLE discovery/handshake + LAN-or-BLE transfer) tab
 /// of Fast Drop: pick-a-file-to-send / start-receiving toggle, peer list,
 /// live transfer progress and the list of files received so far.
-class FastDropP2pView extends StatelessWidget {
+class FastDropP2pView extends StatefulWidget {
   final FastDropP2pState p2pState;
   final ValueChanged<List<XFile>> onFilesPickedToSend;
   final VoidCallback onPasteClipboardToSend;
@@ -46,9 +47,78 @@ class FastDropP2pView extends StatelessWidget {
   });
 
   @override
+  State<FastDropP2pView> createState() => _FastDropP2pViewState();
+}
+
+class _FastDropP2pViewState extends State<FastDropP2pView> with DisposeCleanup {
+  final FocusNode _toggleFocus = FocusNode(debugLabel: 'FastDropReceive');
+  final FocusNode _cancelFocus = FocusNode(debugLabel: 'FastDropCancel');
+  final FocusNode _openFocus = FocusNode(debugLabel: 'FastDropOpenNewest');
+  late bool _wasActive;
+  String? _newestId;
+
+  // The toggle disables and the cancel button vanishes around a transfer,
+  // which would drop remote focus on whatever the scope focused last.
+  bool _carryFocus = false;
+
+  bool get _isActive =>
+      widget.p2pState.isTransferActive || widget.p2pState.progress != null;
+
+  String? get _newestReceivedId =>
+      widget.p2pState.receivedFiles.firstOrNull?.id;
+
+  @override
+  void initState() {
+    super.initState();
+    onDispose(_toggleFocus.dispose);
+    onDispose(_cancelFocus.dispose);
+    onDispose(_openFocus.dispose);
+    _wasActive = _isActive;
+    _newestId = _newestReceivedId;
+  }
+
+  @override
+  void didUpdateWidget(FastDropP2pView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final active = _isActive;
+    if (active && !_wasActive && _hasFocusInside) _carryFocus = true;
+    if (_carryFocus && widget.p2pState.progress != null) {
+      _carryFocus = false;
+      _focusAfterFrame(_cancelFocus);
+    }
+    if (!active && _wasActive && (_carryFocus || _cancelFocus.hasFocus)) {
+      _carryFocus = false;
+      final newest = _newestReceivedId;
+      _focusAfterFrame(
+        newest != null && newest != _newestId ? _openFocus : _toggleFocus,
+      );
+    }
+    _wasActive = active;
+    _newestId = _newestReceivedId;
+  }
+
+  bool get _hasFocusInside {
+    final focused = FocusManager.instance.primaryFocus?.context;
+    if (focused == null || !mounted) return false;
+    var inside = false;
+    focused.visitAncestorElements((e) {
+      inside = e == context;
+      return !inside;
+    });
+    return inside;
+  }
+
+  void _focusAfterFrame(FocusNode node) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && node.context != null) node.requestFocus();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final p2pState = widget.p2pState;
     final isReceiving = p2pState.role == P2pRole.receiving;
     final isSending = p2pState.role == P2pRole.sending;
 
@@ -66,7 +136,8 @@ class FastDropP2pView extends StatelessWidget {
                   : l10n.fastDropP2pTransferringBle,
               sent: p2pState.progress!.$1,
               total: p2pState.progress!.$2,
-              onCancel: onCancelTransfer,
+              onCancel: widget.onCancelTransfer,
+              cancelFocusNode: _cancelFocus,
             ),
             const SizedBox(height: 8),
           ],
@@ -86,12 +157,14 @@ class FastDropP2pView extends StatelessWidget {
             const SizedBox(height: 8),
           ],
           Row(
+            key: const ValueKey('receiveToggle'),
             children: [
               Expanded(
                 child: FilledButton.tonalIcon(
+                  focusNode: _toggleFocus,
                   onPressed: p2pState.isTransferActive
                       ? null
-                      : onToggleReceiving,
+                      : widget.onToggleReceiving,
                   icon: Icon(
                     isReceiving
                         ? Icons.bluetooth_disabled
@@ -141,8 +214,9 @@ class FastDropP2pView extends StatelessWidget {
             const SizedBox(height: 8),
             if (!p2pState.hasPendingSendFile) ...[
               FileDropZone(
-                onFileSelected: (file) => onFilesPickedToSend([file]),
-                onFilesSelected: onFilesPickedToSend,
+                key: const ValueKey('sendDropZone'),
+                onFileSelected: (file) => widget.onFilesPickedToSend([file]),
+                onFilesSelected: widget.onFilesPickedToSend,
                 allowedExtensions: FastDropTool.config.fileExtensions,
                 typeLabel: l10n.fastDropAllFiles,
                 accentColor: FastDropTool.config.accentColor,
@@ -152,7 +226,7 @@ class FastDropP2pView extends StatelessWidget {
                 compact: true,
                 multiple: false,
                 useAndroidStreamingPicker: true,
-                tempScope: tempScope,
+                tempScope: widget.tempScope,
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -161,7 +235,7 @@ class FastDropP2pView extends StatelessWidget {
                 alignment: WrapAlignment.center,
                 children: [
                   OutlinedButton.icon(
-                    onPressed: onPasteClipboardToSend,
+                    onPressed: widget.onPasteClipboardToSend,
                     icon: const Icon(Icons.paste_outlined),
                     label: Text(l10n.fastDropPasteClipboard),
                     style: OutlinedButton.styleFrom(
@@ -183,14 +257,15 @@ class FastDropP2pView extends StatelessWidget {
                 fileName: p2pState.pendingSendFileName ?? '',
                 fileSize: p2pState.pendingSendFileSize ?? 0,
                 hasPeers: p2pState.peers.isNotEmpty,
-                onAbort: onCancelSendSelection,
+                onAbort: widget.onCancelSendSelection,
               ),
             if (p2pState.hasPendingSendFile && p2pState.peers.isNotEmpty) ...[
               const SizedBox(height: 12),
               FastDropPeerList(
+                key: const ValueKey('peerList'),
                 peers: p2pState.peers,
                 isScanning: isSending,
-                onSelect: onSelectPeer,
+                onSelect: widget.onSelectPeer,
               ),
             ],
           ],
@@ -206,10 +281,12 @@ class FastDropP2pView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             FastDropP2pReceivedList(
+              key: const ValueKey('receivedList'),
               files: p2pState.receivedFiles,
-              onOpen: onOpenReceived,
-              onSave: onSaveReceived,
-              onDismiss: onDismissReceived,
+              newestOpenFocusNode: _openFocus,
+              onOpen: widget.onOpenReceived,
+              onSave: widget.onSaveReceived,
+              onDismiss: widget.onDismissReceived,
             ),
           ],
         ],

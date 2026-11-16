@@ -6,11 +6,10 @@ import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_apps_view.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_breadcrumbs.dart';
-import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_tile.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_list.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_file_drop_zone.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_image_grid.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_system_view.dart';
-import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class FileManagerExplorer extends StatelessWidget {
   final FileManagerState state;
@@ -41,6 +40,10 @@ class FileManagerExplorer extends StatelessWidget {
   final ScrollController scrollController;
   final VoidCallback onCloseCategory;
   final ValueChanged<double>? onItemExtentChanged;
+
+  /// Right on a row's trailing control.
+  final VoidCallback? onRowRight;
+
   const FileManagerExplorer({
     super.key,
     required this.state,
@@ -70,6 +73,7 @@ class FileManagerExplorer extends StatelessWidget {
     required this.scrollController,
     required this.onCloseCategory,
     this.onItemExtentChanged,
+    this.onRowRight,
   });
 
   @override
@@ -89,9 +93,6 @@ class FileManagerExplorer extends StatelessWidget {
         onDeleteSelection: onDeleteSelection,
         onMoveSelection: onMoveSelection,
       );
-    }
-    if (state.isLoading && state.entries.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
     }
     return Column(
       children: [
@@ -257,65 +258,21 @@ class FileManagerExplorer extends StatelessWidget {
             onDrop: onDropFiles,
             child: RefreshIndicator(
               onRefresh: onRefresh,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final itemExtent = constraints.isCompact ? 88.0 : 72.0;
-                  final notifyExtent = onItemExtentChanged;
-                  if (notifyExtent != null) {
-                    WidgetsBinding.instance.addPostFrameCallback(
-                      (_) => notifyExtent(itemExtent),
-                    );
-                  }
-                  return state.entries.isEmpty
-                      ? ListView(
-                          controller: scrollController,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            SizedBox(
-                              height: constraints.maxHeight,
-                              child: Center(
-                                child: Text(l10n.fileManagerEmptyFolder),
-                              ),
-                            ),
-                          ],
-                        )
-                      : ListView.builder(
-                          controller: scrollController,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemExtent: itemExtent,
-                          itemCount: state.entries.length,
-                          itemBuilder: (context, index) => FileManagerEntryTile(
-                            entry: state.entries[index],
-                            onOpen: onOpen,
-                            onOpenWithSystem: onOpenWithSystem,
-                            onShare: onShare,
-                            onDetails: onDetails,
-                            onRename: onRename,
-                            onDelete: onDelete,
-                            onCopy: onCopy,
-                            onCut: onCut,
-                            onExtract: onExtract,
-                            showClipboardActions:
-                                state.connection?.protocol !=
-                                FileManagerProtocol.ftp,
-                            selectionMode: state.isSelectionMode,
-                            selected: state.selectedPaths.contains(
-                              state.entries[index].path,
-                            ),
-                            onToggleSelection: onToggleSelection,
-                            isInClipboard: state.clipboardPaths.contains(
-                              state.entries[index].path,
-                            ),
-                            clipboardIsCut: state.clipboardIsCut,
-                            readOnly: state.isReadOnly,
-                            showImagePreviews: !state.isRemote,
-                            metadata: state.metadataFor(state.entries[index]),
-                            childCount: state.childCountFor(
-                              state.entries[index],
-                            ),
-                          ),
-                        );
-                },
+              child: FileManagerEntryList(
+                state: state,
+                scrollController: scrollController,
+                onOpen: onOpen,
+                onOpenWithSystem: onOpenWithSystem,
+                onShare: onShare,
+                onDetails: onDetails,
+                onRename: onRename,
+                onDelete: onDelete,
+                onCopy: onCopy,
+                onCut: onCut,
+                onExtract: onExtract,
+                onToggleSelection: onToggleSelection,
+                onItemExtentChanged: onItemExtentChanged,
+                onRight: onRowRight,
               ),
             ),
           ),

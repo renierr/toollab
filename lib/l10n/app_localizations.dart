@@ -1850,6 +1850,42 @@ abstract class AppLocalizations {
   /// **'Retention updated'**
   String get fastDropRetentionUpdated;
 
+  /// No description provided for @fastDropRetentionPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Retention Period'**
+  String get fastDropRetentionPeriod;
+
+  /// No description provided for @fastDropRetention1Hour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hr'**
+  String get fastDropRetention1Hour;
+
+  /// No description provided for @fastDropRetention8Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'8 hrs'**
+  String get fastDropRetention8Hours;
+
+  /// No description provided for @fastDropRetention24Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'24 hrs'**
+  String get fastDropRetention24Hours;
+
+  /// No description provided for @fastDropRetention7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get fastDropRetention7Days;
+
+  /// No description provided for @fastDropRetentionIndefinite.
+  ///
+  /// In en, this message translates to:
+  /// **'Indefinite'**
+  String get fastDropRetentionIndefinite;
+
   /// No description provided for @fastDropTitle.
   ///
   /// In en, this message translates to:
@@ -21149,6 +21185,18 @@ abstract class AppLocalizations {
   /// **'Sold'**
   String get depotHoldingSold;
 
+  /// No description provided for @depotHoldingMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get depotHoldingMoveUp;
+
+  /// No description provided for @depotHoldingMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get depotHoldingMoveDown;
+
   /// No description provided for @depotSortValue.
   ///
   /// In en, this message translates to:
@@ -25269,6 +25317,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not load the full article'**
   String get newsArticleFailedTitle;
+
+  /// No description provided for @newsArticleLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Links in this article'**
+  String get newsArticleLinks;
 
   /// No description provided for @newsArticleLoading.
   ///

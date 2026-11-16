@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
@@ -35,13 +37,15 @@ class _FastDropEditDescriptionDialogState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // A focused field pops the on-screen keyboard on a TV; start on Save.
+    final tvMode = context.select<AppState, bool>((s) => s.tvMode);
     return ResponsiveAlertDialog(
       title: Text(l10n.fastDropEditDescriptionTitle),
       content: SizedBox(
         width: 400,
         child: TextField(
           controller: _controller,
-          autofocus: true,
+          autofocus: !tvMode,
           maxLines: 4,
           minLines: 4,
           textCapitalization: TextCapitalization.sentences,
@@ -64,6 +68,7 @@ class _FastDropEditDescriptionDialogState
           child: Text(l10n.commonCancel),
         ),
         FilledButton.icon(
+          autofocus: tvMode,
           onPressed: () {
             Navigator.of(context).pop(_controller.text.trim());
           },

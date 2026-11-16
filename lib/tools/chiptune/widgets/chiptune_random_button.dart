@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 
 /// AppBar action for random playback. Spins its dice icon while [busy]
 /// (a tune fetch is in flight). When [onServerCollection] is provided, tapping
@@ -77,16 +78,14 @@ class _ChiptuneRandomButtonState extends State<ChiptuneRandomButton>
       itemBuilder: (context) => [
         PopupMenuItem(
           value: 0,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
+          child: PopupMenuTile(
             leading: const Icon(Icons.public_outlined),
             title: Text(widget.modArchiveLabel),
           ),
         ),
         PopupMenuItem(
           value: 1,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
+          child: PopupMenuTile(
             leading: const Icon(Icons.dns_outlined),
             title: Text(widget.serverLabel),
           ),

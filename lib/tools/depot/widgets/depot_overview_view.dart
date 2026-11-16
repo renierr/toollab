@@ -227,6 +227,12 @@ class DepotOverviewView extends StatelessWidget {
                             ? 0
                             : holding.currentValue / openValue * 100,
                         reorderIndex: index,
+                        onMoveUp: index == 0
+                            ? null
+                            : () => state.reorderHolding(index, index - 1),
+                        onMoveDown: index == holdings.length - 1
+                            ? null
+                            : () => state.reorderHolding(index, index + 1),
                       );
                     },
                   )

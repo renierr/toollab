@@ -9,6 +9,7 @@ class FastDropProgressIndicator extends StatelessWidget {
   final int total;
   final DateTime? startedAt;
   final VoidCallback onCancel;
+  final FocusNode? cancelFocusNode;
 
   const FastDropProgressIndicator({
     super.key,
@@ -17,6 +18,7 @@ class FastDropProgressIndicator extends StatelessWidget {
     required this.total,
     this.startedAt,
     required this.onCancel,
+    this.cancelFocusNode,
   });
 
   @override
@@ -67,6 +69,7 @@ class FastDropProgressIndicator extends StatelessWidget {
                 width: 32,
                 height: 32,
                 child: IconButton(
+                  focusNode: cancelFocusNode,
                   icon: const Icon(Icons.close, size: 18),
                   tooltip: l10n.commonCancel,
                   onPressed: onCancel,

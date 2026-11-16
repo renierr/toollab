@@ -37,6 +37,9 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
 
   final ScrollController _scrollController = ScrollController();
   final FocusNode _actionsFocus = FocusNode(debugLabel: 'NewsActions');
+  final FocusNode _selectedSourceFocus = FocusNode(
+    debugLabel: 'NewsSelectedSource',
+  );
   Timer? _readSyncTimer;
   DateTime? _readSyncDeadline;
   bool _syncWhenIdle = false;
@@ -63,6 +66,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
       lifecycle.dispose();
       _scrollController.dispose();
       _actionsFocus.dispose();
+      _selectedSourceFocus.dispose();
       state.removeListener(onStateChanged);
       final appState = _appState;
       final syncReads =
@@ -184,6 +188,14 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  bool _focusSelectedSource() {
+    final chip = _selectedSourceFocus.context;
+    if (chip == null || !chip.mounted) return false;
+    _selectedSourceFocus.requestFocus();
+    unawaited(Scrollable.ensureVisible(chip));
+    return true;
+  }
+
   Future<void> _openArticle(NewsArticle article) async {
     final state = context.read<NewsState>();
     unawaited(state.markRead(article, immediate: true));
@@ -216,6 +228,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<NewsState>();
+    final tvMode = context.select<AppState?, bool>((s) => s?.tvMode ?? false);
 
     return ToolLayout(
       title: NewsTool.config.localizedName(l10n),
@@ -269,6 +282,7 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
                   unreadCounts: state.unreadCounts,
                   totalUnread: state.totalUnread,
                   onSelected: state.setSelectedSource,
+                  selectedFocusNode: _selectedSourceFocus,
                 ),
                 if (state.isRefreshing)
                   const LinearProgressIndicator(minHeight: 2),
@@ -290,6 +304,8 @@ class _NewsPageState extends State<NewsPage> with DisposeCleanup {
                       ),
                       onRefresh: _refresh,
                       onRight: _actionsFocus.requestFocus,
+                      onUpFromTop: _focusSelectedSource,
+                      autofocusFirst: tvMode,
                       onOpen: _openArticle,
                       onVisible: state.prefetchArticleImage,
                       onSeen: (article) {

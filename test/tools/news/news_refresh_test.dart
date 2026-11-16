@@ -14,6 +14,9 @@ import 'package:tool_lab/tools/news/widgets/news_list.dart';
 
 class _AppState extends ChangeNotifier implements AppState {
   @override
+  bool get tvMode => false;
+
+  @override
   bool syncsTool(String toolId) => false;
 
   @override

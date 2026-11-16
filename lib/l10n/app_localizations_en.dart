@@ -1009,6 +1009,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fastDropRetentionUpdated => 'Retention updated';
 
   @override
+  String get fastDropRetentionPeriod => 'Retention Period';
+
+  @override
+  String get fastDropRetention1Hour => '1 hr';
+
+  @override
+  String get fastDropRetention8Hours => '8 hrs';
+
+  @override
+  String get fastDropRetention24Hours => '24 hrs';
+
+  @override
+  String get fastDropRetention7Days => '7 days';
+
+  @override
+  String get fastDropRetentionIndefinite => 'Indefinite';
+
+  @override
   String get fastDropTitle => 'Fast Drop';
 
   @override
@@ -11882,6 +11900,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotHoldingSold => 'Sold';
 
   @override
+  String get depotHoldingMoveUp => 'Move up';
+
+  @override
+  String get depotHoldingMoveDown => 'Move down';
+
+  @override
   String get depotSortValue => 'Value';
 
   @override
@@ -14363,6 +14387,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newsArticleFailedTitle => 'Could not load the full article';
+
+  @override
+  String get newsArticleLinks => 'Links in this article';
 
   @override
   String get newsArticleLoading => 'Loading article…';

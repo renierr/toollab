@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class RetentionSelector extends StatelessWidget {
@@ -14,19 +15,20 @@ class RetentionSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final options = [
-      {'value': '1', 'label': '1 hr'},
-      {'value': '8', 'label': '8 hrs'},
-      {'value': '24', 'label': '24 hrs'},
-      {'value': '168', 'label': '7 days'},
-      {'value': 'indefinite', 'label': 'Indefinite'},
+      ('1', l10n.fastDropRetention1Hour),
+      ('8', l10n.fastDropRetention8Hours),
+      ('24', l10n.fastDropRetention24Hours),
+      ('168', l10n.fastDropRetention7Days),
+      ('indefinite', l10n.fastDropRetentionIndefinite),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Retention Period',
+          l10n.fastDropRetentionPeriod,
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
@@ -37,10 +39,11 @@ class RetentionSelector extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: options.map((opt) {
-            final isSelected = selectedValue == opt['value'];
+            final (value, label) = opt;
+            final isSelected = selectedValue == value;
             return ChoiceChip(
               label: Text(
-                opt['label']!,
+                label,
                 style: TextStyle(
                   color: isSelected
                       ? Colors.white
@@ -61,7 +64,7 @@ class RetentionSelector extends StatelessWidget {
               ),
               onSelected: (selected) {
                 if (selected) {
-                  onChanged(opt['value']!);
+                  onChanged(value);
                 }
               },
             );

@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -116,16 +117,18 @@ class FastDropCloudView extends StatelessWidget {
             children: [
               SizedBox(
                 width: 320,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: uploadColumn,
+                child: _PanelFocusScope(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: uploadColumn,
+                    ),
                   ),
                 ),
               ),
               const VerticalDivider(width: 1),
-              Expanded(child: _list()),
+              Expanded(child: _PanelFocusScope(child: _list())),
             ],
           ),
         );
@@ -143,4 +146,131 @@ class FastDropCloudView extends StatelessWidget {
     onEditDescription: onEditDescription,
     onEditRetention: onEditRetention,
   );
+}
+
+/// Up/down stay inside one side-by-side panel; up past its top falls through
+/// to app-wide navigation (the header).
+class _PanelFocusScope extends StatefulWidget {
+  final Widget child;
+
+  const _PanelFocusScope({required this.child});
+
+  @override
+  State<_PanelFocusScope> createState() => _PanelFocusScopeState();
+}
+
+class _PanelFocusScopeState extends State<_PanelFocusScope> {
+  static const _shortcuts = <ShortcutActivator, Intent>{
+    SingleActivator(LogicalKeyboardKey.arrowUp): _PanelMoveIntent(up: true),
+    SingleActivator(LogicalKeyboardKey.arrowDown): _PanelMoveIntent(up: false),
+  };
+
+  final FocusScopeNode _scope = FocusScopeNode(debugLabel: 'FastDropPanel');
+  late final _PanelMoveAction _move = _PanelMoveAction(_scope);
+
+  @override
+  void dispose() {
+    _scope.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FocusScope(
+    node: _scope,
+    child: Shortcuts(
+      shortcuts: _shortcuts,
+      child: Actions(actions: {_PanelMoveIntent: _move}, child: widget.child),
+    ),
+  );
+}
+
+class _PanelMoveIntent extends Intent {
+  final bool up;
+
+  const _PanelMoveIntent({required this.up});
+}
+
+class _PanelMoveAction extends Action<_PanelMoveIntent> {
+  final FocusScopeNode scope;
+
+  _PanelMoveAction(this.scope);
+
+  @override
+  bool invoke(_PanelMoveIntent intent) {
+    final primary = FocusManager.instance.primaryFocus;
+    final from = primary == null ? null : _rect(primary);
+    if (primary == null || from == null) return false;
+
+    FocusNode? best;
+    var bestGap = double.infinity;
+    var bestCross = double.infinity;
+    var bestInBand = false;
+    for (final node in scope.traversalDescendants) {
+      if (node is FocusScopeNode || node == primary || !node.canRequestFocus) {
+        continue;
+      }
+      final rect = _rect(node);
+      if (rect == null || rect.isEmpty) continue;
+      final gap = intent.up ? from.top - rect.bottom : rect.top - from.bottom;
+      if (gap < -2.0) continue;
+      final inBand = rect.right > from.left && rect.left < from.right;
+      final cross = inBand
+          ? rect.left - from.left
+          : (rect.center.dx - from.center.dx).abs();
+      final sameRow = (gap - bestGap).abs() <= 4.0;
+      final better =
+          gap < bestGap - 4.0 ||
+          (sameRow && inBand && !bestInBand) ||
+          (sameRow && inBand == bestInBand && cross.abs() < bestCross);
+      if (better) {
+        best = node;
+        bestGap = gap;
+        bestCross = cross.abs();
+        bestInBand = inBand;
+      }
+    }
+
+    if (best != null) {
+      best.requestFocus();
+      final target = best.context;
+      if (target != null) {
+        Scrollable.ensureVisible(
+          target,
+          alignmentPolicy: intent.up
+              ? ScrollPositionAlignmentPolicy.keepVisibleAtStart
+              : ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        );
+      }
+      return true;
+    }
+    // At the bottom stay put unless the panel can still scroll further.
+    return !intent.up && !_canScrollDown(primary.context);
+  }
+
+  @override
+  KeyEventResult toKeyEventResult(
+    _PanelMoveIntent intent,
+    bool? invokeResult,
+  ) => invokeResult == true ? KeyEventResult.handled : KeyEventResult.ignored;
+
+  static Rect? _rect(FocusNode node) {
+    final box = node.context?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  static bool _canScrollDown(BuildContext? context) {
+    var scrollable = context == null
+        ? null
+        : Scrollable.maybeOf(context, axis: Axis.vertical);
+    while (scrollable != null) {
+      final position = scrollable.position;
+      if (position.hasContentDimensions &&
+          position.pixels < position.maxScrollExtent - 0.5) {
+        return true;
+      }
+      scrollable = Scrollable.maybeOf(scrollable.context, axis: Axis.vertical);
+    }
+    return false;
+  }
 }

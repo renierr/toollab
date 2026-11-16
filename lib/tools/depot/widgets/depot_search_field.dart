@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/widgets/keyboard_on_activate.dart';
 
 /// Search box that keeps its own controller, so a rebuild from the filtered
 /// list does not reset the cursor.
@@ -32,25 +33,30 @@ class _DepotSearchFieldState extends State<DepotSearchField>
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      onChanged: widget.onChanged,
-      decoration: InputDecoration(
-        hintText: widget.hint,
-        prefixIcon: const Icon(Icons.search),
-        isDense: true,
-        border: const OutlineInputBorder(),
-        suffixIcon: ListenableBuilder(
-          listenable: _controller,
-          builder: (context, _) => _controller.text.isEmpty
-              ? const SizedBox.shrink()
-              : IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _controller.clear();
-                    widget.onChanged('');
-                  },
-                ),
+    return KeyboardOnActivate(
+      builder: (context, gate) => TextField(
+        controller: _controller,
+        focusNode: gate.focusNode,
+        readOnly: gate.readOnly,
+        onTap: gate.onTap,
+        onChanged: widget.onChanged,
+        decoration: InputDecoration(
+          hintText: widget.hint,
+          prefixIcon: const Icon(Icons.search),
+          isDense: true,
+          border: const OutlineInputBorder(),
+          suffixIcon: ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) => _controller.text.isEmpty
+                ? const SizedBox.shrink()
+                : IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _controller.clear();
+                      widget.onChanged('');
+                    },
+                  ),
+          ),
         ),
       ),
     );

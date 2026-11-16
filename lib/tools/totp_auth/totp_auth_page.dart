@@ -16,6 +16,7 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/tool_lock_gate.dart';
 import 'package:tool_lab/widgets/tool_lock_settings_dialog.dart';
@@ -215,27 +216,24 @@ class _TotpAuthPageState extends State<TotpAuthPage>
           itemBuilder: (_) => [
             PopupMenuItem(
               value: _MenuAction.import,
-              child: ListTile(
+              child: PopupMenuTile(
                 dense: true,
-                contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.file_upload_outlined),
                 title: Text(l10n.totpImportAccounts),
               ),
             ),
             PopupMenuItem(
               value: _MenuAction.export,
-              child: ListTile(
+              child: PopupMenuTile(
                 dense: true,
-                contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.file_download_outlined),
                 title: Text(l10n.totpExportBackup),
               ),
             ),
             PopupMenuItem(
               value: _MenuAction.security,
-              child: ListTile(
+              child: PopupMenuTile(
                 dense: true,
-                contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.key_outlined),
                 title: Text(l10n.toolLockSettings),
               ),

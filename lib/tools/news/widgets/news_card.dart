@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/copyable_image.dart';
+import 'package:tool_lab/widgets/focus_outline.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 
 import '../news_article.dart';
@@ -17,12 +18,14 @@ class NewsCard extends StatelessWidget {
   final NewsArticle article;
   final NewsSource? source;
   final VoidCallback onTap;
+  final bool autofocus;
 
   const NewsCard({
     super.key,
     required this.article,
     required this.source,
     required this.onTap,
+    this.autofocus = false,
   });
 
   @override
@@ -34,80 +37,90 @@ class NewsCard extends StatelessWidget {
       builder: (context, constraints) {
         final compact = constraints.isCompact;
         final hasImage = (article.imageUrl ?? '').isNotEmpty;
+        // The remote cannot reach the thumbnail's long-press, so holding OK
+        // on the card copies it.
+        final copyImage = hasImage && CopyableImage.supported
+            ? () => CopyableImage.copy(context, NetworkImage(article.imageUrl!))
+            : null;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-          child: Material(
-            color: theme.colorScheme.surface,
-            clipBehavior: Clip.antiAlias,
-            borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              onTap: onTap,
-              child: Ink(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isRead
-                        ? theme.colorScheme.outlineVariant.withValues(
-                            alpha: 0.45,
-                          )
-                        : theme.colorScheme.outlineVariant,
+          child: FocusOutline(
+            onTap: onTap,
+            onLongPress: copyImage,
+            child: Material(
+              color: theme.colorScheme.surface,
+              clipBehavior: Clip.antiAlias,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                autofocus: autofocus,
+                onTap: onTap,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isRead
+                          ? theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.45,
+                            )
+                          : theme.colorScheme.outlineVariant,
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: compact && hasImage
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _NewsThumbnail(
-                              url: article.imageUrl!,
-                              width: double.infinity,
-                              height: 140,
-                              cacheWidth:
-                                  (constraints.maxWidth *
-                                          MediaQuery.devicePixelRatioOf(
-                                            context,
-                                          ))
-                                      .round()
-                                      .clamp(1, 1200),
-                              faded: isRead,
-                            ),
-                            const SizedBox(height: 10),
-                            _NewsCardContent(
-                              article: article,
-                              source: source,
-                              compact: compact,
-                            ),
-                          ],
-                        )
-                      : Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (hasImage) ...[
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: compact && hasImage
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                               _NewsThumbnail(
                                 url: article.imageUrl!,
-                                width: 168,
-                                height: 168,
-                                cacheWidth: 336,
+                                width: double.infinity,
+                                height: 140,
+                                cacheWidth:
+                                    (constraints.maxWidth *
+                                            MediaQuery.devicePixelRatioOf(
+                                              context,
+                                            ))
+                                        .round()
+                                        .clamp(1, 1200),
                                 faded: isRead,
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(height: 10),
+                              _NewsCardContent(
+                                article: article,
+                                source: source,
+                                compact: compact,
+                              ),
                             ],
-                            Expanded(
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  minHeight: hasImage ? 168 : 0,
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (hasImage) ...[
+                                _NewsThumbnail(
+                                  url: article.imageUrl!,
+                                  width: 168,
+                                  height: 168,
+                                  cacheWidth: 336,
+                                  faded: isRead,
                                 ),
-                                child: _NewsCardContent(
-                                  article: article,
-                                  source: source,
-                                  compact: compact,
+                                const SizedBox(width: 16),
+                              ],
+                              Expanded(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: hasImage ? 168 : 0,
+                                  ),
+                                  child: _NewsCardContent(
+                                    article: article,
+                                    source: source,
+                                    compact: compact,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                  ),
                 ),
               ),
             ),

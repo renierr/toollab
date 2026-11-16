@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../chat_ai_state.dart';
@@ -76,24 +77,21 @@ class DeepSeekAccountMenu extends StatelessWidget {
           ),
         PopupMenuItem(
           value: _AccountAction.copyToken,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
+          child: PopupMenuTile(
             leading: const Icon(Icons.copy),
             title: Text(l10n.chatAiDeepSeekCopyToken),
           ),
         ),
         PopupMenuItem(
           value: _AccountAction.setToken,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
+          child: PopupMenuTile(
             leading: const Icon(Icons.key_outlined),
             title: Text(l10n.chatAiDeepSeekSetToken),
           ),
         ),
         PopupMenuItem(
           value: _AccountAction.signOut,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
+          child: PopupMenuTile(
             leading: const Icon(Icons.logout),
             title: Text(l10n.chatAiDeepSeekSignOut),
           ),

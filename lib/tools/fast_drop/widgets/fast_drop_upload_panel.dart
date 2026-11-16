@@ -49,22 +49,25 @@ class FastDropUploadPanel extends StatelessWidget {
           opacity: isActionsEnabled ? 1.0 : 0.5,
           child: AbsorbPointer(
             absorbing: !isActionsEnabled,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: useCompact ? 140 : 240),
-              child: FileDropZone(
-                onFilesSelected: onFilesSelected,
-                allowedExtensions: FastDropTool.config.fileExtensions,
-                typeLabel: l10n.fastDropAllFiles,
-                accentColor: FastDropTool.config.accentColor,
-                icon: Icons.cloud_upload_outlined,
-                title: isAndroid
-                    ? l10n.fastDropSelectFilesAndroid
-                    : l10n.fastDropDropFilesHere,
-                subtitle: l10n.fastDropOrClickToBrowse,
-                compact: useCompact,
-                multiple: true,
-                useAndroidStreamingPicker: true,
-                tempScope: tempScope,
+            child: ExcludeFocus(
+              excluding: !isActionsEnabled,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: useCompact ? 140 : 240),
+                child: FileDropZone(
+                  onFilesSelected: onFilesSelected,
+                  allowedExtensions: FastDropTool.config.fileExtensions,
+                  typeLabel: l10n.fastDropAllFiles,
+                  accentColor: FastDropTool.config.accentColor,
+                  icon: Icons.cloud_upload_outlined,
+                  title: isAndroid
+                      ? l10n.fastDropSelectFilesAndroid
+                      : l10n.fastDropDropFilesHere,
+                  subtitle: l10n.fastDropOrClickToBrowse,
+                  compact: useCompact,
+                  multiple: true,
+                  useAndroidStreamingPicker: true,
+                  tempScope: tempScope,
+                ),
               ),
             ),
           ),

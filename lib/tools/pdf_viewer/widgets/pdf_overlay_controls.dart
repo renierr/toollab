@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_overlay_header.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 
 class PdfOverlayControls extends StatelessWidget {
   final String fileName;
@@ -291,7 +292,7 @@ class _LayoutModeButton extends StatelessWidget {
         final menuL10n = AppLocalizations.of(context);
         return [
           for (final mode in PdfLayoutMode.values)
-            CheckedPopupMenuItem(
+            CheckedPopupMenuTile(
               value: mode,
               checked: mode == currentLayoutMode,
               child: Row(

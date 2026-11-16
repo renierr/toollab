@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 
 import 'video_backend.dart';
 import 'video_format.dart';
@@ -25,7 +26,7 @@ class VideoQualityButton extends StatelessWidget {
       onSelected: onSelected,
       itemBuilder: (_) => [
         for (final q in qualities)
-          CheckedPopupMenuItem(
+          CheckedPopupMenuTile(
             value: q,
             checked: q == current,
             child: Text(q.label),
@@ -71,7 +72,7 @@ class VideoSpeedButton extends StatelessWidget {
       onSelected: onSelected,
       itemBuilder: (_) => [
         for (final value in speeds)
-          CheckedPopupMenuItem(
+          CheckedPopupMenuTile(
             value: value,
             checked: value == speed,
             child: Text(label(value)),
@@ -158,7 +159,7 @@ class VideoTracksButton extends StatelessWidget {
             child: Text(l10n.videoPlayerAudio, style: headerStyle),
           ),
           for (final (index, track) in audioTracks.indexed)
-            CheckedPopupMenuItem(
+            CheckedPopupMenuTile(
               value: '$_audioPrefix${track.id}',
               checked: track.selected,
               child: Text(label(track, index)),
@@ -170,29 +171,27 @@ class VideoTracksButton extends StatelessWidget {
           height: 32,
           child: Text(l10n.videoPlayerSubtitles, style: headerStyle),
         ),
-        CheckedPopupMenuItem(
+        CheckedPopupMenuTile(
           value: _off,
           checked: !subtitleTracks.any((t) => t.selected),
           child: Text(l10n.videoPlayerSubtitlesOff),
         ),
         for (final (index, track) in subtitleTracks.indexed)
-          CheckedPopupMenuItem(
+          CheckedPopupMenuTile(
             value: '$_subtitlePrefix${track.id}',
             checked: track.selected,
             child: Text(label(track, index)),
           ),
         PopupMenuItem(
           value: _load,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
+          child: PopupMenuTile(
             leading: const Icon(Icons.file_open_outlined),
             title: Text(l10n.videoPlayerLoadSubtitles),
           ),
         ),
         PopupMenuItem(
           value: _sync,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
+          child: PopupMenuTile(
             leading: const Icon(Icons.av_timer),
             title: Text(l10n.videoPlayerSync),
           ),

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tv_file_picker_dialog.dart';
 import 'package:tool_lab/providers/app_state.dart';
@@ -368,12 +369,12 @@ class _NotesToolbarState extends State<NotesToolbar> {
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
                   ),
-                  CheckedPopupMenuItem(
+                  CheckedPopupMenuTile(
                     value: 'sort_created',
                     checked: widget.threadSort == NoteThreadSort.created,
                     child: Text(l10n.notesThreadSortCreated),
                   ),
-                  CheckedPopupMenuItem(
+                  CheckedPopupMenuTile(
                     value: 'sort_updated',
                     checked: widget.threadSort == NoteThreadSort.updated,
                     child: Text(l10n.notesThreadSortUpdated),

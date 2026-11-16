@@ -46,6 +46,7 @@ class _FileManagerPageState extends State<FileManagerPage>
   late final TempFileScope _tempScope;
   late final ScrollController _scrollController;
   late final FileManagerState _state;
+  final FocusNode _actionsFocus = FocusNode(debugLabel: 'FileManagerActions');
   final Map<String, double> _scrollOffsets = {};
   bool _awaitingStorageAccess = false;
   String? _lastPath;
@@ -67,6 +68,7 @@ class _FileManagerPageState extends State<FileManagerPage>
       _tempScope.cleanTracked();
       _scrollController.removeListener(_trackScrollOffset);
       _scrollController.dispose();
+      _actionsFocus.dispose();
       _state.releaseOnExit();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -574,6 +576,7 @@ class _FileManagerPageState extends State<FileManagerPage>
         leading: const ToolBackButton(exitTool: true),
         actions: [
           IconButton(
+            focusNode: _actionsFocus,
             tooltip: l10n.commonSettings,
             onPressed: _showSettings,
             icon: const Icon(Icons.tune_outlined),
@@ -666,6 +669,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                 onDropFiles: _dropFiles,
                 onCloseCategory: state.closeCategory,
                 scrollController: _scrollController,
+                onRowRight: _actionsFocus.requestFocus,
                 onItemExtentChanged: (extent) {
                   if (_itemExtent != extent) _itemExtent = extent;
                 },

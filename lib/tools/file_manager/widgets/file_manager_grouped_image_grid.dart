@@ -173,53 +173,57 @@ class _GroupHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Tooltip(
-      message: collapsed
-          ? l10n.fileManagerExpandGroup
-          : l10n.fileManagerCollapseGroup,
-      child: InkWell(
-        onTap: onToggle,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.folder_outlined,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary,
+    // A focusable header would be a D-pad container around its buttons.
+    return InkWell(
+      onTap: onToggle,
+      canRequestFocus: false,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.folder_outlined,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                folder,
+                style: Theme.of(context).textTheme.titleSmall,
+                softWrap: true,
               ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  folder,
-                  style: Theme.of(context).textTheme.titleSmall,
-                  softWrap: true,
-                ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l10n.fileManagerItemCount(count),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(width: 8),
-              Text(
-                l10n.fileManagerItemCount(count),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              IconButton(
-                tooltip: l10n.fileManagerOpenFolder,
-                onPressed: () => onOpenFolder(folderPath),
-                icon: const Icon(Icons.folder_open_outlined, size: 18),
-                visualDensity: VisualDensity.compact,
-              ),
-              Icon(
+            ),
+            IconButton(
+              tooltip: l10n.fileManagerOpenFolder,
+              onPressed: () => onOpenFolder(folderPath),
+              icon: const Icon(Icons.folder_open_outlined, size: 18),
+              visualDensity: VisualDensity.compact,
+            ),
+            IconButton(
+              tooltip: collapsed
+                  ? l10n.fileManagerExpandGroup
+                  : l10n.fileManagerCollapseGroup,
+              onPressed: onToggle,
+              icon: Icon(
                 collapsed
                     ? Icons.expand_more_outlined
                     : Icons.expand_less_outlined,
                 size: 18,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
-            ],
-          ),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
         ),
       ),
     );

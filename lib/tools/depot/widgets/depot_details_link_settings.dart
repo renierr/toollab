@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/keyboard_on_activate.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
 
 import '../depot_details_link.dart';
@@ -74,24 +75,29 @@ class _TemplateFieldState extends State<_TemplateField> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return TextField(
-      controller: _controller,
-      keyboardType: TextInputType.url,
-      autocorrect: false,
-      onChanged: _onChanged,
-      decoration: InputDecoration(
-        labelText: switch (_kind) {
-          DepotDetailsLinkKind.etf => l10n.depotDetailsLinkEtf,
-          DepotDetailsLinkKind.etc => l10n.depotDetailsLinkEtc,
-          DepotDetailsLinkKind.fund => l10n.depotDetailsLinkFund,
-          DepotDetailsLinkKind.stock => l10n.depotDetailsLinkStock,
-        },
-        hintText: _kind.defaultTemplate,
-        border: const OutlineInputBorder(),
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.restart_alt),
-          tooltip: l10n.commonReset,
-          onPressed: _reset,
+    return KeyboardOnActivate(
+      builder: (context, gate) => TextField(
+        controller: _controller,
+        focusNode: gate.focusNode,
+        readOnly: gate.readOnly,
+        onTap: gate.onTap,
+        keyboardType: TextInputType.url,
+        autocorrect: false,
+        onChanged: _onChanged,
+        decoration: InputDecoration(
+          labelText: switch (_kind) {
+            DepotDetailsLinkKind.etf => l10n.depotDetailsLinkEtf,
+            DepotDetailsLinkKind.etc => l10n.depotDetailsLinkEtc,
+            DepotDetailsLinkKind.fund => l10n.depotDetailsLinkFund,
+            DepotDetailsLinkKind.stock => l10n.depotDetailsLinkStock,
+          },
+          hintText: _kind.defaultTemplate,
+          border: const OutlineInputBorder(),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.restart_alt),
+            tooltip: l10n.commonReset,
+            onPressed: _reset,
+          ),
         ),
       ),
     );

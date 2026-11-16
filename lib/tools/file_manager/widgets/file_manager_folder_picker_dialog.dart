@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_list_focus.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 /// Browses local folders and returns the picked path. Used for bulk moves,
@@ -18,14 +20,27 @@ class FileManagerFolderPickerDialog extends StatefulWidget {
 }
 
 class _FileManagerFolderPickerDialogState
-    extends State<FileManagerFolderPickerDialog> {
+    extends State<FileManagerFolderPickerDialog>
+    with DisposeCleanup {
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _listFocus = FocusNode(
+    debugLabel: 'FileManagerFolderPickerList',
+    canRequestFocus: false,
+    skipTraversal: true,
+  );
   late String _path = widget.initialPath;
   List<Directory> _folders = const [];
   bool _isLoading = true;
+  bool _hadFocus = false;
+  String? _cameFrom;
 
   @override
   void initState() {
     super.initState();
+    onDispose(() {
+      _scrollController.dispose();
+      _listFocus.dispose();
+    });
     _load();
   }
 
@@ -52,11 +67,40 @@ class _FileManagerFolderPickerDialogState
       _folders = folders;
       _isLoading = false;
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreFocus());
   }
 
   void _open(String path) {
+    _hadFocus = _listFocus.hasFocus;
+    _cameFrom = _path;
     setState(() => _path = path);
     _load();
+  }
+
+  /// The listing replaces the focused row; focus the first folder of the new
+  /// one, or the folder just left when going up.
+  Future<void> _restoreFocus() async {
+    if (!mounted || _folders.isEmpty) return;
+    if (!fileManagerFocusLost(_listFocus) &&
+        !(_hadFocus && _listFocus.hasFocus)) {
+      return;
+    }
+    final path = _path;
+    final index = _folders.indexWhere((folder) => folder.path == _cameFrom);
+    final target = _folders[index == -1 ? 0 : index].path;
+    if (fileManagerRevealRow(
+      _scrollController,
+      index == -1 ? 0 : index,
+      _folders.length,
+    )) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || _path != path) return;
+    }
+    fileManagerFocusWhere(
+      _listFocus,
+      (context) =>
+          context.findAncestorWidgetOfExactType<_FolderRow>()?.path == target,
+    );
   }
 
   @override
@@ -90,26 +134,22 @@ class _FileManagerFolderPickerDialogState
             ),
             const Divider(height: 1),
             Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _folders.isEmpty
-                  ? Center(child: Text(l10n.fileManagerEmptyFolder))
-                  : ListView.builder(
-                      itemCount: _folders.length,
-                      itemBuilder: (context, index) {
-                        final folder = _folders[index];
-                        return ListTile(
-                          dense: true,
-                          leading: const Icon(Icons.folder_outlined),
-                          title: Text(
-                            p.basename(folder.path),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          onTap: () => _open(folder.path),
-                        );
-                      },
-                    ),
+              child: Focus(
+                focusNode: _listFocus,
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _folders.isEmpty
+                    ? Center(child: Text(l10n.fileManagerEmptyFolder))
+                    : ListView.builder(
+                        controller: _scrollController,
+                        itemCount: _folders.length,
+                        prototypeItem: const _FolderRow(path: '/'),
+                        itemBuilder: (context, index) => _FolderRow(
+                          path: _folders[index].path,
+                          onTap: _open,
+                        ),
+                      ),
+              ),
             ),
           ],
         ),
@@ -124,6 +164,28 @@ class _FileManagerFolderPickerDialogState
           child: Text(l10n.fileManagerSelectFolder),
         ),
       ],
+    );
+  }
+}
+
+class _FolderRow extends StatelessWidget {
+  final String path;
+  final ValueChanged<String>? onTap;
+
+  const _FolderRow({required this.path, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final tap = onTap;
+    return ListTile(
+      dense: true,
+      leading: const Icon(Icons.folder_outlined),
+      title: Text(
+        p.basename(path),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onTap: tap == null ? null : () => tap(path),
     );
   }
 }

@@ -10,6 +10,9 @@ class NewsSourceFilterBar extends StatelessWidget {
   final int totalUnread;
   final ValueChanged<String?> onSelected;
 
+  /// Given to the selected chip, so the list can hand focus back to it.
+  final FocusNode? selectedFocusNode;
+
   const NewsSourceFilterBar({
     super.key,
     required this.sources,
@@ -17,6 +20,7 @@ class NewsSourceFilterBar extends StatelessWidget {
     required this.unreadCounts,
     required this.totalUnread,
     required this.onSelected,
+    this.selectedFocusNode,
   });
 
   @override
@@ -36,6 +40,7 @@ class NewsSourceFilterBar extends StatelessWidget {
                 ? '${l10n.newsAllSources} · $totalUnread'
                 : l10n.newsAllSources,
             selected: selectedSourceId == null,
+            focusNode: selectedSourceId == null ? selectedFocusNode : null,
             onTap: () => onSelected(null),
           ),
           for (final source in enabled)
@@ -46,6 +51,9 @@ class NewsSourceFilterBar extends StatelessWidget {
                     ? '${source.title} · ${unreadCounts[source.shortId]}'
                     : source.title,
                 selected: selectedSourceId == source.shortId,
+                focusNode: selectedSourceId == source.shortId
+                    ? selectedFocusNode
+                    : null,
                 warning: source.hasError,
                 onTap: () => onSelected(source.shortId),
               ),
@@ -61,11 +69,13 @@ class _SourceChip extends StatelessWidget {
   final bool selected;
   final bool warning;
   final VoidCallback onTap;
+  final FocusNode? focusNode;
 
   const _SourceChip({
     required this.label,
     required this.selected,
     required this.onTap,
+    this.focusNode,
     this.warning = false,
   });
 
@@ -73,6 +83,7 @@ class _SourceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ChoiceChip(
+      focusNode: focusNode,
       selected: selected,
       onSelected: (_) => onTap(),
       visualDensity: VisualDensity.compact,

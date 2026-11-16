@@ -28,6 +28,10 @@ class NewsList extends StatelessWidget {
   /// Right from a card or the footer, e.g. to reach the toolbar actions.
   final VoidCallback? onRight;
 
+  /// Up from the first card; returns whether it moved focus.
+  final bool Function()? onUpFromTop;
+  final bool autofocusFirst;
+
   const NewsList({
     super.key,
     this.controller,
@@ -40,6 +44,8 @@ class NewsList extends StatelessWidget {
     required this.onSeen,
     this.onVisible,
     this.onRight,
+    this.onUpFromTop,
+    this.autofocusFirst = false,
   });
 
   @override
@@ -66,6 +72,8 @@ class NewsList extends StatelessWidget {
               onVisible: onVisible,
               onRefresh: onRefresh,
               onRight: onRight,
+              onUpFromTop: onUpFromTop,
+              autofocusFirst: autofocusFirst,
             ),
     );
   }
@@ -81,6 +89,8 @@ class _TimelineList extends StatefulWidget {
   final void Function(NewsArticle article)? onVisible;
   final Future<void> Function() onRefresh;
   final VoidCallback? onRight;
+  final bool Function()? onUpFromTop;
+  final bool autofocusFirst;
 
   const _TimelineList({
     this.controller,
@@ -92,6 +102,8 @@ class _TimelineList extends StatefulWidget {
     this.onVisible,
     required this.onRefresh,
     this.onRight,
+    this.onUpFromTop,
+    required this.autofocusFirst,
   });
 
   @override
@@ -215,8 +227,17 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
       if (from < 0) return KeyEventResult.ignored;
     }
     final to = from + direction;
-    // Up from the first card leaves the list for the source filter.
-    if (to < 0 || to > articles.length) return KeyEventResult.ignored;
+    if (to < 0) {
+      // Up leaves for the source filter; a scroll left above the first card
+      // would otherwise take its own press.
+      if (event is KeyDownEvent && _controller.hasClients) {
+        _controller.jumpTo(_controller.position.minScrollExtent);
+      }
+      return widget.onUpFromTop?.call() ?? false
+          ? KeyEventResult.handled
+          : KeyEventResult.ignored;
+    }
+    if (to > articles.length) return KeyEventResult.ignored;
     unawaited(_moveTo(to, direction));
     return KeyEventResult.handled;
   }
@@ -392,6 +413,9 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
                           article: article,
                           source: widget.sourceResolver(article.sourceShortId),
                           onTap: () => widget.onOpen(article),
+                          autofocus:
+                              widget.autofocusFirst &&
+                              article.guidKey == widget.articles.first.guidKey,
                         ),
                       ),
                     );

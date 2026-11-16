@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/keyboard_on_activate.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -285,12 +286,17 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: _clientId,
-                enabled: !state.isConnecting,
-                decoration: InputDecoration(
-                  labelText: l10n.depotSettingsClientId,
-                  border: const OutlineInputBorder(),
+              child: KeyboardOnActivate(
+                builder: (context, gate) => TextField(
+                  controller: _clientId,
+                  focusNode: gate.focusNode,
+                  readOnly: gate.readOnly,
+                  onTap: gate.onTap,
+                  enabled: !state.isConnecting,
+                  decoration: InputDecoration(
+                    labelText: l10n.depotSettingsClientId,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
               ),
             ),

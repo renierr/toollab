@@ -6,9 +6,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/text_ai/text_ai_action.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/copyable_image.dart';
+import 'package:tool_lab/widgets/image_preview_dialog.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
@@ -49,6 +51,16 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
 
   static final _image = RegExp(r'!\[[^\]]*\]\([^)]*\)');
   static final _link = RegExp(r'\[([^\]]*)\]\([^)]*\)');
+  static final _webLink = RegExp(r'(?<!!)\[([^\]]*)\]\((https?://[^)\s]+)');
+
+  /// Inline Markdown links cannot take remote focus; TV lists them instead.
+  static List<({String label, String url})> _webLinks(String markdown) {
+    final seen = <String>{};
+    return [
+      for (final match in _webLink.allMatches(markdown))
+        if (seen.add(match[2]!)) (label: match[1]!.trim(), url: match[2]!),
+    ];
+  }
 
   // Aggregators such as Hacker News link to other sites; name the target.
   static String? _linkHost(String link, String? siteUrl) {
@@ -81,11 +93,13 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
     );
   }
 
-  Future<void> _openOriginal() async {
+  Future<void> _openOriginal() => _openUrl(widget.article.link.trim());
+
+  Future<void> _openUrl(String url) async {
     final l10n = AppLocalizations.of(context);
     try {
       final opened = await launchUrl(
-        Uri.parse(widget.article.link.trim()),
+        Uri.parse(url),
         mode: LaunchMode.externalApplication,
       );
       if (!opened) throw StateError('No handler for the link');
@@ -136,6 +150,7 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
       (state) => state.readerFontPercent,
     );
     final readerScale = fontPercent / 100;
+    final tvMode = context.select<AppState?, bool>((s) => s?.tvMode ?? false);
 
     return Scaffold(
       appBar: AppBar(
@@ -235,6 +250,11 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
                   const SizedBox(height: 16),
                   NewsVideoActions(videoUrls: extracted!.videoUrls),
                 ],
+                if (tvMode && !loading && !failed)
+                  _ReaderLinks(
+                    links: _webLinks(extracted?.markdown ?? ''),
+                    onOpen: _openUrl,
+                  ),
                 const SizedBox(height: 28),
                 _ReaderLinkFooter(
                   link: widget.article.link,
@@ -328,6 +348,11 @@ class _ReaderHeader extends StatelessWidget {
           const SizedBox(height: 16),
           CopyableImage(
             image: NetworkImage(image),
+            focusable: true,
+            onTap: () => ImagePreviewDialog.show(
+              context: context,
+              image: NetworkImage(image),
+            ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(14),
               child: AspectRatio(
@@ -348,6 +373,44 @@ class _ReaderHeader extends StatelessWidget {
             ),
           ),
         ],
+      ],
+    );
+  }
+}
+
+class _ReaderLinks extends StatelessWidget {
+  final List<({String label, String url})> links;
+  final ValueChanged<String> onOpen;
+
+  const _ReaderLinks({required this.links, required this.onOpen});
+
+  @override
+  Widget build(BuildContext context) {
+    if (links.isEmpty) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
+        Text(
+          l10n.newsArticleLinks,
+          style: theme.textTheme.labelMedium?.copyWith(color: theme.hintColor),
+        ),
+        for (final link in links)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.link),
+            title: Text(
+              link.label.isEmpty ? link.url : link.label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: link.label.isEmpty
+                ? null
+                : Text(link.url, maxLines: 1, overflow: TextOverflow.ellipsis),
+            onTap: () => onOpen(link.url),
+          ),
       ],
     );
   }

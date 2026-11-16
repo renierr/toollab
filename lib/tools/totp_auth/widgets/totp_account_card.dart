@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 
 import '../totp.dart';
 import '../totp_account.dart';
@@ -97,27 +98,24 @@ class TotpAccountCard extends StatelessWidget {
                     itemBuilder: (_) => [
                       PopupMenuItem(
                         value: TotpCardAction.edit,
-                        child: ListTile(
+                        child: PopupMenuTile(
                           dense: true,
-                          contentPadding: EdgeInsets.zero,
                           leading: const Icon(Icons.edit_outlined),
                           title: Text(l10n.commonEdit),
                         ),
                       ),
                       PopupMenuItem(
                         value: TotpCardAction.copyUri,
-                        child: ListTile(
+                        child: PopupMenuTile(
                           dense: true,
-                          contentPadding: EdgeInsets.zero,
                           leading: const Icon(Icons.link_outlined),
                           title: Text(l10n.totpCopyUri),
                         ),
                       ),
                       PopupMenuItem(
                         value: TotpCardAction.delete,
-                        child: ListTile(
+                        child: PopupMenuTile(
                           dense: true,
-                          contentPadding: EdgeInsets.zero,
                           leading: const Icon(
                             Icons.delete_outline,
                             color: AppTheme.accentRed,

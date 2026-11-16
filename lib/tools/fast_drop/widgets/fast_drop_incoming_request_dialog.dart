@@ -35,6 +35,7 @@ class FastDropIncomingRequestDialog extends StatelessWidget {
           child: Text(l10n.fastDropP2pDecline),
         ),
         FilledButton(
+          autofocus: true,
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(l10n.fastDropP2pAccept),
         ),

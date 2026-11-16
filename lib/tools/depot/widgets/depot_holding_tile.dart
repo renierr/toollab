@@ -24,6 +24,10 @@ class DepotHoldingTile extends StatelessWidget {
   final double weight;
   final int? reorderIndex;
 
+  /// Custom sort without dragging, for keyboards and remotes; null at the end.
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
+
   const DepotHoldingTile({
     super.key,
     required this.holding,
@@ -32,6 +36,8 @@ class DepotHoldingTile extends StatelessWidget {
     required this.format,
     required this.weight,
     this.reorderIndex,
+    this.onMoveUp,
+    this.onMoveDown,
   });
 
   @override
@@ -202,6 +208,8 @@ class DepotHoldingTile extends StatelessWidget {
         },
       ),
       children: [
+        if (reorderIndex != null)
+          _MoveActions(onMoveUp: onMoveUp, onMoveDown: onMoveDown),
         DepotHoldingDetails(
           holding: holding,
           performance: performance,
@@ -210,6 +218,36 @@ class DepotHoldingTile extends StatelessWidget {
           weight: weight,
         ),
       ],
+    );
+  }
+}
+
+class _MoveActions extends StatelessWidget {
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
+
+  const _MoveActions({required this.onMoveUp, required this.onMoveDown});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: Wrap(
+        spacing: 8,
+        children: [
+          TextButton.icon(
+            onPressed: onMoveUp,
+            icon: const Icon(Icons.arrow_upward, size: 18),
+            label: Text(l10n.depotHoldingMoveUp),
+          ),
+          TextButton.icon(
+            onPressed: onMoveDown,
+            icon: const Icon(Icons.arrow_downward, size: 18),
+            label: Text(l10n.depotHoldingMoveDown),
+          ),
+        ],
+      ),
     );
   }
 }

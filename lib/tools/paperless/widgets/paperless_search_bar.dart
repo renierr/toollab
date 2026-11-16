@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 
 import '../models/paperless_filter.dart';
 import '../paperless_sort_labels.dart';
@@ -68,7 +69,7 @@ class PaperlessSearchBar extends StatelessWidget {
                 onSelected: onSortChanged,
                 itemBuilder: (context) => [
                   for (final option in PaperlessSort.values)
-                    CheckedPopupMenuItem(
+                    CheckedPopupMenuTile(
                       value: option,
                       checked: option == sort,
                       child: Text(paperlessSortLabel(l10n, option)),

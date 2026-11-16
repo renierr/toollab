@@ -10,6 +10,7 @@ import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart' as syntax;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/copyable_image.dart';
+import 'package:tool_lab/widgets/focus_outline.dart';
 import 'package:tool_lab/widgets/image_preview_dialog.dart';
 import 'package:tool_lab/widgets/markdown_checkbox.dart';
 import 'package:tool_lab/widgets/markdown_code_block_builder.dart';
@@ -367,25 +368,28 @@ class _MarkdownViewState extends State<MarkdownView>
 
         // Rendered images are downscaled to the requested size, so offer the
         // full resolution in a zoomable dialog.
-        Widget imageWidget = MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () => ImagePreviewDialog.show(
-              context: context,
-              image: provider!,
-              label: caption,
-            ),
-            child: Image(
-              image: provider,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
-            ),
-          ),
+        final image = provider;
+        void preview() => ImagePreviewDialog.show(
+          context: context,
+          image: image,
+          label: caption,
         );
-
-        if (widget.copyImages) {
-          imageWidget = CopyableImage(image: provider, child: imageWidget);
-        }
+        final rendered = Image(
+          image: image,
+          fit: BoxFit.contain,
+          errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+        );
+        Widget imageWidget = widget.copyImages
+            ? CopyableImage(
+                image: image,
+                focusable: true,
+                onTap: preview,
+                child: rendered,
+              )
+            : FocusOutline(
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(onTap: preview, child: rendered),
+              );
 
         if (width != null || height != null) {
           imageWidget = SizedBox(

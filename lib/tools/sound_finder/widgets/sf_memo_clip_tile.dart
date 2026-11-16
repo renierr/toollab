@@ -5,6 +5,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/file_name_dialog.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 
 import '../memo/memo_clip.dart';
 import '../memo/memo_library_state.dart';
@@ -270,11 +271,7 @@ class SfMemoClipTile extends StatelessWidget {
   ) {
     return PopupMenuItem(
       value: value,
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(icon),
-        title: Text(label),
-      ),
+      child: PopupMenuTile(leading: Icon(icon), title: Text(label)),
     );
   }
 }

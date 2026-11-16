@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/keyboard_on_activate.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
 
 import '../depot_portfolio_state.dart';
@@ -127,36 +128,48 @@ class _DepotTaxSettingsState extends State<DepotTaxSettings>
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: TextField(
-            controller: _allowance,
-            keyboardType: TextInputType.number,
-            // Whole euros, so a typed "1.000" cannot read as one.
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: _onAllowanceChanged,
-            decoration: InputDecoration(
-              labelText: l10n.depotTaxAllowance,
-              suffixText: currency,
-              border: const OutlineInputBorder(),
+          child: KeyboardOnActivate(
+            builder: (context, gate) => TextField(
+              focusNode: gate.focusNode,
+              readOnly: gate.readOnly,
+              onTap: gate.onTap,
+              controller: _allowance,
+              keyboardType: TextInputType.number,
+              // Whole euros, so a typed "1.000" cannot read as one.
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: _onAllowanceChanged,
+              decoration: InputDecoration(
+                labelText: l10n.depotTaxAllowance,
+                suffixText: currency,
+                border: const OutlineInputBorder(),
+              ),
             ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: TextField(
-            controller: _controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: _onChanged,
-            decoration: InputDecoration(
-              labelText: l10n.depotTaxBaseRate('$_year'),
-              suffixText: '%',
-              border: const OutlineInputBorder(),
-              suffixIcon: custom
-                  ? IconButton(
-                      icon: const Icon(Icons.restart_alt),
-                      tooltip: l10n.commonReset,
-                      onPressed: _reset,
-                    )
-                  : null,
+          child: KeyboardOnActivate(
+            builder: (context, gate) => TextField(
+              focusNode: gate.focusNode,
+              readOnly: gate.readOnly,
+              onTap: gate.onTap,
+              controller: _controller,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              onChanged: _onChanged,
+              decoration: InputDecoration(
+                labelText: l10n.depotTaxBaseRate('$_year'),
+                suffixText: '%',
+                border: const OutlineInputBorder(),
+                suffixIcon: custom
+                    ? IconButton(
+                        icon: const Icon(Icons.restart_alt),
+                        tooltip: l10n.commonReset,
+                        onPressed: _reset,
+                      )
+                    : null,
+              ),
             ),
           ),
         ),

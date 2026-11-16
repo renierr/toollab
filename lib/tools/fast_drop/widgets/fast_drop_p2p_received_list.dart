@@ -12,6 +12,7 @@ class FastDropP2pReceivedList extends StatelessWidget {
   final void Function(P2pReceivedFile file) onOpen;
   final void Function(P2pReceivedFile file) onSave;
   final void Function(P2pReceivedFile file)? onDismiss;
+  final FocusNode? newestOpenFocusNode;
 
   const FastDropP2pReceivedList({
     super.key,
@@ -19,6 +20,7 @@ class FastDropP2pReceivedList extends StatelessWidget {
     required this.onOpen,
     required this.onSave,
     this.onDismiss,
+    this.newestOpenFocusNode,
   });
 
   @override
@@ -52,6 +54,7 @@ class FastDropP2pReceivedList extends StatelessWidget {
                     onPressed: () => onDismiss!(file),
                   ),
                 IconButton(
+                  focusNode: index == 0 ? newestOpenFocusNode : null,
                   icon: const Icon(Icons.open_in_new),
                   tooltip: l10n.fastDropOpenFile,
                   onPressed: () => onOpen(file),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/popup_menu_tile.dart';
 
 import '../chat_ai_state.dart';
 import '../chat_models.dart';
@@ -51,11 +52,10 @@ class ChatModelPicker extends StatelessWidget {
         for (final option in ChatBackend.values)
           PopupMenuItem(
             value: option,
-            child: ListTile(
+            child: PopupMenuTile(
               leading: Icon(iconFor(option)),
               title: Text(_description(l10n, option)),
               trailing: option == backend ? const Icon(Icons.check) : null,
-              contentPadding: EdgeInsets.zero,
             ),
           ),
       ],

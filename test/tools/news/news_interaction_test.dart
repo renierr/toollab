@@ -16,6 +16,9 @@ import 'package:tool_lab/tools/news/widgets/news_card.dart';
 import 'package:tool_lab/tools/news/widgets/news_reader_page.dart';
 
 class _AppState extends ChangeNotifier implements AppState {
+  @override
+  bool get tvMode => false;
+
   int syncCalls = 0;
 
   @override
