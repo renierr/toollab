@@ -14,7 +14,10 @@ import 'x_timeline_view.dart';
 /// The logged-in tool: a rail beside the feed when there is room (desktop,
 /// TV), a bottom bar on phones. Visited tabs stay alive to keep their scroll.
 class XFeedShell extends StatefulWidget {
-  const XFeedShell({super.key});
+  /// Right on a post in TV mode.
+  final VoidCallback? onRight;
+
+  const XFeedShell({super.key, this.onRight});
 
   @override
   State<XFeedShell> createState() => _XFeedShellState();
@@ -131,6 +134,7 @@ class _XFeedShellState extends State<XFeedShell> with DisposeCleanup {
                   tab: d.$1,
                   active: d.$1 == tab,
                   focusNode: _tabNodes[d.$1]!,
+                  onRight: widget.onRight,
                 )
               : const SizedBox.shrink(),
       ],
@@ -216,11 +220,13 @@ class _TabContent extends StatelessWidget {
   final XFeedTab tab;
   final bool active;
   final FocusNode focusNode;
+  final VoidCallback? onRight;
 
   const _TabContent({
     required this.tab,
     required this.active,
     required this.focusNode,
+    this.onRight,
   });
 
   @override
@@ -238,6 +244,7 @@ class _TabContent extends StatelessWidget {
                 controller: state.controllerFor(tab),
                 applyFilters: home,
                 onSeen: home ? state.markPostsSeen : null,
+                onRight: onRight,
                 emptyMessage: tab == XFeedTab.bookmarks
                     ? AppLocalizations.of(context).xFeedBookmarksEmpty
                     : null,

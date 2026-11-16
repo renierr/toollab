@@ -21,9 +21,12 @@ class XFeedPage extends StatefulWidget {
 }
 
 class _XFeedPageState extends State<XFeedPage> with DisposeCleanup {
+  final FocusNode _refreshFocus = FocusNode(debugLabel: 'XFeedRefresh');
+
   @override
   void initState() {
     super.initState();
+    onDispose(_refreshFocus.dispose);
     final state = context.read<XFeedState>();
     unawaited(state.init());
     final lifecycle = AppLifecycleListener(onHide: state.persistSeen);
@@ -56,6 +59,7 @@ class _XFeedPageState extends State<XFeedPage> with DisposeCleanup {
       actions: [
         if (loggedIn && state.tab != XFeedTab.search)
           IconButton(
+            focusNode: _refreshFocus,
             onPressed: _refresh,
             tooltip: l10n.xFeedRefresh,
             icon: const Icon(Icons.refresh),
@@ -73,7 +77,9 @@ class _XFeedPageState extends State<XFeedPage> with DisposeCleanup {
           child: CircularProgressIndicator(),
         ),
         XSessionStatus.loggedOut => XLoginView(tvMode: tvMode),
-        XSessionStatus.loggedIn => const XFeedShell(),
+        XSessionStatus.loggedIn => XFeedShell(
+          onRight: _refreshFocus.requestFocus,
+        ),
       },
     );
   }

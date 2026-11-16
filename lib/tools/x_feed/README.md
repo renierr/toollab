@@ -172,7 +172,9 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
 - Moving Down to a later post aligns its top with the feed viewport when possible.
   Moving Up keeps the normal scrolling behavior for reading tall posts.
 - Without TV mode, left/right jump to the previous / next post and scroll it to the top.
-  In TV mode they stay with the rail and the media tiles.
+  In TV mode left stays with the rail and the media tiles; right walks the media tiles
+  and otherwise moves to the toolbar's refresh button (`XTimelineView.onRight`), which
+  a full-width post leaves nothing to the right of.
 - Shift+Down / Shift+Up scroll the feed smoothly by a fifth of the viewport without
   moving the focus, for reading long posts; holding the keys keeps scrolling.
 - Letter keys (`XKeys`, ignored with Ctrl / Alt / Meta held or while typing):

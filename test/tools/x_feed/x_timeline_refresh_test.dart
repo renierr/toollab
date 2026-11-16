@@ -160,6 +160,59 @@ void main() {
     );
   });
 
+  for (final tvMode in [true, false]) {
+    testWidgets(
+      'right on a post ${tvMode ? 'reaches the toolbar on a TV' : 'steps to the next post on a keyboard'}',
+      (tester) async {
+        // A full-width post leaves nothing to its right for D-pad traversal.
+        tester.view.physicalSize = const Size(960, 540);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final refresh = FocusNode(debugLabel: 'refresh');
+        addTearDown(refresh.dispose);
+        final controller = XTimelineController(
+          (cursor) async => XTimelinePage(
+            posts: [for (var i = 0; i < 5; i++) _post('p$i', 'post $i')],
+          ),
+        );
+        addTearDown(controller.dispose);
+        await _pump(
+          tester,
+          Scaffold(
+            appBar: AppBar(
+              actions: [
+                IconButton(
+                  focusNode: refresh,
+                  onPressed: () {},
+                  icon: const Icon(Icons.refresh),
+                ),
+              ],
+            ),
+            body: XTimelineView(
+              controller: controller,
+              onRight: refresh.requestFocus,
+            ),
+          ),
+          tvMode: tvMode,
+        );
+        Focus.of(tester.element(find.text('post 0'))).requestFocus();
+        await tester.pumpAndSettle();
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+        await tester.pumpAndSettle();
+        if (tvMode) {
+          expect(refresh.hasPrimaryFocus, isTrue);
+        } else {
+          expect(refresh.hasFocus, isFalse);
+          expect(_focusIn(tester, 'p1'), isTrue);
+          await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+          await tester.pumpAndSettle();
+          expect(_focusIn(tester, 'p0'), isTrue);
+        }
+      },
+    );
+  }
+
   testWidgets('TV down aligns the next post but up does not', (tester) async {
     tester.view.physicalSize = const Size(800, 600);
     tester.view.devicePixelRatio = 1;
