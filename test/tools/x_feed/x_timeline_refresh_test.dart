@@ -162,7 +162,7 @@ void main() {
 
   for (final tvMode in [true, false]) {
     testWidgets(
-      'right on a post ${tvMode ? 'reaches the toolbar on a TV' : 'steps to the next post on a keyboard'}',
+      '${tvMode ? 'TV' : 'keyboard'}: right ${tvMode ? 'reaches the toolbar' : 'steps posts'}, Esc reaches the toolbar',
       (tester) async {
         // A full-width post leaves nothing to its right for D-pad traversal.
         tester.view.physicalSize = const Size(960, 540);
@@ -190,7 +190,7 @@ void main() {
             ),
             body: XTimelineView(
               controller: controller,
-              onRight: refresh.requestFocus,
+              onToolbar: refresh.requestFocus,
             ),
           ),
           tvMode: tvMode,
@@ -209,6 +209,12 @@ void main() {
           await tester.pumpAndSettle();
           expect(_focusIn(tester, 'p0'), isTrue);
         }
+
+        Focus.of(tester.element(find.text('post 2'))).requestFocus();
+        await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(refresh.hasPrimaryFocus, isTrue);
       },
     );
   }

@@ -29,8 +29,8 @@ class XTimelineView extends StatefulWidget {
   /// Receives the ids of posts that stayed on screen for a moment.
   final ValueChanged<List<XPost>>? onSeen;
 
-  /// Right on a post in TV mode, e.g. to reach the toolbar actions.
-  final VoidCallback? onRight;
+  /// Esc on a post, and right in TV mode: moves to the toolbar actions.
+  final VoidCallback? onToolbar;
 
   const XTimelineView({
     super.key,
@@ -40,7 +40,7 @@ class XTimelineView extends StatefulWidget {
     this.focalPostId,
     this.emptyMessage,
     this.onSeen,
-    this.onRight,
+    this.onToolbar,
   });
 
   @override
@@ -128,8 +128,8 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   }
 
   /// R reloads, Home goes to the first post, J / K and (keyboard only) right /
-  /// left step post to post; a TV keeps left for the rail and right for
-  /// [XTimelineView.onRight].
+  /// left step post to post; a TV keeps left for the rail. Esc, and right on
+  /// a TV, go to [XTimelineView.onToolbar].
   KeyEventResult _onListKey(FocusNode node, KeyEvent event) {
     if (event is KeyUpEvent) return KeyEventResult.ignored;
     final row = FocusManager.instance.primaryFocus?.context
@@ -182,9 +182,11 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
       unawaited(_toFirst());
       return KeyEventResult.handled;
     }
-    final onRight = widget.onRight;
-    if (_tvMode && onRight != null && key == LogicalKeyboardKey.arrowRight) {
-      if (event is KeyDownEvent) onRight();
+    final onToolbar = widget.onToolbar;
+    if (onToolbar != null &&
+        (key == LogicalKeyboardKey.escape ||
+            _tvMode && key == LogicalKeyboardKey.arrowRight)) {
+      if (event is KeyDownEvent) onToolbar();
       return KeyEventResult.handled;
     }
     final arrows = !_tvMode;

@@ -78,7 +78,7 @@ class _XFeedPageState extends State<XFeedPage> with DisposeCleanup {
         ),
         XSessionStatus.loggedOut => XLoginView(tvMode: tvMode),
         XSessionStatus.loggedIn => XFeedShell(
-          onRight: _refreshFocus.requestFocus,
+          onToolbar: _refreshFocus.requestFocus,
         ),
       },
     );
