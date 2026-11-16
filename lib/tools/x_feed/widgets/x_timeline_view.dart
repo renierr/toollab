@@ -71,6 +71,9 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   Duration? _lastPassCheck;
   double? _lastPassPixels;
   late int _refreshCount = widget.controller.refreshCount;
+  _Anchor? _anchor;
+  double? _listWidth;
+  bool _restoringAnchor = false;
 
   @override
   void initState() {
@@ -103,7 +106,10 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
       _visibleSince.clear();
       _showTop();
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) => _trackPassing());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _trackPassing();
+      _captureAnchor();
+    });
     _scheduleSeenCheck();
   }
 
@@ -257,9 +263,76 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
       _trackPassing(throttled: true);
     } else if (notification is ScrollEndNotification) {
       _trackPassing();
+      _captureAnchor();
       _scheduleSeenCheck();
     }
     return false;
+  }
+
+  /// Remembers the top post on screen, to keep it there when the width
+  /// changes (rotation) and every post above it gets a new height.
+  void _captureAnchor() {
+    if (!mounted || _restoringAnchor) return;
+    final layout = _rowLayout();
+    if (layout == null) return;
+    String? id;
+    double? top;
+    for (final MapEntry(key: rowId, value: rect) in layout.rects.entries) {
+      if (rect.bottom <= layout.bounds.top) continue;
+      if (top == null || rect.top < top) {
+        id = rowId;
+        top = rect.top;
+      }
+    }
+    _anchor = id == null ? null : _Anchor(id, top!);
+  }
+
+  void _onWidthChanged(double width) {
+    final previous = _listWidth;
+    _listWidth = width;
+    if (previous == null || previous == width) return;
+    final anchor = _anchor;
+    if (anchor == null) return;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => unawaited(_restoreAnchor(anchor)),
+    );
+  }
+
+  Future<void> _restoreAnchor(_Anchor anchor) async {
+    if (_restoringAnchor) return;
+    final target = _shown.indexWhere((post) => post.id == anchor.id);
+    if (target < 0) return;
+    final indexOf = {for (final (i, post) in _shown.indexed) post.id: i};
+    _restoringAnchor = true;
+    try {
+      // The anchor may lie outside the built range at the old pixel offset;
+      // page toward it until the list builds it.
+      for (var attempt = 0; attempt < 10; attempt++) {
+        if (!mounted || !_scroll.hasClients) return;
+        final layout = _rowLayout();
+        if (layout == null) return;
+        final position = _scroll.position;
+        final rect = layout.rects[anchor.id];
+        final double next;
+        if (rect != null) {
+          next = position.pixels + rect.top - anchor.top;
+        } else {
+          final below = layout.rects.keys.any(
+            (id) => (indexOf[id] ?? -1) > target,
+          );
+          next =
+              position.pixels + (below ? -1 : 1) * position.viewportDimension;
+        }
+        _scroll.jumpTo(
+          next.clamp(position.minScrollExtent, position.maxScrollExtent),
+        );
+        await WidgetsBinding.instance.endOfFrame;
+        if (rect != null) return;
+      }
+    } finally {
+      _restoringAnchor = false;
+      _captureAnchor();
+    }
   }
 
   void _scheduleSeenCheck() {
@@ -398,54 +471,59 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
             child: Focus(
               focusNode: _listFocus,
               onKeyEvent: _onListKey,
-              child: ReadableScrollPadding(
-                maxWidth: XLayout.maxWidth,
-                // Jumping the old list to 0 lands below the top: its stale
-                // child offsets correct the position once the new posts lay out.
-                builder: (context, padding) => ListView.builder(
-                  key: ValueKey(_refreshCount),
-                  controller: _scroll,
-                  padding: padding,
-                  itemCount: posts.length + offset + 1,
-                  itemBuilder: (context, index) {
-                    if (index < offset) return header;
-                    final i = index - offset;
-                    if (i == posts.length) {
-                      return _Footer(controller: controller);
-                    }
-                    if (i >= posts.length - _prefetchDistance &&
-                        error == null) {
-                      WidgetsBinding.instance.addPostFrameCallback(
-                        (_) => unawaited(controller.loadMore()),
-                      );
-                    }
-                    final post = posts[i];
-                    final focal = post.id == widget.focalPostId;
-                    // A thread page's replies hang off the focal post as
-                    // siblings, so the line stops there.
-                    final above =
-                        i > 0 &&
-                        post.replyToId == posts[i - 1].id &&
-                        posts[i - 1].id != widget.focalPostId;
-                    final below =
-                        !focal &&
-                        i + 1 < posts.length &&
-                        posts[i + 1].replyToId == post.id;
-                    return _PostRow(
-                      key: ValueKey(post.id),
-                      postId: post.id,
-                      rows: _rows,
-                      divider: !below,
-                      child: XPostCard(
-                        post: post,
-                        autofocus: i == 0,
-                        focal: focal,
-                        threadAbove: above,
-                        threadBelow: below,
-                      ),
-                    );
-                  },
-                ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  _onWidthChanged(constraints.maxWidth);
+                  return ReadableScrollPadding(
+                    maxWidth: XLayout.maxWidth,
+                    // Jumping the old list to 0 lands below the top: its stale
+                    // child offsets correct the position once the new posts lay out.
+                    builder: (context, padding) => ListView.builder(
+                      key: ValueKey(_refreshCount),
+                      controller: _scroll,
+                      padding: padding,
+                      itemCount: posts.length + offset + 1,
+                      itemBuilder: (context, index) {
+                        if (index < offset) return header;
+                        final i = index - offset;
+                        if (i == posts.length) {
+                          return _Footer(controller: controller);
+                        }
+                        if (i >= posts.length - _prefetchDistance &&
+                            error == null) {
+                          WidgetsBinding.instance.addPostFrameCallback(
+                            (_) => unawaited(controller.loadMore()),
+                          );
+                        }
+                        final post = posts[i];
+                        final focal = post.id == widget.focalPostId;
+                        // A thread page's replies hang off the focal post as
+                        // siblings, so the line stops there.
+                        final above =
+                            i > 0 &&
+                            post.replyToId == posts[i - 1].id &&
+                            posts[i - 1].id != widget.focalPostId;
+                        final below =
+                            !focal &&
+                            i + 1 < posts.length &&
+                            posts[i + 1].replyToId == post.id;
+                        return _PostRow(
+                          key: ValueKey(post.id),
+                          postId: post.id,
+                          rows: _rows,
+                          divider: !below,
+                          child: XPostCard(
+                            post: post,
+                            autofocus: i == 0,
+                            focal: focal,
+                            threadAbove: above,
+                            threadBelow: below,
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -453,6 +531,15 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
       },
     );
   }
+}
+
+class _Anchor {
+  final String id;
+
+  /// Offset of the post's top from the viewport's top.
+  final double top;
+
+  const _Anchor(this.id, this.top);
 }
 
 /// A divided list row that registers itself so the view can tell which posts

@@ -161,45 +161,49 @@ class _XFeedShellState extends State<XFeedShell> with DisposeCleanup {
       onKeyEvent: _onKey,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          if (constraints.canSplit) {
-            return Row(
-              children: [
-                NavigationRail(
+          final split = constraints.canSplit;
+          // One tree shape for both layouts, so rotating keeps the tabs' state.
+          return Column(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    if (split) ...[
+                      NavigationRail(
+                        selectedIndex: index,
+                        onDestinationSelected: select,
+                        labelType: NavigationRailLabelType.all,
+                        destinations: [
+                          for (final d in destinations)
+                            NavigationRailDestination(
+                              icon: Icon(d.$2),
+                              selectedIcon: Icon(d.$3),
+                              label: Text(d.$4),
+                            ),
+                        ],
+                      ),
+                      const VerticalDivider(width: 1),
+                    ],
+                    Expanded(child: body),
+                  ],
+                ),
+              ),
+              if (!split)
+                NavigationBar(
                   selectedIndex: index,
                   onDestinationSelected: select,
-                  labelType: NavigationRailLabelType.all,
+                  height: 64,
+                  labelBehavior:
+                      NavigationDestinationLabelBehavior.onlyShowSelected,
                   destinations: [
                     for (final d in destinations)
-                      NavigationRailDestination(
+                      NavigationDestination(
                         icon: Icon(d.$2),
                         selectedIcon: Icon(d.$3),
-                        label: Text(d.$4),
+                        label: d.$4,
                       ),
                   ],
                 ),
-                const VerticalDivider(width: 1),
-                Expanded(child: body),
-              ],
-            );
-          }
-          return Column(
-            children: [
-              Expanded(child: body),
-              NavigationBar(
-                selectedIndex: index,
-                onDestinationSelected: select,
-                height: 64,
-                labelBehavior:
-                    NavigationDestinationLabelBehavior.onlyShowSelected,
-                destinations: [
-                  for (final d in destinations)
-                    NavigationDestination(
-                      icon: Icon(d.$2),
-                      selectedIcon: Icon(d.$3),
-                      label: d.$4,
-                    ),
-                ],
-              ),
             ],
           );
         },
