@@ -57,29 +57,47 @@ object ToolBiometricStorage {
                         override fun onSuccess(unused: Void?) {
                             if (!completed.compareAndSet(false, true)) return
                             val authenticatedAt = old?.second ?: SystemClock.elapsedRealtime()
+                            fun finish(output: String?) = handler.post {
+                                if (call.method != "delete" && duration > 0) {
+                                    val token = sessions.put(namespace, storage, authenticatedAt)
+                                    val remaining = (duration - (SystemClock.elapsedRealtime() - authenticatedAt)).coerceAtLeast(0)
+                                    handler.postDelayed({
+                                        sessions.removeIfCurrent(namespace, token)
+                                    }, remaining)
+                                } else {
+                                    sessions.remove(namespace)
+                                }
+                                pending.remove(namespace)
+                                main.post { result.success(output) }
+                            }
+                            fun fail(e: Exception) = handler.post {
+                                sessions.remove(namespace)
+                                pending.remove(namespace)
+                                main.post { result.error("BIOMETRIC_STORAGE", e.message, null) }
+                            }
                             handler.post {
                                 try {
                                     val prefixedKey = storage.addPrefixToKey(key)
-                                    val output = when (call.method) {
-                                        "read" -> if (storage.containsKey(prefixedKey)) storage.read(prefixedKey) else null
-                                        "write" -> { storage.write(prefixedKey, value); null }
-                                        else -> { storage.delete(prefixedKey); null }
+                                    when (call.method) {
+                                        "read" -> if (storage.containsKey(prefixedKey)) {
+                                            storage.read(prefixedKey, object : SecurePreferencesCallback<String> {
+                                                override fun onSuccess(output: String?) { finish(output) }
+                                                override fun onError(e: Exception) { fail(e) }
+                                            })
+                                        } else {
+                                            finish(null)
+                                        }
+                                        "write" -> storage.write(prefixedKey, value, object : SecurePreferencesCallback<Void> {
+                                            override fun onSuccess(unused: Void?) { finish(null) }
+                                            override fun onError(e: Exception) { fail(e) }
+                                        })
+                                        else -> {
+                                            storage.delete(prefixedKey)
+                                            finish(null)
+                                        }
                                     }
-                                    if (call.method != "delete" && duration > 0) {
-                                        val token = sessions.put(namespace, storage, authenticatedAt)
-                                        val remaining = (duration - (SystemClock.elapsedRealtime() - authenticatedAt)).coerceAtLeast(0)
-                                        handler.postDelayed({
-                                            sessions.removeIfCurrent(namespace, token)
-                                        }, remaining)
-                                    } else {
-                                        sessions.remove(namespace)
-                                    }
-                                    pending.remove(namespace)
-                                    main.post { result.success(output) }
                                 } catch (e: Exception) {
-                                    sessions.remove(namespace)
-                                    pending.remove(namespace)
-                                    main.post { result.error("BIOMETRIC_STORAGE", e.message, null) }
+                                    fail(e)
                                 }
                             }
                         }
