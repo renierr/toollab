@@ -2,7 +2,7 @@ group 'com.example.desktop_drop'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.3.20'
+    ext.kotlin_version = '2.4.20'
     repositories {
         google()
         mavenCentral()
@@ -14,10 +14,10 @@ buildscript {
     }
 }
 
+// Follows Flutter's plugin template: KGP only on the classpath, never applied
+// here. AGP 9 compiles Kotlin itself; with android.builtInKotlin=false
+// Flutter's Gradle plugin applies KGP for us.
 apply plugin: 'com.android.library'
-// The app sets android.builtInKotlin=false (Flutter template), so Kotlin must
-// come from KGP. Keep this version aligned with the app's KGP.
-apply plugin: 'org.jetbrains.kotlin.android'
 
 rootProject.allprojects {
     repositories {
