@@ -453,6 +453,7 @@ open class MainActivity : FlutterFragmentActivity() {
 
         DeviceInfoHelper.registerChannels(this, messenger)
         ToolBiometricStorage.register(applicationContext, messenger)
+        Pbkdf2Helper.register(messenger)
 
         // Foreground Runtime MethodChannel
         val channelInstance = MethodChannel(messenger, FOREGROUND_RUNTIME_CHANNEL)
