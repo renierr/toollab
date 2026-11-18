@@ -256,9 +256,7 @@ class MemoTranscriber extends ChangeNotifier {
         input.replaceFirst(RegExp(r'\.wav$'), ''),
       );
       for (var i = 0; i < chunks.length; i++) {
-        temp
-          ..add('${stem}_$i.wav')
-          ..add('${stem}_$i.wav.wav');
+        temp.add('${stem}_$i.wav');
       }
       final modelPath = await _path(model);
       final segments = <MemoTranscriptSegment>[];

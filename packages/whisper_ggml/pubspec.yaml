@@ -1,0 +1,27 @@
+name: whisper_ggml
+description: OpenAI Whisper ASR (Automatic Speech Recognition) for Flutter
+version: 2.10.0
+repository: https://github.com/sk3llo/whisper_ggml
+resolution: workspace
+
+environment:
+  sdk: ^3.12.1
+  flutter: ">=3.29.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ffi: ^2.1.4
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+  path_provider: ^2.1.5
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        ffiPlugin: true
+      windows:
+        ffiPlugin: true
+      linux:
+        ffiPlugin: true

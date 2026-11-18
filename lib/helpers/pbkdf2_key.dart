@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:ffi/ffi.dart';
@@ -174,8 +173,9 @@ Uint8List? _deriveBcrypt(int iterations, String password, Uint8List salt) {
   final handle = calloc<Pointer<Void>>();
   final algId = 'SHA256'.toNativeUtf16();
   try {
-    if (open(handle, algId, nullptr, _bcryptAlgHandleHmacFlag) != 0)
+    if (open(handle, algId, nullptr, _bcryptAlgHandleHmacFlag) != 0) {
       return null;
+    }
     try {
       return _withBuffers(password, salt, (pass, passLen, saltPtr, out) {
         final status = derive(
