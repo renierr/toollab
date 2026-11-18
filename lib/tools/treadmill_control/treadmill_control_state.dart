@@ -296,7 +296,11 @@ class TreadmillControlState extends ChangeNotifier {
     final map = jsonDecode(raw) as Map<String, dynamic>;
     final id = map['id'] as String?;
     if (id == null || id.isEmpty) return null;
-    return {'id': id, 'name': (map['name'] as String?) ?? ''};
+    // Saved before universal_ble 3, an Android ID may still be upper-case.
+    return {
+      'id': UniversalBle.canonicalDeviceId(id),
+      'name': (map['name'] as String?) ?? '',
+    };
   }
 
   Future<void> _persistSavedDevice(String key, String? id, String? name) async {
@@ -693,11 +697,9 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  void _onConnectionChange(
-    String deviceId,
-    bool isConnected,
-    String? error,
-  ) async {
+  void _onConnectionChange(BleConnectionChange change) async {
+    final deviceId = change.deviceId;
+    final isConnected = change.isConnected;
     final state = isConnected
         ? BleConnectionState.connected
         : BleConnectionState.disconnected;
@@ -963,13 +965,10 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   // Incoming GATT Data Parsing
-  void _onValueChange(
-    String deviceId,
-    String characteristicId,
-    Uint8List value,
-    int? timestamp,
-  ) {
-    final charId = characteristicId.toLowerCase();
+  void _onValueChange(BleCharacteristicValue change) {
+    final deviceId = change.deviceId;
+    final value = change.value;
+    final charId = change.characteristicId.toLowerCase();
     if (deviceId == treadmillDeviceId) {
       if (charId.contains('2acd')) {
         _parseFtmsData(value);

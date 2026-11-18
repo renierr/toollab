@@ -279,7 +279,11 @@ class RenphoBleProbeState extends ChangeNotifier {
         errorLog('[RenphoScale] Profile load failed: $e');
       }
     }
-    _lastDeviceId = await settings.getSetting(toolId, _lastDeviceKey);
+    final lastId = await settings.getSetting(toolId, _lastDeviceKey);
+    // Saved before universal_ble 3, an Android ID may still be upper-case.
+    _lastDeviceId = lastId == null
+        ? null
+        : UniversalBle.canonicalDeviceId(lastId);
     _lastDeviceName = await settings.getSetting(toolId, _lastDeviceNameKey);
     _healthConnectEnabled = await RenphoHealthConnectPublisher.instance
         .isEnabled();
