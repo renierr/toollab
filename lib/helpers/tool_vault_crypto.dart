@@ -3,23 +3,21 @@ import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/pbkdf2_key.dart';
 
 class ToolVaultCleanupPending implements Exception {}
 
 class ToolVaultCrypto {
   ToolVaultCrypto._();
 
-  static const int _iterations = 600000;
-  static Pbkdf2 _kdf = _pbkdf2(_iterations);
-
-  static Pbkdf2 _pbkdf2(int iterations) =>
-      Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: iterations, bits: 256);
+  static const int _defaultIterations = 600000;
+  static int _iterations = _defaultIterations;
 
   /// Pure-Dart PBKDF2 takes seconds per key; tests that only check the flow
   /// lower it. Null restores the real count.
   @visibleForTesting
   static void setIterationsForTesting(int? iterations) =>
-      _kdf = _pbkdf2(iterations ?? _iterations);
+      _iterations = iterations ?? _defaultIterations;
   static final _cipher = AesGcm.with256bits();
   static final _random = Random.secure();
 
@@ -31,9 +29,10 @@ class ToolVaultCrypto {
   static Future<String> wrapKey(SecretKey dataKey, String password) async {
     if (password.isEmpty) throw ArgumentError('Password must not be empty');
     final salt = _randomBytes(16);
-    final key = await _kdf.deriveKeyFromPassword(
+    final key = await derivePbkdf2Key(
+      iterations: _iterations,
       password: password,
-      nonce: salt,
+      salt: salt,
     );
     final nonce = _cipher.newNonce();
     final box = await _cipher.encrypt(
@@ -66,9 +65,10 @@ class ToolVaultCrypto {
         tag.length != 16) {
       throw const FormatException('Invalid vault key envelope');
     }
-    final key = await _kdf.deriveKeyFromPassword(
+    final key = await derivePbkdf2Key(
+      iterations: _iterations,
       password: password,
-      nonce: salt,
+      salt: salt,
     );
     final bytes = await _cipher.decrypt(
       SecretBox(ciphertext, nonce: nonce, mac: Mac(tag)),

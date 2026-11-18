@@ -3,37 +3,32 @@ import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/pbkdf2_key.dart';
 
 class TotpCrypto {
   /// Secure-storage key shared by the settings dialog and the sync delegate.
   static const syncPasswordKey = 'totp_sync_password';
   static const syncCheckRecordId = '__tool_lab_password_check__';
 
-  static const int _iterations = 100000;
-  static Pbkdf2 _pbkdf2 = _kdf(_iterations);
-
-  static Pbkdf2 _kdf(int iterations) =>
-      Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: iterations, bits: 256);
+  static const int _defaultIterations = 100000;
+  static int _iterations = _defaultIterations;
 
   /// Lowers the sync payload KDF for tests that only check the flow; null
   /// restores the real count.
   @visibleForTesting
   static void setIterationsForTesting(int? iterations) =>
-      _pbkdf2 = _kdf(iterations ?? _iterations);
+      _iterations = iterations ?? _defaultIterations;
   static final _aes = AesGcm.with256bits();
 
   /// 2FAS derives its AES key with PBKDF2-SHA256 and 10,000 iterations.
-  static final _twoFasPbkdf2 = Pbkdf2(
-    macAlgorithm: Hmac.sha256(),
-    iterations: 10000,
-    bits: 256,
-  );
+  static const _twoFasIterations = 10000;
 
   static Future<String> encrypt(String plaintext, String password) async {
     final salt = _randomBytes(16);
-    final secretKey = await _pbkdf2.deriveKeyFromPassword(
+    final secretKey = await derivePbkdf2Key(
+      iterations: _iterations,
       password: password,
-      nonce: salt,
+      salt: salt,
     );
     final nonce = _aes.newNonce();
     final box = await _aes.encrypt(
@@ -51,9 +46,10 @@ class TotpCrypto {
     final nonce = bytes.sublist(16, 28);
     final macBytes = bytes.sublist(bytes.length - 16);
     final cipherText = bytes.sublist(28, bytes.length - 16);
-    final secretKey = await _pbkdf2.deriveKeyFromPassword(
+    final secretKey = await derivePbkdf2Key(
+      iterations: _iterations,
       password: password,
-      nonce: salt,
+      salt: salt,
     );
     final box = SecretBox(cipherText, nonce: nonce, mac: Mac(macBytes));
     final clear = await _aes.decrypt(box, secretKey: secretKey);
@@ -73,9 +69,10 @@ class TotpCrypto {
     if (cipherWithTag.length <= 16) {
       throw const FormatException('Malformed 2FAS ciphertext');
     }
-    final secretKey = await _twoFasPbkdf2.deriveKeyFromPassword(
+    final secretKey = await derivePbkdf2Key(
+      iterations: _twoFasIterations,
       password: password,
-      nonce: salt,
+      salt: salt,
     );
     final box = SecretBox(
       cipherWithTag.sublist(0, cipherWithTag.length - 16),
