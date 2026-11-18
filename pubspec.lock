@@ -33,6 +33,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.7.0"
+  asn1lib:
+    dependency: transitive
+    description:
+      name: asn1lib
+      sha256: cfb3cf6a53158918d52dda61bc26f0cc8612a0d3b9dc29e87eaa3423902ca636
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.6.8"
   async:
     dependency: transitive
     description:
@@ -281,14 +289,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      sha256: "41e005c33bd814be4d3096aff55b1908d419fde52ca656c8c47719ec745873cd"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.9"
   cupertino_ui:
     dependency: transitive
     description:
@@ -301,10 +301,10 @@ packages:
     dependency: "direct main"
     description:
       name: dart_smb2
-      sha256: cd7fbb5e21b188e2b098c16fea18ef2a8028e937592259f57b1c3eccfd63d85a
+      sha256: "4d9a87028c6ac9bae6e610cc19f95c1e5a53cbd7d92fd08e61577ecba65a8d8c"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.3"
+    version: "0.4.1"
   dart_style:
     dependency: transitive
     description:
@@ -313,6 +313,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.7"
+  dartssh2:
+    dependency: transitive
+    description:
+      name: dartssh2
+      sha256: "1a21ef1e62f2ece3ee71de7ec106dc8faf67762b12ca2ab59b1cd08d5aa1f6ab"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.1"
   dbus:
     dependency: "direct main"
     description:
@@ -332,10 +340,10 @@ packages:
     dependency: "direct main"
     description:
       name: desktop_webview_window
-      sha256: "22f23a8b88753f39207a112791eaf42ff7cf4726432f95ceab12e222ea002d46"
+      sha256: "1bd3f4276d7594d9e1600782f72dbbf773a2019fa0e9a8d421d7df2f5a9b63cc"
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.2"
+    version: "0.4.3"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -505,10 +513,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_classic_bluetooth
-      sha256: a32a6c75f4f5ed0b7a2e27b7cbee2b58197c9d82b96e2b2baa0ae82c3cb31f45
+      sha256: "25b3bbd559aa5de6dc4ac29c5448ba2dd32237d35f36ac11c7185e57c3a85c0d"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.10"
+    version: "1.7.4"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -640,10 +648,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_zxing
-      sha256: "2c1ed2d0b1eb70c95231da33e9dea80e5b2f8a4711974bdadf7d9c1813b7ad5e"
+      sha256: aba36b8235a3a985da7dc9e300be05b62ed0a8b1b27f04cbc299ef3246e70bc6
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.0"
+    version: "3.1.1"
   freezed:
     dependency: transitive
     description:
@@ -664,10 +672,10 @@ packages:
     dependency: "direct main"
     description:
       name: ftpconnect
-      sha256: a9ebac24a50b17dc9a1101fff85c3729fd8c16ec41346b0fa6e549616e23b2f6
+      sha256: a1e7d2e9cd2cbbfefdae0f9db3f1f8caa142b787c49db1fce02479e461897e87
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.10"
+    version: "3.0.0"
   geoclue:
     dependency: transitive
     description:
@@ -1232,10 +1240,10 @@ packages:
     dependency: "direct main"
     description:
       name: nfc_manager
-      sha256: "65c5825e9c950852c34da88de49854717dd2ddc2f147a9af40c0190d887535da"
+      sha256: "72a331ea179d1dbe16533aa3fe7f7d2d43600386e39fbbf9592e4c254b3822ce"
       url: "https://pub.dev"
     source: hosted
-    version: "4.3.0"
+    version: "4.4.0"
   nfc_manager_ndef:
     dependency: "direct main"
     description:
@@ -1280,10 +1288,10 @@ packages:
     dependency: "direct main"
     description:
       name: pasteboard
-      sha256: fedbe8da188d2f713aa8b01260737342e6e1087534a3ab26e1a719f8d3e8f32f
+      sha256: aa9c08dbe836eb04d1fd4d5d5fe9d7f27515b185a612b965bce26e1b32135f3a
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.0"
+    version: "0.6.1"
   path:
     dependency: "direct main"
     description:
@@ -1396,6 +1404,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.1.0"
+  pinenacl:
+    dependency: transitive
+    description:
+      name: pinenacl
+      sha256: "57e907beaacbc3c024a098910b6240758e899674de07d6949a67b52fd984cbdf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.0"
   platform:
     dependency: transitive
     description:
@@ -2045,10 +2061,10 @@ packages:
     dependency: "direct main"
     description:
       name: whisper_ggml
-      sha256: "2b478898f3db902104e6d02b66bffa4b38422ba050f227cf1c3318570bd94fd8"
+      sha256: "3b9bab1300b0985ac8fbba2d14106d57a1daa2ee05f0e30f01455f695ba4b354"
       url: "https://pub.dev"
     source: hosted
-    version: "2.9.0"
+    version: "2.10.0"
   wifi_scan:
     dependency: "direct main"
     description:

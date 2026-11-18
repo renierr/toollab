@@ -818,7 +818,10 @@ class FileManagerState extends ChangeNotifier {
       } else {
         final smb = _smb;
         if (smb == null) throw Exception('SMB connection is no longer active.');
-        await smb.downloadToFile(_joinRemotePath(_path, entry.name), target);
+        await smb.downloadToFile(
+          _joinRemotePath(_path, entry.name),
+          target.path,
+        );
       }
     });
     return _error == null ? tempPath : null;

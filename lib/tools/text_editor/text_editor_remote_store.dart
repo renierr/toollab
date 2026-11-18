@@ -65,7 +65,7 @@ class TextEditorRemoteStore {
         });
       case 'smb':
         await _withSmb(profile, password, (smb) async {
-          await smb.downloadToFile(origin.remotePath, File(localPath));
+          await smb.downloadToFile(origin.remotePath, localPath);
         });
       default:
         throw Exception('Unknown protocol: ${origin.protocol}');

@@ -22,7 +22,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
-  dart_smb2
   flutter_soloud
   flutter_zxing
   jni
