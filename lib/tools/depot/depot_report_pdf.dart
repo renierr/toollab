@@ -237,7 +237,10 @@ pw.Widget _header(_Report r) {
           children: [
             pw.Text(
               l10n.depotReportTitle,
-              style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 17,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 2),
             pw.Text(
@@ -257,7 +260,7 @@ pw.Widget _header(_Report r) {
         children: [
           pw.Text(
             l10n.toolNameDepot,
-            style: pw.TextStyle(
+            style: const pw.TextStyle(
               fontSize: 9,
               fontWeight: pw.FontWeight.bold,
               color: _accent,
@@ -377,7 +380,7 @@ class _ValueChart extends pw.StatelessWidget {
     final t0 = points.first.date.millisecondsSinceEpoch;
     final span = math.max(1, points.last.date.millisecondsSinceEpoch - t0);
     final plotW = width - _leftPad;
-    final plotH = _height - _axis - 4;
+    const plotH = _height - _axis - 4;
 
     double xOf(DateTime d) =>
         _leftPad + (d.millisecondsSinceEpoch - t0) / span * plotW;
@@ -683,7 +686,7 @@ pw.Widget _table({
     child: pw.Text(
       text,
       textAlign: i == 0 ? pw.TextAlign.left : pw.TextAlign.right,
-      style: pw.TextStyle(
+      style: const pw.TextStyle(
         fontSize: 6.5,
         fontWeight: pw.FontWeight.bold,
         color: _muted,
@@ -728,9 +731,7 @@ pw.Widget _table({
 pw.Widget _holdingsTable(_Report r) {
   final l10n = r.l10n;
   final f = r.format;
-  final maxWeight = r.holdings
-      .map(r.weightOf)
-      .fold<double>(0, (a, w) => math.max(a, w));
+  final maxWeight = r.holdings.map(r.weightOf).fold<double>(0, math.max);
   var totalValue = 0.0;
   var totalGain = 0.0;
   var totalWeight = 0.0;

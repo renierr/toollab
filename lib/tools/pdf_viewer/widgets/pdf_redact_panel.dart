@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -72,7 +73,7 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
         const Duration(seconds: 30),
       );
       if (!mounted) {
-        doc.dispose();
+        unawaited(doc.dispose());
         return;
       }
       _doc = doc;
@@ -206,7 +207,7 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
       _inputMode = PdfRedactEditMode.draw;
       _hasTextSelection = false;
     });
-    _renderPage(_pageIndex);
+    unawaited(_renderPage(_pageIndex));
   }
 
   int get _totalMarkCount =>

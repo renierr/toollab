@@ -73,7 +73,7 @@ Uint8List makePitPatPacket(String action, double speedKph) {
   arr[10] = 80;
   arr[11] = 0x00;
 
-  int cmd = action == 'PAUSE' ? 2 : (action == 'STOP' ? 0 : 4);
+  final int cmd = action == 'PAUSE' ? 2 : (action == 'STOP' ? 0 : 4);
   arr[12] = cmd & 0xf7;
 
   const int userId = 58965456623;

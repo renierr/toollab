@@ -217,7 +217,7 @@ pw.Widget _letterhead(AppLocalizations l10n, String locale) => pw.Column(
             children: [
               pw.Text(
                 l10n.renphoReportTitle,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 19,
                   fontWeight: pw.FontWeight.bold,
                   color: _accent,
@@ -255,7 +255,7 @@ pw.Widget _runningHeader(
           pw.Expanded(
             child: pw.Text(
               l10n.renphoReportTitle,
-              style: pw.TextStyle(
+              style: const pw.TextStyle(
                 fontSize: 9,
                 fontWeight: pw.FontWeight.bold,
                 color: _accent,
@@ -362,7 +362,7 @@ pw.Widget _recordBox(
                     pw.Text(
                       field.$2,
                       maxLines: 1,
-                      style: pw.TextStyle(
+                      style: const pw.TextStyle(
                         fontSize: 8.5,
                         fontWeight: pw.FontWeight.bold,
                       ),
@@ -439,7 +439,7 @@ pw.Widget _sectionTitle(String title) => pw.Column(
   children: [
     pw.Text(
       title,
-      style: pw.TextStyle(
+      style: const pw.TextStyle(
         fontSize: 11,
         fontWeight: pw.FontWeight.bold,
         color: _accent,
@@ -452,7 +452,7 @@ pw.Widget _sectionTitle(String title) => pw.Column(
 
 pw.Widget _label(String text) => pw.Text(
   text.toUpperCase(),
-  style: pw.TextStyle(
+  style: const pw.TextStyle(
     fontSize: 7,
     fontWeight: pw.FontWeight.bold,
     color: _muted,
@@ -897,7 +897,7 @@ pw.Widget _guidance(AppLocalizations l10n) => pw.Column(
           child: pw.RichText(
             text: pw.TextSpan(
               text: '${kind.label(l10n)} — ',
-              style: pw.TextStyle(
+              style: const pw.TextStyle(
                 fontSize: 7.5,
                 fontWeight: pw.FontWeight.bold,
               ),
@@ -997,7 +997,7 @@ pw.TableRow _headerRow(List<String> cells) => pw.TableRow(
         child: pw.Text(
           cell,
           maxLines: 1,
-          style: pw.TextStyle(
+          style: const pw.TextStyle(
             fontSize: 7.5,
             fontWeight: pw.FontWeight.bold,
             color: _muted,
@@ -1039,7 +1039,7 @@ class _RangeStrip extends pw.StatelessWidget {
             decoration: pw.BoxDecoration(
               color: band == rating
                   ? _ratingColor(band)
-                  : PdfColor.fromInt(0xFFE9ECF1),
+                  : const PdfColor.fromInt(0xFFE9ECF1),
               borderRadius: pw.BorderRadius.circular(1.5),
             ),
           ),
@@ -1093,7 +1093,7 @@ class _TrendPanel extends pw.StatelessWidget {
               child: pw.Text(
                 title,
                 maxLines: 1,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 8,
                   fontWeight: pw.FontWeight.bold,
                 ),

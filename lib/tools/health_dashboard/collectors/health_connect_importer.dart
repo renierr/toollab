@@ -217,16 +217,16 @@ class HealthConnectImporter {
     onPage,
   }) async {
     const mapper = HealthConnectMapper();
-    dynamic request = readable.readInTimeRange(
+    var request = readable.readInTimeRange(
       startTime: start,
       endTime: end,
       pageSize: _pageSize,
       dataOrigins: origins,
     );
-    do {
-      final dynamic response = await connector.readRecords(request);
+    while (true) {
+      final response = await connector.readRecords(request);
       final page = <HealthMappedRecord>[];
-      for (final record in (response.records as List).cast<hc.HealthRecord>()) {
+      for (final record in response.records) {
         final result = mapper.map(record);
         // Exclusion is checked on the writer the row would be stored under, not
         // on the raw data origin, so switching a source off matches what the
@@ -235,9 +235,11 @@ class HealthConnectImporter {
         page.add(result);
         touched.add(result);
       }
-      request = response.nextPageRequest;
-      await onPage(page, request == null);
-    } while (request != null);
+      final next = response.nextPageRequest;
+      await onPage(page, next == null);
+      if (next == null) break;
+      request = next;
+    }
   }
 }
 

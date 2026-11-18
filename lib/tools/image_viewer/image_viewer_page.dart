@@ -360,13 +360,11 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                     widthController: _controller.widthController,
                     heightController: _controller.heightController,
                     keepAspectRatio: _controller.keepAspectRatio,
-                    onKeepAspectRatioChanged: (val) =>
-                        _controller.setKeepAspectRatio(val),
+                    onKeepAspectRatioChanged: _controller.setKeepAspectRatio,
                     selectedFormat: _controller.selectedFormat,
-                    onFormatChanged: (val) =>
-                        _controller.setSelectedFormat(val),
+                    onFormatChanged: _controller.setSelectedFormat,
                     quality: _controller.quality,
-                    onQualityChanged: (val) => _controller.setQuality(val),
+                    onQualityChanged: _controller.setQuality,
                     onPreview: () async {
                       try {
                         await _controller.previewResize();
@@ -386,8 +384,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                     metadata: _controller.metadata,
                     fileName: _controller.fileName ?? 'image.png',
                     preserveExif: _controller.preserveExif,
-                    onPreserveExifChanged: (val) =>
-                        _controller.setPreserveExif(val),
+                    onPreserveExifChanged: _controller.setPreserveExif,
                     onRotateLeft: () async {
                       try {
                         await _controller.rotateImage(270);
@@ -451,8 +448,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                               _onResetZoom();
                             } catch (e) {
                               final errorMsg = e.toString();
-                              if (errorMsg.contains("Waiting for") ||
-                                  errorMsg.contains("download")) {
+                              if (errorMsg.contains('Waiting for') ||
+                                  errorMsg.contains('download')) {
                                 _showError(
                                   l10n.imgViewSegmentSubjectDownloading,
                                 );
@@ -734,7 +731,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
               ],
             );
 
-            final Widget? fab = null;
+            const Widget? fab = null;
 
             final Widget? endDrawer = (_controller.uiImage != null && !canSplit)
                 ? Drawer(

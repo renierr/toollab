@@ -92,6 +92,7 @@ class ChiptunePlayer {
   // path needs neither the mixer feed loop nor a position poll.
   bool _isSystem = false;
   String? _systemPath;
+  // ignore: cancel_subscriptions
   StreamSubscription<SystemAudioEvent>? _systemSubscription;
   SoundHandle? _handle;
   Timer? _feedTimer;
@@ -830,7 +831,7 @@ class ChiptunePlayer {
             : _bufferAheadSeconds;
         final int targetBytes = (sampleRate * ahead * 2 * 4)
             .toInt(); // stereo f32
-        final int chunkBytes = _chunkFrames * 2 * Float32List.bytesPerElement;
+        const int chunkBytes = _chunkFrames * 2 * Float32List.bytesPerElement;
         final int maxIterations = ((targetBytes / chunkBytes).ceil() + 8)
             .clamp(8, 192)
             .toInt();
@@ -1121,6 +1122,7 @@ class ChiptunePlayer {
   }
 
   VoidCallback? onPrevious;
+  // ignore: cancel_subscriptions
   StreamSubscription<MediaButton>? _mediaButtonSub;
 
   void _initMediaControls() {

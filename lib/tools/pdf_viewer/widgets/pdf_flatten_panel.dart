@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
@@ -95,7 +96,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
         );
       }
     } finally {
-      doc?.dispose();
+      unawaited(doc?.dispose());
     }
   }
 

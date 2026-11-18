@@ -47,11 +47,9 @@ class HealthMetricSeries {
 
   /// Extremes span the individual readings, not the daily figures, so a day's
   /// low is visible even when the day itself is shown as an average.
-  double? get min =>
-      _extreme((day) => day.lo ?? day.value, (a, b) => math.min(a, b));
+  double? get min => _extreme((day) => day.lo ?? day.value, math.min);
 
-  double? get max =>
-      _extreme((day) => day.hi ?? day.value, (a, b) => math.max(a, b));
+  double? get max => _extreme((day) => day.hi ?? day.value, math.max);
 
   double? _extreme(
     double? Function(HealthMetricDay day) pick,

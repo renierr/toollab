@@ -45,10 +45,7 @@ class MarkdownToPdfConverter {
       encodeHtml: false,
       extensionSet: md.ExtensionSet.gitHubFlavored,
     );
-    final sections = markdown
-        .split(pageBreakMarker)
-        .map((section) => parser.parse(section))
-        .toList();
+    final sections = markdown.split(pageBreakMarker).map(parser.parse).toList();
 
     doc.addPage(
       pw.MultiPage(
@@ -201,7 +198,7 @@ class MarkdownToPdfConverter {
     return pw.Container(
       margin: const pw.EdgeInsets.only(bottom: 8),
       padding: const pw.EdgeInsets.only(left: 14, top: 4, bottom: 4),
-      decoration: pw.BoxDecoration(
+      decoration: const pw.BoxDecoration(
         border: pw.Border(
           left: pw.BorderSide(color: PdfColors.grey400, width: 3),
         ),
@@ -443,9 +440,9 @@ class MarkdownToPdfConverter {
     return pw.Container(
       margin: const pw.EdgeInsets.only(bottom: 8),
       padding: const pw.EdgeInsets.all(10),
-      decoration: pw.BoxDecoration(
+      decoration: const pw.BoxDecoration(
         color: PdfColors.grey100,
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+        borderRadius: pw.BorderRadius.all(pw.Radius.circular(3)),
       ),
       child: pw.Text(
         _clean(code),

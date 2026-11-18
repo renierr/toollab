@@ -55,7 +55,7 @@ void main() {
     test('removes repeated headlines, paragraphs and hero images', () {
       const paragraph =
           'A repeated introduction with enough text to identify it reliably.';
-      final html =
+      const html =
           '''
 <html><head><meta property="og:image" content="/hero.jpg?width=900"></head>
 <body><article>

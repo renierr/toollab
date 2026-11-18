@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:typed_data';
@@ -307,7 +308,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
         ],
       ),
     );
-    if (bg != null) state.setBackground(bg);
+    if (bg != null) unawaited(state.setBackground(bg));
   }
 
   void _showBoardInfo() {
@@ -472,7 +473,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
       ]);
       if (results != null) {
         if (mounted) {
-          context.read<SketchBoardState>().refreshSaved();
+          unawaited(context.read<SketchBoardState>().refreshSaved());
           _toast(
             l10n.notesSyncFinished(
               results['pulled'] ?? 0,

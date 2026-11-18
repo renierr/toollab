@@ -35,8 +35,7 @@ class MaintenancePage extends StatelessWidget {
         suggestedName: 'tool_lab_db_$timestamp.db',
         bytes: bytes,
         successMessageAndroid: l10n.coreDatabaseExportedAndroid,
-        successMessageGeneralBuilder: (displayPath) =>
-            l10n.coreDatabaseExportedGeneral(displayPath),
+        successMessageGeneralBuilder: l10n.coreDatabaseExportedGeneral,
         errorMessageBuilder: (e) => l10n.coreDatabaseExportFailed(e.toString()),
       );
     } catch (e) {
@@ -64,8 +63,7 @@ class MaintenancePage extends StatelessWidget {
         suggestedName: 'tool_lab_settings_$timestamp.json',
         bytes: bytes,
         successMessageAndroid: l10n.coreSettingsExportedAndroid,
-        successMessageGeneralBuilder: (displayPath) =>
-            l10n.coreSettingsExportedGeneral(displayPath),
+        successMessageGeneralBuilder: l10n.coreSettingsExportedGeneral,
         errorMessageBuilder: (e) => l10n.coreSettingsExportFailed(e.toString()),
       );
     } catch (e) {

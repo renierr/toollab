@@ -54,7 +54,7 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
     final sortBy = appState.sortBy;
     final compact = appState.compactMode;
 
-    var tools = ToolRegistry.all.where((t) {
+    final tools = ToolRegistry.all.where((t) {
       if (query.isEmpty) return true;
       final q = query.toLowerCase();
       return t.localizedName(l10n).toLowerCase().contains(q) ||

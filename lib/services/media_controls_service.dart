@@ -392,11 +392,11 @@ class MprisObject extends DBusObject {
       'org.mpris.MediaPlayer2.Player',
       changedProperties: {
         'Metadata': DBusDict.stringVariant({}),
-        'PlaybackStatus': DBusString('Stopped'),
-        'CanGoNext': DBusBoolean(true),
-        'CanGoPrevious': DBusBoolean(true),
-        'CanPlay': DBusBoolean(true),
-        'CanPause': DBusBoolean(true),
+        'PlaybackStatus': const DBusString('Stopped'),
+        'CanGoNext': const DBusBoolean(true),
+        'CanGoPrevious': const DBusBoolean(true),
+        'CanPlay': const DBusBoolean(true),
+        'CanPause': const DBusBoolean(true),
       },
     );
   }
@@ -414,13 +414,13 @@ class MprisObject extends DBusObject {
     if (interface == 'org.mpris.MediaPlayer2') {
       switch (name) {
         case 'CanQuit':
-          return DBusGetPropertyResponse(DBusBoolean(false));
+          return DBusGetPropertyResponse(const DBusBoolean(false));
         case 'CanRaise':
-          return DBusGetPropertyResponse(DBusBoolean(false));
+          return DBusGetPropertyResponse(const DBusBoolean(false));
         case 'HasTrackList':
-          return DBusGetPropertyResponse(DBusBoolean(false));
+          return DBusGetPropertyResponse(const DBusBoolean(false));
         case 'Identity':
-          return DBusGetPropertyResponse(DBusString('ToolLab'));
+          return DBusGetPropertyResponse(const DBusString('ToolLab'));
         case 'SupportedUriSchemes':
           return DBusGetPropertyResponse(DBusArray.string([]));
         case 'SupportedMimeTypes':
@@ -439,9 +439,9 @@ class MprisObject extends DBusObject {
         case 'Position':
           return DBusGetPropertyResponse(DBusInt64(positionUs));
         case 'MinimumRate':
-          return DBusGetPropertyResponse(DBusDouble(1.0));
+          return DBusGetPropertyResponse(const DBusDouble(1.0));
         case 'MaximumRate':
-          return DBusGetPropertyResponse(DBusDouble(1.0));
+          return DBusGetPropertyResponse(const DBusDouble(1.0));
         case 'CanGoNext':
           return DBusGetPropertyResponse(DBusBoolean(_canGoNext));
         case 'CanGoPrevious':
@@ -451,9 +451,9 @@ class MprisObject extends DBusObject {
         case 'CanPause':
           return DBusGetPropertyResponse(DBusBoolean(_canPause));
         case 'CanSeek':
-          return DBusGetPropertyResponse(DBusBoolean(false));
+          return DBusGetPropertyResponse(const DBusBoolean(false));
         case 'CanControl':
-          return DBusGetPropertyResponse(DBusBoolean(true));
+          return DBusGetPropertyResponse(const DBusBoolean(true));
       }
     }
     return DBusMethodErrorResponse.unknownProperty();
@@ -463,10 +463,10 @@ class MprisObject extends DBusObject {
   Future<DBusMethodResponse> getAllProperties(String interface) async {
     if (interface == 'org.mpris.MediaPlayer2') {
       return DBusGetAllPropertiesResponse({
-        'CanQuit': DBusBoolean(false),
-        'CanRaise': DBusBoolean(false),
-        'HasTrackList': DBusBoolean(false),
-        'Identity': DBusString('ToolLab'),
+        'CanQuit': const DBusBoolean(false),
+        'CanRaise': const DBusBoolean(false),
+        'HasTrackList': const DBusBoolean(false),
+        'Identity': const DBusString('ToolLab'),
         'SupportedUriSchemes': DBusArray.string([]),
         'SupportedMimeTypes': DBusArray.string([]),
       });
@@ -477,14 +477,14 @@ class MprisObject extends DBusObject {
         'Metadata': DBusDict.stringVariant(metadata),
         'Volume': DBusDouble(volume),
         'Position': DBusInt64(positionUs),
-        'MinimumRate': DBusDouble(1.0),
-        'MaximumRate': DBusDouble(1.0),
+        'MinimumRate': const DBusDouble(1.0),
+        'MaximumRate': const DBusDouble(1.0),
         'CanGoNext': DBusBoolean(_canGoNext),
         'CanGoPrevious': DBusBoolean(_canGoPrevious),
         'CanPlay': DBusBoolean(_canPlay),
         'CanPause': DBusBoolean(_canPause),
-        'CanSeek': DBusBoolean(false),
-        'CanControl': DBusBoolean(true),
+        'CanSeek': const DBusBoolean(false),
+        'CanControl': const DBusBoolean(true),
       });
     }
     return DBusGetAllPropertiesResponse({});

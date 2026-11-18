@@ -277,15 +277,14 @@ class HealthDebugSeeder {
         if (!_allTypeIds.contains(typeId)) continue;
         try {
           final ids = <hc.HealthRecordId>[];
-          dynamic request = readable.readInTimeRange(
+          var request = readable.readInTimeRange(
             startTime: from,
             endTime: to,
             pageSize: 1000,
           );
-          do {
-            final dynamic response = await connector.readRecords(request);
-            for (final record
-                in (response.records as List).cast<hc.HealthRecord>()) {
+          while (true) {
+            final response = await connector.readRecords(request);
+            for (final record in response.records) {
               final clientId = record.metadata.clientRecordId;
               if (clientId == null ||
                   !clientId.startsWith(healthDebugClientIdPrefix)) {
@@ -294,8 +293,10 @@ class HealthDebugSeeder {
               if (record.id == hc.HealthRecordId.none) continue;
               ids.add(record.id);
             }
-            request = response.nextPageRequest;
-          } while (request != null);
+            final next = response.nextPageRequest;
+            if (next == null) break;
+            request = next;
+          }
 
           for (var i = 0; i < ids.length; i += _deleteChunk) {
             final chunk = ids.sublist(i, min(i + _deleteChunk, ids.length));
@@ -724,7 +725,7 @@ class HealthDebugSeeder {
       records.add(
         hc.HeightRecord(
           time: _at(day, 7, 25),
-          height: hc.Length.centimeters(182),
+          height: const hc.Length.centimeters(182),
           metadata: _meta(epochDay, 'height'),
         ),
       );

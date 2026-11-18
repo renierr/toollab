@@ -139,7 +139,7 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
     final tableWidth = state.showAscii ? 760.0 : 600.0;
 
     return GestureDetector(
-      onTap: () => _focusNode.requestFocus(),
+      onTap: _focusNode.requestFocus,
       child: Focus(
         focusNode: _focusNode,
         onKeyEvent: (node, event) {

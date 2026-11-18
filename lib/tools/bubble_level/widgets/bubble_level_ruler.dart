@@ -67,10 +67,10 @@ class _RulerPainter extends CustomPainter {
     final cmPx = pixelsPerMm * 10;
     if (cmPx < 1) return;
 
-    final tickRight1cm = 44.0;
-    final tickRight5mm = 30.0;
-    final tickRight1mm = 20.0;
-    final numLeft = 48.0;
+    const tickRight1cm = 44.0;
+    const tickRight5mm = 30.0;
+    const tickRight1mm = 20.0;
+    const numLeft = 48.0;
 
     var cm = 0;
     for (var y = 0.0; y < size.height; y += cmPx) {
@@ -101,7 +101,7 @@ class _RulerPainter extends CustomPainter {
       }
 
       canvas.drawLine(
-        Offset(0, 0),
+        const Offset(0, 0),
         Offset(0, size.height),
         Paint()
           ..color = Colors.grey.shade700
@@ -119,7 +119,7 @@ class _RulerPainter extends CustomPainter {
       ),
     );
     textPainter.layout();
-    textPainter.paint(canvas, Offset(numLeft, 6));
+    textPainter.paint(canvas, const Offset(numLeft, 6));
   }
 
   @override

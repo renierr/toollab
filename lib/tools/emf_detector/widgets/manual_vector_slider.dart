@@ -50,7 +50,7 @@ class ManualVectorSlider extends StatelessWidget {
             child: Text(
               value.toStringAsFixed(0),
               textAlign: TextAlign.end,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 10,
                 fontWeight: FontWeight.w500,

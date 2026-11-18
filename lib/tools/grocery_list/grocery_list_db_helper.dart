@@ -63,7 +63,7 @@ class GroceryListDbHelper {
       where: 'deleted = 0',
       orderBy: 'checked ASC, name ASC',
     );
-    return rows.map((r) => GroceryItem.fromMap(r)).toList();
+    return rows.map(GroceryItem.fromMap).toList();
   }
 
   Future<List<Map<String, dynamic>>> getSyncRecords() async {

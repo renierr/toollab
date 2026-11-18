@@ -98,7 +98,7 @@ class _TotpScanDialogState extends State<TotpScanDialog> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final accent = TotpAuthColors.accent;
+    const accent = TotpAuthColors.accent;
 
     final Widget body;
     if (Platform.isAndroid) {

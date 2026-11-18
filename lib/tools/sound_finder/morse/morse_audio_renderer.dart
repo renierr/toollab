@@ -32,7 +32,7 @@ class MorseAudioRenderer {
 }
 
 Uint8List _renderIsolate(Map<String, dynamic> args) {
-  final List<dynamic> tokenData = args['tokens'] as List<dynamic>;
+  final tokenData = (args['tokens'] as List).cast<Map<String, dynamic>>();
   final double wpm = args['wpm'] as double;
   final double freq = args['frequency'] as double;
 

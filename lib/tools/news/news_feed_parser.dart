@@ -162,7 +162,7 @@ class NewsFeedParser {
   }) {
     final title = _cleanText(_textOf(element, const ['title']), maxChars: 400);
     var link = _textOf(element, const ['link']).trim();
-    var guid = _textOf(element, const ['guid', 'id']).trim();
+    final guid = _textOf(element, const ['guid', 'id']).trim();
 
     if (link.isEmpty && element.name.local.toLowerCase() == 'entry') {
       link = _atomLink(element, preferAlternate: true);

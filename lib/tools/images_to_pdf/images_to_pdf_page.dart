@@ -183,8 +183,8 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
         context: context,
         suggestedName: 'images_export.pdf',
         sourcePath: pdfPath,
-        successMessageGeneralBuilder: (path) => l10n.img2pdfSavedTo(path),
-        errorMessageBuilder: (e) => l10n.img2pdfSaveFailed(e),
+        successMessageGeneralBuilder: l10n.img2pdfSavedTo,
+        errorMessageBuilder: l10n.img2pdfSaveFailed,
       );
     } catch (e) {
       if (mounted) {

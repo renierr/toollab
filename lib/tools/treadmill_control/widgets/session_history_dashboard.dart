@@ -190,7 +190,10 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
           build: (context) => [
             pw.Text(
               l10n.treadmillHistoryReportTitle,
-              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 24,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
@@ -199,7 +202,10 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
             pw.SizedBox(height: 20),
             pw.Text(
               l10n.treadmillHistoryOverview,
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 16,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 8),
             pw.TableHelper.fromTextArray(
@@ -221,7 +227,10 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
             pw.SizedBox(height: 20),
             pw.Text(
               l10n.treadmillHistoryPersonalBests,
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 16,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 8),
             pw.TableHelper.fromTextArray(
@@ -254,7 +263,7 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
               pw.SizedBox(height: 20),
               pw.Text(
                 l10n.treadmillHistoryHeartRate,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 16,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -276,7 +285,10 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
             pw.SizedBox(height: 20),
             pw.Text(
               l10n.treadmillHistoryDistanceLastSevenDays,
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 16,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 8),
             SessionPdfBarChart(
@@ -309,7 +321,7 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
               pw.SizedBox(height: 20),
               pw.Text(
                 l10n.treadmillHistoryHeartRateLastSevenDays,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                   fontSize: 16,
                   fontWeight: pw.FontWeight.bold,
                 ),

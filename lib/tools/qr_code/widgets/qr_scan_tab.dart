@@ -286,7 +286,7 @@ class _ScanModeToggle extends StatelessWidget {
       ],
       selected: {cameraMode},
       onSelectionChanged: (s) => onChanged(s.first),
-      style: ButtonStyle(visualDensity: VisualDensity.compact),
+      style: const ButtonStyle(visualDensity: VisualDensity.compact),
     );
   }
 }

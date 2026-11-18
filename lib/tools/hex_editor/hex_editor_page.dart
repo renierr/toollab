@@ -48,9 +48,9 @@ class _HexEditorPageState extends State<HexEditorPage> with DisposeCleanup {
     });
 
     // Listen for incoming files at runtime
-    final sharingSub = SharingService.instance.onSharedFile.listen((file) {
-      _loadSharedFile(file);
-    });
+    final sharingSub = SharingService.instance.onSharedFile.listen(
+      _loadSharedFile,
+    );
     onDispose(sharingSub.cancel);
   }
 
@@ -59,7 +59,7 @@ class _HexEditorPageState extends State<HexEditorPage> with DisposeCleanup {
   }
 
   Future<void> _onFileSelected(XFile file) async {
-    context.read<HexEditorState>().loadFile(file.path, file.name);
+    await context.read<HexEditorState>().loadFile(file.path, file.name);
   }
 
   Future<bool> _confirmDiscardEdits() async {
@@ -197,7 +197,7 @@ class _HexEditorPageState extends State<HexEditorPage> with DisposeCleanup {
                           ),
                           child: Text(
                             l10n.hexEditorModified,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppTheme.statusOrange,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,

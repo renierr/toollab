@@ -395,7 +395,7 @@ class _CategoryView extends StatelessWidget {
               ],
               IconButton(
                 tooltip: l10n.fileManagerRefresh,
-                onPressed: state.isLoading ? null : () => onRefresh(),
+                onPressed: state.isLoading ? null : onRefresh,
                 icon: const Icon(Icons.refresh),
               ),
             ],
@@ -418,7 +418,7 @@ class _CategoryView extends StatelessWidget {
                     child: FileManagerImageGrid(
                       entries: state.entries,
                       onOpen: onOpenImage,
-                      onOpenFolder: (path) => state.openLocal(path),
+                      onOpenFolder: state.openLocal,
                       selectedPaths: state.selectedPaths,
                       isSelectionMode: state.isSelectionMode,
                       onToggleSelection: onToggleSelection,

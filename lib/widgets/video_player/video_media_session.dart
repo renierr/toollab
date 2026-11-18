@@ -18,6 +18,7 @@ class VideoMediaSession {
   ForegroundRuntimeLease? _lease;
   bool _acquiring = false;
   bool _disposed = false;
+  // ignore: cancel_subscriptions
   StreamSubscription<MediaButton>? _buttons;
   ({bool playing, Duration duration})? _sent;
   VideoPlaybackState? _latest;

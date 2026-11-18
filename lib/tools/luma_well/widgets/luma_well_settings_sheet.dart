@@ -191,8 +191,7 @@ class LumaWellSettingsSheet extends StatelessWidget {
                                 label: l10n.lumaWellTouchOffsetDistancePixels(
                                   state.touchOffsetDistance.round(),
                                 ),
-                                onChanged: (value) =>
-                                    state.setTouchOffsetDistance(value),
+                                onChanged: state.setTouchOffsetDistance,
                               ),
                             ),
                             SizedBox(

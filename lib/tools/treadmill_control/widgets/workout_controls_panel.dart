@@ -30,7 +30,7 @@ class WorkoutControlsPanel extends StatelessWidget {
                 icon: Icons.play_arrow,
                 label: l10n.workoutStart,
                 minWidth: 120,
-                onPressed: () => state.startWorkout(),
+                onPressed: state.startWorkout,
               )
             else ...[
               if (state.workoutStatus == WorkoutStatus.running)
@@ -38,21 +38,21 @@ class WorkoutControlsPanel extends StatelessWidget {
                   color: Colors.amber,
                   icon: Icons.pause,
                   label: l10n.workoutPause,
-                  onPressed: () => state.pauseWorkout(),
+                  onPressed: state.pauseWorkout,
                 )
               else if (state.workoutStatus == WorkoutStatus.paused)
                 WorkoutActionButton(
                   color: TreadmillColors.greenMetric,
                   icon: Icons.play_arrow,
                   label: l10n.workoutResume,
-                  onPressed: () => state.startWorkout(),
+                  onPressed: state.startWorkout,
                 ),
               const SizedBox(width: 8),
               WorkoutActionButton(
                 color: Colors.red,
                 icon: Icons.stop,
                 label: l10n.workoutStop,
-                onPressed: () => state.stopWorkout(),
+                onPressed: state.stopWorkout,
               ),
             ],
             const ConnectionStatusIndicators(),

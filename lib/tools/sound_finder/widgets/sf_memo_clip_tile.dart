@@ -68,7 +68,7 @@ class SfMemoClipTile extends StatelessWidget {
           suggestedName: clip.fileName,
           sourcePath: clip.path,
           successMessageAndroid: l10n.sfClipSavedAndroid,
-          successMessageGeneralBuilder: (path) => l10n.sfClipSaved(path),
+          successMessageGeneralBuilder: l10n.sfClipSaved,
           errorMessageBuilder: (_) => l10n.sfClipSaveError,
         );
       case _ClipAction.trim:

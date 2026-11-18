@@ -72,7 +72,7 @@ class TrainNoiseRenderer implements GeneratedSoundRenderer {
     final double lfoW = 1.0 + 0.07 * sin(_t * 2 * pi * 0.04 / sampleRate);
     final double wF = (800.0 * lfoW).clamp(20, sampleRate * 0.45);
     final double svF = 2 * sin(pi * wF / sampleRate);
-    final double svQ = 0.4;
+    const double svQ = 0.4;
     final double lfoG = 1.0 + 0.1 * sin(_t * 2 * pi * 0.04 / sampleRate + 1.0);
     final double bpL = _svfBp(pL, svF, svQ, isL: true);
     final double bpR = _svfBp(pR, svF, svQ, isL: false);

@@ -762,7 +762,7 @@ class RicochetEngine {
     RicochetAudioService.instance.play(RicochetSfx.boom, minGapMs: 40);
     shake = math.max(shake, 10);
 
-    final radius = RicochetTuning.explosionRadius;
+    const radius = RicochetTuning.explosionRadius;
     // Snapshot first: destroying a brick mutates the list, and a chained bomb
     // re-enters this method.
     final caught = bricks.where((brick) {

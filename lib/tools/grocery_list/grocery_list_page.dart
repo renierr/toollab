@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -273,7 +274,7 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
       if (e.message == 'Operation cancelled') return null;
       rethrow;
     } finally {
-      scanner.close();
+      unawaited(scanner.close());
     }
   }
 

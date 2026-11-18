@@ -62,7 +62,7 @@ class DepotFeeReport {
         previous.update(
           currency,
           (total) => total + transaction.fee.abs(),
-          ifAbsent: () => transaction.fee.abs(),
+          ifAbsent: transaction.fee.abs,
         );
       }
     }

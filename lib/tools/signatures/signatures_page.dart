@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:typed_data';
@@ -168,7 +169,7 @@ class _SignaturesPageState extends State<SignaturesPage>
       ]);
       if (results != null) {
         if (mounted) {
-          context.read<SignaturesState>().refreshSaved();
+          unawaited(context.read<SignaturesState>().refreshSaved());
           _toast(
             l10n.notesSyncFinished(
               results['pulled'] ?? 0,
@@ -250,7 +251,7 @@ class _SignaturesPageState extends State<SignaturesPage>
           IconButton(
             tooltip: l10n.chipSyncTooltip,
             icon: appState.isSyncing
-                ? SizedBox(
+                ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(

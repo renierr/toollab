@@ -111,12 +111,12 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
 
       if (Platform.isAndroid) {
         if (!mounted) {
-          _channel.invokeMethod('stopGpsInfoUpdates');
+          unawaited(_channel.invokeMethod('stopGpsInfoUpdates'));
           return;
         }
         await _channel.invokeMethod('startGpsInfoUpdates');
         if (!mounted) {
-          _channel.invokeMethod('stopGpsInfoUpdates');
+          unawaited(_channel.invokeMethod('stopGpsInfoUpdates'));
           return;
         }
         await _loadProviders();

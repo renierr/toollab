@@ -76,7 +76,7 @@ void main() {
   });
 
   test('legacy analyses without sub-events retain edge trimming', () {
-    final legacy = SleepChunkAnalysis(
+    const legacy = SleepChunkAnalysis(
       category: SleepSoundCategory.snore,
       confidence: 0.8,
       levelDb: -30,

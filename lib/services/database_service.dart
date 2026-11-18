@@ -66,7 +66,7 @@ class DatabaseService {
       path = dbPathOverride!;
     } else {
       final appSupportDir = await getApplicationSupportDirectory();
-      final modeSubdir = kReleaseMode
+      const modeSubdir = kReleaseMode
           ? ''
           : (kProfileMode ? 'profile' : 'debug');
       final docDir = Directory(p.join(appSupportDir.path, modeSubdir));

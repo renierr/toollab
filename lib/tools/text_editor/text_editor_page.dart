@@ -62,9 +62,9 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
       }
     });
 
-    final sharingSub = SharingService.instance.onSharedFile.listen((file) {
-      _handleIncomingShare(file);
-    });
+    final sharingSub = SharingService.instance.onSharedFile.listen(
+      _handleIncomingShare,
+    );
     onDispose(sharingSub.cancel);
   }
 
@@ -189,8 +189,7 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
       context: context,
       suggestedName: name,
       bytes: bytes,
-      successMessageGeneralBuilder: (displayPath) =>
-          l10n.textEditorSavedTo(displayPath),
+      successMessageGeneralBuilder: l10n.textEditorSavedTo,
     );
     if (destPath != null) {
       await _state.adoptSavedPath(destPath, p.basename(destPath));
@@ -255,7 +254,7 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
                         alignment: WrapAlignment.center,
                         children: [
                           OutlinedButton.icon(
-                            onPressed: () => state.startBlank(),
+                            onPressed: state.startBlank,
                             icon: const Icon(Icons.edit_note),
                             label: Text(l10n.textEditorNewBlank),
                           ),
@@ -332,10 +331,16 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
         ],
         child: CallbackShortcuts(
           bindings: {
-            SingleActivator(LogicalKeyboardKey.keyS, control: true, meta: true):
-                _save,
-            SingleActivator(LogicalKeyboardKey.keyF, control: true, meta: true):
-                _toggleFind,
+            const SingleActivator(
+              LogicalKeyboardKey.keyS,
+              control: true,
+              meta: true,
+            ): _save,
+            const SingleActivator(
+              LogicalKeyboardKey.keyF,
+              control: true,
+              meta: true,
+            ): _toggleFind,
           },
           child: Column(
             children: [

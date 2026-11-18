@@ -71,7 +71,7 @@ class FastDropList extends StatelessWidget {
               const SizedBox(height: 24),
               if (appState.fastDropError != null)
                 FilledButton.icon(
-                  onPressed: () => appState.loadFastDrops(),
+                  onPressed: appState.loadFastDrops,
                   icon: const Icon(Icons.refresh),
                   label: Text(l10n.fastDropRetryConnection),
                   style: FilledButton.styleFrom(
@@ -144,7 +144,7 @@ class FastDropList extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: () => appState.loadFastDrops(),
+      onRefresh: appState.loadFastDrops,
       color: AppTheme.accentTeal,
       child: listView,
     );

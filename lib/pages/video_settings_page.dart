@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -42,8 +43,10 @@ class VideoSettingsPage extends StatelessWidget {
       confirmColor: AppTheme.statusRed,
     );
     if (confirmed != true || !context.mounted) return;
-    context.read<AppState>().setVideoPlayerSettings(
-      const VideoPlayerSettings(),
+    unawaited(
+      context.read<AppState>().setVideoPlayerSettings(
+        const VideoPlayerSettings(),
+      ),
     );
   }
 

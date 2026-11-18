@@ -142,7 +142,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
               tagWritable = ndef.isWritable;
             }
 
-            List<DecodedRecord> decodedRecords = [];
+            final List<DecodedRecord> decodedRecords = [];
             if (ndef != null) {
               final cachedMsg = ndef.cachedMessage;
               if (cachedMsg != null) {

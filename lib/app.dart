@@ -175,7 +175,7 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   Future<void> _initSharing() async {
     final sharedData = await SharingService.instance.getInitialSharedData();
     if (sharedData != null && !sharedData.isEmpty && mounted) {
-      _handleSharedData(sharedData);
+      unawaited(_handleSharedData(sharedData));
     }
 
     _sharingSubscription = SharingService.instance.onSharedData.listen((data) {
@@ -284,7 +284,7 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   Future<void> _checkPendingSharing() async {
     final sharedData = await SharingService.instance.getInitialSharedData();
     if (sharedData != null && !sharedData.isEmpty && mounted) {
-      _handleSharedData(sharedData);
+      unawaited(_handleSharedData(sharedData));
     }
   }
 

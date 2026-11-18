@@ -1286,9 +1286,9 @@ void main() {
       app(
         ChangeNotifierProvider.value(
           value: state,
-          child: MediaQuery(
-            data: const MediaQueryData(textScaler: TextScaler.linear(2)),
-            child: const DepotWishlistAddDialog(),
+          child: const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: DepotWishlistAddDialog(),
           ),
         ),
       ),

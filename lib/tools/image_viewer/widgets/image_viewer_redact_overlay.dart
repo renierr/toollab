@@ -352,9 +352,7 @@ class _Handle extends StatelessWidget {
       onPanEnd: (_) {
         onDragEnd();
       },
-      onPanCancel: () {
-        onDragEnd();
-      },
+      onPanCancel: onDragEnd,
       onPanUpdate: (details) {
         onDrag(details.globalPosition);
       },

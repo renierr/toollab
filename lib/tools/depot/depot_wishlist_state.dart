@@ -413,7 +413,7 @@ class DepotWishlistState extends ChangeNotifier {
         _eurRates.remove(currency);
         debugLog('[DepotWishlistState] EUR rate unavailable for $currency: $e');
       } finally {
-        _fxLoads.remove(currency);
+        unawaited(_fxLoads.remove(currency));
         _notify();
       }
     });

@@ -376,7 +376,7 @@ void main(List<String> args) async {
     (wfx.cast<ffi.Uint8>() + 16).cast<ffi.Uint16>().value = 0; // cbSize
 
     // WAVE_MAPPER is 0xFFFFFFFF
-    int err = waveOutOpen(
+    final int err = waveOutOpen(
       hwoPtr,
       0xFFFFFFFF,
       wfx.cast(),

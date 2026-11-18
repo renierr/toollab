@@ -299,10 +299,10 @@ class _ChiptunePageState extends State<ChiptunePage>
       amigaFilter: s.amigaFilter,
       rampStep: s.rampStep,
       modSeparation: s.modSeparation,
-      onInterpolationChanged: (mode) => s.setInterpolation(mode),
+      onInterpolationChanged: s.setInterpolation,
       onStereoWidthChanged: s.setStereoWidth,
       onPreAmpChanged: s.setPreAmp,
-      onAmigaFilterChanged: (mode) => s.setAmigaFilter(mode),
+      onAmigaFilterChanged: s.setAmigaFilter,
       onRampStepChanged: s.setRampStep,
       onModSeparationChanged: s.setModSeparation,
     );

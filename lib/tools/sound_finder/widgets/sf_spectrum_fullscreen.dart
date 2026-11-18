@@ -205,7 +205,7 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
         ),
       });
       if (mounted) setState(() {});
-      if (_frames.length >= _recMaxFrames) _stopRecording();
+      if (_frames.length >= _recMaxFrames) unawaited(_stopRecording());
     } finally {
       _capturing = false;
     }

@@ -92,11 +92,11 @@ void main() {
   });
 
   test('holding filter identifies portfolio and holding, not just name', () {
-    final filter = DepotActivityFilter(
+    const filter = DepotActivityFilter(
       portfolioId: 'p',
       holdingId: 'h',
       holdingName: 'Name',
-      types: const {DepotTransactionType.sell},
+      types: {DepotTransactionType.sell},
     );
     expect(
       filter.matches(tx('one', DepotTransactionType.sell, DateTime(2026))),

@@ -207,7 +207,7 @@ class PdfOverlayControls extends StatelessWidget {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.zoom_out),
-                          onPressed: () => controller.zoomDown(),
+                          onPressed: controller.zoomDown,
                           tooltip: l10n.pdfNavZoomOut,
                           iconSize: 16,
                           constraints: const BoxConstraints(
@@ -230,7 +230,7 @@ class PdfOverlayControls extends StatelessWidget {
                         ),
                         IconButton(
                           icon: const Icon(Icons.zoom_in),
-                          onPressed: () => controller.zoomUp(),
+                          onPressed: controller.zoomUp,
                           tooltip: l10n.pdfNavZoomIn,
                           iconSize: 16,
                           constraints: const BoxConstraints(

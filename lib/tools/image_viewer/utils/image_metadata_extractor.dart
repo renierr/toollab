@@ -81,7 +81,7 @@ ImageMetadata extractMetadataTask(Uint8List bytes) {
       thumbnailBytes: thumbnailBytes,
     );
   } catch (e) {
-    errorLog("Failed to extract metadata: $e");
+    errorLog('Failed to extract metadata: $e');
     return ImageMetadata(exifTags: {});
   }
 }
@@ -185,7 +185,7 @@ double? _parseGpsCoordinate(dynamic value, String? ref) {
       return decimal;
     }
   } catch (e) {
-    errorLog("Failed to parse GPS coordinate: $e");
+    errorLog('Failed to parse GPS coordinate: $e');
   }
   return null;
 }

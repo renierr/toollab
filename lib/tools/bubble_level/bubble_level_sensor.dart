@@ -86,7 +86,7 @@ class BubbleLevelSensor {
 
     double mappedX = event.x;
     double mappedY = event.y;
-    double mappedZ = event.z;
+    final double mappedZ = event.z;
 
     switch (_orientation) {
       case DeviceScreenOrientation.portraitUp:

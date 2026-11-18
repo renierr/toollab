@@ -44,16 +44,15 @@ class HealthConnectDiscovery {
       try {
         final counts = <String, int>{};
         final lastSeen = <String, int>{};
-        dynamic request = readable.readInTimeRange(
+        var request = readable.readInTimeRange(
           startTime: start,
           endTime: end,
           pageSize: _pageSize,
         );
         var pages = 0;
-        do {
-          final dynamic response = await connector.readRecords(request);
-          for (final record
-              in (response.records as List).cast<hc.HealthRecord>()) {
+        while (true) {
+          final response = await connector.readRecords(request);
+          for (final record in response.records) {
             // Same resolution the mapper uses, so the debug generator shows up
             // as its own source on the selection screens rather than hiding
             // inside this app's own package.
@@ -65,9 +64,10 @@ class HealthConnectDiscovery {
             }.millisecondsSinceEpoch;
             if (time > (lastSeen[package] ?? 0)) lastSeen[package] = time;
           }
-          request = response.nextPageRequest;
-          pages++;
-        } while (request != null && pages < _maxPagesPerType);
+          final next = response.nextPageRequest;
+          if (next == null || ++pages >= _maxPagesPerType) break;
+          request = next;
+        }
         for (final entry in counts.entries) {
           await HealthStore.instance.recordDiscoveredApp(
             type: typeId,

@@ -69,7 +69,7 @@ class GroceryListMenu extends StatelessWidget {
           enabled: checkedCount > 0,
           child: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.delete_sweep_outlined,
                 size: 18,
                 color: AppTheme.statusRed,

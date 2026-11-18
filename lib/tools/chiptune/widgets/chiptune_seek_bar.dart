@@ -204,7 +204,7 @@ class _SeekBarPainter extends CustomPainter {
     const barHeight = 8.0;
     const inset = 12.0;
     final barY = (size.height - barHeight) / 2;
-    final barLeft = inset;
+    const barLeft = inset;
     final barRight = size.width - inset;
     final barWidth = barRight - barLeft;
     final barRect = RRect.fromRectAndRadius(

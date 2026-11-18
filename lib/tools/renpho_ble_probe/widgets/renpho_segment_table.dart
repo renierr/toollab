@@ -28,8 +28,8 @@ class RenphoSegmentTable extends StatelessWidget {
           DataColumn(label: Text(l10n.renphoSegmentMuscle), numeric: true),
           DataColumn(label: Text(l10n.renphoSegmentOfStandard), numeric: true),
           DataColumn(label: Text(l10n.renphoSegmentFat), numeric: true),
-          DataColumn(label: Text('20 kHz'), numeric: true),
-          DataColumn(label: Text('100 kHz'), numeric: true),
+          const DataColumn(label: Text('20 kHz'), numeric: true),
+          const DataColumn(label: Text('100 kHz'), numeric: true),
         ],
         rows: [
           for (final segment in derived.segments)

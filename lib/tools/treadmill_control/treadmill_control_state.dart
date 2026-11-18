@@ -485,7 +485,7 @@ class TreadmillControlState extends ChangeNotifier {
 
     try {
       await UniversalBle.requestPermissions(withAndroidFineLocation: false);
-      _scanSubscription?.cancel();
+      unawaited(_scanSubscription?.cancel());
       _scanSubscription = UniversalBle.scanStream.listen(_onDeviceDiscovered);
       await UniversalBle.startScan();
       isScanning = true;
@@ -500,7 +500,7 @@ class TreadmillControlState extends ChangeNotifier {
     try {
       await UniversalBle.stopScan();
     } catch (_) {}
-    _scanSubscription?.cancel();
+    unawaited(_scanSubscription?.cancel());
     _scanSubscription = null;
     isScanning = false;
     notifyListeners();
@@ -510,14 +510,14 @@ class TreadmillControlState extends ChangeNotifier {
     final name = device.name ?? '';
     final services = device.services.map((s) => s.toLowerCase()).toList();
 
-    bool isTread =
+    final bool isTread =
         services.contains(ftmsService) ||
         services.contains(pitpatService) ||
         name.toLowerCase().contains('treadmill') ||
         name.toLowerCase().contains('walkingpad') ||
         name.toLowerCase().contains('pitpat');
 
-    bool isHrmDevice =
+    final bool isHrmDevice =
         services.contains(hrService) ||
         name.toLowerCase().contains('polar') ||
         name.toLowerCase().contains('coospo') ||
@@ -1181,8 +1181,8 @@ class TreadmillControlState extends ChangeNotifier {
     }
 
     // Automatically trigger WakeLock
-    _setWakeLock(true);
-    _setSessionKeepAlive(true);
+    unawaited(_setWakeLock(true));
+    unawaited(_setSessionKeepAlive(true));
     _syncSessionChronometer(running: true);
 
     if (isSimulator) {
@@ -1227,8 +1227,8 @@ class TreadmillControlState extends ChangeNotifier {
     _workoutTimer = null;
 
     // Disable WakeLock
-    _setWakeLock(false);
-    _setSessionKeepAlive(false);
+    unawaited(_setWakeLock(false));
+    unawaited(_setSessionKeepAlive(false));
 
     if (!isSimulator &&
         treadmillConnection == BleConnectionState.connected &&

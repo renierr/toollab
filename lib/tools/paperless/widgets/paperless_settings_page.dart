@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -97,7 +98,7 @@ class _PaperlessSettingsPageState extends State<PaperlessSettingsPage>
         _token.clear();
       }
       _url.text = state.serverUrl;
-      state.refreshAll();
+      unawaited(state.refreshAll());
       await _test(afterSave: true);
     } catch (e) {
       _setMessage(describePaperlessError(l10n, e), isError: true);

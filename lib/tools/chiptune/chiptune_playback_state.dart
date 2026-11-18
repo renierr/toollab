@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart' show XFile;
@@ -474,7 +475,7 @@ class ChiptunePlaybackState extends ChangeNotifier with WidgetsBindingObserver {
       return;
     }
     final next = _nextArchivedId();
-    if (next != null) playArchived(next);
+    if (next != null) unawaited(playArchived(next));
   }
 
   // ---- Random (The Mod Archive) ----

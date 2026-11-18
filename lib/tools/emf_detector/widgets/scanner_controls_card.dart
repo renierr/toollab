@@ -141,7 +141,7 @@ class ScannerControlsCard extends StatelessWidget {
                 children: [
                   Text(
                     l10n.emfCableTriggerThreshold,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,

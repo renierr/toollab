@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wifi_scan/wifi_scan.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -36,7 +37,7 @@ class _WifiHeatmapPageState extends State<WifiHeatmapPage> with DisposeCleanup {
         IconButton(
           icon: const Icon(Icons.wifi_find_outlined),
           tooltip: 'Scan',
-          onPressed: state.scanning ? null : () => state.scan(),
+          onPressed: state.scanning ? null : state.scan,
         ),
         IconButton(
           icon: Icon(
@@ -108,7 +109,7 @@ class _WifiHeatmapPageState extends State<WifiHeatmapPage> with DisposeCleanup {
                 rows: state.rows,
                 samples: state.samples,
                 showHeatmap: state.showHeatmap,
-                onTap: (x, y) => state.recordSample(x, y),
+                onTap: state.recordSample,
               ),
             ),
           ),
@@ -122,7 +123,7 @@ class _WifiHeatmapPageState extends State<WifiHeatmapPage> with DisposeCleanup {
                 const SizedBox(width: 8),
                 _legendDot(AppTheme.accentGreen, 'Good'),
                 const Spacer(),
-                Text('Tap a cell to sample'),
+                const Text('Tap a cell to sample'),
                 const SizedBox(width: 12),
                 Text('Samples: ${state.samples.length}'),
               ],
@@ -133,13 +134,15 @@ class _WifiHeatmapPageState extends State<WifiHeatmapPage> with DisposeCleanup {
     );
   }
 
-  List<DropdownMenuItem<String>> _buildNetworkItems(List<dynamic> scanned) {
+  List<DropdownMenuItem<String>> _buildNetworkItems(
+    List<WiFiAccessPoint> scanned,
+  ) {
     final seen = <String>{};
     final list = <DropdownMenuItem<String>>[];
     for (final a in scanned) {
-      final ssid = a.ssid as String;
-      final bssid = a.bssid as String;
-      final level = a.level as int;
+      final ssid = a.ssid;
+      final bssid = a.bssid;
+      final level = a.level;
       final key = ssid.isNotEmpty ? ssid : bssid;
       if (seen.add(key)) {
         list.add(

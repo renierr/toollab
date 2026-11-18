@@ -233,7 +233,7 @@ class FastDropService {
         .get(Uri.parse(url))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (data['success'] == true) {
         final List<dynamic> list = data['drops'] ?? [];
         return list.map((item) => FastDropItem.fromJson(item)).toList();
@@ -288,7 +288,7 @@ class FastDropService {
         .delete(Uri.parse(url))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
-      final errorData = jsonDecode(response.body);
+      final errorData = jsonDecode(response.body) as Map<String, dynamic>;
       throw Exception(
         errorData['error'] ?? 'Failed to delete drop: ${response.statusCode}',
       );
@@ -310,7 +310,7 @@ class FastDropService {
         )
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
-      final errorData = jsonDecode(response.body);
+      final errorData = jsonDecode(response.body) as Map<String, dynamic>;
       throw Exception(
         errorData['error'] ??
             'Failed to update description: ${response.statusCode}',
@@ -333,7 +333,7 @@ class FastDropService {
         )
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
-      final errorData = jsonDecode(response.body);
+      final errorData = jsonDecode(response.body) as Map<String, dynamic>;
       throw Exception(
         errorData['error'] ??
             'Failed to update retention: ${response.statusCode}',
@@ -348,7 +348,7 @@ class FastDropService {
         .patch(Uri.parse(url))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
-      final errorData = jsonDecode(response.body);
+      final errorData = jsonDecode(response.body) as Map<String, dynamic>;
       throw Exception(
         errorData['error'] ?? 'Failed to update drop: ${response.statusCode}',
       );

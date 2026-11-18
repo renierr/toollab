@@ -20,7 +20,7 @@ class VideoPlayerTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameVideoPlayer,
     descriptionL10n: (l10n) => l10n.toolDescVideoPlayer,
-    shareTarget: ShareTargetConfig(accept: ['video/*']),
+    shareTarget: const ShareTargetConfig(accept: ['video/*']),
     fileExtensions: videoFileExtensions,
     acceptsContentUris: true,
     createPage: (sd) => VideoPlayerToolPage(sharedFile: sd?.firstFile),

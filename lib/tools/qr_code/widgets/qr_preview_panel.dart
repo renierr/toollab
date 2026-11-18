@@ -29,8 +29,8 @@ class QrPreviewPanel extends StatelessWidget {
       suggestedName: 'qr_code.png',
       bytes: pngBytes,
       successMessageAndroid: l10n.qrSavedToDownloads,
-      successMessageGeneralBuilder: (p) => l10n.qrSavedTo(p),
-      errorMessageBuilder: (e) => l10n.qrSaveFailed(e),
+      successMessageGeneralBuilder: l10n.qrSavedTo,
+      errorMessageBuilder: l10n.qrSaveFailed,
     );
   }
 

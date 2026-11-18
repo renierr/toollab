@@ -73,7 +73,7 @@ class _HealthConnectActionsState<T> extends State<HealthConnectActions<T>> {
           onTap: busy ? null : _publish,
         ),
         ListTile(
-          leading: Icon(
+          leading: const Icon(
             Icons.delete_forever_outlined,
             color: AppTheme.statusRed,
           ),

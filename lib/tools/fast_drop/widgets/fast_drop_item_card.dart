@@ -99,7 +99,7 @@ class FastDropItemCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.paste_outlined,
                           size: 10,
                           color: AppTheme.accentTeal,
@@ -107,7 +107,7 @@ class FastDropItemCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           l10n.fastDropClipboardBadge,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.accentTeal,

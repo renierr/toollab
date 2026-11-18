@@ -247,7 +247,7 @@ _ItVolumeColumn _parseItVolumeColumn(int vol) {
     final depth = vol - 203;
     return _ItVolumeColumn(null, null, 0x04, depth);
   }
-  return _ItVolumeColumn(null, null, 0, 0);
+  return const _ItVolumeColumn(null, null, 0, 0);
 }
 
 Float32List _decodeCompressedItSample(
@@ -810,7 +810,7 @@ class _ItParser {
 
     final rowsPerPattern = patterns
         .map((p) => p.rows.length)
-        .fold<int>(64, (a, b) => math.max(a, b));
+        .fold<int>(64, math.max);
 
     return ModuleFile(
       type: 'IT',

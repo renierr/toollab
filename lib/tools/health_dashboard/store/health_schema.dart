@@ -444,10 +444,10 @@ class HealthSchema {
   static Future<void> backfillDedupeKeys(ToolDatabaseExecutor db) async {
     final sessions = db.nameTable(session);
     await db.execute(
-      "UPDATE OR IGNORE $sessions SET dedupe_key = COALESCE("
+      'UPDATE OR IGNORE $sessions SET dedupe_key = COALESCE('
       "'c:' || NULLIF(client_id, ''), "
       "'k:' || kind || '|' || t0 || '|' || t1 || '|' || "
-      "COALESCE((SELECT package FROM ${db.nameTable(app)} AS a "
+      'COALESCE((SELECT package FROM ${db.nameTable(app)} AS a '
       "WHERE a.id = $sessions.app), '?')"
       ') WHERE dedupe_key IS NULL',
     );

@@ -198,7 +198,7 @@ class GameAudioService {
     stopLoop();
     for (final source in _clips.values) {
       try {
-        SoLoud.instance.disposeSource(source);
+        unawaited(SoLoud.instance.disposeSource(source));
       } catch (_) {}
     }
     _clips.clear();

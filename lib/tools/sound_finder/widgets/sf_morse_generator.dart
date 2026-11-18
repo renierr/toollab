@@ -177,7 +177,7 @@ class _SfMorseGeneratorState extends State<SfMorseGenerator> {
                       children: [
                         if (state.morsePlaying)
                           FilledButton.icon(
-                            onPressed: () => state.stopMorsePlayback(),
+                            onPressed: state.stopMorsePlayback,
                             icon: const Icon(Icons.stop),
                             label: Text(l10n.sfStop),
                             style: FilledButton.styleFrom(
@@ -186,7 +186,7 @@ class _SfMorseGeneratorState extends State<SfMorseGenerator> {
                           )
                         else
                           FilledButton.icon(
-                            onPressed: () => state.startMorsePlayback(),
+                            onPressed: state.startMorsePlayback,
                             icon: const Icon(Icons.play_arrow),
                             label: Text(l10n.sfPlayTone),
                           ),
@@ -255,9 +255,7 @@ class _SfMorseGeneratorState extends State<SfMorseGenerator> {
                   min: 10,
                   max: 45,
                   divisions: 35,
-                  onChanged: state.morsePlaying
-                      ? (val) {}
-                      : (val) => state.setMorseWpm(val),
+                  onChanged: state.morsePlaying ? (val) {} : state.setMorseWpm,
                 ),
                 const SizedBox(height: 16),
                 SfLabeledSlider(
@@ -268,9 +266,7 @@ class _SfMorseGeneratorState extends State<SfMorseGenerator> {
                   min: 400,
                   max: 1000,
                   divisions: 60,
-                  onChanged: state.morsePlaying
-                      ? (val) {}
-                      : (val) => state.setMorseFreq(val),
+                  onChanged: state.morsePlaying ? (val) {} : state.setMorseFreq,
                 ),
                 const SizedBox(height: 16),
                 SfLabeledSlider(
@@ -278,7 +274,7 @@ class _SfMorseGeneratorState extends State<SfMorseGenerator> {
                   label: l10n.sfVolume,
                   valueText: '${(state.morseVolume * 100).round()}%',
                   value: state.morseVolume,
-                  onChanged: (val) => state.setMorseVolume(val),
+                  onChanged: state.setMorseVolume,
                 ),
               ],
             ),

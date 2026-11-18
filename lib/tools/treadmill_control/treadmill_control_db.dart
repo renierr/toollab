@@ -72,7 +72,7 @@ class TreadmillControlDb {
       where: 'deleted = 0',
       orderBy: 'start_time DESC',
     );
-    return rows.map((r) => TreadmillSession.fromMap(r)).toList();
+    return rows.map(TreadmillSession.fromMap).toList();
   }
 
   Future<TreadmillSession?> getSessionByUid(String uid) async {

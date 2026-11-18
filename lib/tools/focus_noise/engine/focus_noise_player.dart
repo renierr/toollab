@@ -125,7 +125,7 @@ class FocusNoisePlayer {
 
     // A newer play()/stop() ran while we were rendering/decoding — discard.
     if (generation != _playGeneration) {
-      SoLoud.instance.disposeSource(source);
+      unawaited(SoLoud.instance.disposeSource(source));
       return;
     }
 
@@ -203,7 +203,7 @@ class FocusNoisePlayer {
 
     final AudioSource? source = _source;
     if (source != null) {
-      SoLoud.instance.disposeSource(source);
+      unawaited(SoLoud.instance.disposeSource(source));
       _source = null;
     }
 
@@ -306,7 +306,7 @@ class FocusNoisePlayer {
 
   Future<void> dispose() async {
     await stop();
-    _mediaButtonSub?.cancel();
+    unawaited(_mediaButtonSub?.cancel());
     _mediaButtonSub = null;
     onExternalStop = null;
     onExternalStateChange = null;

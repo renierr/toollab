@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
@@ -220,7 +221,7 @@ class _CalculatorPageState extends State<CalculatorPage>
   }
 
   Future<void> _onPaste() async {
-    HapticFeedback.lightImpact();
+    unawaited(HapticFeedback.lightImpact());
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     if (!mounted) return;
 
@@ -292,7 +293,7 @@ class _CalculatorPageState extends State<CalculatorPage>
               final double idealButtonW = (gridW - gridHPad) / cols;
 
               final double maxButtonH = effectiveShowScientific ? 70.0 : 80.0;
-              final double minButtonH = 48.0;
+              const double minButtonH = 48.0;
 
               final double idealButtonH = idealButtonW.clamp(
                 minButtonH,

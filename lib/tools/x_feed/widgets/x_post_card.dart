@@ -305,7 +305,7 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
         Padding(
           padding: const EdgeInsets.only(top: 4),
           child: ExcludeFocus(
-            child: XPostActions(post: post, onReply: () => _open()),
+            child: XPostActions(post: post, onReply: _open),
           ),
         ),
       ],

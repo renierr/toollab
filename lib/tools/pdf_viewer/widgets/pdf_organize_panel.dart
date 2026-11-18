@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XTypeGroup;
 import 'package:pdfrx/pdfrx.dart';
@@ -62,7 +63,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
         const Duration(seconds: 30),
       );
       if (!mounted) {
-        doc.dispose();
+        unawaited(doc.dispose());
         return;
       }
       final pages = <_PageItem>[];
@@ -76,7 +77,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
           _isLoading = false;
         });
       } else {
-        doc.dispose();
+        unawaited(doc.dispose());
       }
     } catch (e) {
       if (mounted) {
@@ -138,7 +139,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       if (mounted) {
         _showInsertDialog(srcPages, insertDoc, xFile.name);
       } else {
-        insertDoc.dispose();
+        unawaited(insertDoc.dispose());
       }
     } catch (e) {
       if (mounted) {
@@ -277,7 +278,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       final bytes = await newDoc.encodePdf().timeout(
         const Duration(minutes: 5),
       );
-      newDoc.dispose();
+      unawaited(newDoc.dispose());
 
       // Stage to the parent scope so the result survives this panel closing.
       final resultPath = await widget.session.tempScope.createFile(

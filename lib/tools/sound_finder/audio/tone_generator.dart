@@ -128,9 +128,10 @@ class ToneGenerator {
   void _scheduleNotificationRefresh() {
     if (!_isPlaying) return;
     _notifyDebounce?.cancel();
-    _notifyDebounce = Timer(const Duration(milliseconds: 250), () {
-      refreshNotification();
-    });
+    _notifyDebounce = Timer(
+      const Duration(milliseconds: 250),
+      refreshNotification,
+    );
   }
 
   double _speedFor(double hz) =>
@@ -163,7 +164,7 @@ class ToneGenerator {
       wav,
     );
     if (generation != _generation || !_isPlaying) {
-      SoLoud.instance.disposeSource(source);
+      unawaited(SoLoud.instance.disposeSource(source));
       return;
     }
     final SoundHandle handle = SoLoud.instance.play(
@@ -184,7 +185,7 @@ class ToneGenerator {
       wav,
     );
     if (generation != _generation || !_isPlaying) {
-      SoLoud.instance.disposeSource(source);
+      unawaited(SoLoud.instance.disposeSource(source));
       return;
     }
     final SoundHandle handle = SoLoud.instance.play(
@@ -289,7 +290,7 @@ class ToneGenerator {
       await SoLoud.instance.stop(handle);
     }
     if (source != null) {
-      SoLoud.instance.disposeSource(source);
+      unawaited(SoLoud.instance.disposeSource(source));
     }
   }
 
@@ -342,7 +343,7 @@ class ToneGenerator {
 
   Future<void> dispose() async {
     await stop();
-    _mediaButtonSub?.cancel();
+    unawaited(_mediaButtonSub?.cancel());
     _mediaButtonSub = null;
   }
 

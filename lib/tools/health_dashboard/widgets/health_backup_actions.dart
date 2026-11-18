@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
@@ -47,7 +48,7 @@ class HealthBackupActions {
     if (destination == null && !Platform.isAndroid) return;
     if (!context.mounted) return;
     final notify = context.read<AppState>().systemNotificationsEnabled;
-    HealthExportProgressDialog.show(context);
+    unawaited(HealthExportProgressDialog.show(context));
     final String? saved;
     try {
       saved = await context.read<HealthDashboardState>().exportBackup(
@@ -142,9 +143,11 @@ class HealthBackupActions {
     );
     if (confirmed != true || !context.mounted) return;
     try {
-      HealthImportProgressDialog.show(
-        context,
-        operation: HealthImportOperation.backup,
+      unawaited(
+        HealthImportProgressDialog.show(
+          context,
+          operation: HealthImportOperation.backup,
+        ),
       );
       final imported = await context.read<HealthDashboardState>().importBackup(
         file.path,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:go_router/go_router.dart';
@@ -112,7 +113,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
         errorLog('[DocumentScanner] Scan failed or empty: $e');
         return;
       } finally {
-        documentScanner.close();
+        unawaited(documentScanner.close());
       }
     }
   }
@@ -193,18 +194,20 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
   /// Builds the PDF behind a progress dialog; null when it failed.
   Future<Uint8List?> _buildPdf(DocumentScannerState state) async {
     final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          content: Row(
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(width: 24),
-              Expanded(child: Text(l10n.docScanGeneratingPdf)),
-            ],
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            content: Row(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 24),
+                Expanded(child: Text(l10n.docScanGeneratingPdf)),
+              ],
+            ),
           ),
         ),
       ),
@@ -245,7 +248,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
       context: context,
       suggestedName: 'scanned_document.pdf',
       sourcePath: pdfPath,
-      successMessageGeneralBuilder: (path) => l10n.docScanSavedPdf(path),
+      successMessageGeneralBuilder: l10n.docScanSavedPdf,
       errorMessageBuilder: (e) => l10n.docScanFailedPdf(e.toString()),
     );
   }
@@ -263,10 +266,12 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
         '${two(now.hour)}-${two(now.minute)}-${two(now.second)}.pdf';
     final path = await TempFileManager.createFile(name, bytes: pdfBytes);
     if (!mounted) return;
-    context.push(
-      PaperlessTool.config.route,
-      extra: SharedData.single(
-        SharedFile(path: path, name: name, mimeType: 'application/pdf'),
+    unawaited(
+      context.push(
+        PaperlessTool.config.route,
+        extra: SharedData.single(
+          SharedFile(path: path, name: name, mimeType: 'application/pdf'),
+        ),
       ),
     );
   }
@@ -393,9 +398,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
               onDeletePage: (index) async {
                 await state.removePage(index);
               },
-              onReorder: (oldIdx, newIdx) {
-                state.reorderPages(oldIdx, newIdx);
-              },
+              onReorder: state.reorderPages,
             ),
           ),
 

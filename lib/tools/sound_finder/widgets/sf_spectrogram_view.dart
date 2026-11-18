@@ -103,8 +103,8 @@ class _SfSpectrogramViewState extends State<SfSpectrogramView> {
     for (int c = 0; c < _cols; c++) {
       final double fLo = math.exp(logMin + logSpan * c / _cols);
       final double fHi = math.exp(logMin + logSpan * (c + 1) / _cols);
-      int lo = (fLo / widget.binHz).floor().clamp(1, maxBin);
-      int hi = (fHi / widget.binHz).ceil().clamp(lo, maxBin);
+      final int lo = (fLo / widget.binHz).floor().clamp(1, maxBin);
+      final int hi = (fHi / widget.binHz).ceil().clamp(lo, maxBin);
       double peak = 0;
       for (int i = lo; i <= hi; i++) {
         if (mags[i] > peak) peak = mags[i];

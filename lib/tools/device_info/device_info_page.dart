@@ -99,7 +99,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
           _batteryDetails = details;
         });
       });
-      onDispose(() => timer.cancel());
+      onDispose(timer.cancel);
     } catch (e) {
       errorLog('[DeviceInfo] Failed to read battery: $e');
     }

@@ -82,7 +82,7 @@ class _AboutPageState extends State<AboutPage> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.info_outline,
                         color: AppTheme.accentBlue,
                         size: 24,
@@ -120,7 +120,7 @@ class _AboutPageState extends State<AboutPage> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.warning_amber_rounded,
                         color: AppTheme.accentAmber,
                         size: 24,
@@ -154,7 +154,7 @@ class _AboutPageState extends State<AboutPage> {
               Card(
                 margin: EdgeInsets.zero,
                 child: ListTile(
-                  leading: Icon(
+                  leading: const Icon(
                     Icons.description_outlined,
                     color: AppTheme.accentBlue,
                   ),

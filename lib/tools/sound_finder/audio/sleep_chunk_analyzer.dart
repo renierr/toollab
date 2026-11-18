@@ -1203,7 +1203,7 @@ class SleepChunkAnalyzer {
   /// phone microphone's useful range.
   static Float32List _highPass(Float32List input, int sampleRate) {
     final dt = 1 / sampleRate;
-    final rc = 1 / (2 * math.pi * _highPassHz);
+    const rc = 1 / (2 * math.pi * _highPassHz);
     final a = rc / (rc + dt);
     final out = Float32List(input.length);
     var prevIn = 0.0;

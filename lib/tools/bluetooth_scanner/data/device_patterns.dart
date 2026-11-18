@@ -16,126 +16,126 @@ class DevicePattern {
 
 final List<DevicePattern> devicePatterns = [
   // Apple
-  DevicePattern(
+  const DevicePattern(
     pattern: r'AirPods Pro',
     name: 'AirPods Pro',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'AirPods$',
     name: 'AirPods',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'AirPods Max',
     name: 'AirPods Max',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Apple Watch',
     name: 'Apple Watch',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Watch Ultra',
     name: 'Apple Watch Ultra',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^iPhone',
     name: 'iPhone',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^iPad',
     name: 'iPad',
     type: 'Tablet',
     category: 'Phones',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^MacBook',
     name: 'MacBook',
     type: 'Laptop',
     category: 'Computers',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Mac mini',
     name: 'Mac mini',
     type: 'Desktop',
     category: 'Computers',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Mac Pro',
     name: 'Mac Pro',
     type: 'Desktop',
     category: 'Computers',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^iMac',
     name: 'iMac',
     type: 'Desktop',
     category: 'Computers',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Beats Studio',
     name: 'Beats Studio',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Beats Fit',
     name: 'Beats Fit Pro',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Powerbeats Pro',
     name: 'Powerbeats Pro',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Beats',
     name: 'Beats',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Powerbeats',
     name: 'Powerbeats',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'HomePod',
     name: 'HomePod',
     type: 'Speaker',
     category: 'Audio',
     manufacturer: 'Apple',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'AirTag',
     name: 'AirTag',
     type: 'Tracker',
@@ -144,63 +144,63 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Samsung
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Galaxy Buds[23]? Pro?',
     name: 'Galaxy Buds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Samsung',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Galaxy Buds Live',
     name: 'Galaxy Buds Live',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Samsung',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Galaxy Watch',
     name: 'Galaxy Watch',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Samsung',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Galaxy Fit',
     name: 'Galaxy Fit',
     type: 'Fitness Tracker',
     category: 'Wearables',
     manufacturer: 'Samsung',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Galaxy SmartTag',
     name: 'Galaxy SmartTag',
     type: 'Tracker',
     category: 'IoT',
     manufacturer: 'Samsung',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Samsung SmartTag',
     name: 'Samsung SmartTag',
     type: 'Tracker',
     category: 'IoT',
     manufacturer: 'Samsung',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Samsung Galaxy',
     name: 'Samsung Galaxy',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'Samsung',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^SM-',
     name: 'Samsung Galaxy',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'Samsung',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Samsung',
     name: 'Samsung Device',
     type: 'Unknown',
@@ -209,35 +209,35 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Google / Pixel
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Pixel Buds',
     name: 'Pixel Buds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Google',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Pixel Watch',
     name: 'Pixel Watch',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Google',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Pixel',
     name: 'Pixel',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'Google',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Nest (Hub|Audio|Mini|Thermostat)',
     name: 'Nest',
     type: 'Smart Home',
     category: 'IoT',
     manufacturer: 'Google',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Chromecast',
     name: 'Chromecast',
     type: 'Streaming',
@@ -246,35 +246,35 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Huawei
-  DevicePattern(
+  const DevicePattern(
     pattern: r'FreeBuds',
     name: 'Huawei FreeBuds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Huawei',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Huawei.*Buds',
     name: 'Huawei Buds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Huawei',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Watch (Fit|GT|Ultimate)',
     name: 'Huawei Watch',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Huawei',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Huawei.*Band',
     name: 'Huawei Band',
     type: 'Fitness Tracker',
     category: 'Wearables',
     manufacturer: 'Huawei',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Huawei',
     name: 'Huawei Device',
     type: 'Phone',
@@ -283,63 +283,63 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Xiaomi
-  DevicePattern(
+  const DevicePattern(
     pattern: r'MJ_HT_V1',
     name: 'Mi Temperature / Humidity',
     type: 'Environmental Sensor',
     category: 'IoT',
     manufacturer: 'Xiaomi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Redmi Buds',
     name: 'Redmi Buds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Xiaomi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Xiaomi Buds',
     name: 'Xiaomi Buds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Xiaomi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Mi Buds',
     name: 'Mi Buds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Xiaomi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Mi Smart Band',
     name: 'Mi Smart Band',
     type: 'Fitness Tracker',
     category: 'Wearables',
     manufacturer: 'Xiaomi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Xiaomi.*Watch',
     name: 'Xiaomi Watch',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Xiaomi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Mi Watch',
     name: 'Mi Watch',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Xiaomi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Mi ',
     name: 'Xiaomi Mi',
     type: 'Smart Device',
     category: 'IoT',
     manufacturer: 'Xiaomi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Xiaomi',
     name: 'Xiaomi Device',
     type: 'Phone',
@@ -348,56 +348,56 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Sony
-  DevicePattern(
+  const DevicePattern(
     pattern: r'WF-1000XM',
     name: 'Sony WF-1000XM',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Sony',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'WH-1000XM',
     name: 'Sony WH-1000XM',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Sony',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'LinkBuds',
     name: 'Sony LinkBuds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Sony',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Sony.*Headphones',
     name: 'Sony Headphones',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Sony',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Sony.*Speaker',
     name: 'Sony Speaker',
     type: 'Speaker',
     category: 'Audio',
     manufacturer: 'Sony',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'SRS-',
     name: 'Sony Speaker',
     type: 'Speaker',
     category: 'Audio',
     manufacturer: 'Sony',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Xperia',
     name: 'Xperia',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'Sony',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'PlayStation',
     name: 'PlayStation',
     type: 'Console',
@@ -406,21 +406,21 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Bose
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Bose QuietComfort',
     name: 'Bose QuietComfort',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Bose',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'QC Earbuds',
     name: 'Bose QC Earbuds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Bose',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Bose (SoundLink|SoundSport|Sport)',
     name: 'Bose',
     type: 'Speaker',
@@ -429,14 +429,14 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // JBL
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^JBL',
     name: 'JBL',
     type: 'Speaker',
     category: 'Audio',
     manufacturer: 'JBL',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Tune',
     name: 'JBL Tune',
     type: 'Headphones',
@@ -445,49 +445,49 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Garmin
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Garmin.*Forerunner',
     name: 'Garmin Forerunner',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Garmin',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Garmin.*Fenix',
     name: 'Garmin Fenix',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Garmin',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Garmin.*Venu',
     name: 'Garmin Venu',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Garmin',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Garmin.*Edge',
     name: 'Garmin Edge',
     type: 'Cycling Computer',
     category: 'Fitness',
     manufacturer: 'Garmin',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Garmin.*HRM',
     name: 'Garmin HRM',
     type: 'Heart Rate Monitor',
     category: 'Fitness',
     manufacturer: 'Garmin',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Garmin.*Instinct',
     name: 'Garmin Instinct',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Garmin',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Garmin',
     name: 'Garmin Device',
     type: 'Fitness',
@@ -496,35 +496,35 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Fitbit
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Fitbit',
     name: 'Fitbit',
     type: 'Fitness Tracker',
     category: 'Wearables',
     manufacturer: 'Fitbit',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Charge [0-9]',
     name: 'Fitbit Charge',
     type: 'Fitness Tracker',
     category: 'Wearables',
     manufacturer: 'Fitbit',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Versa',
     name: 'Fitbit Versa',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Fitbit',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Inspire',
     name: 'Fitbit Inspire',
     type: 'Fitness Tracker',
     category: 'Wearables',
     manufacturer: 'Fitbit',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Luxe',
     name: 'Fitbit Luxe',
     type: 'Fitness Tracker',
@@ -533,21 +533,21 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Polar
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Polar (Vantage|Grit|Unite|Pacer|Ignite)',
     name: 'Polar',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Polar',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Polar H[0-9]',
     name: 'Polar HRM',
     type: 'Heart Rate Monitor',
     category: 'Fitness',
     manufacturer: 'Polar',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Polar',
     name: 'Polar Device',
     type: 'Fitness',
@@ -556,14 +556,14 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Tile
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Tile (Mate|Slim|Sticker|Pro)',
     name: 'Tile',
     type: 'Tracker',
     category: 'IoT',
     manufacturer: 'Tile',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Tile',
     name: 'Tile',
     type: 'Tracker',
@@ -572,28 +572,28 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Amazon
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Echo',
     name: 'Amazon Echo',
     type: 'Smart Speaker',
     category: 'IoT',
     manufacturer: 'Amazon',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Amazon.*(Echo|Dot|Show)',
     name: 'Amazon Echo',
     type: 'Smart Speaker',
     category: 'IoT',
     manufacturer: 'Amazon',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Fire (TV|Stick|Cube)',
     name: 'Fire TV',
     type: 'Streaming',
     category: 'IoT',
     manufacturer: 'Amazon',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Kindle',
     name: 'Kindle',
     type: 'E-Reader',
@@ -602,35 +602,35 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Microsoft
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Surface',
     name: 'Surface',
     type: 'Laptop',
     category: 'Computers',
     manufacturer: 'Microsoft',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Xbox',
     name: 'Xbox',
     type: 'Console',
     category: 'Gaming',
     manufacturer: 'Microsoft',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Sculpt',
     name: 'Microsoft Sculpt',
     type: 'Mouse',
     category: 'Input',
     manufacturer: 'Microsoft',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Microsoft.*Mouse',
     name: 'Microsoft Mouse',
     type: 'Mouse',
     category: 'Input',
     manufacturer: 'Microsoft',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Microsoft.*Keyboard',
     name: 'Microsoft Keyboard',
     type: 'Keyboard',
@@ -639,14 +639,14 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Logitech
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Logitech',
     name: 'Logitech',
     type: 'Input',
     category: 'Input',
     manufacturer: 'Logitech',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'MX (Master|Anywhere|Keys)',
     name: 'Logitech MX',
     type: 'Input',
@@ -655,21 +655,21 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Nintendo
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Nintendo Switch',
     name: 'Nintendo Switch',
     type: 'Console',
     category: 'Gaming',
     manufacturer: 'Nintendo',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Joy-Con',
     name: 'Joy-Con',
     type: 'Controller',
     category: 'Gaming',
     manufacturer: 'Nintendo',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Pro Controller',
     name: 'Pro Controller',
     type: 'Controller',
@@ -678,84 +678,84 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Dev boards / IoT
-  DevicePattern(
+  const DevicePattern(
     pattern: r'ESP32',
     name: 'ESP32',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Espressif',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'ESP8266',
     name: 'ESP8266',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Espressif',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Raspberry Pi',
     name: 'Raspberry Pi',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Raspberry Pi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'RPi ',
     name: 'Raspberry Pi',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Raspberry Pi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Pi Pico',
     name: 'Raspberry Pi Pico',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Raspberry Pi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Pi Zero',
     name: 'Raspberry Pi Zero',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Raspberry Pi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Pico W',
     name: 'Raspberry Pi Pico W',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Raspberry Pi',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'M5Stick',
     name: 'M5Stick',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'M5Stack',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'M5Stack',
     name: 'M5Stack',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'M5Stack',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Arduino',
     name: 'Arduino',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Arduino',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'micro:bit',
     name: 'micro:bit',
     type: 'Dev Board',
     category: 'IoT',
     manufacturer: 'Micro:bit',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Adafruit',
     name: 'Adafruit',
     type: 'Dev Board',
@@ -764,133 +764,133 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Smart Home / IoT
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Shelly',
     name: 'Shelly',
     type: 'Smart Switch',
     category: 'IoT',
     manufacturer: 'Shelly',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Sonoff',
     name: 'Sonoff',
     type: 'Smart Switch',
     category: 'IoT',
     manufacturer: 'Sonoff',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'TuyaSmart',
     name: 'Tuya',
     type: 'Smart Device',
     category: 'IoT',
     manufacturer: 'Tuya',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Tuya',
     name: 'Tuya',
     type: 'Smart Device',
     category: 'IoT',
     manufacturer: 'Tuya',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'TRADFRI',
     name: 'IKEA TRÅDFRI',
     type: 'Smart Lights',
     category: 'IoT',
     manufacturer: 'IKEA',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^IKEA',
     name: 'IKEA',
     type: 'Smart Device',
     category: 'IoT',
     manufacturer: 'IKEA',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Philips Hue',
     name: 'Philips Hue',
     type: 'Smart Lights',
     category: 'IoT',
     manufacturer: 'Philips',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Hue',
     name: 'Philips Hue',
     type: 'Smart Lights',
     category: 'IoT',
     manufacturer: 'Philips',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Yeelight',
     name: 'Yeelight',
     type: 'Smart Lights',
     category: 'IoT',
     manufacturer: 'Yeelight',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Nanoleaf',
     name: 'Nanoleaf',
     type: 'Smart Lights',
     category: 'IoT',
     manufacturer: 'Nanoleaf',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'TP-Link',
     name: 'TP-Link',
     type: 'Smart Device',
     category: 'IoT',
     manufacturer: 'TP-Link',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Kasa',
     name: 'Kasa',
     type: 'Smart Switch',
     category: 'IoT',
     manufacturer: 'TP-Link',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'SwitchBot',
     name: 'SwitchBot',
     type: 'Smart Device',
     category: 'IoT',
     manufacturer: 'SwitchBot',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Aqara',
     name: 'Aqara',
     type: 'Smart Sensor',
     category: 'IoT',
     manufacturer: 'Aqara',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Wemo',
     name: 'Wemo',
     type: 'Smart Switch',
     category: 'IoT',
     manufacturer: 'Wemo',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Wyze',
     name: 'Wyze',
     type: 'Smart Camera',
     category: 'IoT',
     manufacturer: 'Wyze',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Ring ',
     name: 'Ring',
     type: 'Doorbell',
     category: 'IoT',
     manufacturer: 'Ring',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Blink',
     name: 'Blink',
     type: 'Camera',
     category: 'IoT',
     manufacturer: 'Blink',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Arlo',
     name: 'Arlo',
     type: 'Camera',
@@ -899,49 +899,49 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Fitness / Health
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Wahoo',
     name: 'Wahoo',
     type: 'Fitness Sensor',
     category: 'Fitness',
     manufacturer: 'Wahoo',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Suunto',
     name: 'Suunto',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Suunto',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Coros',
     name: 'Coros',
     type: 'Smartwatch',
     category: 'Wearables',
     manufacturer: 'Coros',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Peloton',
     name: 'Peloton',
     type: 'Exercise Bike',
     category: 'Fitness',
     manufacturer: 'Peloton',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'NordicTrack',
     name: 'NordicTrack',
     type: 'Treadmill',
     category: 'Fitness',
     manufacturer: 'NordicTrack',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Dexcom',
     name: 'Dexcom',
     type: 'CGM',
     category: 'Health',
     manufacturer: 'Dexcom',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Freestyle',
     name: 'Abbott Freestyle',
     type: 'CGM',
@@ -950,126 +950,126 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Audio
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Soundcore',
     name: 'Soundcore',
     type: 'Speaker',
     category: 'Audio',
     manufacturer: 'Anker',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Anker',
     name: 'Anker',
     type: 'Speaker',
     category: 'Audio',
     manufacturer: 'Anker',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Marshall (Motif|Major|Minor|Monitor)',
     name: 'Marshall',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Marshall',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Skullcandy',
     name: 'Skullcandy',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Skullcandy',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Jabra',
     name: 'Jabra',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Jabra',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Plantronics',
     name: 'Plantronics',
     type: 'Headset',
     category: 'Audio',
     manufacturer: 'Plantronics',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Poly ',
     name: 'Poly',
     type: 'Headset',
     category: 'Audio',
     manufacturer: 'Poly',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Sennheiser',
     name: 'Sennheiser',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Sennheiser',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Audio.?Technica',
     name: 'Audio-Technica',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Audio-Technica',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Shure',
     name: 'Shure',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Shure',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Shokz',
     name: 'Shokz',
     type: 'Headphones',
     category: 'Audio',
     manufacturer: 'Shokz',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Nothing.*(Ear|Stick)',
     name: 'Nothing Ear',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'Nothing',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Nothing Phone',
     name: 'Nothing Phone',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'Nothing',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'OnePlus.*(Buds|Nord)',
     name: 'OnePlus Buds',
     type: 'Earbuds',
     category: 'Audio',
     manufacturer: 'OnePlus',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'OnePlus',
     name: 'OnePlus',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'OnePlus',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Oppo',
     name: 'Oppo',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'Oppo',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Vivo',
     name: 'Vivo',
     type: 'Phone',
     category: 'Phones',
     manufacturer: 'Vivo',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Realme',
     name: 'Realme',
     type: 'Phone',
@@ -1078,21 +1078,21 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Vehicles
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Tesla',
     name: 'Tesla',
     type: 'Vehicle',
     category: 'Vehicle',
     manufacturer: 'Tesla',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'Ford',
     name: 'Ford',
     type: 'Vehicle',
     category: 'Vehicle',
     manufacturer: 'Ford',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'BMW',
     name: 'BMW',
     type: 'Vehicle',
@@ -1101,13 +1101,13 @@ final List<DevicePattern> devicePatterns = [
   ),
 
   // Fallback
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^BLE$',
     name: 'BLE Device',
     type: 'Unknown',
     category: 'Unknown',
   ),
-  DevicePattern(
+  const DevicePattern(
     pattern: r'^Unknown$',
     name: 'Unknown',
     type: 'Unknown',

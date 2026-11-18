@@ -164,7 +164,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
-      doc?.dispose();
+      unawaited(doc?.dispose());
     }
   }
 
@@ -187,7 +187,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   }
 
   void _clearSelection() {
-    setState(() => _selectedIds.clear());
+    setState(_selectedIds.clear);
   }
 
   Future<void> _downloadSingle(PdfExtractedImageItem item) async {

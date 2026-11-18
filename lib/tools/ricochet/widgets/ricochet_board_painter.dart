@@ -93,7 +93,7 @@ class RicochetBoardPainter extends CustomPainter {
 
   void _paintDangerZone(Canvas canvas) {
     canvas.drawRect(
-      Rect.fromLTRB(0, Board.dangerY, Board.width, Board.height),
+      const Rect.fromLTRB(0, Board.dangerY, Board.width, Board.height),
       Paint()..color = RicochetColors.danger.withValues(alpha: 0.07),
     );
     // The line is dashed by hand: Flutter has no dash support on Paint, and one

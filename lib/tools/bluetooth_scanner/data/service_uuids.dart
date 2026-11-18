@@ -278,7 +278,7 @@ List<String> getMatchingServiceFilters(List<String> uuids) {
   }
   final matched = <String>[];
   for (final entry in serviceFilterMap.entries) {
-    if (entry.value.any((s) => normalized.contains(s))) {
+    if (entry.value.any(normalized.contains)) {
       matched.add(entry.key);
     }
   }

@@ -15,9 +15,9 @@ import 'package:tool_lab/services/sync_service.dart';
 class BackendSyncTask {
   BackendSyncTask._();
 
-  static final BackgroundTask task = BackgroundTask(
+  static const BackgroundTask task = BackgroundTask(
     id: 'backend-sync',
-    defaultInterval: const Duration(hours: 24),
+    defaultInterval: Duration(hours: 24),
     requiresNetwork: true,
     run: _run,
   );

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:go_router/go_router.dart';
@@ -125,14 +126,16 @@ class _FileManagerPageState extends State<FileManagerPage>
                 .where((candidate) => candidate.id == toolId)
                 .firstOrNull;
       if (tool != null) {
-        context.push(
-          tool.route,
-          extra: SharedData.single(
-            SharedFile(
-              path: path,
-              name: entry.name,
-              mimeType: mimeType,
-              origin: origin,
+        unawaited(
+          context.push(
+            tool.route,
+            extra: SharedData.single(
+              SharedFile(
+                path: path,
+                name: entry.name,
+                mimeType: mimeType,
+                origin: origin,
+              ),
             ),
           ),
         );

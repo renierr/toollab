@@ -67,7 +67,7 @@ class _Background extends StatelessWidget {
           case CanvasBackground.white:
             return const ColoredBox(color: Colors.white);
           case CanvasBackground.black:
-            return ColoredBox(color: SketchBoardColors.canvasBlack);
+            return const ColoredBox(color: SketchBoardColors.canvasBlack);
           case CanvasBackground.checkerboard:
             return const CheckerboardBackground();
         }

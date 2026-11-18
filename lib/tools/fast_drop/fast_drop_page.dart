@@ -696,7 +696,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             syncEnabled: appState.syncEnabled,
             isServerAvailable: isServerAvailable,
             isLoading: isLoadingFastDrops,
-            onRefresh: () => fastDropState.loadFastDrops(),
+            onRefresh: fastDropState.loadFastDrops,
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -712,7 +712,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           if (_mode == FastDropMode.cloud)
             FastDropStatusBanner(
               appState: fastDropState,
-              onRetry: () => fastDropState.loadFastDrops(),
+              onRetry: fastDropState.loadFastDrops,
             ),
           Expanded(
             child: _mode == FastDropMode.nearby
@@ -727,7 +727,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                     onOpenReceived: _onOpenReceived,
                     onSaveReceived: _onSaveReceived,
                     onDismissReceived: _onDismissReceived,
-                    onCancelTransfer: () => p2pState.cancelTransfer(),
+                    onCancelTransfer: p2pState.cancelTransfer,
                   )
                 : !isConfigured
                 ? const FastDropNotConfigured()

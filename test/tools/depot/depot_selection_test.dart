@@ -36,11 +36,11 @@ void main() {
       ),
     );
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('de'),
+      const MaterialApp(
+        locale: Locale('de'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
+        home: Scaffold(
           body: Center(child: SelectionArea(child: Text('US0378331005'))),
         ),
       ),

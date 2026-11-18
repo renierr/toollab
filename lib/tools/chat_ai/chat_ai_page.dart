@@ -64,9 +64,9 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
       _loadSharedFile(widget.sharedFile!);
     }
 
-    final sharingSub = SharingService.instance.onSharedFile.listen((file) {
-      _loadSharedFile(file);
-    });
+    final sharingSub = SharingService.instance.onSharedFile.listen(
+      _loadSharedFile,
+    );
     onDispose(sharingSub.cancel);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {

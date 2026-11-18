@@ -122,7 +122,7 @@ class PerspectiveWarp {
     final int height = (targetH * scale).round();
 
     final destRect = [
-      Offset(0, 0),
+      const Offset(0, 0),
       Offset(width.toDouble(), 0),
       Offset(width.toDouble(), height.toDouble()),
       Offset(0, height.toDouble()),

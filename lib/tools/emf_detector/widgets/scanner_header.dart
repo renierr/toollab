@@ -26,12 +26,12 @@ class ScannerHeader extends StatelessWidget {
               spacing: 6,
               runSpacing: 4,
               children: [
-                ToolBackButton(
+                const ToolBackButton(
                   color: Colors.white,
                   iconSize: 20,
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  constraints: BoxConstraints(),
                 ),
                 Text(
                   l10n.emfScannerTitle,
@@ -67,7 +67,7 @@ class ScannerHeader extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               l10n.emfWallCurrentSubtitle,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.0,

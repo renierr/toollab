@@ -218,7 +218,7 @@ class _MiniPlayerCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: _maxWidth, minWidth: 240),
+        constraints: const BoxConstraints(maxWidth: _maxWidth, minWidth: 240),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
           child: Column(
@@ -284,7 +284,7 @@ class _MiniPlayerCard extends StatelessWidget {
                       ),
                     ),
                     IconButton.filledTonal(
-                      onPressed: () => playback.stop(),
+                      onPressed: playback.stop,
                       icon: const Icon(Icons.stop_outlined),
                     ),
                     IconButton.filledTonal(

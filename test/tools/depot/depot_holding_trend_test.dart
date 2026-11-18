@@ -79,7 +79,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
     DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;
   });
-  tearDownAll(() => DatabaseService.instance.close());
+  tearDownAll(DatabaseService.instance.close);
 
   test(
     'limits concurrent requests, deduplicates and drops invisible queue entries',

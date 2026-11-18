@@ -32,9 +32,7 @@ class HexBufferManager {
     final previous = _lock;
     final completer = Completer<void>();
     _lock = completer.future;
-    return previous
-        .then((_) => action())
-        .whenComplete(() => completer.complete());
+    return previous.then((_) => action()).whenComplete(completer.complete);
   }
 
   Future<int> getByte(int offset) async {

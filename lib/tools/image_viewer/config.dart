@@ -38,7 +38,7 @@ class ImageViewerTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameImageViewer,
     descriptionL10n: (l10n) => l10n.toolDescImageViewer,
-    shareTarget: ShareTargetConfig(accept: ['image/*']),
+    shareTarget: const ShareTargetConfig(accept: ['image/*']),
     fileExtensions: imageViewerExtensions,
     createPage: (sd) => ImageViewerPage(sharedFile: sd?.firstFile),
   );

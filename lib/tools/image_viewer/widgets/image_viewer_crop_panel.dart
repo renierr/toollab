@@ -453,7 +453,7 @@ class _CropOverlay extends StatelessWidget {
     double pxWidth = cropRectNormalized.width * imageDispW;
     double pxHeight = cropRectNormalized.height * imageDispH;
 
-    final double minSize = 32.0;
+    const double minSize = 32.0;
 
     if (aspectRatio == null) {
       // Freeform scaling
@@ -484,8 +484,8 @@ class _CropOverlay extends StatelessWidget {
       // We adjust based on the primary dragging axis.
       if (left && top) {
         // Resize from Top-Left
-        double proposedW = pxWidth - dx;
-        double proposedH = proposedW / aspectRatio!;
+        final double proposedW = pxWidth - dx;
+        final double proposedH = proposedW / aspectRatio!;
         if (proposedW >= minSize &&
             proposedH >= minSize &&
             (pxLeft + pxWidth - proposedW) >= 0 &&
@@ -497,8 +497,8 @@ class _CropOverlay extends StatelessWidget {
         }
       } else if (right && top) {
         // Resize from Top-Right
-        double proposedW = pxWidth + dx;
-        double proposedH = proposedW / aspectRatio!;
+        final double proposedW = pxWidth + dx;
+        final double proposedH = proposedW / aspectRatio!;
         if (proposedW >= minSize &&
             proposedH >= minSize &&
             (pxLeft + proposedW) <= imageDispW &&
@@ -509,8 +509,8 @@ class _CropOverlay extends StatelessWidget {
         }
       } else if (left && bottom) {
         // Resize from Bottom-Left
-        double proposedW = pxWidth - dx;
-        double proposedH = proposedW / aspectRatio!;
+        final double proposedW = pxWidth - dx;
+        final double proposedH = proposedW / aspectRatio!;
         if (proposedW >= minSize &&
             proposedH >= minSize &&
             (pxLeft + pxWidth - proposedW) >= 0 &&
@@ -521,8 +521,8 @@ class _CropOverlay extends StatelessWidget {
         }
       } else if (right && bottom) {
         // Resize from Bottom-Right
-        double proposedW = pxWidth + dx;
-        double proposedH = proposedW / aspectRatio!;
+        final double proposedW = pxWidth + dx;
+        final double proposedH = proposedW / aspectRatio!;
         if (proposedW >= minSize &&
             proposedH >= minSize &&
             (pxLeft + proposedW) <= imageDispW &&

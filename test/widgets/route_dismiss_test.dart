@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/widgets/route_dismiss.dart';
@@ -28,18 +29,22 @@ void main() {
     final pageContext = await pumpPage(tester);
     late BuildContext progressContext;
 
-    showDialog<void>(
-      context: pageContext,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        progressContext = dialogContext;
-        return const Text('progress');
-      },
+    unawaited(
+      showDialog<void>(
+        context: pageContext,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          progressContext = dialogContext;
+          return const Text('progress');
+        },
+      ),
     );
     await tester.pumpAndSettle();
-    showDialog<void>(
-      context: pageContext,
-      builder: (_) => const Text('notification'),
+    unawaited(
+      showDialog<void>(
+        context: pageContext,
+        builder: (_) => const Text('notification'),
+      ),
     );
     await tester.pumpAndSettle();
     expect(find.text('progress'), findsOneWidget);
@@ -61,12 +66,14 @@ void main() {
     final pageContext = await pumpPage(tester);
     late BuildContext dialogContext;
 
-    showDialog<void>(
-      context: pageContext,
-      builder: (context) {
-        dialogContext = context;
-        return const Text('only');
-      },
+    unawaited(
+      showDialog<void>(
+        context: pageContext,
+        builder: (context) {
+          dialogContext = context;
+          return const Text('only');
+        },
+      ),
     );
     await tester.pumpAndSettle();
 

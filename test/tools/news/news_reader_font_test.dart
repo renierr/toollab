@@ -60,10 +60,10 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider<NewsState>.value(
         value: state,
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const NewsReaderPage(article: _article),
+          home: NewsReaderPage(article: _article),
         ),
       ),
     );
@@ -93,10 +93,10 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider<NewsState>.value(
         value: state,
-        child: MaterialApp(
+        child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const NewsReaderPage(article: _article),
+          home: NewsReaderPage(article: _article),
         ),
       ),
     );
@@ -135,10 +135,10 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<NewsState>.value(
           value: state,
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const NewsReaderPage(article: _article),
+            home: NewsReaderPage(article: _article),
           ),
         ),
       );
@@ -185,10 +185,10 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<NewsState>.value(
           value: state,
-          child: MaterialApp(
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const NewsReaderPage(article: _article),
+            home: NewsReaderPage(article: _article),
           ),
         ),
       );

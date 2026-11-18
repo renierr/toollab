@@ -274,7 +274,10 @@ pw.Widget _header(_Review r) {
           children: [
             pw.Text(
               l10n.depotYearReviewTitle('${r.year}'),
-              style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
+              style: const pw.TextStyle(
+                fontSize: 17,
+                fontWeight: pw.FontWeight.bold,
+              ),
             ),
             pw.SizedBox(height: 2),
             pw.Text(
@@ -292,7 +295,7 @@ pw.Widget _header(_Review r) {
         children: [
           pw.Text(
             l10n.toolNameDepot,
-            style: pw.TextStyle(
+            style: const pw.TextStyle(
               fontSize: 9,
               fontWeight: pw.FontWeight.bold,
               color: _S.accent,

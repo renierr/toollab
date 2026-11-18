@@ -85,7 +85,7 @@ void main() {
         (a) => Uri.parse(a.link).path == firstPath,
       );
       final reader = state.loadArticleBody(first);
-      final html =
+      const html =
           '<html><head><meta property="og:image" content="/hero.jpg"></head>'
           '<body><article><p>This article has enough content to be cached and '
           'displayed when the user opens it from the timeline.</p></article></body></html>';

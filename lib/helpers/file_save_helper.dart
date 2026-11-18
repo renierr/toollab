@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +80,7 @@ class FileSaveHelper {
             mimeType: mimeType,
             message:
                 successMessageGeneralBuilder?.call(displayPath) ??
-                "File saved to $displayPath",
+                'File saved to $displayPath',
           );
         }
       } else if (Platform.isAndroid) {
@@ -111,7 +112,7 @@ class FileSaveHelper {
                 'mimeType': mimeType,
               });
             } catch (e) {
-              errorLog("Failed to show native system notification: $e");
+              errorLog('Failed to show native system notification: $e');
             }
           }
 
@@ -123,7 +124,7 @@ class FileSaveHelper {
               bytes: bytes,
             );
           } catch (e) {
-            errorLog("Failed to create temporary file for sharing: $e");
+            errorLog('Failed to create temporary file for sharing: $e');
           }
 
           // Show in-app success dialog
@@ -134,7 +135,7 @@ class FileSaveHelper {
               actualPath: sharePath,
               mimeType: mimeType,
               message:
-                  successMessageAndroid ?? "File saved to Downloads folder",
+                  successMessageAndroid ?? 'File saved to Downloads folder',
             );
           }
         }
@@ -159,7 +160,7 @@ class FileSaveHelper {
             mimeType: mimeType,
             message:
                 successMessageGeneralBuilder?.call(displayPath) ??
-                "File saved to $displayPath",
+                'File saved to $displayPath',
           );
         }
       }
@@ -171,7 +172,7 @@ class FileSaveHelper {
           context: context,
           errorMessage:
               errorMessageBuilder?.call(e.toString()) ??
-              "Failed to save file: $e",
+              'Failed to save file: $e',
         );
       }
       return null;
@@ -354,7 +355,7 @@ class FileSaveHelper {
         await Process.run('xdg-open', [path]);
       }
     } catch (e) {
-      errorLog("Error opening file: $e");
+      errorLog('Error opening file: $e');
     }
   }
 
@@ -365,7 +366,7 @@ class FileSaveHelper {
         ShareParams(files: [XFile(path, mimeType: mimeType)]),
       );
     } catch (e) {
-      errorLog("Error sharing file: $e");
+      errorLog('Error sharing file: $e');
     }
   }
 
@@ -423,9 +424,11 @@ class FileSaveHelper {
           );
         }
         if (context.mounted) {
-          GoRouter.of(
-            context,
-          ).push(selectedTool.route, extra: SharedData.single(file));
+          unawaited(
+            GoRouter.of(
+              context,
+            ).push(selectedTool.route, extra: SharedData.single(file)),
+          );
         }
       }
     }
@@ -483,9 +486,11 @@ class FileSaveHelper {
           );
         }
         if (context.mounted) {
-          GoRouter.of(
-            context,
-          ).push(selectedTool.route, extra: SharedData.single(file));
+          unawaited(
+            GoRouter.of(
+              context,
+            ).push(selectedTool.route, extra: SharedData.single(file)),
+          );
         }
       }
     }
@@ -541,7 +546,7 @@ class FileSaveHelper {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            "Export Successful",
+                            'Export Successful',
                             style: TextStyle(
                               color: theme.colorScheme.onSurface,
                               fontSize: 18,
@@ -575,7 +580,7 @@ class FileSaveHelper {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                           label: Text(
-                            "Close",
+                            'Close',
                             style: TextStyle(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -598,7 +603,7 @@ class FileSaveHelper {
                             color: Colors.white,
                           ),
                           label: const Text(
-                            "Open",
+                            'Open',
                             style: TextStyle(color: Colors.white),
                           ),
                           style: ElevatedButton.styleFrom(
@@ -623,7 +628,7 @@ class FileSaveHelper {
                             color: Colors.white,
                           ),
                           label: const Text(
-                            "Share",
+                            'Share',
                             style: TextStyle(color: Colors.white),
                           ),
                           style: ElevatedButton.styleFrom(

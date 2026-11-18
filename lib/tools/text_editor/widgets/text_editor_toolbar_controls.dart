@@ -43,7 +43,7 @@ class TextEditorToolbarControls extends StatelessWidget {
           label: Text(l10n.textEditorSyntaxHighlight),
           selected: state.highlightEnabled && state.hasHighlightableLanguage,
           onSelected: state.hasHighlightableLanguage
-              ? (value) => state.setHighlightEnabled(value)
+              ? state.setHighlightEnabled
               : null,
         ),
       ],

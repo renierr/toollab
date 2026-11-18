@@ -233,6 +233,7 @@ class P2pLanService {
   ) async {
     final address = peer.lanAddress;
     if (address == null) throw Exception('LAN peer has no address');
+    // ignore: close_sinks
     final socket = await Socket.connect(
       address,
       P2pProtocol.lanPort,

@@ -804,7 +804,7 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
       await SoLoud.instance.stop(handle);
     }
     if (source != null) {
-      SoLoud.instance.disposeSource(source);
+      unawaited(SoLoud.instance.disposeSource(source));
     }
 
     notifyListeners();
@@ -850,7 +850,7 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
       }
 
       final int maxSamples = MicAnalyzer.sampleRate * 60;
-      int currentSamples = _morseChunks.fold(
+      final int currentSamples = _morseChunks.fold(
         0,
         (sum, element) => sum + element.length,
       );
@@ -873,7 +873,7 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
       notifyListeners();
 
       try {
-        int totalLength = _morseChunks.fold(
+        final int totalLength = _morseChunks.fold(
           0,
           (sum, element) => sum + element.length,
         );

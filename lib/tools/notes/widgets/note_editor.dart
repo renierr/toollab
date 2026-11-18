@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
@@ -151,38 +152,23 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     final l10n = AppLocalizations.of(context);
     final isAndroid = Platform.isAndroid;
 
-    showDialog(
-      context: context,
-      builder: (dialogCtx) {
-        return ResponsiveAlertDialog(
-          title: Text(l10n.notesImageSourceTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: Text(l10n.notesImageSourceGallery),
-                onTap: () async {
-                  Navigator.of(dialogCtx).pop();
-                  final picker = ImagePicker();
-                  final pickedFile = await picker.pickImage(
-                    source: ImageSource.gallery,
-                  );
-                  if (pickedFile != null) {
-                    final bytes = await pickedFile.readAsBytes();
-                    await _processAndInsertImage(bytes, pickedFile.name);
-                  }
-                },
-              ),
-              if (isAndroid)
+    unawaited(
+      showDialog(
+        context: context,
+        builder: (dialogCtx) {
+          return ResponsiveAlertDialog(
+            title: Text(l10n.notesImageSourceTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 ListTile(
-                  leading: const Icon(Icons.camera_alt_outlined),
-                  title: Text(l10n.notesImageSourceCamera),
+                  leading: const Icon(Icons.photo_library_outlined),
+                  title: Text(l10n.notesImageSourceGallery),
                   onTap: () async {
                     Navigator.of(dialogCtx).pop();
                     final picker = ImagePicker();
                     final pickedFile = await picker.pickImage(
-                      source: ImageSource.camera,
+                      source: ImageSource.gallery,
                     );
                     if (pickedFile != null) {
                       final bytes = await pickedFile.readAsBytes();
@@ -190,35 +176,52 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                     }
                   },
                 ),
-              ListTile(
-                leading: const Icon(Icons.paste_outlined),
-                title: Text(l10n.notesImageSourceClipboard),
-                onTap: () async {
-                  Navigator.of(dialogCtx).pop();
-                  final bytes = await ClipboardHelper.getImagePng();
-                  if (bytes == null) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.notesImageSourceClipboardEmpty),
-                        ),
+                if (isAndroid)
+                  ListTile(
+                    leading: const Icon(Icons.camera_alt_outlined),
+                    title: Text(l10n.notesImageSourceCamera),
+                    onTap: () async {
+                      Navigator.of(dialogCtx).pop();
+                      final picker = ImagePicker();
+                      final pickedFile = await picker.pickImage(
+                        source: ImageSource.camera,
                       );
+                      if (pickedFile != null) {
+                        final bytes = await pickedFile.readAsBytes();
+                        await _processAndInsertImage(bytes, pickedFile.name);
+                      }
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.paste_outlined),
+                  title: Text(l10n.notesImageSourceClipboard),
+                  onTap: () async {
+                    Navigator.of(dialogCtx).pop();
+                    final bytes = await ClipboardHelper.getImagePng();
+                    if (bytes == null) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(l10n.notesImageSourceClipboardEmpty),
+                          ),
+                        );
+                      }
+                    } else {
+                      await _processAndInsertImage(bytes, 'pasted_image.png');
                     }
-                  } else {
-                    await _processAndInsertImage(bytes, 'pasted_image.png');
-                  }
-                },
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: Text(l10n.commonCancel),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: Text(l10n.commonCancel),
-            ),
-          ],
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -659,7 +662,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                               onCode: () => _insertText('`', suffix: '`'),
                               onCodeBlock: () =>
                                   _insertText('\n```\n', suffix: '\n```\n'),
-                              onImage: () => _showImageSourceDialog(),
+                              onImage: _showImageSourceDialog,
                             ),
                             Container(
                               padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),

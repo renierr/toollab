@@ -663,7 +663,7 @@ class HealthDashboardState extends ChangeNotifier {
       // The copy out of temp is a second pass over the whole file, so it gets
       // its own phase rather than leaving the dialog at 100% for its duration.
       backupExportPhase = HealthExportPhase.saving;
-      work.update('Saving...', minIntervalMs: 0);
+      unawaited(work.update('Saving...', minIntervalMs: 0));
       notifyListeners();
       final saved = await FileSaveHelper.saveToDownloadsHeadless(
         sourcePath: target,

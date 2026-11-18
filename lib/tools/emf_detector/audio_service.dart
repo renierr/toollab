@@ -50,7 +50,7 @@ class AudioService {
       const int byteRate = sampleRate * blockAlign; // 96000 bytes/sec
       const int subchunk2size =
           numSamples * blockAlign; // 19200 bytes of PCM data
-      final int fileSize = 36 + subchunk2size; // 19236 bytes total file size
+      const int fileSize = 36 + subchunk2size; // 19236 bytes total file size
 
       final List<int> wavBytes = [];
 

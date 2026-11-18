@@ -11,7 +11,7 @@ void main() {
     final className = parts
         .map((p) => '${p[0].toUpperCase()}${p.substring(1)}')
         .join();
-    final package = 'de.renier.tool_lab';
+    const package = 'de.renier.tool_lab';
     final activityName = '$package.${className}Activity';
     final aliasName = '$package.${className}Alias';
     final resource = 'ic_launcher_${tool.id.replaceAll('-', '_')}';
@@ -46,7 +46,7 @@ void main() {
         isTrue,
       );
     }
-    final kotlin = 'android/app/src/main/kotlin/de/renier/tool_lab';
+    const kotlin = 'android/app/src/main/kotlin/de/renier/tool_lab';
     expect(
       File('$kotlin/MainActivity.kt').readAsStringSync(),
       contains('class ${className}Activity : MainActivity()'),

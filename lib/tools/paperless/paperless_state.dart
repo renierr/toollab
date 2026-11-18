@@ -370,7 +370,7 @@ class PaperlessState extends ChangeNotifier {
       debugLog('[Paperless] Thumbnail $id failed: $e');
       return null;
     } finally {
-      if (connection == _connection) _thumbnailRequests.remove(id);
+      if (connection == _connection) unawaited(_thumbnailRequests.remove(id));
     }
   }
 
@@ -627,8 +627,8 @@ class PaperlessState extends ChangeNotifier {
               documentId: task.documentId,
             ),
           );
-          refreshDocuments();
-          refreshStatistics();
+          unawaited(refreshDocuments());
+          unawaited(refreshStatistics());
           return;
         case PaperlessTaskStatus.failure:
           _updateUpload(

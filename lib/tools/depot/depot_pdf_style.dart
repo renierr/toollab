@@ -51,7 +51,7 @@ abstract final class DepotPdfStyle {
 
   static pw.Widget sectionTitle(String text) => pw.Text(
     text.toUpperCase(),
-    style: pw.TextStyle(
+    style: const pw.TextStyle(
       fontSize: 8,
       fontWeight: pw.FontWeight.bold,
       color: muted,

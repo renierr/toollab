@@ -74,7 +74,7 @@ class CircularGauge extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   'MAGNETIC FIELD',
                   style: TextStyle(
                     fontSize: 10,
@@ -187,17 +187,17 @@ class _GaugePainter extends CustomPainter {
     final rect = Rect.fromCircle(center: center, radius: radius);
 
     // Setup beautiful high-tech linear gradient
-    final gradient = SweepGradient(
+    const gradient = SweepGradient(
       center: Alignment.center,
       startAngle: startAngle,
       endAngle: startAngle + totalSweep,
-      colors: const [
+      colors: [
         EmfColors.neonCyan,
         EmfColors.neonEmerald,
         EmfColors.amberYellow,
         EmfColors.neonPink,
       ],
-      stops: const [0.0, 0.35, 0.65, 1.0],
+      stops: [0.0, 0.35, 0.65, 1.0],
     );
 
     // Primary filled arc

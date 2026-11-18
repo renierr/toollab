@@ -25,7 +25,7 @@ class StatusBadge extends StatelessWidget {
         ? BorderRadius.circular(12)
         : BorderRadius.circular(8);
 
-    Widget badge = Container(
+    final Widget badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withAlpha(30),

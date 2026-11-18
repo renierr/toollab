@@ -103,7 +103,7 @@ class _BeamPainter extends CustomPainter {
       canvas.drawRRect(
         rrect,
         Paint()
-          ..shader = LinearGradient(
+          ..shader = const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
@@ -158,10 +158,10 @@ class _BeamPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
         Paint()
-          ..shader = RadialGradient(
-            center: const Alignment(-0.3, -0.3),
+          ..shader = const RadialGradient(
+            center: Alignment(-0.3, -0.3),
             radius: 1,
-            colors: const [
+            colors: [
               BubbleLevelColors.bubbleLightTop,
               BubbleLevelColors.bubbleLightMid,
               BubbleLevelColors.bubbleLightBottom,

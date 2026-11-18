@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart' show DatabaseException;
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -449,7 +450,7 @@ class DepotPortfolioState extends ChangeNotifier {
       await future;
     } finally {
       if (identical(_periodRefreshes[period], future)) {
-        _periodRefreshes.remove(period);
+        unawaited(_periodRefreshes.remove(period));
       }
       _notify();
       _reduceIfIdle();

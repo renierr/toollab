@@ -388,7 +388,7 @@ class BackgroundVoice {
         lastMixedVolume = math.max(0.0, lastMixedVolume - (1.0 / 64.0));
         final raw = _readRawSampleValue();
         sampleIndex += sampleSpeed;
-        double effectivePanning = panning;
+        final double effectivePanning = panning;
         final panTheta = (effectivePanning / 255) * (math.pi / 2);
         outL = raw * lastMixedVolume * math.cos(panTheta);
         outR = raw * lastMixedVolume * math.sin(panTheta);
@@ -1644,7 +1644,7 @@ class WorkletChannel {
     if (!playing || sample == null || sample!.data.isEmpty) {
       if (lastMixedVolume > 0.001) {
         lastMixedVolume = math.max(0.0, lastMixedVolume - (1.0 / 64.0));
-        final raw = 0.0;
+        const raw = 0.0;
         final panTheta = (panning / 255) * (math.pi / 2);
         outL = raw * lastMixedVolume * math.cos(panTheta);
         outR = raw * lastMixedVolume * math.sin(panTheta);

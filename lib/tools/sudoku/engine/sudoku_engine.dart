@@ -278,7 +278,7 @@ class SudokuEngine extends ChangeNotifier {
     _undo.add(
       _UndoEntry(
         grid: List<int>.from(_grid),
-        notes: _notes.map((s) => Set<int>.from(s)).toList(),
+        notes: _notes.map(Set<int>.from).toList(),
         mistakes: _mistakes,
         selected: _selected,
       ),

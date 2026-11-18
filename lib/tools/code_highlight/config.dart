@@ -24,7 +24,7 @@ class CodeHighlightTool {
         create: (_) => CodeHighlightState(),
       ),
     ],
-    shareTarget: ShareTargetConfig(
+    shareTarget: const ShareTargetConfig(
       accept: [
         'text/plain',
         'text/javascript',

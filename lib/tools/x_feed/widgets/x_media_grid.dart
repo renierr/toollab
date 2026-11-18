@@ -141,13 +141,13 @@ class _MediaTile extends StatelessWidget {
               ),
             ),
             if (media.isPlayable)
-              Center(
+              const Center(
                 child: DecoratedBox(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.black54,
                     shape: BoxShape.circle,
                   ),
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.all(10),
                     child: Icon(
                       Icons.play_arrow,

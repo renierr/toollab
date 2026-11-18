@@ -264,9 +264,8 @@ class DeepSeekApi {
       final sent = client.send(request).timeout(_uploadTimeout);
       request.sink.add(head);
       await request.sink.addStream(file.openRead());
-      request.sink
-        ..add(tail)
-        ..close();
+      request.sink.add(tail);
+      unawaited(request.sink.close());
       response = await http.Response.fromStream(await sent);
     } catch (e) {
       throw DeepSeekException(DeepSeekErrorKind.network, '$e');

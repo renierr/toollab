@@ -27,7 +27,7 @@ class GreenNoiseRenderer implements GeneratedSoundRenderer {
     final double wR = _random.nextDouble() * 2 - 1;
 
     final double f = 2 * sin(pi * 500 / sampleRate);
-    final double q = 0.7;
+    const double q = 0.7;
 
     final double hpInL = wL - _lpL - q * _bpL;
     _bpL = _bpL + f * hpInL;

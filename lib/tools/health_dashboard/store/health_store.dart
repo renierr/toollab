@@ -459,7 +459,9 @@ class HealthStore {
     // import; ties keep the first writer. Same-app sessions only collapse on an
     // exact range: an app that logs two overlapping activities means it.
     final span = max(1, row.t1 - row.t0);
-    Map<String, Object?>? existing = identical.isEmpty ? null : identical.first;
+    final Map<String, Object?>? existing = identical.isEmpty
+        ? null
+        : identical.first;
     Map<String, Object?>? mirror;
     if (existing == null) {
       final candidates = await db.query(

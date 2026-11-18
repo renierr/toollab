@@ -178,9 +178,9 @@ void main() {
                     ],
                   ),
                 ),
-                ChatMessageBubble(
+                const ChatMessageBubble(
                   modelName: 'DeepSeek',
-                  message: const ChatMessage(
+                  message: ChatMessage(
                     id: 2,
                     sessionId: 1,
                     role: 'model',

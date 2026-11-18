@@ -101,7 +101,7 @@ double _gapHalfWidth(
   final baseGap = (math.min(w, h) * 0.1) == 0 ? 12.0 : math.min(w, h) * 0.1;
   final outX = math.max(0.0, math.max(x - tip.dx, tip.dx - (x + w)));
   final outY = math.max(0.0, math.max(y - tip.dy, tip.dy - (y + h)));
-  var gap = math.min(math.min(w, h) * 0.3, baseGap + (outX + outY) * 0.1);
+  final gap = math.min(math.min(w, h) * 0.3, baseGap + (outX + outY) * 0.1);
   final sideLen = (side == _Side.top || side == _Side.bottom) ? w : h;
   final avail = math.max(0.0, sideLen - 2 * r);
   return math.min(gap, (avail / 2) * 0.8);

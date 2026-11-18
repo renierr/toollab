@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:math' as math;
@@ -312,11 +313,11 @@ class PdfEngineHelper {
       final result = await PdfDocument.createNew(sourceName: 'combined.pdf');
       result.pages = docs.map((d) => d.pages[0]).toList();
       final bytes = await result.encodePdf();
-      result.dispose();
+      unawaited(result.dispose());
       return bytes;
     } finally {
       for (final d in docs) {
-        d.dispose();
+        unawaited(d.dispose());
       }
     }
   }
@@ -362,7 +363,7 @@ class PdfEngineHelper {
     final newDoc = await PdfDocument.createNew(sourceName: 'reorganized.pdf');
     newDoc.pages = indices.map((i) => pages[i]).toList();
     final bytes = await newDoc.encodePdf();
-    newDoc.dispose();
+    unawaited(newDoc.dispose());
     return bytes;
   }
 
@@ -392,7 +393,7 @@ class PdfEngineHelper {
 
       return await targetDoc.encodePdf();
     } finally {
-      sourceDoc.dispose();
+      unawaited(sourceDoc.dispose());
     }
   }
 
@@ -436,11 +437,11 @@ class PdfEngineHelper {
       final result = await PdfDocument.createNew(sourceName: 'flattened.pdf');
       result.pages = imageDocs.map((d) => d.pages[0]).toList();
       final bytes = await result.encodePdf();
-      result.dispose();
+      unawaited(result.dispose());
       return bytes;
     } finally {
       for (final d in imageDocs) {
-        d.dispose();
+        unawaited(d.dispose());
       }
     }
   }
@@ -550,7 +551,7 @@ class PdfEngineHelper {
     final newDoc = await PdfDocument.createNew(sourceName: 'redacted.pdf');
     newDoc.pages = doc.pages.toList();
     final bytes = await newDoc.encodePdf();
-    newDoc.dispose();
+    unawaited(newDoc.dispose());
     return bytes;
   }
 

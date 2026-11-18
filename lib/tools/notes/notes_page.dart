@@ -441,7 +441,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       fullscreen: true,
       showFloatingBackButton: false,
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openEditor(),
+        onPressed: _openEditor,
         backgroundColor: AppTheme.accentTeal,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),

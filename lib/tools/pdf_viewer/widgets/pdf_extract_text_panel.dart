@@ -97,7 +97,7 @@ class _PdfExtractTextPanelState extends State<PdfExtractTextPanel> {
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
-      doc?.dispose();
+      unawaited(doc?.dispose());
     }
   }
 

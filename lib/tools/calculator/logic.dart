@@ -139,7 +139,7 @@ class CalculatorLogic {
         while (i < input.length && (_isDigit(input[i]) || input[i] == '.')) {
           i++;
         }
-        if (prevIsValue()) tokens.add(_Token(_TokenType.operator, '*'));
+        if (prevIsValue()) tokens.add(const _Token(_TokenType.operator, '*'));
         tokens.add(_Token(_TokenType.number, input.substring(start, i)));
         continue;
       }
@@ -153,7 +153,7 @@ class CalculatorLogic {
         final id = input.substring(start, i);
         final lower = id.toLowerCase();
 
-        if (prevIsValue()) tokens.add(_Token(_TokenType.operator, '*'));
+        if (prevIsValue()) tokens.add(const _Token(_TokenType.operator, '*'));
 
         if (_constants.containsKey(lower)) {
           tokens.add(_Token(_TokenType.constant, lower));
@@ -164,20 +164,20 @@ class CalculatorLogic {
       }
 
       if (ch == '(') {
-        if (prevIsValue()) tokens.add(_Token(_TokenType.operator, '*'));
-        tokens.add(_Token(_TokenType.leftParen, '('));
+        if (prevIsValue()) tokens.add(const _Token(_TokenType.operator, '*'));
+        tokens.add(const _Token(_TokenType.leftParen, '('));
         i++;
         continue;
       }
 
       if (ch == ')') {
-        tokens.add(_Token(_TokenType.rightParen, ')'));
+        tokens.add(const _Token(_TokenType.rightParen, ')'));
         i++;
         continue;
       }
 
       if (ch == '%') {
-        tokens.add(_Token(_TokenType.percent, '%'));
+        tokens.add(const _Token(_TokenType.percent, '%'));
         i++;
         continue;
       }

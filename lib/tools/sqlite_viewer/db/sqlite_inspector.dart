@@ -138,7 +138,7 @@ class SqliteInspector {
 
   Future<List<DbObject>> listObjects() async {
     final rows = await _require.rawQuery(
-      "SELECT type, name, tbl_name, sql FROM sqlite_master "
+      'SELECT type, name, tbl_name, sql FROM sqlite_master '
       "WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name",
     );
     return rows

@@ -12,7 +12,7 @@ void main() {
     databaseFactory = databaseFactoryFfi;
     DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;
   });
-  tearDownAll(() => DatabaseService.instance.close());
+  tearDownAll(DatabaseService.instance.close);
 
   test('existing recent article reads are migrated for sync', () async {
     final db = await DatabaseService.instance.getToolDatabase(

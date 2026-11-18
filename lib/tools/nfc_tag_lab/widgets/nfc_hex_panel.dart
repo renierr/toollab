@@ -70,9 +70,7 @@ class _NfcHexPanelState extends State<NfcHexPanel> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {
-                      _hexInputController.clear();
-                    },
+                    onPressed: _hexInputController.clear,
                     child: Text(l10n.nfcClearInput),
                   ),
                 ),

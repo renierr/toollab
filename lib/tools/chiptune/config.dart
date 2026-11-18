@@ -21,7 +21,7 @@ class ChiptuneTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameChiptune,
     descriptionL10n: (l10n) => l10n.toolDescChiptune,
-    shareTarget: ShareTargetConfig(
+    shareTarget: const ShareTargetConfig(
       accept: [
         'audio/x-mod',
         'audio/x-xm',

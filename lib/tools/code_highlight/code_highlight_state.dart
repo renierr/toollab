@@ -34,7 +34,7 @@ class CodeHighlightState extends ChangeNotifier {
 
   Future<void> initialize() async {
     // Initial load, highlight defaults
-    rehighlight();
+    unawaited(rehighlight());
   }
 
   Future<void> rehighlight() async {
@@ -75,9 +75,7 @@ class CodeHighlightState extends ChangeNotifier {
     _code = code;
 
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 150), () {
-      rehighlight();
-    });
+    _debounceTimer = Timer(const Duration(milliseconds: 150), rehighlight);
 
     notifyListeners();
   }

@@ -22,7 +22,7 @@ class DepotWishlistRefreshButton extends StatelessWidget {
             )
           : const Icon(Icons.refresh),
       tooltip: l10n.depotWishlistRefresh,
-      onPressed: refreshing ? null : () => state.refresh(),
+      onPressed: refreshing ? null : state.refresh,
     );
   }
 }

@@ -116,7 +116,7 @@ class _FrontmatterEntry extends StatelessWidget {
           label,
           const SizedBox(height: 4),
           if (items.isEmpty)
-            _PlainValue(text: '-')
+            const _PlainValue(text: '-')
           else if (items.any((e) => e is Map || e is List))
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

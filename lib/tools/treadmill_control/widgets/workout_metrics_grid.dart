@@ -247,7 +247,7 @@ class _MetricCardState extends State<_MetricCard>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    Widget cardContent = Container(
+    final Widget cardContent = Container(
       clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(

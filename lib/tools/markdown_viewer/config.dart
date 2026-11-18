@@ -17,7 +17,7 @@ class MarkdownViewerTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameMarkdownViewer,
     descriptionL10n: (l10n) => l10n.toolDescMarkdownViewer,
-    shareTarget: ShareTargetConfig(
+    shareTarget: const ShareTargetConfig(
       accept: ['text/markdown', 'text/x-markdown', 'text/plain', 'text/*'],
     ),
     fileExtensions: ['md', 'txt', 'markdown'],

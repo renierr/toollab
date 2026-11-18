@@ -78,7 +78,7 @@ class SketchSelectionActions extends StatelessWidget {
                   ),
                 IconButton(
                   tooltip: l10n.commonDelete,
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.delete_outline,
                     size: 20,
                     color: AppTheme.statusRed,

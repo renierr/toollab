@@ -211,9 +211,7 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                       ),
                     ),
                     value: enabled,
-                    onChanged: (val) {
-                      appState.setSyncEnabled(val);
-                    },
+                    onChanged: appState.setSyncEnabled,
                   ),
                 ),
                 const SizedBox(height: 16),

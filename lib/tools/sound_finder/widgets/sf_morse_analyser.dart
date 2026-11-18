@@ -174,7 +174,7 @@ class _SfMorseAnalyserState extends State<SfMorseAnalyser> {
                   children: [
                     if (state.morseListening)
                       FilledButton.icon(
-                        onPressed: () => state.stopMorseListening(),
+                        onPressed: state.stopMorseListening,
                         icon: const Icon(Icons.stop),
                         label: Text(l10n.sfStop),
                         style: FilledButton.styleFrom(
@@ -183,7 +183,7 @@ class _SfMorseAnalyserState extends State<SfMorseAnalyser> {
                       )
                     else
                       FilledButton.icon(
-                        onPressed: () => state.startMorseListening(),
+                        onPressed: state.startMorseListening,
                         icon: const Icon(Icons.mic),
                         label: Text(l10n.sfMorseLiveTranslate),
                       ),
@@ -203,7 +203,7 @@ class _SfMorseAnalyserState extends State<SfMorseAnalyser> {
                           ),
                           const SizedBox(width: 8),
                           IconButton.outlined(
-                            onPressed: () => state.clearMorseDecodedText(),
+                            onPressed: state.clearMorseDecodedText,
                             icon: const Icon(Icons.clear_all),
                             tooltip: l10n.commonClear,
                             style: IconButton.styleFrom(

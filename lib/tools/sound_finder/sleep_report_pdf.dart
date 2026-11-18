@@ -163,7 +163,7 @@ String _clock(DateTime t) => sleepClock(t, seconds: false);
 
 pw.Widget _sectionTitle(String text) => pw.Text(
   text.toUpperCase(),
-  style: pw.TextStyle(
+  style: const pw.TextStyle(
     fontSize: 8,
     fontWeight: pw.FontWeight.bold,
     color: _muted,
@@ -184,7 +184,10 @@ pw.Widget _header(
         children: [
           pw.Text(
             l10n.sfSleepPdfTitle,
-            style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
+            style: const pw.TextStyle(
+              fontSize: 17,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
           pw.SizedBox(height: 2),
           pw.Text(
@@ -238,7 +241,7 @@ pw.Widget _stats(SleepSessionData data, AppLocalizations l10n) {
                 pw.Text(
                   value,
                   maxLines: 1,
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                     fontSize: 10,
                     fontWeight: pw.FontWeight.bold,
                   ),
@@ -578,7 +581,7 @@ pw.Widget _table({
     padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
     child: pw.Text(
       text,
-      style: pw.TextStyle(
+      style: const pw.TextStyle(
         fontSize: 7,
         fontWeight: pw.FontWeight.bold,
         color: _muted,

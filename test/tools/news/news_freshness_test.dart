@@ -44,7 +44,7 @@ void main() {
     await toolDb.delete(NewsDbHelper.readMarksTable);
     await db.saveSource(source);
   });
-  tearDownAll(() => DatabaseService.instance.close());
+  tearDownAll(DatabaseService.instance.close);
 
   test('old items stay cached but are not new or unread', () async {
     final now = DateTime.now().millisecondsSinceEpoch;

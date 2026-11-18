@@ -47,7 +47,7 @@ class EmvParser {
   };
 
   static List<TlvNode> parseTlv(Uint8List bytes) {
-    List<TlvNode> nodes = [];
+    final List<TlvNode> nodes = [];
     int i = 0;
     while (i < bytes.length) {
       if (bytes[i] == 0x00 || bytes[i] == 0xFF) {
@@ -69,7 +69,7 @@ class EmvParser {
 
       int length = bytes[i++];
       if ((length & 0x80) != 0) {
-        int numBytes = length & 0x7F;
+        final int numBytes = length & 0x7F;
         length = 0;
         for (int j = 0; j < numBytes; j++) {
           if (i >= bytes.length) break;
@@ -81,7 +81,7 @@ class EmvParser {
         length = bytes.length - i;
       }
 
-      Uint8List value = bytes.sublist(i, i + length);
+      final Uint8List value = bytes.sublist(i, i + length);
       i += length;
 
       List<TlvNode> children = [];
@@ -90,7 +90,7 @@ class EmvParser {
       while (firstByte > 0xFF) {
         firstByte >>= 8;
       }
-      bool isConstructed = (firstByte & 0x20) != 0;
+      final bool isConstructed = (firstByte & 0x20) != 0;
 
       if (isConstructed) {
         children = parseTlv(value);
@@ -104,14 +104,14 @@ class EmvParser {
   static TlvNode? findTag(List<TlvNode> nodes, int targetTag) {
     for (var node in nodes) {
       if (node.tag == targetTag) return node;
-      var found = findTag(node.children, targetTag);
+      final found = findTag(node.children, targetTag);
       if (found != null) return found;
     }
     return null;
   }
 
   static List<TlvNode> findAllTags(List<TlvNode> nodes, int targetTag) {
-    List<TlvNode> results = [];
+    final List<TlvNode> results = [];
     for (var node in nodes) {
       if (node.tag == targetTag) results.add(node);
       results.addAll(findAllTags(node.children, targetTag));
@@ -120,10 +120,10 @@ class EmvParser {
   }
 
   static String decodePan(Uint8List bytes) {
-    StringBuffer sb = StringBuffer();
+    final StringBuffer sb = StringBuffer();
     for (var b in bytes) {
-      int high = (b >> 4) & 0x0F;
-      int low = b & 0x0F;
+      final int high = (b >> 4) & 0x0F;
+      final int low = b & 0x0F;
       sb.write(high.toRadixString(16));
       sb.write(low.toRadixString(16));
     }
@@ -136,19 +136,19 @@ class EmvParser {
 
   static String decodeExpiry(Uint8List bytes) {
     if (bytes.length < 2) return '';
-    StringBuffer sb = StringBuffer();
+    final StringBuffer sb = StringBuffer();
     // Expiration date is YYMMDD, we only need YYMM
     for (int i = 0; i < 2; i++) {
-      int b = bytes[i];
-      int high = (b >> 4) & 0x0F;
-      int low = b & 0x0F;
+      final int b = bytes[i];
+      final int high = (b >> 4) & 0x0F;
+      final int low = b & 0x0F;
       sb.write(high.toRadixString(16));
       sb.write(low.toRadixString(16));
     }
-    String str = sb.toString();
+    final String str = sb.toString();
     if (str.length >= 4) {
-      String yy = str.substring(0, 2);
-      String mm = str.substring(2, 4);
+      final String yy = str.substring(0, 2);
+      final String mm = str.substring(2, 4);
       return '$mm/$yy';
     }
     return '';
@@ -162,7 +162,7 @@ class EmvParser {
     try {
       // 1. Try to SELECT PPSE
       // CLA = 00, INS = A4, P1 = 04, P2 = 00, Lc = 0E, Data = "2PAY.SYS.DDF01" (325041592E5359532E4444463031)
-      Uint8List selectPpseCmd = Uint8List.fromList([
+      final Uint8List selectPpseCmd = Uint8List.fromList([
         0x00,
         0xA4,
         0x04,
@@ -187,14 +187,14 @@ class EmvParser {
 
       List<String> candidateAids = [];
       try {
-        Uint8List response = await isoDep.transceive(selectPpseCmd);
+        final Uint8List response = await isoDep.transceive(selectPpseCmd);
         if (response.length >= 2 &&
             response[response.length - 2] == 0x90 &&
             response[response.length - 1] == 0x00) {
-          List<TlvNode> nodes = parseTlv(
+          final List<TlvNode> nodes = parseTlv(
             response.sublist(0, response.length - 2),
           );
-          List<TlvNode> aidNodes = findAllTags(nodes, 0x4F);
+          final List<TlvNode> aidNodes = findAllTags(nodes, 0x4F);
           for (var node in aidNodes) {
             candidateAids.add(
               node.value
@@ -212,12 +212,12 @@ class EmvParser {
       }
 
       for (String aidHex in candidateAids) {
-        List<int> aidBytes = [];
+        final List<int> aidBytes = [];
         for (int i = 0; i < aidHex.length; i += 2) {
           aidBytes.add(int.parse(aidHex.substring(i, i + 2), radix: 16));
         }
 
-        Uint8List selectAidCmd = Uint8List.fromList([
+        final Uint8List selectAidCmd = Uint8List.fromList([
           0x00,
           0xA4,
           0x04,
@@ -228,22 +228,22 @@ class EmvParser {
         ]);
 
         try {
-          Uint8List response = await isoDep.transceive(selectAidCmd);
+          final Uint8List response = await isoDep.transceive(selectAidCmd);
           if (response.length >= 2 &&
               response[response.length - 2] == 0x90 &&
               response[response.length - 1] == 0x00) {
-            List<TlvNode> fciNodes = parseTlv(
+            final List<TlvNode> fciNodes = parseTlv(
               response.sublist(0, response.length - 2),
             );
-            TlvNode? labelNode = findTag(fciNodes, 0x50);
-            TlvNode? prefNameNode = findTag(fciNodes, 0x9F12);
-            String label = labelNode != null
+            final TlvNode? labelNode = findTag(fciNodes, 0x50);
+            final TlvNode? prefNameNode = findTag(fciNodes, 0x9F12);
+            final String label = labelNode != null
                 ? decodeString(labelNode.value)
                 : '';
-            String prefName = prefNameNode != null
+            final String prefName = prefNameNode != null
                 ? decodeString(prefNameNode.value)
                 : '';
-            String finalLabel = prefName.isNotEmpty
+            final String finalLabel = prefName.isNotEmpty
                 ? prefName
                 : (label.isNotEmpty
                       ? label
@@ -252,8 +252,8 @@ class EmvParser {
             // SFI 1 to 4, record 1 to 10
             for (int sfi = 1; sfi <= 4; sfi++) {
               for (int rec = 1; rec <= 10; rec++) {
-                int p2 = (sfi << 3) | 4;
-                Uint8List readCmd = Uint8List.fromList([
+                final int p2 = (sfi << 3) | 4;
+                final Uint8List readCmd = Uint8List.fromList([
                   0x00,
                   0xB2,
                   rec,
@@ -262,23 +262,23 @@ class EmvParser {
                 ]);
 
                 try {
-                  Uint8List recResp = await isoDep.transceive(readCmd);
+                  final Uint8List recResp = await isoDep.transceive(readCmd);
                   if (recResp.length >= 2 &&
                       recResp[recResp.length - 2] == 0x90 &&
                       recResp[recResp.length - 1] == 0x00) {
-                    List<TlvNode> recNodes = parseTlv(
+                    final List<TlvNode> recNodes = parseTlv(
                       recResp.sublist(0, recResp.length - 2),
                     );
-                    TlvNode? panNode = findTag(recNodes, 0x5A);
+                    final TlvNode? panNode = findTag(recNodes, 0x5A);
                     if (panNode != null) {
-                      String pan = decodePan(panNode.value);
-                      TlvNode? expiryNode = findTag(recNodes, 0x5F24);
-                      TlvNode? holderNode = findTag(recNodes, 0x5F20);
+                      final String pan = decodePan(panNode.value);
+                      final TlvNode? expiryNode = findTag(recNodes, 0x5F24);
+                      final TlvNode? holderNode = findTag(recNodes, 0x5F20);
 
-                      String expiry = expiryNode != null
+                      final String expiry = expiryNode != null
                           ? decodeExpiry(expiryNode.value)
                           : '';
-                      String holder = holderNode != null
+                      final String holder = holderNode != null
                           ? decodeString(holderNode.value)
                           : '';
 

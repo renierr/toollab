@@ -264,7 +264,7 @@ class ScanProfileClassifier {
 
   static bool hasAnySignature(ScanContext context, List<String> signatures) {
     final haystack = buildScanHaystack(context);
-    return signatures.any((sig) => haystack.contains(sig));
+    return signatures.any(haystack.contains);
   }
 
   static String buildScanHaystack(ScanContext context) {

@@ -84,7 +84,7 @@ class _PlaylistItem extends StatelessWidget {
                 ),
               ),
               if (isCurrent)
-                Icon(
+                const Icon(
                   Icons.volume_up_outlined,
                   size: 18,
                   color: ChiptuneColors.accent,

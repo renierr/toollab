@@ -209,7 +209,7 @@ class ImageEditorController extends ChangeNotifier {
 
       _extractExif(bytes, currentSession);
     } catch (e) {
-      errorLog("Failed to load image: $e");
+      errorLog('Failed to load image: $e');
       rethrow;
     }
   }
@@ -291,7 +291,7 @@ class ImageEditorController extends ChangeNotifier {
           notifyListeners();
         })
         .catchError((e) {
-          errorLog("Failed to extract metadata in background: $e");
+          errorLog('Failed to extract metadata in background: $e');
         });
   }
 
@@ -309,9 +309,7 @@ class ImageEditorController extends ChangeNotifier {
       image.width,
       image.height,
       ui.PixelFormat.rgba8888,
-      (ui.Image img) {
-        completer.complete(img);
-      },
+      completer.complete,
     );
     return completer.future;
   }
@@ -369,7 +367,7 @@ class ImageEditorController extends ChangeNotifier {
       return;
     }
     if (_rawBytes == null) {
-      throw Exception("No image data available for decoding.");
+      throw Exception('No image data available for decoding.');
     }
     final session = _loadSessionCounter;
     _decodingFuture = compute(decodeAndBakeOrientationTask, _rawBytes!).then((
@@ -387,7 +385,7 @@ class ImageEditorController extends ChangeNotifier {
     await _ensureDecoded();
     if (_backgroundSync != null) await _backgroundSync;
     if (_decodedImage == null) {
-      throw Exception("Backing image not yet decoded.");
+      throw Exception('Backing image not yet decoded.');
     }
   }
 
@@ -404,7 +402,7 @@ class ImageEditorController extends ChangeNotifier {
       final prevImage = await _history.undo(_decodedImage!);
       if (prevImage != null) await _applyHistoryImage(prevImage);
     } catch (e) {
-      errorLog("Undo failed: $e");
+      errorLog('Undo failed: $e');
       rethrow;
     } finally {
       _isProcessing = false;
@@ -421,7 +419,7 @@ class ImageEditorController extends ChangeNotifier {
       final nextImage = await _history.redo(_decodedImage!);
       if (nextImage != null) await _applyHistoryImage(nextImage);
     } catch (e) {
-      errorLog("Redo failed: $e");
+      errorLog('Redo failed: $e');
       rethrow;
     } finally {
       _isProcessing = false;
@@ -479,7 +477,7 @@ class ImageEditorController extends ChangeNotifier {
     if (_uiImage == null) return;
     if (!Platform.isAndroid && !Platform.isWindows && !Platform.isLinux) {
       throw UnsupportedError(
-        "Background removal is not supported on this platform.",
+        'Background removal is not supported on this platform.',
       );
     }
 
@@ -489,7 +487,7 @@ class ImageEditorController extends ChangeNotifier {
     try {
       await _ensureDecoded();
       if (_decodedImage == null) {
-        throw Exception("Decoded image is null.");
+        throw Exception('Decoded image is null.');
       }
 
       // Snapshot the pre-edit image for history.
@@ -502,7 +500,7 @@ class ImageEditorController extends ChangeNotifier {
         try {
           segmentedBytes = await _segmentWithMlKit(beforePng);
         } catch (e) {
-          errorLog("ML Kit segmentation unavailable, falling back to ONNX: $e");
+          errorLog('ML Kit segmentation unavailable, falling back to ONNX: $e');
           segmentedBytes = await _segmentWithOnnx();
         }
       } else {
@@ -529,7 +527,7 @@ class ImageEditorController extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      errorLog("Subject segmentation failed: $e");
+      errorLog('Subject segmentation failed: $e');
       rethrow;
     } finally {
       _isProcessing = false;
@@ -565,7 +563,7 @@ class ImageEditorController extends ChangeNotifier {
       } catch (e) {
         await segmenter.close();
         if (e is PlatformException &&
-            (e.message?.contains("Waiting for") ?? false) &&
+            (e.message?.contains('Waiting for') ?? false) &&
             attempt == 0) {
           await Future<void>.delayed(const Duration(milliseconds: 2500));
           continue;
@@ -581,7 +579,7 @@ class ImageEditorController extends ChangeNotifier {
     final segmentedBytes = result?.foregroundBitmap;
     if (segmentedBytes == null) {
       throw Exception(
-        "Failed to segment subject: no foreground bitmap returned.",
+        'Failed to segment subject: no foreground bitmap returned.',
       );
     }
     return segmentedBytes;
@@ -859,7 +857,7 @@ class ImageEditorController extends ChangeNotifier {
     try {
       await _ensureFullySynced();
     } catch (e) {
-      errorLog("Failed to sync/decode image: $e");
+      errorLog('Failed to sync/decode image: $e');
     } finally {
       _isProcessing = false;
       notifyListeners();
@@ -1029,11 +1027,11 @@ class ImageEditorController extends ChangeNotifier {
 
   Future<String> extractText() async {
     if (_uiImage == null) {
-      throw Exception("No image loaded.");
+      throw Exception('No image loaded.');
     }
     if (!Platform.isAndroid && !Platform.isWindows) {
       throw UnsupportedError(
-        "Text extraction is not supported on this platform.",
+        'Text extraction is not supported on this platform.',
       );
     }
 
@@ -1043,7 +1041,7 @@ class ImageEditorController extends ChangeNotifier {
     try {
       await _ensureFullySynced();
       if (_decodedImage == null) {
-        throw Exception("Decoded image is null.");
+        throw Exception('Decoded image is null.');
       }
 
       // Convert current decoded image to PNG bytes for the OCR engine.
@@ -1076,7 +1074,7 @@ class ImageEditorController extends ChangeNotifier {
 
       return extractedText;
     } catch (e) {
-      errorLog("Text extraction failed: $e");
+      errorLog('Text extraction failed: $e');
       rethrow;
     } finally {
       _isProcessing = false;

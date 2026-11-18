@@ -774,7 +774,7 @@ class NewsState extends ChangeNotifier {
       return await fetch;
     } finally {
       if (identical(_articleFetches[article.guidKey], fetch)) {
-        _articleFetches.remove(article.guidKey);
+        unawaited(_articleFetches.remove(article.guidKey));
       }
     }
   }

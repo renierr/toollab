@@ -204,7 +204,7 @@ class SyncService {
           .timeout(const Duration(seconds: 4));
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
-        return body['status'] == 'ok';
+        return body is Map && body['status'] == 'ok';
       }
       return false;
     } catch (e) {
@@ -382,7 +382,7 @@ class SyncService {
     var fullMetadata = true;
     var hasMoreMetadata = false;
     var truncatedMetadata = false;
-    final serverMetaList = <dynamic>[];
+    final serverMetaList = <Map<String, dynamic>>[];
     do {
       await requireReady();
       final query = <String, String>{'limit': '$_syncBatchSize'};
@@ -403,7 +403,8 @@ class SyncService {
         throw Exception('Server returned success=false for metadata');
       }
       serverMetaList.addAll(
-        metadataJson['records'] as List<dynamic>? ?? const [],
+        (metadataJson['records'] as List<dynamic>? ?? const [])
+            .cast<Map<String, dynamic>>(),
       );
       fullMetadata = metadataJson['full'] as bool? ?? true;
       nextCursor = metadataJson['cursor'] as String?;
@@ -589,7 +590,9 @@ class SyncService {
         }
         // Applied per batch so the decoded payloads can be released before the
         // next page is fetched.
-        for (final sRec in pullJson['records'] as List<dynamic>? ?? const []) {
+        for (final sRec
+            in (pullJson['records'] as List<dynamic>? ?? const [])
+                .cast<Map<String, dynamic>>()) {
           final String id = sRec['id'] as String;
           final bool serverDeleted = sRec['deleted'] as bool? ?? false;
           final int serverUpdatedAt = sRec['updatedAt'] as int? ?? 0;

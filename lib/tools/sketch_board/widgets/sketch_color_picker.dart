@@ -182,7 +182,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
                       FilteringTextInputFormatter.allow(RegExp('[0-9a-fA-F]')),
                       LengthLimitingTextInputFormatter(8),
                     ],
-                    onChanged: (v) => _applyHex(v),
+                    onChanged: _applyHex,
                   ),
                 ),
               ],

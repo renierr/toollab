@@ -71,7 +71,7 @@ class _ImageInsightSheetState extends State<ImageInsightSheet> {
           )
           .listen(
             (chunk) => setState(() => _description += chunk),
-            onError: (Object e) => _fail(e),
+            onError: _fail,
             onDone: () {
               if (mounted) {
                 setState(() {

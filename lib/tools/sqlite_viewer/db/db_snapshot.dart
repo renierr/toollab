@@ -38,7 +38,7 @@ Future<List<InternalDbEntry>> listInternalDatabases() async {
   try {
     final livePath = (await DatabaseService.instance.database).path;
     final support = await getApplicationSupportDirectory();
-    final modeSubdir = kReleaseMode ? '' : (kProfileMode ? 'profile' : 'debug');
+    const modeSubdir = kReleaseMode ? '' : (kProfileMode ? 'profile' : 'debug');
     final dirs = <Directory>{
       support,
       Directory(p.join(support.path, modeSubdir)),

@@ -190,9 +190,9 @@ class SignaturesState extends ChangeNotifier {
     switch (cmd) {
       case AddPathCmd _:
         if (_paths.isNotEmpty) _paths.removeLast();
-      case ClearCmd c:
+      case final ClearCmd c:
         _setPaths(c.prev);
-      case ReplaceCmd c:
+      case final ReplaceCmd c:
         _setPaths(c.prev);
     }
     _redo.add(cmd);
@@ -203,11 +203,11 @@ class SignaturesState extends ChangeNotifier {
     if (_redo.isEmpty) return;
     final cmd = _redo.removeLast();
     switch (cmd) {
-      case AddPathCmd c:
+      case final AddPathCmd c:
         _paths.add(List<SignaturePoint>.from(c.path));
       case ClearCmd _:
         _paths.clear();
-      case ReplaceCmd c:
+      case final ReplaceCmd c:
         _setPaths(c.next);
     }
     _undo.add(cmd);
@@ -221,7 +221,7 @@ class SignaturesState extends ChangeNotifier {
   }
 
   List<List<SignaturePoint>> _clonePaths(List<List<SignaturePoint>> src) =>
-      src.map((s) => List<SignaturePoint>.from(s)).toList();
+      src.map(List<SignaturePoint>.from).toList();
 
   // ---- Export helpers (operate on the current canvas) ----
   NormalizedSignature _normalizedCurrent() =>

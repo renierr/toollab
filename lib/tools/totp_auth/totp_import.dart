@@ -264,8 +264,12 @@ class TotpImporter {
 
     final ordered = services.whereType<Map>().toList()
       ..sort((a, b) {
-        final pa = (a['order'] is Map ? a['order']['position'] : null) as num?;
-        final pb = (b['order'] is Map ? b['order']['position'] : null) as num?;
+        final pa =
+            (a['order'] is Map ? (a['order'] as Map)['position'] : null)
+                as num?;
+        final pb =
+            (b['order'] is Map ? (b['order'] as Map)['position'] : null)
+                as num?;
         return (pa ?? 0).compareTo(pb ?? 0);
       });
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -154,7 +155,12 @@ class _PaperlessPageState extends State<PaperlessPage>
       mimeType: mimeType,
     );
     if (file.mimeType == 'application/pdf') {
-      context.push(PdfViewerTool.config.route, extra: SharedData.single(file));
+      unawaited(
+        context.push(
+          PdfViewerTool.config.route,
+          extra: SharedData.single(file),
+        ),
+      );
       return;
     }
     await FileSaveHelper.openFile(file.path, file.mimeType);

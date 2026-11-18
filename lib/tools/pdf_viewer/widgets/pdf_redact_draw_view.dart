@@ -47,7 +47,7 @@ class PdfRedactDrawView extends StatelessWidget {
               final areaH = constraints.maxHeight;
               final dispW = areaW;
               final dispH = dispW / pageAspect;
-              final dispLeft = 0.0;
+              const dispLeft = 0.0;
               final dispTop = dispH < areaH ? (areaH - dispH) / 2 : 0.0;
 
               return InteractiveViewer(

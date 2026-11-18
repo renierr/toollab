@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
@@ -42,7 +43,7 @@ class ZipArchiveHandler implements ArchiveHandler {
       }
       return entries.values.toList();
     } finally {
-      input.close();
+      unawaited(input.close());
     }
   }
 
@@ -76,7 +77,7 @@ class ZipArchiveHandler implements ArchiveHandler {
         }
       }
     } finally {
-      input.close();
+      unawaited(input.close());
     }
   }
 

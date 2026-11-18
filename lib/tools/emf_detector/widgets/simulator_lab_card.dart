@@ -88,7 +88,7 @@ class SimulatorLabCard extends StatelessWidget {
           // Simulation Presets Toggle
           Text(
             l10n.emfSelectFieldScenarioPreset,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
               color: EmfColors.inkDim,
@@ -133,7 +133,7 @@ class SimulatorLabCard extends StatelessWidget {
             children: [
               Text(
                 l10n.emfManualVectorAdjustments,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                   color: EmfColors.inkDim,

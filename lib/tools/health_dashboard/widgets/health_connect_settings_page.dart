@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -105,7 +106,7 @@ class HealthConnectSettingsPage extends StatelessWidget {
               value: healthState.autoHealthConnectSync,
               onChanged: healthState.isCollecting
                   ? null
-                  : (value) => healthState.setAutoHealthConnectSync(value),
+                  : healthState.setAutoHealthConnectSync,
             ),
             ListTile(
               leading: const Icon(Icons.download_for_offline_outlined),
@@ -217,9 +218,11 @@ class HealthConnectSettingsPage extends StatelessWidget {
       healthState.enabledTypeCount,
     );
     if (!confirmed || !context.mounted) return;
-    HealthImportProgressDialog.show(
-      context,
-      operation: HealthImportOperation.healthConnect,
+    unawaited(
+      HealthImportProgressDialog.show(
+        context,
+        operation: HealthImportOperation.healthConnect,
+      ),
     );
     await healthState.importIntoStore(restart: restart);
     if (!context.mounted) return;

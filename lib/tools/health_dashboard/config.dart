@@ -21,7 +21,7 @@ class HealthDashboardTool {
     sectionId: 'sensors',
     nameL10n: (l10n) => l10n.toolNameHealthDashboard,
     descriptionL10n: (l10n) => l10n.toolDescHealthDashboard,
-    syncDelegateFactory: () => HealthSyncDelegate(),
+    syncDelegateFactory: HealthSyncDelegate.new,
     backgroundTasks: () => [HealthBackgroundSync.task],
     createPage: (_) => const HealthDashboardPage(),
     stateProviders: () => [

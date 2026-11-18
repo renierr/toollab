@@ -110,7 +110,7 @@ class _HexEditorToolbarState extends State<HexEditorToolbar> {
           children: [
             Switch(
               value: state.showAscii,
-              onChanged: (val) => state.toggleAscii(val),
+              onChanged: state.toggleAscii,
               activeThumbColor: AppTheme.accentPurple,
             ),
             const SizedBox(width: 4),

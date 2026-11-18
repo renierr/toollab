@@ -92,7 +92,7 @@ void paintArrow(
     return;
   }
 
-  final spread = math.pi / 6;
+  const spread = math.pi / 6;
   final halfBase = math.max(strokeW * 1.5, headLen * math.sin(spread));
   final perp = Offset(-math.sin(angle), math.cos(angle));
   final dir = Offset(math.cos(angle), math.sin(angle));

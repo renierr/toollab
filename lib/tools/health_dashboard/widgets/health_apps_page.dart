@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -82,7 +83,7 @@ class _HealthAppsPageState extends State<HealthAppsPage>
   Future<void> _move(int index, int delta) async {
     final state = context.read<HealthDashboardState>();
     if (state.isCollecting) {
-      HealthBusyDialog.show(context);
+      unawaited(HealthBusyDialog.show(context));
       return;
     }
     final order = state.healthApps.map((app) => app.package).toList();

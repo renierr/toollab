@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -75,7 +76,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
       );
       final signatures = await SignatureLibrary.instance.getSignatures();
       if (!mounted) {
-        doc.dispose();
+        unawaited(doc.dispose());
         return;
       }
       _doc = doc;
@@ -135,7 +136,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
     final p = _placements[_pageIndex];
     if (p == null) return;
     setState(() {
-      var fw = ((p.fw * dispW + deltaX) / dispW).clamp(0.05, 1.0);
+      final fw = ((p.fw * dispW + deltaX) / dispW).clamp(0.05, 1.0);
       p.fw = fw;
       var fh = _heightFraction(p, _pageIndex);
       if (fh > 1.0) {

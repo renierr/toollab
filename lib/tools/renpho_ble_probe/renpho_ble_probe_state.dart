@@ -743,7 +743,7 @@ class RenphoBleProbeState extends ChangeNotifier {
   }) async {
     _subscriptions.add(
       UniversalBle.characteristicValueStream(id, characteristic).listen(
-        (value) => _onFrame(value),
+        _onFrame,
         onError: (Object e) => errorLog('[RenphoScale] Receive failed: $e'),
       ),
     );

@@ -125,7 +125,7 @@ class BluetoothScannerState extends ChangeNotifier {
     }
 
     try {
-      _scanSubscription?.cancel();
+      unawaited(_scanSubscription?.cancel());
       _scanSubscription = UniversalBle.scanStream.listen(
         _onDeviceDiscovered,
         onError: (e) {
@@ -159,7 +159,7 @@ class BluetoothScannerState extends ChangeNotifier {
     try {
       await UniversalBle.stopScan();
     } catch (_) {}
-    _scanSubscription?.cancel();
+    unawaited(_scanSubscription?.cancel());
     _scanSubscription = null;
     await _stopClassicScan();
     _isScanning = false;
@@ -184,7 +184,7 @@ class BluetoothScannerState extends ChangeNotifier {
   Future<void> _stopClassicScan() async {
     _classicPollTimer?.cancel();
     _classicPollTimer = null;
-    _discoverySubscription?.cancel();
+    unawaited(_discoverySubscription?.cancel());
     _discoverySubscription = null;
     try {
       await _btPlugin.stopDiscovery();

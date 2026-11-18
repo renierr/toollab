@@ -290,7 +290,8 @@ class MemoTranscriber extends ChangeNotifier {
           ),
           modelPath: modelPath,
         );
-        for (final s in response.segments ?? const []) {
+        for (final s
+            in response.segments ?? const <WhisperTranscribeSegment>[]) {
           if (s.text.trim().isEmpty) continue;
           segments.add(
             MemoTranscriptSegment(

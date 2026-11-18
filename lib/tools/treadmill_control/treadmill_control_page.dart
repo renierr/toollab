@@ -114,7 +114,7 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
           color: state.wakeLockEnabled ? TreadmillColors.amberMetric : null,
         ),
         tooltip: l10n.levelWakeLock,
-        onPressed: () => state.toggleWakeLock(),
+        onPressed: state.toggleWakeLock,
       ),
       IconButton(
         icon: const Icon(Icons.bluetooth),
@@ -162,9 +162,9 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                WorkoutMetricsGrid(isLandscape: false),
+                const WorkoutMetricsGrid(isLandscape: false),
                 const SizedBox(height: 16),
-                WorkoutControlsPanel(isLandscape: false),
+                const WorkoutControlsPanel(isLandscape: false),
                 const SizedBox(height: 24),
                 connectionBadges,
               ],
@@ -173,10 +173,10 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
           landscape: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              const Expanded(
                 flex: 5,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [WorkoutControlsPanel(isLandscape: true)],
@@ -191,7 +191,7 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      WorkoutMetricsGrid(isLandscape: true),
+                      const WorkoutMetricsGrid(isLandscape: true),
                       const SizedBox(height: 24),
                       connectionBadges,
                     ],

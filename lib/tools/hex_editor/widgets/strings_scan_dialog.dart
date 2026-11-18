@@ -149,7 +149,7 @@ class _StringsScanDialogState extends State<StringsScanDialog> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => state.cancelScan(),
+                      onPressed: state.cancelScan,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.statusRed,
                       ),

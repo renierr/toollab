@@ -52,9 +52,9 @@ class _CodeHighlightToolPageState extends State<CodeHighlightToolPage>
       }
     });
 
-    final sharingSub = SharingService.instance.onSharedFile.listen((file) {
-      _loadSharedFile(file);
-    });
+    final sharingSub = SharingService.instance.onSharedFile.listen(
+      _loadSharedFile,
+    );
     onDispose(sharingSub.cancel);
   }
 

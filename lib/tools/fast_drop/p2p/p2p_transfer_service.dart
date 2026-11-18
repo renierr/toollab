@@ -228,7 +228,7 @@ class P2pTransferService {
     // Not awaited: the accept notification is already on its way, and a
     // peripheral call that never returns must not be able to outlive the
     // transfer it is announcing.
-    unawaited(onReady().catchError((Object e, StackTrace s) => fail(e, s)));
+    unawaited(onReady().catchError(fail));
     try {
       await completer.future;
       return outputPath;
@@ -345,6 +345,7 @@ class P2pTransferService {
     required P2pProgressCallback onProgress,
     required bool Function() isCancelled,
   }) async {
+    // ignore: close_sinks
     final lanSocket = await _tryConnectLan(receiverIps, receiverPort);
     if (lanSocket != null) {
       await _sendOverLan(
@@ -386,13 +387,11 @@ class P2pTransferService {
     if (ips.isEmpty) return null;
     final completer = Completer<Socket?>();
     var pending = ips.length;
-    final sockets = <Socket>[];
 
     for (final ip in ips) {
       unawaited(
         Socket.connect(ip, port, timeout: P2pProtocol.lanConnectAttemptTimeout)
             .then((socket) {
-              sockets.add(socket);
               if (!completer.isCompleted) {
                 completer.complete(socket);
               } else {
@@ -411,7 +410,11 @@ class P2pTransferService {
     try {
       return await completer.future.timeout(
         P2pProtocol.lanConnectOverallTimeout,
-        onTimeout: () => null,
+        onTimeout: () {
+          // Late connects then hit the destroy branch instead of leaking.
+          if (!completer.isCompleted) completer.complete(null);
+          return null;
+        },
       );
     } catch (_) {
       return null;

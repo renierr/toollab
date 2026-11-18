@@ -44,7 +44,7 @@ class SoundFinderTool {
         },
       ),
     ],
-    syncDelegateFactory: () => SleepSyncDelegate(),
+    syncDelegateFactory: SleepSyncDelegate.new,
     createPage: (_) => const SoundFinderPage(),
   );
 }

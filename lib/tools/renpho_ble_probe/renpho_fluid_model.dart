@@ -138,7 +138,7 @@ class RenphoFluidModel {
       frequencyKHz / _characteristicFrequencyKHz,
       _dispersionExponent,
     );
-    final angle = _dispersionExponent * math.pi / 2;
+    const angle = _dispersionExponent * math.pi / 2;
     final real = 1 + magnitude * math.cos(angle);
     final imaginary = magnitude * math.sin(angle);
     final denominator = real * real + imaginary * imaginary;

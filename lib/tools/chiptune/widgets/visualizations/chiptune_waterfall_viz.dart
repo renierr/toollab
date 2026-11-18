@@ -103,8 +103,8 @@ class _ChiptuneWaterfallVizState extends State<ChiptuneWaterfallViz> {
       final double fHi = math.exp(logMin + logSpan * (c + 1) / _cols);
 
       // Start clamp at 1 to ignore the DC offset / subsonic rumble at bin 0
-      int lo = (fLo / hzPerBin).floor().clamp(1, freq.length - 1);
-      int hi = (fHi / hzPerBin).ceil().clamp(lo, freq.length - 1);
+      final int lo = (fLo / hzPerBin).floor().clamp(1, freq.length - 1);
+      final int hi = (fHi / hzPerBin).ceil().clamp(lo, freq.length - 1);
 
       // Find the peak magnitude in this column's frequency span (prevents aliasing)
       double peak = 0.0;
