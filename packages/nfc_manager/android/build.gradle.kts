@@ -1,8 +1,21 @@
 group = "dev.flutter.plugins.nfcmanager"
 version = "1.0-SNAPSHOT"
 
-// No Kotlin Gradle Plugin here: AGP 9 compiles Kotlin itself, and with
-// android.builtInKotlin=false Flutter's Gradle plugin applies KGP for us.
+// Follows Flutter's plugin template: KGP only on the classpath, never applied
+// here. AGP 9 compiles Kotlin itself; with android.builtInKotlin=false
+// Flutter's Gradle plugin applies KGP for us.
+buildscript {
+    val kotlinVersion = "2.4.20"
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+    }
+}
+
 plugins {
     id("com.android.library")
 }
@@ -25,5 +38,11 @@ android {
 
     defaultConfig {
         minSdk = 24
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }

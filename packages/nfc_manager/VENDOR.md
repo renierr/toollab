@@ -2,8 +2,9 @@
 
 This is a vendored copy of `nfc_manager` 4.4.0 from pub.dev, Android only.
 
-`android/build.gradle.kts` no longer applies the Kotlin Gradle Plugin (KGP) or
-declares its own buildscript. Upstream applies KGP unconditionally, which AGP 9
+`android/build.gradle.kts` follows Flutter 3.50's plugin template: KGP is only
+on the buildscript classpath and the `kotlin { }` block pins `jvmTarget` 17 to
+match Java, but KGP is never applied here. Upstream applies KGP unconditionally, which AGP 9
 rejects once the app switches to built-in Kotlin, and Flutter warns that future
 versions will fail to build with it. Without KGP in the file, AGP's built-in
 Kotlin compiles the plugin, and while the app still sets
