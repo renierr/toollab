@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:tool_lab/tools/text_editor/text_editor_state.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_toolbar_controls.dart';

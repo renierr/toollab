@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Shortens a name in the middle so its start and its extension stay visible.
 class FileManagerFileName extends StatelessWidget {

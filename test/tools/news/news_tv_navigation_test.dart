@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/news/news_article.dart';
 import 'package:tool_lab/tools/news/news_article_service.dart';
@@ -92,7 +93,7 @@ Future<void> _pumpTv(WidgetTester tester, NewsState state, Widget home) async {
       ],
       child: MaterialApp.router(
         routerConfig: router,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) =>
             TvNavigationScope(enabled: true, child: child!),

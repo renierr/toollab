@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/tools/depot/depot_colors.dart';
 import 'package:tool_lab/tools/depot/depot_format.dart';
 import 'package:tool_lab/tools/depot/depot_portfolio_state.dart';
@@ -33,7 +34,7 @@ void main() {
 
         Widget app(bool showChart) => MaterialApp(
           locale: const Locale('de'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SingleChildScrollView(
@@ -79,7 +80,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('de'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: DepotValueCard(

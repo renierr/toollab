@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/tools/news/news_article.dart';
 import 'package:tool_lab/tools/news/news_article_service.dart';
 import 'package:tool_lab/tools/news/news_error.dart';
@@ -61,7 +62,7 @@ void main() {
       ChangeNotifierProvider<NewsState>.value(
         value: state,
         child: const MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: NewsReaderPage(article: _article),
         ),
@@ -94,7 +95,7 @@ void main() {
       ChangeNotifierProvider<NewsState>.value(
         value: state,
         child: const MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: NewsReaderPage(article: _article),
         ),
@@ -136,7 +137,7 @@ void main() {
         ChangeNotifierProvider<NewsState>.value(
           value: state,
           child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: NewsReaderPage(article: _article),
           ),
@@ -186,7 +187,7 @@ void main() {
         ChangeNotifierProvider<NewsState>.value(
           value: state,
           child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: NewsReaderPage(article: _article),
           ),
@@ -222,7 +223,7 @@ void main() {
         ChangeNotifierProvider<NewsState>.value(
           value: state,
           child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) => MediaQuery(
               data: MediaQueryData.fromView(

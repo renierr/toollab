@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/tool_lock_controller.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';

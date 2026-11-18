@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A bare trend line for the recent values of one metric — no axes, no labels,
 /// meant to sit behind or beside a headline figure. Gaps in the series are

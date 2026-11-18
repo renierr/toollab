@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../models/market_quote.dart';
 import 'depot_market_sparkline.dart';

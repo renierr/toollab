@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Small choice chips that switch what a depot card shows.
 class DepotModeChips<T> extends StatelessWidget {

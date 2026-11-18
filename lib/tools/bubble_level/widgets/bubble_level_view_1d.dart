@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../bubble_level_colors.dart';
 
 class BubbleLevelView1d extends StatelessWidget {

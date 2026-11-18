@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A premium, reusable action chip button for toolbars.
 class ToolChip extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 /// Wraps a camera preview with pinch-to-zoom, quick zoom steps and a slider so

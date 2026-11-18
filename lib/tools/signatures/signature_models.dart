@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Rendering curve algorithm for a stroke.
 enum CurveMode { fast, natural, draft, none }

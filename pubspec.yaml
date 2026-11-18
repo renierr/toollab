@@ -111,6 +111,7 @@ dependencies:
   google_mlkit_digital_ink_recognition: ^1.0.3
   speech_to_text: ^7.5.0
   whisper_ggml: ^2.9.0
+  material_ui: ^1.11.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

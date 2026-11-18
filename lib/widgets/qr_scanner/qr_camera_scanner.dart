@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 

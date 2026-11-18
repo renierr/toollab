@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/constants.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -298,16 +299,21 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
       darkTheme: AppTheme.dark,
       themeMode: appState.themeMode,
       locale: appState.locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: _router,
       builder: (context, child) {
         final content = child ?? const SizedBox.shrink();
-        return TvNavigationScope(
-          enabled: appState.tvMode,
-          child: _toolOverlays.isEmpty
-              ? content
-              : Stack(children: [content, ..._toolOverlays]),
+        // Packages still on package:flutter/material.dart read their theme and
+        // localizations through this until they migrate to material_ui.
+        // ignore: deprecated_member_use
+        return MaterialUiCompatibilityBridge(
+          child: TvNavigationScope(
+            enabled: appState.tvMode,
+            child: _toolOverlays.isEmpty
+                ? content
+                : Stack(children: [content, ..._toolOverlays]),
+          ),
         );
       },
       debugShowCheckedModeBanner: false,

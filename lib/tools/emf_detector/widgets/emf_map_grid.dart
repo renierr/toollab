@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class EmfMapSample {
   EmfMapSample({required this.x, required this.y, required this.value});

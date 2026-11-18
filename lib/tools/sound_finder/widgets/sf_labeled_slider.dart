@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A titled slider row with a trailing value label. Used for volume, phase and
 /// masking-noise controls across the generator and counter views.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:tool_lab/constants.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';

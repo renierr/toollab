@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/tools/depot/depot_benchmark_state.dart';
 import 'package:tool_lab/tools/depot/depot_format.dart';
 import 'package:tool_lab/tools/depot/depot_portfolio_state.dart';
@@ -187,7 +188,7 @@ void main() {
     final format = DepotFormat('en', 'EUR');
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
@@ -254,7 +255,7 @@ void main() {
         ChangeNotifierProvider<DepotPortfolioState>.value(value: portfolio),
       ],
       child: MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
@@ -310,7 +311,7 @@ void main() {
           ChangeNotifierProvider<DepotPortfolioState>.value(value: portfolio),
         ],
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SingleChildScrollView(
@@ -369,7 +370,7 @@ void main() {
           ChangeNotifierProvider<DepotPortfolioState>.value(value: portfolio),
         ],
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(

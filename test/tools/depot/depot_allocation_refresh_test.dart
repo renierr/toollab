@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/tools/depot/depot_allocation_state.dart';
 import 'package:tool_lab/tools/depot/depot_portfolio_state.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
@@ -84,7 +85,7 @@ void main() {
           ChangeNotifierProvider<DepotAllocationState>.value(value: allocation),
         ],
         child: const MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: DepotAllocationRefreshButton()),
         ),
@@ -115,7 +116,7 @@ void main() {
           ChangeNotifierProvider<DepotAllocationState>.value(value: allocation),
         ],
         child: const MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(body: DepotAllocationTabView()),
         ),

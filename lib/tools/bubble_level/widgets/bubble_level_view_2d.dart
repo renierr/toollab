@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../bubble_level_colors.dart';
 
 class BubbleLevelView2d extends StatelessWidget {

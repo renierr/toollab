@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show Offset;
+import 'package:material_ui/material_ui.dart' show Offset;
 import 'package:image/image.dart' as img;
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/tools/document_scanner/utils/perspective_warp.dart';

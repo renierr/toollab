@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// What the badge shows; [flash] it after a gesture or a key.
 class VideoBadgeController extends ChangeNotifier {

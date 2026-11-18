@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../emf_colors.dart';
 import '../sensor_service.dart';
 import '../detector_state.dart';

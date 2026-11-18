@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Group label for a run of settings tiles, with an optional line explaining
 /// what the group is for.

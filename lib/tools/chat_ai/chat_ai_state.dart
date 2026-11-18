@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_mlkit_genai_prompt/google_mlkit_genai_prompt.dart';
 import 'package:tool_lab/helpers/text_analysis_helper.dart';
 import 'package:tool_lab/services/database_service.dart';

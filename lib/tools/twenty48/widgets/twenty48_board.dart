@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../engine/twenty48_engine.dart';
 import '../twenty48_colors.dart';

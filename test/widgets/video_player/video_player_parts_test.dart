@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/widgets/video_player/video_backend.dart';
@@ -8,6 +8,7 @@ import 'package:tool_lab/widgets/video_player/video_progress_saver.dart';
 import 'package:tool_lab/widgets/video_player/video_resume_store.dart';
 import 'package:tool_lab/widgets/video_player/video_seek_bar.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/widgets/video_player/video_stall_watchdog.dart';
 import 'package:tool_lab/widgets/video_player/video_sync_dialog.dart';
 import 'package:tool_lab/widgets/video_player/video_thumbnailer.dart';
@@ -248,7 +249,7 @@ void main() {
     Duration? audio;
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: VideoSyncDialog(

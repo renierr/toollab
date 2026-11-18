@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/x_feed/models/x_media.dart';
 import 'package:tool_lab/tools/x_feed/models/x_post.dart';
@@ -53,7 +54,7 @@ Future<void> _pump(
         ChangeNotifierProvider(create: (_) => XFeedState()),
       ],
       child: MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: tvMode ? TvNavigationScope(enabled: true, child: home) : home,
       ),

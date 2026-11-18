@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// One labelled readout in a game's HUD — score, best, level, lives.
 ///

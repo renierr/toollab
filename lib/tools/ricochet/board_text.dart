@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Lays out short board labels — HP numbers, score popups, chip captions — and
 /// caches the result.

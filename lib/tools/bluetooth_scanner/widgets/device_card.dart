@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/data/scanned_device.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/bluetooth_scanner_state.dart';
 import 'package:tool_lab/theme/theme.dart';

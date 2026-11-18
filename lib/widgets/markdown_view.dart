@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+// flutter_markdown_plus still takes the legacy ThemeData.
+// ignore: deprecated_member_use
+import 'package:flutter/material.dart' as legacy;
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:tool_lab/helpers/syntax/language_detector.dart';
@@ -298,32 +301,38 @@ class _MarkdownViewState extends State<MarkdownView>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    final styleSheet = MarkdownStyleSheet.fromTheme(theme).copyWith(
-      textScaler: TextScaler.linear(widget.scale),
-      p: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
-      code: TextStyle(
-        fontFamily: 'monospace',
-        fontFamilyFallback: const ['Courier', 'Consolas'],
-        fontSize: 14,
-        color: theme.colorScheme.onSurface,
-        backgroundColor: theme.colorScheme.surfaceContainerHighest,
-      ),
-      codeblockPadding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
-        vertical: 12.0,
-      ),
-      codeblockDecoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1.0),
-      ),
-      blockquotePadding: const EdgeInsets.all(12.0),
-      blockquoteDecoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(6.0),
-        border: Border(left: BorderSide(color: widget.accentColor, width: 4.0)),
-      ),
-    );
+    final styleSheet = MarkdownStyleSheet.fromTheme(legacy.Theme.of(context))
+        .copyWith(
+          textScaler: TextScaler.linear(widget.scale),
+          p: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
+          code: TextStyle(
+            fontFamily: 'monospace',
+            fontFamilyFallback: const ['Courier', 'Consolas'],
+            fontSize: 14,
+            color: theme.colorScheme.onSurface,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+          ),
+          codeblockPadding: const EdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 12.0,
+          ),
+          codeblockDecoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(8.0),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant,
+              width: 1.0,
+            ),
+          ),
+          blockquotePadding: const EdgeInsets.all(12.0),
+          blockquoteDecoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(6.0),
+            border: Border(
+              left: BorderSide(color: widget.accentColor, width: 4.0),
+            ),
+          ),
+        );
     final MarkdownBuilder builder = MarkdownBuilder(
       delegate: this,
       selectable: false,

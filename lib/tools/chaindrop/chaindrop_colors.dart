@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Chain Drop's own palette: one hue per disc value 1-7, plus a neutral pair
 /// for cracked discs that darkens as they take a second hit.

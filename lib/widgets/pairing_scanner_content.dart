@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/widgets/qr_scanner/qr_camera_scanner.dart';
 
 class PairingScannerContent extends StatelessWidget {

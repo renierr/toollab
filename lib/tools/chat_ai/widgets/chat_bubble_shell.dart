@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 
 /// Padding, alignment, width cap and rounded background shared by the message

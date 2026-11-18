@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/tools/notes/widgets/markdown_span_builder.dart';
 

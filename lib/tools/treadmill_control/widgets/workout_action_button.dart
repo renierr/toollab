@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Outlined session control button — colored border and label, no bright fill,
 /// to reduce OLED brightness/burn-in during long sessions.

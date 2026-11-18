@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:isolate';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/helpers/syntax/language_registry.dart';
 import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart';
 import 'package:tool_lab/helpers/syntax/textmate_engine.dart';

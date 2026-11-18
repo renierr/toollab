@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:tool_lab/core/tool_page_state.dart';

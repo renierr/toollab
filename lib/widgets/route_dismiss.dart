@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Closes the route [context] belongs to, even when something newer sits on top.
 ///

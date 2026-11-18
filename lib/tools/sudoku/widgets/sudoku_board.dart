@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../engine/sudoku_engine.dart';
 import '../engine/sudoku_solver.dart';

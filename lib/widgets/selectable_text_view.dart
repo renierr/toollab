@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Shared read-only text result display: a bordered, scrollable, selectable
 /// text box with an empty-state fallback. Used wherever extracted/generated

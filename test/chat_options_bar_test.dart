@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/tools/chat_ai/chat_ai_state.dart';
 import 'package:tool_lab/tools/chat_ai/widgets/chat_options_bar.dart';
 
@@ -15,7 +16,7 @@ void main() {
         ChangeNotifierProvider(
           create: (_) => ChatAiState(),
           child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(body: ChatOptionsBar()),
           ),

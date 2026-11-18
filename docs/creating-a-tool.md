@@ -130,7 +130,7 @@ Tools with significant internal state (loading states, item lists, upload progre
 Create `<name>_state.dart` at the tool root:
 
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 class MyNewToolState extends ChangeNotifier {
@@ -205,7 +205,7 @@ Tool state providers should read sync config directly from `DatabaseService.inst
 
 ### Step 1: Write `config.dart`
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -254,7 +254,7 @@ The same applies to picking: `FileDropZone(androidContentUris: true)` hands back
 
 ### Step 2: Write `<name>_page.dart`
 ```dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'responsive_layout.dart';
 
 /// A widget that switches between a portrait and a landscape layout

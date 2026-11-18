@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Multiplies the inherited text scaling by [scale] for [child].
 class TextScaleMultiplier extends StatelessWidget {

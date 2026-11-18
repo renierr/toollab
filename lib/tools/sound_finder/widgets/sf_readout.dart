@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Compact labeled value used for live readouts (level, dominant frequency).
 class SfReadout extends StatelessWidget {

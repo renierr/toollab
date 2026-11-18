@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Static palette + stroke widths for the Sketch Board toolbar.
 class SketchBoardColors {

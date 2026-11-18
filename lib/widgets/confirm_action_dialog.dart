@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'responsive_alert_dialog.dart';
 
 class ConfirmActionDialog {

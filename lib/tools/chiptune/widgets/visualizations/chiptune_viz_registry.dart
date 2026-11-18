@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'chiptune_circular_viz.dart';
 import 'chiptune_mirrored_bars_viz.dart';

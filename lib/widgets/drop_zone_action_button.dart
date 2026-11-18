@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Outlined secondary action button used beneath file drop zones
 /// (paste from clipboard, pick from gallery, etc.). Shared across tools.

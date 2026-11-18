@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/widgets/focus_outline.dart';
 
 class SectionHeader extends StatelessWidget {

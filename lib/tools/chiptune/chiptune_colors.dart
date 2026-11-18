@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Retro tracker-inspired palette for the chiptune player.
 class ChiptuneColors {

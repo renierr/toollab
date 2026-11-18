@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Sudoku's own palette, with a light and a dark board picked by the app theme.
 class SudokuColors {

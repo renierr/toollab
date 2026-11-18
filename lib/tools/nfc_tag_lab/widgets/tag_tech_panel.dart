@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/widgets/data_row.dart' as shared;
 import '../tag_tech_data.dart';
 

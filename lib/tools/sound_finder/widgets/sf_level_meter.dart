@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Horizontal loudness meter with a peak-hold tick and an optional reference
 /// marker (the "marked spot" the user is comparing against).
