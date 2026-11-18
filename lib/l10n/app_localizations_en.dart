@@ -622,6 +622,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coreTempFilesCleanedUp => 'Temp files cleaned up';
 
   @override
+  String get coreStorageTitle => 'Storage Usage';
+
+  @override
+  String get coreStorageDescription =>
+      'What the app stores on this device, largest first. Tap a folder to see what is inside.';
+
+  @override
+  String get coreStorageLoading => 'Measuring storage...';
+
+  @override
+  String coreStorageTotal(String size) {
+    return 'Total: $size';
+  }
+
+  @override
+  String coreStorageFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coreStorageEmpty => 'This folder is empty.';
+
+  @override
+  String get coreStorageRefresh => 'Refresh';
+
+  @override
+  String get coreStorageRootAppData => 'App data';
+
+  @override
+  String get coreStorageRootExternal => 'External app data';
+
+  @override
+  String get coreStorageRootSupport => 'App support';
+
+  @override
+  String get coreStorageRootCache => 'Cache';
+
+  @override
+  String get coreStorageRootTemp => 'Temp files';
+
+  @override
+  String get coreStorageHintDocuments =>
+      'Documents: recordings and files saved by tools';
+
+  @override
+  String get coreStorageHintAppFiles => 'App files: database and tool data';
+
+  @override
+  String get coreStorageHintCache => 'Cache: safe to clear';
+
+  @override
+  String get coreStorageHintCodeCache => 'Compiled code cache';
+
+  @override
+  String get coreStorageHintDatabases => 'System databases';
+
+  @override
+  String get coreStorageHintPrefs => 'Settings';
+
+  @override
+  String get coreStorageHintWebView =>
+      'Web view data: logins, cookies, site cache';
+
+  @override
   String get coreShortcutsTitle => 'Tool Shortcuts';
 
   @override

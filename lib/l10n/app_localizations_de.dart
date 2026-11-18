@@ -627,6 +627,76 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreTempFilesCleanedUp => 'Temporäre Dateien wurden bereinigt';
 
   @override
+  String get coreStorageTitle => 'Speichernutzung';
+
+  @override
+  String get coreStorageDescription =>
+      'Was die App auf diesem Gerät speichert, größte zuerst. Tippe auf einen Ordner, um den Inhalt zu sehen.';
+
+  @override
+  String get coreStorageLoading => 'Speicher wird gemessen...';
+
+  @override
+  String coreStorageTotal(String size) {
+    return 'Gesamt: $size';
+  }
+
+  @override
+  String coreStorageFiles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Dateien',
+      one: '1 Datei',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get coreStorageEmpty => 'Dieser Ordner ist leer.';
+
+  @override
+  String get coreStorageRefresh => 'Aktualisieren';
+
+  @override
+  String get coreStorageRootAppData => 'App-Daten';
+
+  @override
+  String get coreStorageRootExternal => 'Externe App-Daten';
+
+  @override
+  String get coreStorageRootSupport => 'App-Support';
+
+  @override
+  String get coreStorageRootCache => 'Cache';
+
+  @override
+  String get coreStorageRootTemp => 'Temporäre Dateien';
+
+  @override
+  String get coreStorageHintDocuments =>
+      'Dokumente: Aufnahmen und von Tools gespeicherte Dateien';
+
+  @override
+  String get coreStorageHintAppFiles => 'App-Dateien: Datenbank und Tool-Daten';
+
+  @override
+  String get coreStorageHintCache => 'Cache: kann bereinigt werden';
+
+  @override
+  String get coreStorageHintCodeCache => 'Cache für kompilierten Code';
+
+  @override
+  String get coreStorageHintDatabases => 'Systemdatenbanken';
+
+  @override
+  String get coreStorageHintPrefs => 'Einstellungen';
+
+  @override
+  String get coreStorageHintWebView =>
+      'Web-View-Daten: Logins, Cookies, Seiten-Cache';
+
+  @override
   String get coreShortcutsTitle => 'Tool-Verknüpfungen';
 
   @override

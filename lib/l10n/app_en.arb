@@ -296,6 +296,39 @@
   },
   "coreTempFilesCleanUp": "Clean Up Temp Files",
   "coreTempFilesCleanedUp": "Temp files cleaned up",
+  "coreStorageTitle": "Storage Usage",
+  "coreStorageDescription": "What the app stores on this device, largest first. Tap a folder to see what is inside.",
+  "coreStorageLoading": "Measuring storage...",
+  "coreStorageTotal": "Total: {size}",
+  "@coreStorageTotal": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "coreStorageFiles": "{count, plural, =1{1 file} other{{count} files}}",
+  "@coreStorageFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coreStorageEmpty": "This folder is empty.",
+  "coreStorageRefresh": "Refresh",
+  "coreStorageRootAppData": "App data",
+  "coreStorageRootExternal": "External app data",
+  "coreStorageRootSupport": "App support",
+  "coreStorageRootCache": "Cache",
+  "coreStorageRootTemp": "Temp files",
+  "coreStorageHintDocuments": "Documents: recordings and files saved by tools",
+  "coreStorageHintAppFiles": "App files: database and tool data",
+  "coreStorageHintCache": "Cache: safe to clear",
+  "coreStorageHintCodeCache": "Compiled code cache",
+  "coreStorageHintDatabases": "System databases",
+  "coreStorageHintPrefs": "Settings",
+  "coreStorageHintWebView": "Web view data: logins, cookies, site cache",
   "coreShortcutsTitle": "Tool Shortcuts",
   "coreShortcutsDirectAccessSubtitle": "Pin a home screen shortcut or show a separate app drawer icon. A shortcut opens the app straight inside that tool.",
   "coreShortcutsAndroidRequired": "Android is required to pin native shortcuts or toggle app drawer icons. Toggles persist locally, but no native icons are changed.",

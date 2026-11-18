@@ -7,6 +7,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/pages/maintenance/export_backups_card.dart';
 import 'package:tool_lab/pages/maintenance/import_backup_card.dart';
+import 'package:tool_lab/pages/maintenance/storage_usage_card.dart';
 import 'package:tool_lab/pages/maintenance/temp_files_card.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/health_dashboard/store/health_store.dart';
@@ -150,6 +151,8 @@ class MaintenancePage extends StatelessWidget {
                 onExportDb: () => _exportDbFlow(context),
                 onExportSettings: () => _exportSettingsFlow(context),
               ),
+              const SizedBox(height: 16),
+              const StorageUsageCard(),
               const SizedBox(height: 16),
               const TempFilesCard(),
               const SizedBox(height: 16),

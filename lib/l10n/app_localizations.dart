@@ -1178,6 +1178,120 @@ abstract class AppLocalizations {
   /// **'Temp files cleaned up'**
   String get coreTempFilesCleanedUp;
 
+  /// No description provided for @coreStorageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Usage'**
+  String get coreStorageTitle;
+
+  /// No description provided for @coreStorageDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'What the app stores on this device, largest first. Tap a folder to see what is inside.'**
+  String get coreStorageDescription;
+
+  /// No description provided for @coreStorageLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Measuring storage...'**
+  String get coreStorageLoading;
+
+  /// No description provided for @coreStorageTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: {size}'**
+  String coreStorageTotal(String size);
+
+  /// No description provided for @coreStorageFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}}'**
+  String coreStorageFiles(int count);
+
+  /// No description provided for @coreStorageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is empty.'**
+  String get coreStorageEmpty;
+
+  /// No description provided for @coreStorageRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get coreStorageRefresh;
+
+  /// No description provided for @coreStorageRootAppData.
+  ///
+  /// In en, this message translates to:
+  /// **'App data'**
+  String get coreStorageRootAppData;
+
+  /// No description provided for @coreStorageRootExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'External app data'**
+  String get coreStorageRootExternal;
+
+  /// No description provided for @coreStorageRootSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'App support'**
+  String get coreStorageRootSupport;
+
+  /// No description provided for @coreStorageRootCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache'**
+  String get coreStorageRootCache;
+
+  /// No description provided for @coreStorageRootTemp.
+  ///
+  /// In en, this message translates to:
+  /// **'Temp files'**
+  String get coreStorageRootTemp;
+
+  /// No description provided for @coreStorageHintDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents: recordings and files saved by tools'**
+  String get coreStorageHintDocuments;
+
+  /// No description provided for @coreStorageHintAppFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'App files: database and tool data'**
+  String get coreStorageHintAppFiles;
+
+  /// No description provided for @coreStorageHintCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache: safe to clear'**
+  String get coreStorageHintCache;
+
+  /// No description provided for @coreStorageHintCodeCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Compiled code cache'**
+  String get coreStorageHintCodeCache;
+
+  /// No description provided for @coreStorageHintDatabases.
+  ///
+  /// In en, this message translates to:
+  /// **'System databases'**
+  String get coreStorageHintDatabases;
+
+  /// No description provided for @coreStorageHintPrefs.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get coreStorageHintPrefs;
+
+  /// No description provided for @coreStorageHintWebView.
+  ///
+  /// In en, this message translates to:
+  /// **'Web view data: logins, cookies, site cache'**
+  String get coreStorageHintWebView;
+
   /// No description provided for @coreShortcutsTitle.
   ///
   /// In en, this message translates to:
