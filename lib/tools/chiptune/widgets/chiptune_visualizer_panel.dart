@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
@@ -8,7 +10,7 @@ import 'visualizations/chiptune_viz_data.dart';
 import 'visualizations/chiptune_viz_registry.dart';
 
 /// Paged visualization panel with horizontal swipe between modes.
-/// Owns a single [Ticker] + [AudioData] and distributes [VizData] to all pages.
+/// Owns a single [Ticker] + visualization stream and distributes [VizData] to all pages.
 class ChiptuneVisualizerPanel extends StatefulWidget {
   final ChiptunePlayer player;
   final String currentVizId;
@@ -33,7 +35,8 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
   late final PageController _pageController;
   late final Ticker _ticker;
 
-  AudioData? _audioData;
+  StreamSubscription<AudioVisualizationData>? _vizSub;
+  AudioVisualizationData? _latestPacket;
   VizData? _latestData;
 
   Duration _lastElapsed = Duration.zero;
@@ -73,13 +76,16 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
     }
   }
 
-  void _ensureAudioData() {
-    if (_audioData != null) return;
+  void _ensureVisualization() {
+    if (_vizSub != null) return;
     try {
-      SoLoud.instance.setVisualizationEnabled(true);
-      _audioData = AudioData(GetSamplesKind.linear);
+      // 512 gives 256 FFT bins, the resolution the visualizations draw.
+      SoLoud.instance.setVisualizationEnabled(true, windowSize: 512);
+      _vizSub = SoLoud.instance.audioVisualizationEvents.listen(
+        (packet) => _latestPacket = packet,
+      );
     } catch (_) {
-      _audioData = null;
+      _vizSub = null;
     }
   }
 
@@ -104,26 +110,25 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
       return;
     }
 
-    _ensureAudioData();
-    final ad = _audioData;
-    if (ad == null) return;
+    _ensureVisualization();
+    final fft = _latestPacket?.fftData;
+    final samples = _latestPacket?.waveData;
+    if (fft == null || samples == null) return;
 
     try {
-      ad.updateSamples();
-      final all = ad.getAudioData();
-      if (all.length < 512) return;
+      if (fft.length < 256 || samples.length < 256) return;
 
       final freq = <double>[];
       double bassSum = 0;
       for (int i = 0; i < 256; i++) {
-        final v = all[i].clamp(0.0, 1.0);
+        final v = fft[i].clamp(0.0, 1.0);
         freq.add(v);
         if (i < 16) bassSum += v;
       }
 
       final wave = <double>[];
       for (int i = 0; i < 256; i++) {
-        wave.add(all[256 + i]);
+        wave.add(samples[i]);
       }
 
       _latestData = VizData(
@@ -155,7 +160,7 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
   void dispose() {
     _ticker.dispose();
     widget.player.state.removeListener(_onStateChanged);
-    _audioData?.dispose();
+    unawaited(_vizSub?.cancel());
     _pageController.dispose();
     super.dispose();
   }

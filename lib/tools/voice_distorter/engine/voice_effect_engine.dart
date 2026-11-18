@@ -210,8 +210,8 @@ class VoiceEffectEngine {
       () => filters.freeverbFilter.activate(),
       () => filters.freeverbFilter.deactivate(),
       () {
-        // Freeverb scales its wet signal by 3 and the dry by 2, so a raw 1.0
-        // wet is a loud, washed-out mess. Keep the mix in a musical range.
+        // Freeverb scales its wet signal by 3, so a raw 1.0 wet is a loud,
+        // washed-out mess. Keep the mix in a musical range.
         filters.freeverbFilter.wet(soundHandle: handle).value =
             p.reverbAmount * 0.45;
         filters.freeverbFilter.roomSize(soundHandle: handle).value = 0.6;

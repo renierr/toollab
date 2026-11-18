@@ -1000,7 +1000,7 @@ class ChiptunePlayer {
       }
     } else if (savedDevice != null) {
       try {
-        SoLoud.instance.changeDevice(newDevice: savedDevice);
+        await SoLoud.instance.changeDevice(newDevice: savedDevice);
       } catch (e) {
         errorLog('$_logPrefix Error changing device during init: $e');
       }
