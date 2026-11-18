@@ -6,7 +6,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../models/x_post.dart';
 import '../x_feed_state.dart';
 import '../x_timeline_controller.dart';
-import 'x_back_key.dart';
+import 'package:tool_lab/widgets/back_key_scope.dart';
 import 'x_post_menu.dart';
 import 'x_timeline_view.dart';
 
@@ -36,7 +36,7 @@ class _XPostDetailPageState extends State<XPostDetailPage> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return XBackKey(
+    return BackKeyScope(
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.xFeedPostTitle),

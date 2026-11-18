@@ -190,10 +190,10 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
   | Post | T | Translate / show original |
   | Feed | 1 – 4 | For you, Following, Bookmarks, Search; focus returns to where it was |
   | Feed | / | Search field |
-  | Thread, profile, search page, photo viewer, player | Backspace | Back |
+  | Thread, profile, search page, photo viewer, player | Esc / Backspace | Back |
   | Player | K / J / L / M | Play-pause / back 10 s / forward 10 s / mute |
 
-  `XBackKey` wraps each pushed page in its own focus scope, so Backspace arrives even
+  `BackKeyScope` wraps each pushed page in its own focus scope, so the back keys arrive even
   before anything inside has taken the focus.
 - **Settings → Post text size** scales all text inside posts on top of the system text
   scale; stored in the tool's settings.

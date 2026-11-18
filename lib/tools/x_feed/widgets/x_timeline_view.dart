@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/scroll_nudger.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
@@ -69,7 +70,7 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
   int _navigationSequence = 0;
   int _alignmentSequence = 0;
   bool _aligningPost = false;
-  double? _nudgeTarget;
+  final ScrollNudger _nudger = ScrollNudger();
   Timer? _seenTimer;
   final Map<String, Duration> _visibleSince = {};
   Duration? _lastPassCheck;
@@ -136,11 +137,10 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
         ?.findAncestorStateOfType<_PostRowState>();
     if (row == null) return KeyEventResult.ignored;
     final key = event.logicalKey;
-    if (HardwareKeyboard.instance.isShiftPressed &&
-        XKeys.plain &&
-        (key == LogicalKeyboardKey.arrowDown ||
-            key == LogicalKeyboardKey.arrowUp)) {
-      _nudge(key == LogicalKeyboardKey.arrowDown ? 1 : -1);
+    final nudge = ScrollNudger.directionOf(event);
+    if (nudge != null) {
+      _aligningPost = false;
+      _nudger.nudge(_scroll, nudge);
       return KeyEventResult.handled;
     }
     final sequence = ++_navigationSequence;
@@ -210,29 +210,6 @@ class _XTimelineViewState extends State<XTimelineView> with DisposeCleanup {
 
   /// Shift+Up/Down scrolls a short step for reading tall posts; held keys
   /// continue from the running animation's target.
-  void _nudge(int direction) {
-    if (!_scroll.hasClients) return;
-    _aligningPost = false;
-    final position = _scroll.position;
-    final from = _nudgeTarget ?? position.pixels;
-    final target = (from + direction * position.viewportDimension * 0.2).clamp(
-      position.minScrollExtent,
-      position.maxScrollExtent,
-    );
-    _nudgeTarget = target;
-    unawaited(
-      _scroll
-          .animateTo(
-            target,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut,
-          )
-          .whenComplete(() {
-            if (_nudgeTarget == target) _nudgeTarget = null;
-          }),
-    );
-  }
-
   Future<void> _toFirst() async {
     if (!_scroll.hasClients || _shown.isEmpty) return;
     _scroll.jumpTo(_scroll.position.minScrollExtent);

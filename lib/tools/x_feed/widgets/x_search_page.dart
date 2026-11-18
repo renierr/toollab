@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-import 'x_back_key.dart';
+import 'package:tool_lab/widgets/back_key_scope.dart';
 import 'x_search_view.dart';
 
 class XSearchPage extends StatelessWidget {
@@ -15,7 +15,7 @@ class XSearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return XBackKey(
+    return BackKeyScope(
       child: Scaffold(
         appBar: AppBar(title: Text(AppLocalizations.of(context).commonSearch)),
         body: XSearchView(initialQuery: query),

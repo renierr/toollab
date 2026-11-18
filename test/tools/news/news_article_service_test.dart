@@ -186,6 +186,47 @@ void main() {
       expect(markdown, contains('_Caption. Credit_'));
     });
 
+    test('drops size variants encoded in the file name or path', () {
+      const cdn = 'https://cdn.example.com/images';
+      final article = NewsArticleService.extract(
+        '<html><body><article><p>${'Some story text here. ' * 5}</p>'
+            '<img src="$cdn/9d2d-56a6_w960_r1.5_fpx51_fpy40.jpg">'
+            '<img src="$cdn/9d2d-56a6_w520_r1.33_fpx51_fpy40.jpg">'
+            '<img src="$cdn/w_640,h_360,c_fill/photo.jpg">'
+            '<img src="$cdn/w_1280,c_fill/photo.jpg">'
+            '<img src="$cdn/1.jpg"><img src="$cdn/2.jpg">'
+            '</article></body></html>',
+        'https://example.com/story',
+        heroImageUrl: '$cdn/9d2d-56a6_w1200_r1.778_fpx51_fpy40.jpg',
+      )!;
+      final markdown = article.markdown;
+      expect(markdown, isNot(contains('9d2d-56a6')));
+      expect('photo.jpg'.allMatches(markdown), hasLength(1));
+      expect(markdown, contains('$cdn/1.jpg'));
+      expect(markdown, contains('$cdn/2.jpg'));
+    });
+
+    test('drops related teasers, print-only copies and templates', () {
+      final article = NewsArticleService.extract(
+        '<html><body><article>'
+            '<div class="hidden print:block">Printed for personal use.</div>'
+            '<p>${'Some story text here. ' * 5}</p>'
+            '<section data-area="related_articles"><ul><li>'
+            '<a href="/other">Other story</a></li></ul></section>'
+            '<a href="https://google.com/preferences/source?q=x">Prefer</a>'
+            '<h2> </h2><template><p>__proto_headline__</p></template>'
+            '</article></body></html>',
+        'https://example.com/story',
+      )!;
+      final markdown = article.markdown;
+      expect(markdown, contains('Some story text'));
+      expect(markdown, isNot(contains('Printed')));
+      expect(markdown, isNot(contains('Other story')));
+      expect(markdown, isNot(contains('Prefer')));
+      expect(markdown, isNot(contains('proto')));
+      expect(markdown, isNot(contains('##')));
+    });
+
     test('rejects a bot check page', () {
       final article = NewsArticleService.extract(
         '<html><head><title>Just a moment...</title></head><body><main>'

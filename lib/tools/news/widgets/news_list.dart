@@ -5,6 +5,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/key_guards.dart';
+import 'package:tool_lab/helpers/scroll_nudger.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
@@ -25,7 +27,7 @@ class NewsList extends StatelessWidget {
   final void Function(NewsArticle article) onSeen;
   final void Function(NewsArticle article)? onVisible;
 
-  /// Right from a card or the footer, e.g. to reach the toolbar actions.
+  /// Right or Esc from a card or the footer, e.g. to reach the toolbar actions.
   final VoidCallback? onRight;
 
   /// Up from the first card; returns whether it moved focus.
@@ -132,6 +134,7 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
   bool _wheelPullSpent = false;
   bool _refreshing = false;
   int _moveSequence = 0;
+  final ScrollNudger _nudger = ScrollNudger();
   Timer? _wheelReleaseTimer;
 
   @override
@@ -199,19 +202,45 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
     _rows[widget.articles.first.guidKey]?.focusCard();
   }
 
-  /// Up / Down step card to card and centre the target, so the remote never
-  /// lands on a card at the viewport edge; past the last card is the footer.
+  /// Up / Down and J / K step card to card and centre the target, so the
+  /// remote never lands on a card at the viewport edge; past the last card is
+  /// the footer. Home goes to the first card, R reloads, Shift+Up / Down
+  /// scroll without moving the focus, Right and Esc go to the toolbar.
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is KeyUpEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
+    final plain = KeyGuards.plain;
     final onRight = widget.onRight;
-    if (key == LogicalKeyboardKey.arrowRight && onRight != null) {
+    if (onRight != null &&
+        (key == LogicalKeyboardKey.arrowRight ||
+            plain && key == LogicalKeyboardKey.escape)) {
       if (event is KeyDownEvent) onRight();
       return KeyEventResult.handled;
     }
-    final direction = key == LogicalKeyboardKey.arrowDown
+    final nudge = ScrollNudger.directionOf(event);
+    if (nudge != null) {
+      _nudger.nudge(_controller, nudge);
+      return KeyEventResult.handled;
+    }
+    if (plain && key == LogicalKeyboardKey.keyR) {
+      if (event is KeyDownEvent) unawaited(_refreshFromEnd());
+      return KeyEventResult.handled;
+    }
+    if (plain && key == LogicalKeyboardKey.home) {
+      if (event is KeyDownEvent && widget.articles.isNotEmpty) {
+        if (_controller.hasClients) {
+          _controller.jumpTo(_controller.position.minScrollExtent);
+        }
+        unawaited(_moveTo(0, -1));
+      }
+      return KeyEventResult.handled;
+    }
+    final direction =
+        key == LogicalKeyboardKey.arrowDown ||
+            plain && key == LogicalKeyboardKey.keyJ
         ? 1
-        : key == LogicalKeyboardKey.arrowUp
+        : key == LogicalKeyboardKey.arrowUp ||
+              plain && key == LogicalKeyboardKey.keyK
         ? -1
         : 0;
     if (direction == 0) return KeyEventResult.ignored;

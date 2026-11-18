@@ -54,6 +54,7 @@ class NewsCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 autofocus: autofocus,
+                focusColor: Colors.transparent,
                 onTap: onTap,
                 child: Ink(
                   decoration: BoxDecoration(

@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/scroll_nudger.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/text_ai/text_ai_action.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/back_key_scope.dart';
 import 'package:tool_lab/widgets/copyable_image.dart';
 import 'package:tool_lab/widgets/image_preview_dialog.dart';
 import 'package:tool_lab/widgets/info_card.dart';
@@ -37,6 +39,21 @@ class NewsReaderPage extends StatefulWidget {
 class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
   Future<ExtractedArticle>? _body;
   bool _started = false;
+  final ScrollController _scroll = ScrollController();
+  final ScrollNudger _nudger = ScrollNudger();
+
+  @override
+  void initState() {
+    super.initState();
+    onDispose(_scroll.dispose);
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    final nudge = ScrollNudger.directionOf(event);
+    if (nudge == null) return KeyEventResult.ignored;
+    _nudger.nudge(_scroll, nudge);
+    return KeyEventResult.handled;
+  }
 
   @override
   void didChangeDependencies() {
@@ -152,121 +169,132 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
     final readerScale = fontPercent / 100;
     final tvMode = context.select<AppState?, bool>((s) => s?.tvMode ?? false);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.source?.title ?? l10n.newsUnknownSource,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
-          IconButton(
-            onPressed: _openTextAi,
-            icon: const Icon(Icons.auto_awesome_outlined),
-            tooltip: l10n.textAiOpen,
-          ),
-          IconButton(
-            onPressed: fontPercent <= NewsState.minFontPercent
-                ? null
-                : () => context.read<NewsState>().setReaderFontPercent(
-                    fontPercent - NewsState.fontStep,
-                  ),
-            icon: const Icon(Icons.text_decrease),
-            tooltip: l10n.newsReaderFontSmaller,
-          ),
-          IconButton(
-            onPressed: fontPercent >= NewsState.maxFontPercent
-                ? null
-                : () => context.read<NewsState>().setReaderFontPercent(
-                    fontPercent + NewsState.fontStep,
-                  ),
-            icon: const Icon(Icons.text_increase),
-            tooltip: l10n.newsReaderFontLarger,
-          ),
-          IconButton(
-            onPressed: _hasLink ? _openOriginal : null,
-            icon: const Icon(Icons.open_in_browser),
-            tooltip: l10n.newsOpenInBrowser,
-          ),
-        ],
-      ),
-      body: FutureBuilder<ExtractedArticle>(
-        future: _body,
-        builder: (context, snapshot) {
-          final extracted = snapshot.data;
-          final loading = snapshot.connectionState != ConnectionState.done;
-          final failed = snapshot.hasError && !loading;
-
-          return ReadableScrollPadding(
-            maxWidth: 760,
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
-            builder: (context, padding) => ListView(
-              padding: padding,
-              children: [
-                _ReaderHeader(
-                  article: widget.article,
-                  source: widget.source,
-                  heroImage: widget.article.imageUrl ?? extracted?.imageUrl,
-                  fontScale: readerScale,
-                  meta: [
-                    ?_linkHost(widget.article.link, widget.source?.siteUrl),
-                    newsRelativeTimeFor(
-                      l10n,
-                      locale,
-                      widget.article.publishedAt,
-                    ),
-                    if (newsReadingMinutes(extracted?.markdown ?? '')
-                        case final minutes?)
-                      l10n.newsReadingMinutes(minutes),
-                  ].where((part) => part.isNotEmpty).join(' · '),
-                ),
-                const SizedBox(height: 20),
-                if (loading) ...[
-                  const LinearProgressIndicator(minHeight: 2),
-                  const SizedBox(height: 18),
-                  Text(
-                    l10n.newsArticleLoading,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.hintColor,
-                    ),
-                  ),
-                ] else if (failed)
-                  _ReaderFallback(
-                    article: widget.article,
-                    fontScale: readerScale,
-                    onOpen: _hasLink ? _openOriginal : null,
-                  )
-                else
-                  MarkdownView(
-                    data: extracted?.markdown ?? '',
-                    accentColor: AppTheme.accentAmber,
-                    copyImages: true,
-                    scale:
-                        readerScale *
-                        MediaQuery.textScalerOf(context).scale(16) /
-                        16,
-                  ),
-                if (!loading && (extracted?.videoUrls.isNotEmpty ?? false)) ...[
-                  const SizedBox(height: 16),
-                  NewsVideoActions(videoUrls: extracted!.videoUrls),
-                ],
-                if (tvMode && !loading && !failed)
-                  _ReaderLinks(
-                    links: _webLinks(extracted?.markdown ?? ''),
-                    onOpen: _openUrl,
-                  ),
-                const SizedBox(height: 28),
-                _ReaderLinkFooter(
-                  link: widget.article.link,
-                  sourceTitle: widget.source?.title ?? l10n.newsUnknownSource,
-                  onOpen: _hasLink ? _openOriginal : null,
-                  onShare: _hasLink ? _shareLink : null,
-                  onCopy: _hasLink ? _copyLink : null,
-                ),
-              ],
+    // Outside the back-key scope, which holds the focus until a control takes it.
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: _onKey,
+      child: BackKeyScope(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              widget.source?.title ?? l10n.newsUnknownSource,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-          );
-        },
+            actions: [
+              IconButton(
+                onPressed: _openTextAi,
+                icon: const Icon(Icons.auto_awesome_outlined),
+                tooltip: l10n.textAiOpen,
+              ),
+              IconButton(
+                onPressed: fontPercent <= NewsState.minFontPercent
+                    ? null
+                    : () => context.read<NewsState>().setReaderFontPercent(
+                        fontPercent - NewsState.fontStep,
+                      ),
+                icon: const Icon(Icons.text_decrease),
+                tooltip: l10n.newsReaderFontSmaller,
+              ),
+              IconButton(
+                onPressed: fontPercent >= NewsState.maxFontPercent
+                    ? null
+                    : () => context.read<NewsState>().setReaderFontPercent(
+                        fontPercent + NewsState.fontStep,
+                      ),
+                icon: const Icon(Icons.text_increase),
+                tooltip: l10n.newsReaderFontLarger,
+              ),
+              IconButton(
+                onPressed: _hasLink ? _openOriginal : null,
+                icon: const Icon(Icons.open_in_browser),
+                tooltip: l10n.newsOpenInBrowser,
+              ),
+            ],
+          ),
+          body: FutureBuilder<ExtractedArticle>(
+            future: _body,
+            builder: (context, snapshot) {
+              final extracted = snapshot.data;
+              final loading = snapshot.connectionState != ConnectionState.done;
+              final failed = snapshot.hasError && !loading;
+
+              return ReadableScrollPadding(
+                maxWidth: 760,
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
+                builder: (context, padding) => ListView(
+                  controller: _scroll,
+                  padding: padding,
+                  children: [
+                    _ReaderHeader(
+                      article: widget.article,
+                      source: widget.source,
+                      heroImage: widget.article.imageUrl ?? extracted?.imageUrl,
+                      fontScale: readerScale,
+                      meta: [
+                        ?_linkHost(widget.article.link, widget.source?.siteUrl),
+                        newsRelativeTimeFor(
+                          l10n,
+                          locale,
+                          widget.article.publishedAt,
+                        ),
+                        if (newsReadingMinutes(extracted?.markdown ?? '')
+                            case final minutes?)
+                          l10n.newsReadingMinutes(minutes),
+                      ].where((part) => part.isNotEmpty).join(' · '),
+                    ),
+                    const SizedBox(height: 20),
+                    if (loading) ...[
+                      const LinearProgressIndicator(minHeight: 2),
+                      const SizedBox(height: 18),
+                      Text(
+                        l10n.newsArticleLoading,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ] else if (failed)
+                      _ReaderFallback(
+                        article: widget.article,
+                        fontScale: readerScale,
+                        onOpen: _hasLink ? _openOriginal : null,
+                      )
+                    else
+                      MarkdownView(
+                        data: extracted?.markdown ?? '',
+                        accentColor: AppTheme.accentAmber,
+                        copyImages: true,
+                        scale:
+                            readerScale *
+                            MediaQuery.textScalerOf(context).scale(16) /
+                            16,
+                      ),
+                    if (!loading &&
+                        (extracted?.videoUrls.isNotEmpty ?? false)) ...[
+                      const SizedBox(height: 16),
+                      NewsVideoActions(videoUrls: extracted!.videoUrls),
+                    ],
+                    if (tvMode && !loading && !failed)
+                      _ReaderLinks(
+                        links: _webLinks(extracted?.markdown ?? ''),
+                        onOpen: _openUrl,
+                      ),
+                    const SizedBox(height: 28),
+                    _ReaderLinkFooter(
+                      link: widget.article.link,
+                      sourceTitle:
+                          widget.source?.title ?? l10n.newsUnknownSource,
+                      onOpen: _hasLink ? _openOriginal : null,
+                      onShare: _hasLink ? _shareLink : null,
+                      onCopy: _hasLink ? _copyLink : null,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

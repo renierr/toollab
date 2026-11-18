@@ -10,7 +10,7 @@ import '../models/x_user.dart';
 import '../x_feed_state.dart';
 import '../x_media_actions.dart';
 import '../x_timeline_controller.dart';
-import 'x_back_key.dart';
+import 'package:tool_lab/widgets/back_key_scope.dart';
 import 'x_error_view.dart';
 import 'x_timeline_view.dart';
 import 'x_user_header.dart';
@@ -95,7 +95,7 @@ class _XUserPageState extends State<XUserPage> with DisposeCleanup {
       body = const Center(child: CircularProgressIndicator());
     }
 
-    return XBackKey(
+    return BackKeyScope(
       child: Scaffold(
         appBar: AppBar(
           title: Text('@${widget.screenName}'),

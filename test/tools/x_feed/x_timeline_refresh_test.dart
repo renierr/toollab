@@ -7,7 +7,7 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/x_feed/models/x_media.dart';
 import 'package:tool_lab/tools/x_feed/models/x_post.dart';
 import 'package:tool_lab/tools/x_feed/models/x_user.dart';
-import 'package:tool_lab/tools/x_feed/widgets/x_back_key.dart';
+import 'package:tool_lab/widgets/back_key_scope.dart';
 import 'package:tool_lab/tools/x_feed/widgets/x_timeline_view.dart';
 import 'package:tool_lab/tools/x_feed/x_feed_state.dart';
 import 'package:tool_lab/tools/x_feed/x_timeline_controller.dart';
@@ -458,7 +458,7 @@ void main() {
         builder: (context) => TextButton(
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => const XBackKey(
+              builder: (_) => const BackKeyScope(
                 child: Scaffold(body: TextField(autofocus: true)),
               ),
             ),

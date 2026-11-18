@@ -36,6 +36,7 @@ class NewsArticleService {
     'script',
     'style',
     'noscript',
+    'template',
     'iframe',
     'svg',
     'canvas',
@@ -52,6 +53,8 @@ class NewsArticleService {
     '[role="banner"]',
     '[role="complementary"]',
     '[aria-hidden="true"]',
+    '[hidden]',
+    'a[href*="google.com/preferences/source"]',
   ];
 
   // Matched against class/id words, not substrings: `node--promoted` is no
@@ -230,12 +233,44 @@ class NewsArticleService {
     );
   }
 
+  static const List<String> _namingAttributes = [
+    'data-area',
+    'data-component',
+    'data-module',
+  ];
+
+  // Screen-hidden print copies, e.g. Tailwind `hidden print:block`.
+  static bool _isPrintOnly(String className) {
+    final classes = className.split(RegExp(r'\s+'));
+    if (classes.any(
+      (c) => c == 'print-only' || c == 'show-for-print' || c == 'visible-print',
+    )) {
+      return true;
+    }
+    final hidden = classes.any((c) => c == 'hidden' || c == 'd-none');
+    return hidden &&
+        classes.any(
+          (c) =>
+              (c.startsWith('print:') && c != 'print:hidden') ||
+              (c.startsWith('d-print-') && c != 'd-print-none'),
+        );
+  }
+
   static void _dropJunk(dom.Document document) {
     final junk = <dom.Element>[];
-    for (final element in document.querySelectorAll('[class], [id]')) {
+    for (final element in document.querySelectorAll(
+      '[class], [id], [data-area], [data-component], [data-module]',
+    )) {
       final name = element.localName;
       if (name == 'html' || name == 'body' || name == 'main') continue;
-      final words = '${element.className} ${element.id}'
+      if (_isPrintOnly(element.className)) {
+        junk.add(element);
+        continue;
+      }
+      final named = _namingAttributes
+          .map((attribute) => element.attributes[attribute] ?? '')
+          .join(' ');
+      final words = '${element.className} ${element.id} $named'
           .replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]}-${m[2]}')
           .toLowerCase()
           .split(RegExp(r'[^a-z0-9]+'));
@@ -286,6 +321,11 @@ class NewsArticleService {
         image.remove();
       }
     }
+    for (final heading in root.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+      if (heading.text.trim().isEmpty && heading.querySelector('img') == null) {
+        heading.remove();
+      }
+    }
     for (final item in root.querySelectorAll('li')) {
       if (item.text.trim().isEmpty && item.querySelector('img') == null) {
         item.remove();
@@ -300,6 +340,33 @@ class NewsArticleService {
     r'\.(jpe?g|png|gif|webp|avif)$',
     caseSensitive: false,
   );
+
+  static final RegExp _nameSeparator = RegExp(r'[_\-~,]+');
+
+  // Size, crop and focus tokens CDNs put into file names and path segments:
+  // `w960`, `1200x630`, `r1.5`, `fpx51`, `@2x`, WordPress `scaled`.
+  static final RegExp _sizeToken = RegExp(
+    r'^(?:[whqr]\d+(?:\.\d+)?|\d+x\d+|\d+[wh]|fp[xy]\d+(?:\.\d+)?|@?\d(?:\.\d)?x|'
+    r'scaled|thumb|thumbnail|small|medium|large|original|v)$',
+    caseSensitive: false,
+  );
+
+  // Cloudinary-style transform segments: `w_960,h_540,c_fill`.
+  static final RegExp _transformSegment = RegExp(
+    r'^[a-z]{1,3}_[\w.:]+(?:,[a-z]{1,3}_[\w.:]+)*$',
+    caseSensitive: false,
+  );
+
+  static bool _isVariantSegment(String segment) =>
+      _transformSegment.hasMatch(segment) ||
+      segment
+          .split(_nameSeparator)
+          .every((token) => token.isEmpty || _sizeToken.hasMatch(token));
+
+  static String _stripVariantTokens(String name) => name
+      .split(_nameSeparator)
+      .where((token) => token.isNotEmpty && !_sizeToken.hasMatch(token))
+      .join('-');
 
   // Same picture regardless of size, crop or format variant.
   static String _imageIdentity(String url) {
@@ -318,12 +385,16 @@ class NewsArticleService {
         return _imageIdentity(inner);
       }
     }
-    final path = uri.path.replaceFirst(
-      RegExp(r'-\d{2,5}x\d{2,5}(?=\.\w+$)'),
-      '',
-    );
-    final base = '${uri.host.toLowerCase()}$path';
-    if (_imageExtension.hasMatch(path)) return base;
+    final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+    final file = segments.isEmpty ? '' : segments.removeLast();
+    final stem = file.replaceFirst(RegExp(r'\.\w+$'), '');
+    final name = _isVariantSegment(stem) ? '' : _stripVariantTokens(stem);
+    final path = [
+      ...segments.where((s) => !_isVariantSegment(s)),
+      name,
+    ].join('/');
+    final base = '${uri.host.toLowerCase()}/${path.toLowerCase()}';
+    if (_imageExtension.hasMatch(uri.path)) return base;
     const variants = {
       'width',
       'height',
