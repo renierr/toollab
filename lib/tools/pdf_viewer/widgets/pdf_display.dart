@@ -13,7 +13,7 @@ class PdfDisplay extends StatelessWidget {
   final VoidCallback onViewerTap;
   final EdgeInsets boundaryMargin;
   final List<PdfViewerPagePaintCallback> pagePaintCallbacks;
-  final PdfPageLayoutFunction? layoutPages;
+  final PdfPageLayoutStrategy layoutStrategy;
   final void Function(PdfDocument document, PdfViewerController controller)?
   onViewerReady;
   final void Function(PdfTextSelection? selection)? onTextSelectionChange;
@@ -28,7 +28,7 @@ class PdfDisplay extends StatelessWidget {
     required this.onViewerTap,
     required this.boundaryMargin,
     required this.pagePaintCallbacks,
-    this.layoutPages,
+    this.layoutStrategy = const SequentialPagesLayout(),
     this.onViewerReady,
     this.onTextSelectionChange,
   });
@@ -47,7 +47,7 @@ class PdfDisplay extends StatelessWidget {
         onPageChanged: onPageChanged,
         boundaryMargin: boundaryMargin,
         pagePaintCallbacks: pagePaintCallbacks,
-        layoutPages: layoutPages,
+        layoutStrategy: layoutStrategy,
         onViewerReady: onViewerReady,
         onDocumentLoadFinished: onDocumentLoadFinished,
         onGeneralTap: (context, controller, details) {

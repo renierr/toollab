@@ -6,7 +6,6 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_page_layouts.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
@@ -545,11 +544,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
                 if (_pdfTextSearcher != null)
                   _pdfTextSearcher!.pageTextMatchPaintCallback,
               ],
-              layoutPages: _layoutMode == PdfLayoutMode.horizontal
-                  ? PdfPageLayouts.horizontal
-                  : _layoutMode == PdfLayoutMode.doublePage
-                  ? PdfPageLayouts.doublePage
-                  : null,
+              layoutStrategy: _layoutMode.strategy,
               onViewerReady: (doc, controller) {
                 _initSearcher();
                 _totalPagesNotifier.value = _pdfController.pageCount;

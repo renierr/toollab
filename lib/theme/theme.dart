@@ -20,6 +20,7 @@ class AppTheme {
   /// D-pad navigation show it, so a stronger value costs touch users nothing.
   static Color get focusColor => accentBlue.withValues(alpha: 0.35);
 
+  // Mirrored for legacy-Material packages in LegacyMaterialBridge.
   static ThemeData get light => ThemeData(
     useMaterial3: true,
     colorSchemeSeed: accentBlue,
