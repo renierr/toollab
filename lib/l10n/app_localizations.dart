@@ -29169,6 +29169,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lists'**
   String get todoShowLists;
+
+  /// No description provided for @todoThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get todoThisWeek;
+
+  /// No description provided for @todoNoDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No date'**
+  String get todoNoDate;
+
+  /// No description provided for @todoDigestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your day'**
+  String get todoDigestTitle;
+
+  /// No description provided for @todoDigestDue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} due today'**
+  String todoDigestDue(int count);
+
+  /// No description provided for @todoDigestOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} overdue'**
+  String todoDigestOverdue(int count);
+
+  /// No description provided for @todoDigestMyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in My Day'**
+  String todoDigestMyDay(int count);
+
+  /// No description provided for @todoMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String todoMinutes(int count);
+
+  /// No description provided for @todoDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String todoDays(int count);
+
+  /// No description provided for @todoOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get todoOff;
+
+  /// No description provided for @todoNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get todoNever;
+
+  /// No description provided for @todoSnoozeLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Snooze length'**
+  String get todoSnoozeLength;
+
+  /// No description provided for @todoSnoozeLengthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For the snooze button on reminders and alarms'**
+  String get todoSnoozeLengthHint;
+
+  /// No description provided for @todoAlarmSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarm sound and vibration'**
+  String get todoAlarmSound;
+
+  /// No description provided for @todoAlarmSoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens the system settings for Todo alarms'**
+  String get todoAlarmSoundHint;
+
+  /// No description provided for @todoRepeatReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat reminders'**
+  String get todoRepeatReminders;
+
+  /// No description provided for @todoRepeatRemindersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings again at this interval until the task is done, snoozed or dismissed'**
+  String get todoRepeatRemindersHint;
+
+  /// No description provided for @todoRepeatAllTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat for all tasks'**
+  String get todoRepeatAllTasks;
+
+  /// No description provided for @todoRepeatAllTasksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: only important tasks'**
+  String get todoRepeatAllTasksHint;
+
+  /// No description provided for @todoDigest.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summary'**
+  String get todoDigest;
+
+  /// No description provided for @todoDigestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A notification with what is due and overdue'**
+  String get todoDigestHint;
+
+  /// No description provided for @todoDigestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary time'**
+  String get todoDigestTime;
+
+  /// No description provided for @todoCleanup.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove completed tasks'**
+  String get todoCleanup;
+
+  /// No description provided for @todoCleanupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes completed tasks after this time'**
+  String get todoCleanupHint;
+
+  /// No description provided for @todoTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently deleted'**
+  String get todoTrash;
+
+  /// No description provided for @todoTrashHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted tasks are kept on this device for 30 days'**
+  String get todoTrashHint;
+
+  /// No description provided for @todoTrashEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was deleted recently'**
+  String get todoTrashEmpty;
+
+  /// No description provided for @todoRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get todoRestore;
+
+  /// No description provided for @todoRestoreAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore all'**
+  String get todoRestoreAll;
+
+  /// No description provided for @todoEmptyTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty'**
+  String get todoEmptyTrash;
+
+  /// No description provided for @todoEmptyTrashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty recently deleted?'**
+  String get todoEmptyTrashTitle;
+
+  /// No description provided for @todoEmptyTrashMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'These tasks can no longer be restored.'**
+  String get todoEmptyTrashMessage;
+
+  /// No description provided for @todoRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored \"{title}\"'**
+  String todoRestoredSnack(String title);
+
+  /// No description provided for @todoDeletedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {date}'**
+  String todoDeletedOn(String date);
+
+  /// No description provided for @todoStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide until'**
+  String get todoStartDate;
+
+  /// No description provided for @todoHiddenUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden until {date}'**
+  String todoHiddenUntil(String date);
+
+  /// No description provided for @todoStartsMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'From {date}'**
+  String todoStartsMeta(String date);
+
+  /// No description provided for @todoDeferredCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Later ({count})'**
+  String todoDeferredCount(int count);
+
+  /// No description provided for @todoFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get todoFilters;
+
+  /// No description provided for @todoNewFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'New filter'**
+  String get todoNewFilter;
+
+  /// No description provided for @todoEditFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit filter'**
+  String get todoEditFilter;
+
+  /// No description provided for @todoDeleteFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete filter'**
+  String get todoDeleteFilter;
+
+  /// No description provided for @todoDeleteFilterMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the filter \"{title}\"? Its tasks are kept.'**
+  String todoDeleteFilterMessage(String title);
+
+  /// No description provided for @todoFilterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get todoFilterName;
+
+  /// No description provided for @todoFilterList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get todoFilterList;
+
+  /// No description provided for @todoFilterTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag'**
+  String get todoFilterTag;
+
+  /// No description provided for @todoFilterAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get todoFilterAny;
+
+  /// No description provided for @todoFilterDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get todoFilterDue;
+
+  /// No description provided for @todoFilterDueOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get todoFilterDueOverdue;
+
+  /// No description provided for @todoFilterDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today or earlier'**
+  String get todoFilterDueToday;
+
+  /// No description provided for @todoFilterDueNext7.
+  ///
+  /// In en, this message translates to:
+  /// **'Next 7 days'**
+  String get todoFilterDueNext7;
+
+  /// No description provided for @todoFilterImportantOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only important'**
+  String get todoFilterImportantOnly;
+
+  /// No description provided for @todoEmptyFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'No task matches this filter'**
+  String get todoEmptyFilter;
 }
 
 class _AppLocalizationsDelegate

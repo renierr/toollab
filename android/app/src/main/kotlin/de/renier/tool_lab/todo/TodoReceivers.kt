@@ -28,7 +28,8 @@ class TodoActionReceiver : BroadcastReceiver() {
             ACTION_TOMORROW -> TodoActions.moveToTomorrow(context, taskId)
             ACTION_SNOOZE -> {
                 val entry = TodoActions.entryFrom(intent) ?: return
-                TodoActions.snooze(context, entry, intent.getIntExtra(EXTRA_MINUTES, 10).coerceAtLeast(1))
+                val minutes = intent.getIntExtra(EXTRA_MINUTES, 0)
+                TodoActions.snooze(context, entry, if (minutes > 0) minutes else TodoFiles.snoozeMinutes(context))
             }
         }
     }

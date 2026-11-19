@@ -112,6 +112,27 @@ class TodoScheduleSection extends StatelessWidget {
         ),
         const Divider(height: 1, indent: 56),
         _ScheduleTile(
+          icon: Icons.visibility_off_outlined,
+          label: task.isDeferred(now)
+              ? l10n.todoHiddenUntil(
+                  TodoFormat.day(task.start!, l10n, now: now),
+                )
+              : l10n.todoStartDate,
+          color: task.isDeferred(now) ? active : null,
+          onTap: () async {
+            final picked = await TodoPickers.pickStart(
+              context,
+              initial: task.start,
+            );
+            if (picked == null) return;
+            await state.setStart(task, picked);
+          },
+          onClear: task.startAt == null
+              ? null
+              : () => state.setStart(task, null),
+        ),
+        const Divider(height: 1, indent: 56),
+        _ScheduleTile(
           icon: Icons.repeat,
           label: task.recurrence == null
               ? l10n.todoRepeat

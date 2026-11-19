@@ -16,7 +16,8 @@ class TodoSorting {
 
   static TodoSort forView(TodoView view, Map<String, TodoSort> modes) =>
       modes[view.widgetKey] ??
-      (view.smart == TodoSmartList.planned
+      (view.smart == TodoSmartList.planned ||
+              view.smart == TodoSmartList.thisWeek
           ? TodoSort.dueDate
           : TodoSort.manual);
 

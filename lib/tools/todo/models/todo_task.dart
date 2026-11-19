@@ -58,6 +58,9 @@ class TodoTask {
   final int? dueAt;
   final bool dueHasTime;
   final TodoRecurrence? recurrence;
+
+  /// Local midnight of the day the task shows up again; hidden until then.
+  final int? startAt;
   final int? completedAt;
   final double sortOrder;
   final List<TodoStep> steps;
@@ -77,6 +80,7 @@ class TodoTask {
     this.dueAt,
     this.dueHasTime = false,
     this.recurrence,
+    this.startAt,
     this.completedAt,
     required this.sortOrder,
     this.steps = const [],
@@ -91,6 +95,12 @@ class TodoTask {
   DateTime? get due =>
       dueAt == null ? null : DateTime.fromMillisecondsSinceEpoch(dueAt!);
   int get stepsDone => steps.where((s) => s.done).length;
+  DateTime? get start =>
+      startAt == null ? null : DateTime.fromMillisecondsSinceEpoch(startAt!);
+
+  bool isDeferred(DateTime now) =>
+      startAt != null &&
+      startAt! > DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
 
   bool isInMyDay(DateTime now) => myDay != null && myDay == dayKey(now);
 
@@ -114,6 +124,7 @@ class TodoTask {
     dueAt: map['due_at'] as int?,
     dueHasTime: (map['due_has_time'] as int? ?? 0) == 1,
     recurrence: TodoRecurrence.tryParse(map['recurrence'] as String?),
+    startAt: map['start_at'] as int?,
     completedAt: map['completed_at'] as int?,
     sortOrder: (map['sort_order'] as num?)?.toDouble() ?? 0,
     steps: _decodeList(
@@ -145,6 +156,7 @@ class TodoTask {
     dueAt: json['dueAt'] as int?,
     dueHasTime: json['dueHasTime'] as bool? ?? false,
     recurrence: TodoRecurrence.tryParse(json['recurrence'] as String?),
+    startAt: json['startAt'] as int?,
     completedAt: json['completedAt'] as int?,
     sortOrder: (json['sortOrder'] as num?)?.toDouble() ?? 0,
     steps: [
@@ -191,6 +203,7 @@ class TodoTask {
     'due_at': dueAt,
     'due_has_time': dueHasTime ? 1 : 0,
     'recurrence': recurrence?.encode(),
+    'start_at': startAt,
     'completed_at': completedAt,
     'sort_order': sortOrder,
     'steps': jsonEncode([for (final s in steps) s.toJson()]),
@@ -210,6 +223,7 @@ class TodoTask {
     'dueAt': dueAt,
     'dueHasTime': dueHasTime,
     'recurrence': recurrence?.encode(),
+    'startAt': startAt,
     'completedAt': completedAt,
     'sortOrder': sortOrder,
     'steps': [for (final s in steps) s.toJson()],
@@ -228,6 +242,7 @@ class TodoTask {
     int? Function()? dueAt,
     bool? dueHasTime,
     TodoRecurrence? Function()? recurrence,
+    int? Function()? startAt,
     int? Function()? completedAt,
     double? sortOrder,
     List<TodoStep>? steps,
@@ -246,6 +261,7 @@ class TodoTask {
     dueAt: dueAt != null ? dueAt() : this.dueAt,
     dueHasTime: dueHasTime ?? this.dueHasTime,
     recurrence: recurrence != null ? recurrence() : this.recurrence,
+    startAt: startAt != null ? startAt() : this.startAt,
     completedAt: completedAt != null ? completedAt() : this.completedAt,
     sortOrder: sortOrder ?? this.sortOrder,
     steps: steps ?? this.steps,

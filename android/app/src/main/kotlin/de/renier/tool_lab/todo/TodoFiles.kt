@@ -14,6 +14,10 @@ data class TodoAlarmEntry(
     val title: String,
     val body: String,
     val color: Int,
+    /** Minutes until it rings again while the task is open; 0 rings once. */
+    val repeat: Int = 0,
+    val listId: String? = null,
+    val digest: Boolean = false,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("key", key)
@@ -23,6 +27,11 @@ data class TodoAlarmEntry(
         .put("title", title)
         .put("body", body)
         .put("color", color.toLong() and 0xFFFFFFFFL)
+        .apply {
+            if (repeat > 0) put("repeat", repeat)
+            if (listId != null) put("listId", listId)
+            if (digest) put("kind", "digest")
+        }
 
     companion object {
         fun fromJson(json: JSONObject): TodoAlarmEntry? {
@@ -36,6 +45,9 @@ data class TodoAlarmEntry(
                 title = json.optString("title"),
                 body = json.optString("body"),
                 color = json.optLong("color", 0xFF4FC3F7L).toInt(),
+                repeat = json.optInt("repeat", 0).coerceAtLeast(0),
+                listId = json.optString("listId").takeIf { it.isNotEmpty() },
+                digest = json.optString("kind") == "digest",
             )
         }
     }
@@ -104,6 +116,22 @@ object TodoFiles {
         return (0 until array.length()).mapNotNull { i ->
             array.optJSONObject(i)?.let(TodoAlarmEntry::fromJson)
         }
+    }
+
+    fun snoozeMinutes(context: Context): Int =
+        (readJson(context, ALARMS)?.optInt("snoozeMinutes", 10) ?: 10).coerceAtLeast(1)
+
+    /** Tasks Dart saw done or deleted; their snoozes and repeats are dropped. */
+    fun stoppedTasks(context: Context): Set<String> {
+        val array = readJson(context, ALARMS)?.optJSONArray("stopped") ?: return emptySet()
+        return (0 until array.length()).mapNotNull { array.optString(it).takeIf { id -> id.isNotEmpty() } }.toSet()
+    }
+
+    fun removeSnoozes(context: Context, taskId: String): Boolean {
+        val snoozes = readEntries(context, SNOOZES)
+        if (snoozes.none { it.taskId == taskId }) return false
+        writeSnoozes(context, snoozes.filter { it.taskId != taskId })
+        return true
     }
 
     fun writeSnoozes(context: Context, entries: List<TodoAlarmEntry>) = writeEntries(context, SNOOZES, entries)

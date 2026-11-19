@@ -7,13 +7,16 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/todo/config.dart';
 import 'package:tool_lab/tools/todo/models/todo_attachment.dart';
+import 'package:tool_lab/tools/todo/models/todo_filter.dart';
 import 'package:tool_lab/tools/todo/models/todo_folder.dart';
 import 'package:tool_lab/tools/todo/models/todo_list.dart';
 import 'package:tool_lab/tools/todo/models/todo_task.dart';
+import 'package:tool_lab/tools/todo/models/todo_trash_item.dart';
 import 'package:tool_lab/tools/todo/todo_background.dart';
 import 'package:tool_lab/tools/todo/todo_db_helper.dart';
 import 'package:tool_lab/tools/todo/todo_desktop_reminders.dart';
 import 'package:tool_lab/tools/todo/todo_native.dart';
+import 'package:tool_lab/tools/todo/todo_notify_settings.dart';
 import 'package:tool_lab/tools/todo/todo_operations.dart';
 import 'package:tool_lab/tools/todo/todo_publisher.dart';
 import 'package:tool_lab/tools/todo/todo_quick_parser.dart';
@@ -24,6 +27,7 @@ import 'package:tool_lab/tools/todo/todo_view.dart';
 
 export 'package:tool_lab/tools/todo/todo_sort.dart' show TodoSort;
 export 'package:tool_lab/tools/todo/todo_swipe_action.dart';
+export 'package:tool_lab/tools/todo/todo_notify_settings.dart';
 
 /// What an undo restores: the tasks as they were, minus the ones it created.
 class TodoUndo {
@@ -69,6 +73,9 @@ class TodoState extends ChangeNotifier {
   TodoSwipeAction _swipeEnd = TodoSwipeAction.delete;
   int _defaultReminderMinutes = defaultReminderMinutesFallback;
   bool _plannedCalendar = false;
+  TodoNotifySettings _notify = const TodoNotifySettings();
+  int _cleanupDays = TodoOperations.defaultCleanupDays;
+  List<TodoFilter> _filters = [];
 
   bool _loaded = false;
   bool _loading = false;
@@ -78,6 +85,7 @@ class TodoState extends ChangeNotifier {
   String? _selectedTaskId;
   String _query = '';
   final Set<TodoView> _expandedCompleted = {};
+  final Set<TodoView> _expandedDeferred = {};
 
   Timer? _publishDebounce;
   Timer? _syncDebounce;
@@ -127,6 +135,22 @@ class TodoState extends ChangeNotifier {
 
   TodoSort sortFor(TodoView view) => TodoSorting.forView(view, _sortModes);
 
+  TodoNotifySettings get notifySettings => _notify;
+
+  /// Completed tasks older than this many days are removed; 0 keeps them.
+  int get cleanupDays => _cleanupDays;
+
+  List<TodoFilter> get filters => _filters;
+
+  Map<String, TodoFilter> get _filterMap => {for (final f in _filters) f.id: f};
+
+  TodoFilter? filterById(String id) {
+    for (final f in _filters) {
+      if (f.id == id) return f;
+    }
+    return null;
+  }
+
   /// Action for a swipe from the leading edge towards the trailing one.
   TodoSwipeAction get swipeStart => _swipeStart;
   TodoSwipeAction get swipeEnd => _swipeEnd;
@@ -138,6 +162,8 @@ class TodoState extends ChangeNotifier {
   bool get plannedCalendar => _plannedCalendar;
 
   bool completedExpanded(TodoView view) => _expandedCompleted.contains(view);
+
+  bool deferredExpanded(TodoView view) => _expandedDeferred.contains(view);
 
   List<String> get allTags {
     final seen = <String, String>{};
@@ -157,6 +183,7 @@ class TodoState extends ChangeNotifier {
         TodoViewKind.smart => smartName(view.smart!),
         TodoViewKind.list => listById(view.id)?.name ?? '',
         TodoViewKind.tag => '#${view.id}',
+        TodoViewKind.filter => filterById(view.id)?.name ?? '',
       };
 
   int colorFor(TodoView view) => view.kind == TodoViewKind.list
@@ -165,20 +192,48 @@ class TodoState extends ChangeNotifier {
 
   int openCount(TodoView view) {
     final now = DateTime.now();
-    return _tasks.where((t) => !t.completed && view.matches(t, now)).length;
+    final filters = _filterMap;
+    return _tasks
+        .where(
+          (t) =>
+              !t.completed &&
+              !t.isDeferred(now) &&
+              view.matches(t, now, filters),
+        )
+        .length;
   }
 
-  /// Open tasks of the current view (or the search result), sorted.
+  /// Open tasks of the current view (or the search result), sorted. Tasks
+  /// with a start date still ahead only show up in a search.
   List<TodoTask> openTasks(TodoView view) {
     final now = DateTime.now();
     final needle = _query.trim().toLowerCase();
+    final filters = _filterMap;
     final result = _tasks.where((t) {
       if (t.completed) return false;
       if (needle.isNotEmpty) return _matchesQuery(t, needle);
-      return view.matches(t, now);
+      return !t.isDeferred(now) && view.matches(t, now, filters);
     }).toList();
     TodoSorting.sort(result, sortFor(view));
     return result;
+  }
+
+  /// Open tasks of [view] hidden until a later start date, soonest first.
+  List<TodoTask> deferredTasks(TodoView view) {
+    if (_query.trim().isNotEmpty || view.smart == TodoSmartList.completed) {
+      return const [];
+    }
+    final now = DateTime.now();
+    final filters = _filterMap;
+    return _tasks
+        .where(
+          (t) =>
+              !t.completed &&
+              t.isDeferred(now) &&
+              view.matches(t, now, filters),
+        )
+        .toList()
+      ..sort((a, b) => a.startAt!.compareTo(b.startAt!));
   }
 
   List<TodoTask> completedTasks(TodoView view) {
@@ -194,7 +249,7 @@ class TodoState extends ChangeNotifier {
             if (!t.completed) return false;
             if (needle.isNotEmpty) return _matchesQuery(t, needle);
             if (view.smart == TodoSmartList.completed) return true;
-            return view.matches(t, now);
+            return view.matches(t, now, _filterMap);
           }).toList()
           ..sort((a, b) => (b.completedAt ?? 0).compareTo(a.completedAt ?? 0));
     return result;
@@ -217,6 +272,7 @@ class TodoState extends ChangeNotifier {
       await _reloadFromDb();
       await _ensureDefaultList();
       await _loadSettings();
+      await _cleanup();
       _loaded = true;
     } catch (e) {
       errorLog('[TodoState] load failed: $e');
@@ -287,6 +343,9 @@ class TodoState extends ChangeNotifier {
     if (minutes != null && minutes >= 0 && minutes < 24 * 60) {
       _defaultReminderMinutes = minutes;
     }
+    _notify = await TodoNotifySettings.load();
+    _cleanupDays = await TodoOperations.loadCleanupDays();
+    _filters = await TodoFilter.load();
     _plannedCalendar =
         await DatabaseService.instance.getSetting(
           TodoTool.config.id,
@@ -299,7 +358,21 @@ class TodoState extends ChangeNotifier {
     );
     if (last != null) {
       final v = TodoView.fromWidgetKey(last);
-      if (v.kind != TodoViewKind.list || listById(v.id) != null) _view = v;
+      if (_viewExists(v)) _view = v;
+    }
+  }
+
+  bool _viewExists(TodoView v) => switch (v.kind) {
+    TodoViewKind.list => listById(v.id) != null,
+    TodoViewKind.filter => filterById(v.id) != null,
+    _ => true,
+  };
+
+  Future<void> _cleanup() async {
+    try {
+      if (await TodoOperations.cleanup(_cleanupDays)) await _reloadFromDb();
+    } catch (e) {
+      errorLog('[TodoState] cleanup failed: $e');
     }
   }
 
@@ -329,7 +402,7 @@ class TodoState extends ChangeNotifier {
     if (!_loaded) await load();
     if (intent.listId != null) {
       final v = TodoView.fromWidgetKey(intent.listId!);
-      if (v.kind != TodoViewKind.list || listById(v.id) != null) selectView(v);
+      if (_viewExists(v)) selectView(v);
     }
     if (intent.taskId != null) {
       if (taskById(intent.taskId!) == null) await _reloadFromDb();
@@ -369,6 +442,11 @@ class TodoState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleDeferredExpanded(TodoView view) {
+    if (!_expandedDeferred.remove(view)) _expandedDeferred.add(view);
+    notifyListeners();
+  }
+
   Future<void> setSort(TodoView view, TodoSort sort) async {
     _sortModes[view.widgetKey] = sort;
     notifyListeners();
@@ -403,6 +481,58 @@ class TodoState extends ChangeNotifier {
     );
   }
 
+  Future<void> setNotifySettings(TodoNotifySettings settings) async {
+    _notify = settings;
+    notifyListeners();
+    await settings.save();
+    _schedulePublish();
+  }
+
+  Future<void> setCleanupDays(int days) async {
+    _cleanupDays = days;
+    notifyListeners();
+    await TodoOperations.saveCleanupDays(days);
+    await _cleanup();
+    notifyListeners();
+    _schedulePublish();
+    _scheduleSync();
+  }
+
+  // ---------------------------------------------------------------- filters
+
+  Future<TodoFilter> saveFilter(TodoFilter filter) async {
+    final draft = filter.id.isEmpty
+        ? TodoFilter(
+            id: _db.generateShortId(),
+            name: filter.name,
+            listId: filter.listId,
+            tag: filter.tag,
+            due: filter.due,
+            importantOnly: filter.importantOnly,
+          )
+        : filter;
+    final exists = _filters.any((f) => f.id == draft.id);
+    _filters = exists
+        ? [for (final f in _filters) f.id == draft.id ? draft : f]
+        : [..._filters, draft];
+    await TodoFilter.save(_filters);
+    if (!exists) {
+      selectView(TodoView.filter(draft.id));
+    } else {
+      notifyListeners();
+    }
+    _schedulePublish();
+    return draft;
+  }
+
+  Future<void> deleteFilter(TodoFilter filter) async {
+    _filters = _filters.where((f) => f.id != filter.id).toList();
+    if (_view == TodoView.filter(filter.id)) _view = TodoView.myDay;
+    notifyListeners();
+    await TodoFilter.save(_filters);
+    _schedulePublish();
+  }
+
   Future<void> setDefaultReminderMinutes(int minutes) async {
     _defaultReminderMinutes = minutes;
     notifyListeners();
@@ -426,8 +556,12 @@ class TodoState extends ChangeNotifier {
   }
 
   /// The list a new task in [view] goes to.
-  String targetListFor(TodoView view) =>
-      view.kind == TodoViewKind.list ? view.id : defaultListId;
+  String targetListFor(TodoView view) => switch (view.kind) {
+    TodoViewKind.list => view.id,
+    TodoViewKind.filter =>
+      listById(filterById(view.id)?.listId)?.shortId ?? defaultListId,
+    _ => defaultListId,
+  };
 
   Future<TodoTask> addTask(
     TodoQuickDraft draft, {
@@ -438,10 +572,21 @@ class TodoState extends ChangeNotifier {
   }) async {
     final v = view ?? _view;
     final now = DateTime.now();
-    final tags = {...draft.tags, if (v.kind == TodoViewKind.tag) v.id}.toList();
+    final filter = v.kind == TodoViewKind.filter ? filterById(v.id) : null;
+    final tags = {
+      ...draft.tags,
+      if (v.kind == TodoViewKind.tag) v.id,
+      ?filter?.tag,
+    }.toList();
     var due = draft.due;
     var hasTime = draft.hasTime;
-    if (due == null && v.smart == TodoSmartList.planned) {
+    final datedView =
+        v.smart == TodoSmartList.planned ||
+        v.smart == TodoSmartList.thisWeek ||
+        (filter != null &&
+            filter.due != TodoFilterDue.any &&
+            filter.due != TodoFilterDue.noDate);
+    if (due == null && datedView) {
       due = DateTime(now.year, now.month, now.day);
       hasTime = false;
     }
@@ -454,7 +599,10 @@ class TodoState extends ChangeNotifier {
       shortId: _db.generateShortId(),
       listId: listId ?? targetListFor(v),
       title: draft.title,
-      important: draft.important || v.smart == TodoSmartList.important,
+      important:
+          draft.important ||
+          v.smart == TodoSmartList.important ||
+          (filter?.importantOnly ?? false),
       myDay: addToMyDay || v.smart == TodoSmartList.myDay
           ? TodoTask.dayKey(now)
           : null,
@@ -516,6 +664,7 @@ class TodoState extends ChangeNotifier {
 
   Future<void> undo(TodoUndo undo) async {
     final stamp = _now;
+    await _db.removeFromTrash(ids: [for (final t in undo.previous) t.shortId]);
     await _saveTasks([
       for (final t in undo.previous)
         t.copyWith(updatedAt: stamp, deleted: false),
@@ -584,6 +733,15 @@ class TodoState extends ChangeNotifier {
     );
   }
 
+  /// Hides the task until [day]; null shows it again.
+  Future<void> setStart(TodoTask task, DateTime? day) => updateTask(
+    task.copyWith(
+      startAt: () => day == null
+          ? null
+          : DateTime(day.year, day.month, day.day).millisecondsSinceEpoch,
+    ),
+  );
+
   Future<void> setRecurrence(TodoTask task, TodoRecurrence? recurrence) {
     final now = DateTime.now();
     final due =
@@ -648,6 +806,7 @@ class TodoState extends ChangeNotifier {
   }
 
   Future<TodoUndo> deleteTask(TodoTask task) async {
+    await _db.addToTrash([task], _now);
     await _saveTasks([task.copyWith(deleted: true, updatedAt: _now)]);
     await _db.softDelete(TodoRecordKind.task, task.shortId);
     if (_selectedTaskId == task.shortId) _selectedTaskId = null;
@@ -655,6 +814,29 @@ class TodoState extends ChangeNotifier {
     notifyListeners();
     return TodoUndo([task]);
   }
+
+  // ------------------------------------------------------------------ trash
+
+  Future<List<TodoTrashItem>> trash() => _db.getTrash();
+
+  /// Puts the tasks back; one whose list is gone lands in the default list.
+  Future<void> restore(List<TodoTrashItem> items) async {
+    if (items.isEmpty) return;
+    final stamp = _now;
+    await _saveTasks([
+      for (final item in items)
+        item.task.copyWith(
+          listId: listById(item.task.listId) == null
+              ? defaultListId
+              : item.task.listId,
+          deleted: false,
+          updatedAt: stamp,
+        ),
+    ]);
+    await _db.removeFromTrash(ids: [for (final i in items) i.task.shortId]);
+  }
+
+  Future<void> emptyTrash() => _db.removeFromTrash();
 
   /// Manual order: moves the task between its new neighbours in [visible].
   /// [newIndex] is the position after removal, as `onReorderItem` reports.
@@ -720,6 +902,7 @@ class TodoState extends ChangeNotifier {
       }
       _attachments.remove(task.shortId);
     }
+    await _db.addToTrash(doomed, stamp);
     await _saveTasks([
       for (final t in doomed) t.copyWith(deleted: true, updatedAt: stamp),
     ]);
@@ -850,6 +1033,8 @@ class TodoState extends ChangeNotifier {
           tasks: _loaded ? _tasks : await _db.getTasks(),
           lists: _loaded ? _lists : await _db.getLists(),
           sortModes: _loaded ? _sortModes : await TodoSorting.load(),
+          filters: _loaded ? _filters : await TodoFilter.load(),
+          settings: _loaded ? _notify : await TodoNotifySettings.load(),
           l10n: await TodoPublisher.localizations(),
         );
       } else {

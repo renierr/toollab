@@ -8,6 +8,7 @@ import 'package:tool_lab/tools/todo/models/todo_attachment.dart';
 import 'package:tool_lab/tools/todo/models/todo_folder.dart';
 import 'package:tool_lab/tools/todo/models/todo_list.dart';
 import 'package:tool_lab/tools/todo/models/todo_task.dart';
+import 'package:tool_lab/tools/todo/models/todo_trash_item.dart';
 
 enum TodoRecordKind { folder, list, task, attachment }
 
@@ -31,6 +32,9 @@ class TodoDbHelper {
   static const String tasksTable = 'todo_tasks';
   static const String attachmentsTable = 'todo_attachments';
 
+  /// Local only, never synced: snapshots of deleted tasks for restoring.
+  static const String trashTable = 'todo_trash';
+
   static const Map<TodoRecordKind, String> _tables = {
     TodoRecordKind.folder: foldersTable,
     TodoRecordKind.list: listsTable,
@@ -49,7 +53,7 @@ class TodoDbHelper {
       TodoTool.config.id,
     );
     await db.migrate(
-      currentVersion: 1,
+      currentVersion: 2,
       onMigrate: (txn, oldVersion, newVersion) async {
         if (oldVersion < 1) {
           const sync = '''
@@ -111,6 +115,17 @@ class TodoDbHelper {
             'CREATE INDEX idx_${txn.nameTable(attachmentsTable)}_task '
             'ON ${txn.nameTable(attachmentsTable)}(task_id)',
           );
+        }
+        if (oldVersion < 2) {
+          await txn.execute(
+            'ALTER TABLE ${txn.nameTable(tasksTable)} ADD COLUMN start_at INTEGER',
+          );
+          await txn.execute('''
+            CREATE TABLE ${txn.nameTable(trashTable)} (
+              short_id TEXT PRIMARY KEY,
+              deleted_at INTEGER NOT NULL,
+              data TEXT NOT NULL
+            )''');
         }
       },
     );
@@ -307,6 +322,58 @@ class TodoDbHelper {
       where: 'short_id = ?',
       whereArgs: [shortId],
     );
+  }
+
+  Future<void> addToTrash(List<TodoTask> tasks, int deletedAt) async {
+    if (tasks.isEmpty) return;
+    final db = await _getDb();
+    await db.transaction((txn) async {
+      for (final task in tasks) {
+        await txn.insert(
+          trashTable,
+          TodoTrashItem(task: task, deletedAt: deletedAt).toRow(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
+  }
+
+  Future<List<TodoTrashItem>> getTrash() async {
+    final db = await _getDb();
+    final rows = await db.query(trashTable, orderBy: 'deleted_at DESC');
+    return [for (final row in rows) ?TodoTrashItem.fromMap(row)];
+  }
+
+  /// Removes the given entries, or all with [olderThan] / no arguments.
+  Future<void> removeFromTrash({List<String>? ids, int? olderThan}) async {
+    final db = await _getDb();
+    if (ids != null) {
+      if (ids.isEmpty) return;
+      await db.delete(
+        trashTable,
+        where: 'short_id IN (${List.filled(ids.length, '?').join(',')})',
+        whereArgs: ids,
+      );
+    } else if (olderThan != null) {
+      await db.delete(
+        trashTable,
+        where: 'deleted_at < ?',
+        whereArgs: [olderThan],
+      );
+    } else {
+      await db.delete(trashTable);
+    }
+  }
+
+  /// Completed tasks done before [before], for the automatic cleanup.
+  Future<List<TodoTask>> getCompletedBefore(int before) async {
+    final db = await _getDb();
+    final rows = await db.query(
+      tasksTable,
+      where: 'deleted = 0 AND completed_at IS NOT NULL AND completed_at < ?',
+      whereArgs: [before],
+    );
+    return rows.map(TodoTask.fromMap).toList();
   }
 
   Future<void> markPulledDeleted(

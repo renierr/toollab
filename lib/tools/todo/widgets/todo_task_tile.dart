@@ -292,6 +292,13 @@ class _TaskMeta extends StatelessWidget {
           label: TodoFormat.due(task, l10n, now: now),
           color: _isToday(task.due!, now) ? theme.colorScheme.primary : null,
         ),
+      if (!task.completed && task.isDeferred(now))
+        _MetaItem(
+          icon: Icons.visibility_off_outlined,
+          label: l10n.todoStartsMeta(
+            TodoFormat.day(task.start!, l10n, now: now),
+          ),
+        ),
       if (task.recurrence != null) const _MetaItem(icon: Icons.repeat),
       if (task.reminders.isNotEmpty)
         _MetaItem(

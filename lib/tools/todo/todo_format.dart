@@ -40,6 +40,8 @@ class TodoFormat {
         TodoSmartList.myDay => l10n.todoMyDay,
         TodoSmartList.important => l10n.todoImportant,
         TodoSmartList.planned => l10n.todoPlanned,
+        TodoSmartList.thisWeek => l10n.todoThisWeek,
+        TodoSmartList.noDate => l10n.todoNoDate,
         TodoSmartList.all => l10n.todoAllTasks,
         TodoSmartList.completed => l10n.todoCompleted,
       };

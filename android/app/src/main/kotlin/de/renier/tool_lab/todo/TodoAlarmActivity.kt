@@ -102,8 +102,9 @@ class TodoAlarmActivity : Activity() {
             TodoActions.complete(this, entry.taskId)
             finish()
         })
-        root.addView(button(getString(R.string.todo_action_snooze_10_long), Color.rgb(0x2A, 0x31, 0x3C), Color.WHITE) {
-            TodoActions.snooze(this, entry, 10)
+        val snooze = TodoFiles.snoozeMinutes(this)
+        root.addView(button(getString(R.string.todo_action_snooze_long, snooze), Color.rgb(0x2A, 0x31, 0x3C), Color.WHITE) {
+            TodoActions.snooze(this, entry, snooze)
             finish()
         })
         root.addView(button(getString(R.string.todo_action_tomorrow_long), Color.rgb(0x2A, 0x31, 0x3C), Color.WHITE) {

@@ -65,11 +65,7 @@ object TodoActions {
                 .put("at", System.currentTimeMillis()),
         )
         TodoNotifications.cancel(context, taskId)
-        val snoozes = TodoFiles.readEntries(context, TodoFiles.SNOOZES)
-        if (snoozes.any { it.taskId == taskId }) {
-            TodoFiles.writeSnoozes(context, snoozes.filter { it.taskId != taskId })
-            TodoAlarmScheduler.reschedule(context)
-        }
+        if (TodoFiles.removeSnoozes(context, taskId)) TodoAlarmScheduler.reschedule(context)
     }
 
     fun snooze(context: Context, entry: TodoAlarmEntry, minutes: Int) {
@@ -81,7 +77,9 @@ object TodoActions {
         TodoAlarmScheduler.reschedule(context)
     }
 
+    /** Also stops a repeating reminder. */
     fun dismiss(context: Context, taskId: String) {
         TodoNotifications.cancel(context, taskId)
+        if (TodoFiles.removeSnoozes(context, taskId)) TodoAlarmScheduler.reschedule(context)
     }
 }

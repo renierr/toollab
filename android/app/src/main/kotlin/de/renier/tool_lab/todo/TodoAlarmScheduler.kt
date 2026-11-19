@@ -41,8 +41,9 @@ object TodoAlarmScheduler {
 
     private fun pending(context: Context): List<TodoAlarmEntry> {
         val last = lastFiredAt(context)
+        val stopped = TodoFiles.stoppedTasks(context)
         return (TodoFiles.readEntries(context, TodoFiles.ALARMS) +
-            TodoFiles.readEntries(context, TodoFiles.SNOOZES))
+            TodoFiles.readEntries(context, TodoFiles.SNOOZES).filter { it.taskId !in stopped })
             .filter { it.at > last }
             .sortedBy { it.at }
     }
@@ -93,15 +94,23 @@ object TodoAlarmScheduler {
         val due = pending(context).filter { it.at <= now + DUE_SLACK_MS }
         if (due.isNotEmpty()) {
             // One notification per task: the latest due entry wins.
-            due.groupBy { it.taskId }
+            val shown = due.groupBy { it.taskId }
                 .map { (_, entries) -> entries.maxBy { it.at } }
                 .filter { now - it.at < STALE_MS }
-                .forEach { TodoNotifications.show(context, it) }
+            shown.forEach { TodoNotifications.show(context, it) }
             val newest = due.maxOf { it.at }
             setLastFiredAt(context, newest)
+            // Repeating reminders come back as snoozes until done, snoozed or dismissed.
+            val repeats = shown.filter { it.repeat > 0 && !it.digest }.map {
+                val at = maxOf(now, newest) + it.repeat * 60_000L
+                it.copy(key = "${it.taskId}@$at", at = at)
+            }
+            val repeated = repeats.map { it.taskId }.toSet()
+            val stopped = TodoFiles.stoppedTasks(context)
             val snoozes = TodoFiles.readEntries(context, TodoFiles.SNOOZES)
-            if (snoozes.any { it.at <= newest }) {
-                TodoFiles.writeSnoozes(context, snoozes.filter { it.at > newest })
+            val kept = snoozes.filter { it.at > newest && it.taskId !in repeated && it.taskId !in stopped }
+            if (kept.size != snoozes.size || repeats.isNotEmpty()) {
+                TodoFiles.writeSnoozes(context, kept + repeats)
             }
         }
         reschedule(context)

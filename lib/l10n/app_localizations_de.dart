@@ -16705,4 +16705,188 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get todoShowLists => 'Listen';
+
+  @override
+  String get todoThisWeek => 'Diese Woche';
+
+  @override
+  String get todoNoDate => 'Ohne Datum';
+
+  @override
+  String get todoDigestTitle => 'Dein Tag';
+
+  @override
+  String todoDigestDue(int count) {
+    return '$count heute fällig';
+  }
+
+  @override
+  String todoDigestOverdue(int count) {
+    return '$count überfällig';
+  }
+
+  @override
+  String todoDigestMyDay(int count) {
+    return '$count in Mein Tag';
+  }
+
+  @override
+  String todoMinutes(int count) {
+    return '$count Min.';
+  }
+
+  @override
+  String todoDays(int count) {
+    return '$count Tage';
+  }
+
+  @override
+  String get todoOff => 'Aus';
+
+  @override
+  String get todoNever => 'Nie';
+
+  @override
+  String get todoSnoozeLength => 'Schlummerdauer';
+
+  @override
+  String get todoSnoozeLengthHint =>
+      'Für die Schlummern-Taste bei Erinnerungen und Alarmen';
+
+  @override
+  String get todoAlarmSound => 'Alarmton und Vibration';
+
+  @override
+  String get todoAlarmSoundHint =>
+      'Öffnet die Systemeinstellungen für Todo-Alarme';
+
+  @override
+  String get todoRepeatReminders => 'Erinnerungen wiederholen';
+
+  @override
+  String get todoRepeatRemindersHint =>
+      'Meldet sich in diesem Abstand erneut, bis die Aufgabe erledigt, geschlummert oder geschlossen ist';
+
+  @override
+  String get todoRepeatAllTasks => 'Für alle Aufgaben wiederholen';
+
+  @override
+  String get todoRepeatAllTasksHint => 'Aus: nur wichtige Aufgaben';
+
+  @override
+  String get todoDigest => 'Tägliche Übersicht';
+
+  @override
+  String get todoDigestHint =>
+      'Eine Benachrichtigung mit allem, was fällig und überfällig ist';
+
+  @override
+  String get todoDigestTime => 'Uhrzeit der Übersicht';
+
+  @override
+  String get todoCleanup => 'Erledigte Aufgaben entfernen';
+
+  @override
+  String get todoCleanupHint => 'Löscht erledigte Aufgaben nach dieser Zeit';
+
+  @override
+  String get todoTrash => 'Zuletzt gelöscht';
+
+  @override
+  String get todoTrashHint =>
+      'Gelöschte Aufgaben bleiben 30 Tage auf diesem Gerät';
+
+  @override
+  String get todoTrashEmpty => 'Zuletzt wurde nichts gelöscht';
+
+  @override
+  String get todoRestore => 'Wiederherstellen';
+
+  @override
+  String get todoRestoreAll => 'Alle wiederherstellen';
+
+  @override
+  String get todoEmptyTrash => 'Leeren';
+
+  @override
+  String get todoEmptyTrashTitle => 'Zuletzt gelöscht leeren?';
+
+  @override
+  String get todoEmptyTrashMessage =>
+      'Diese Aufgaben lassen sich dann nicht mehr wiederherstellen.';
+
+  @override
+  String todoRestoredSnack(String title) {
+    return '„$title“ wiederhergestellt';
+  }
+
+  @override
+  String todoDeletedOn(String date) {
+    return 'Gelöscht $date';
+  }
+
+  @override
+  String get todoStartDate => 'Ausblenden bis';
+
+  @override
+  String todoHiddenUntil(String date) {
+    return 'Ausgeblendet bis $date';
+  }
+
+  @override
+  String todoStartsMeta(String date) {
+    return 'Ab $date';
+  }
+
+  @override
+  String todoDeferredCount(int count) {
+    return 'Später ($count)';
+  }
+
+  @override
+  String get todoFilters => 'Filter';
+
+  @override
+  String get todoNewFilter => 'Neuer Filter';
+
+  @override
+  String get todoEditFilter => 'Filter bearbeiten';
+
+  @override
+  String get todoDeleteFilter => 'Filter löschen';
+
+  @override
+  String todoDeleteFilterMessage(String title) {
+    return 'Filter „$title“ löschen? Die Aufgaben bleiben erhalten.';
+  }
+
+  @override
+  String get todoFilterName => 'Name';
+
+  @override
+  String get todoFilterList => 'Liste';
+
+  @override
+  String get todoFilterTag => 'Tag';
+
+  @override
+  String get todoFilterAny => 'Alle';
+
+  @override
+  String get todoFilterDue => 'Fällig';
+
+  @override
+  String get todoFilterDueOverdue => 'Überfällig';
+
+  @override
+  String get todoFilterDueToday => 'Bis heute';
+
+  @override
+  String get todoFilterDueNext7 => 'Nächste 7 Tage';
+
+  @override
+  String get todoFilterImportantOnly => 'Nur wichtige';
+
+  @override
+  String get todoEmptyFilter => 'Keine Aufgabe passt zu diesem Filter';
 }

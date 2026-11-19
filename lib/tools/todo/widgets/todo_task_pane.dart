@@ -36,8 +36,11 @@ class TodoTaskPane extends StatelessWidget {
     final searching = state.query.trim().isNotEmpty;
     final open = state.openTasks(view);
     final completed = state.completedTasks(view);
+    final deferred = state.deferredTasks(view);
     final accent = view.smart != null
         ? TodoColors.smart(view.smart!)
+        : view.kind == TodoViewKind.filter
+        ? TodoColors.filter
         : Color(state.colorFor(view));
     final showList = view.kind != TodoViewKind.list || searching;
     final selectedId = state.selectedTask?.shortId;
@@ -119,13 +122,12 @@ class TodoTaskPane extends StatelessWidget {
                       right: padding.right,
                     ),
                     sliver: SliverToBoxAdapter(
-                      child: TodoCalendar(
-                        tasks: open,
-                        tileBuilder: tile,
-                      ),
+                      child: TodoCalendar(tasks: open, tileBuilder: tile),
                     ),
                   ),
-                ] else if (open.isEmpty && completed.isEmpty)
+                ] else if (open.isEmpty &&
+                    completed.isEmpty &&
+                    deferred.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: _EmptyState(view: view, searching: searching),
@@ -173,6 +175,32 @@ class TodoTaskPane extends StatelessWidget {
                       itemBuilder: (context, i) => tile(open[i]),
                     ),
                   ),
+                if (deferred.isNotEmpty) ...[
+                  SliverPadding(
+                    padding: EdgeInsets.only(
+                      left: padding.left,
+                      right: padding.right,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: _CollapsibleHeader(
+                        label: l10n.todoDeferredCount(deferred.length),
+                        expanded: state.deferredExpanded(view),
+                        onTap: () => state.toggleDeferredExpanded(view),
+                      ),
+                    ),
+                  ),
+                  if (state.deferredExpanded(view))
+                    SliverPadding(
+                      padding: EdgeInsets.only(
+                        left: padding.left,
+                        right: padding.right,
+                      ),
+                      sliver: SliverList.builder(
+                        itemCount: deferred.length,
+                        itemBuilder: (context, i) => tile(deferred[i]),
+                      ),
+                    ),
+                ],
                 if (completed.isNotEmpty &&
                     view.smart != TodoSmartList.completed) ...[
                   SliverPadding(
@@ -181,8 +209,8 @@ class TodoTaskPane extends StatelessWidget {
                       right: padding.right,
                     ),
                     sliver: SliverToBoxAdapter(
-                      child: _CompletedHeader(
-                        count: completed.length,
+                      child: _CollapsibleHeader(
+                        label: l10n.todoCompletedCount(completed.length),
                         expanded: state.completedExpanded(view) || searching,
                         onTap: () => state.toggleCompletedExpanded(view),
                       ),
@@ -342,13 +370,13 @@ class _PaneHeader extends StatelessWidget {
   }
 }
 
-class _CompletedHeader extends StatelessWidget {
-  final int count;
+class _CollapsibleHeader extends StatelessWidget {
+  final String label;
   final bool expanded;
   final VoidCallback onTap;
 
-  const _CompletedHeader({
-    required this.count,
+  const _CollapsibleHeader({
+    required this.label,
     required this.expanded,
     required this.onTap,
   });
@@ -367,10 +395,7 @@ class _CompletedHeader extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             child: const Icon(Icons.chevron_right),
           ),
-          label: Text(
-            AppLocalizations.of(context).todoCompletedCount(count),
-            style: theme.textTheme.titleSmall,
-          ),
+          label: Text(label, style: theme.textTheme.titleSmall),
         ),
       ),
     );
@@ -389,6 +414,8 @@ class _EmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     final (icon, text) = searching
         ? (Icons.search_off, l10n.todoEmptySearch)
+        : view.kind == TodoViewKind.filter
+        ? (Icons.filter_alt_outlined, l10n.todoEmptyFilter)
         : switch (view.smart) {
             TodoSmartList.myDay => (
               Icons.wb_sunny_outlined,

@@ -8,10 +8,12 @@ import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/tools/todo/todo_background.dart';
 import 'package:tool_lab/tools/todo/todo_native.dart';
 import 'package:tool_lab/tools/todo/todo_state.dart';
+import 'package:tool_lab/tools/todo/widgets/todo_reminder_settings.dart';
+import 'package:tool_lab/tools/todo/widgets/todo_trash_sheet.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_upcoming_sheet.dart';
 import 'package:tool_lab/widgets/background_task_tile.dart';
 
-/// Reminder permissions, background refresh, swipe gestures and the
+/// Reminder permissions and behaviour, cleanup, swipe gestures and the
 /// quick-add syntax.
 class TodoSettingsSheet extends StatefulWidget {
   const TodoSettingsSheet({super.key});
@@ -110,6 +112,16 @@ class _TodoSettingsSheetState extends State<TodoSettingsSheet>
               onTap: () => TodoUpcomingSheet.show(context),
             ),
             const _ReminderTimeTile(),
+            const TodoReminderSettings(),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.restore_from_trash_outlined),
+              title: Text(l10n.todoTrash),
+              subtitle: Text(l10n.todoTrashHint),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => TodoTrashSheet.show(context),
+            ),
+            const TodoCleanupTile(),
             const Divider(),
             const _SwipeSettings(),
             if (!Platform.isAndroid) ...[
@@ -219,32 +231,20 @@ class _SwipeActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final labels = {
-      TodoSwipeAction.none: l10n.todoSwipeNone,
-      TodoSwipeAction.complete: l10n.todoSwipeComplete,
-      TodoSwipeAction.delete: l10n.todoSwipeDelete,
-      TodoSwipeAction.important: l10n.todoSwipeImportant,
-      TodoSwipeAction.myDay: l10n.todoSwipeMyDay,
-      TodoSwipeAction.tomorrow: l10n.todoSwipeTomorrow,
-      TodoSwipeAction.nextWeek: l10n.todoSwipeNextWeek,
-    };
-    return PopupMenuButton<TodoSwipeAction>(
-      tooltip: title,
-      initialValue: value,
-      onSelected: onChanged,
-      itemBuilder: (_) => [
-        for (final e in labels.entries)
-          CheckedPopupMenuItem(
-            value: e.key,
-            checked: e.key == value,
-            child: Text(e.value),
-          ),
-      ],
-      child: ListTile(
-        leading: Icon(icon),
-        title: Text(title),
-        trailing: Text(labels[value]!),
-      ),
+    return TodoChoiceTile<TodoSwipeAction>(
+      icon: icon,
+      title: title,
+      value: value,
+      onChanged: onChanged,
+      options: {
+        TodoSwipeAction.none: l10n.todoSwipeNone,
+        TodoSwipeAction.complete: l10n.todoSwipeComplete,
+        TodoSwipeAction.delete: l10n.todoSwipeDelete,
+        TodoSwipeAction.important: l10n.todoSwipeImportant,
+        TodoSwipeAction.myDay: l10n.todoSwipeMyDay,
+        TodoSwipeAction.tomorrow: l10n.todoSwipeTomorrow,
+        TodoSwipeAction.nextWeek: l10n.todoSwipeNextWeek,
+      },
     );
   }
 }

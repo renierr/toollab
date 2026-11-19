@@ -16576,4 +16576,185 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get todoShowLists => 'Lists';
+
+  @override
+  String get todoThisWeek => 'This week';
+
+  @override
+  String get todoNoDate => 'No date';
+
+  @override
+  String get todoDigestTitle => 'Your day';
+
+  @override
+  String todoDigestDue(int count) {
+    return '$count due today';
+  }
+
+  @override
+  String todoDigestOverdue(int count) {
+    return '$count overdue';
+  }
+
+  @override
+  String todoDigestMyDay(int count) {
+    return '$count in My Day';
+  }
+
+  @override
+  String todoMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String todoDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get todoOff => 'Off';
+
+  @override
+  String get todoNever => 'Never';
+
+  @override
+  String get todoSnoozeLength => 'Snooze length';
+
+  @override
+  String get todoSnoozeLengthHint =>
+      'For the snooze button on reminders and alarms';
+
+  @override
+  String get todoAlarmSound => 'Alarm sound and vibration';
+
+  @override
+  String get todoAlarmSoundHint => 'Opens the system settings for Todo alarms';
+
+  @override
+  String get todoRepeatReminders => 'Repeat reminders';
+
+  @override
+  String get todoRepeatRemindersHint =>
+      'Rings again at this interval until the task is done, snoozed or dismissed';
+
+  @override
+  String get todoRepeatAllTasks => 'Repeat for all tasks';
+
+  @override
+  String get todoRepeatAllTasksHint => 'Off: only important tasks';
+
+  @override
+  String get todoDigest => 'Daily summary';
+
+  @override
+  String get todoDigestHint => 'A notification with what is due and overdue';
+
+  @override
+  String get todoDigestTime => 'Summary time';
+
+  @override
+  String get todoCleanup => 'Remove completed tasks';
+
+  @override
+  String get todoCleanupHint => 'Deletes completed tasks after this time';
+
+  @override
+  String get todoTrash => 'Recently deleted';
+
+  @override
+  String get todoTrashHint =>
+      'Deleted tasks are kept on this device for 30 days';
+
+  @override
+  String get todoTrashEmpty => 'Nothing was deleted recently';
+
+  @override
+  String get todoRestore => 'Restore';
+
+  @override
+  String get todoRestoreAll => 'Restore all';
+
+  @override
+  String get todoEmptyTrash => 'Empty';
+
+  @override
+  String get todoEmptyTrashTitle => 'Empty recently deleted?';
+
+  @override
+  String get todoEmptyTrashMessage => 'These tasks can no longer be restored.';
+
+  @override
+  String todoRestoredSnack(String title) {
+    return 'Restored \"$title\"';
+  }
+
+  @override
+  String todoDeletedOn(String date) {
+    return 'Deleted $date';
+  }
+
+  @override
+  String get todoStartDate => 'Hide until';
+
+  @override
+  String todoHiddenUntil(String date) {
+    return 'Hidden until $date';
+  }
+
+  @override
+  String todoStartsMeta(String date) {
+    return 'From $date';
+  }
+
+  @override
+  String todoDeferredCount(int count) {
+    return 'Later ($count)';
+  }
+
+  @override
+  String get todoFilters => 'Filters';
+
+  @override
+  String get todoNewFilter => 'New filter';
+
+  @override
+  String get todoEditFilter => 'Edit filter';
+
+  @override
+  String get todoDeleteFilter => 'Delete filter';
+
+  @override
+  String todoDeleteFilterMessage(String title) {
+    return 'Delete the filter \"$title\"? Its tasks are kept.';
+  }
+
+  @override
+  String get todoFilterName => 'Name';
+
+  @override
+  String get todoFilterList => 'List';
+
+  @override
+  String get todoFilterTag => 'Tag';
+
+  @override
+  String get todoFilterAny => 'Any';
+
+  @override
+  String get todoFilterDue => 'Due';
+
+  @override
+  String get todoFilterDueOverdue => 'Overdue';
+
+  @override
+  String get todoFilterDueToday => 'Today or earlier';
+
+  @override
+  String get todoFilterDueNext7 => 'Next 7 days';
+
+  @override
+  String get todoFilterImportantOnly => 'Only important';
+
+  @override
+  String get todoEmptyFilter => 'No task matches this filter';
 }

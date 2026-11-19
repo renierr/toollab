@@ -216,6 +216,8 @@ void main() {
         'smart:myDay',
         'smart:important',
         'smart:planned',
+        'smart:thisWeek',
+        'smart:noDate',
         'smart:all',
         'L1',
       ]);

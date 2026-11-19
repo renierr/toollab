@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/l10n/app_localization_delegates.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/tools/todo/models/todo_filter.dart';
 import 'package:tool_lab/tools/todo/todo_page.dart';
 import 'package:tool_lab/tools/todo/todo_quick_parser.dart';
 import 'package:tool_lab/tools/todo/todo_state.dart';
@@ -54,6 +55,16 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 100)),
       );
       await tester.pump(const Duration(seconds: 11));
+    }
+  }
+
+  // Database futures behind a sheet only finish in real async time.
+  Future<void> settleSheet(WidgetTester tester) async {
+    for (var i = 0; i < 4; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
     }
   }
 
@@ -153,6 +164,59 @@ void main() {
     await tester.tap(find.byTooltip('List view'));
     await tester.pump();
     expect(state.plannedCalendar, isFalse);
+    await settleDatabase(tester);
+    state.dispose();
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('deferred section, filter view, trash and settings on phone', (
+    tester,
+  ) async {
+    state = TodoState();
+    await tester.runAsync(() async {
+      await state.load();
+      final now = DateTime.now();
+      final later = await state.addTask(
+        const TodoQuickDraft(title: 'Renew passport'),
+        view: TodoView.smart(TodoSmartList.all),
+      );
+      await state.setStart(later, DateTime(now.year, now.month, now.day + 3));
+      final gone = await state.addTask(
+        const TodoQuickDraft(title: 'Old idea'),
+        view: TodoView.smart(TodoSmartList.all),
+      );
+      await state.deleteTask(gone);
+      await state.saveFilter(
+        const TodoFilter(id: '', name: 'Home stuff', due: TodoFilterDue.noDate),
+      );
+      state.selectView(TodoView.smart(TodoSmartList.all));
+    });
+    await pumpPage(tester, const Size(360, 800));
+    expect(find.text('Renew passport'), findsNothing);
+    await tester.tap(find.text('Later (1)'));
+    await tester.pump();
+    expect(find.text('Renew passport'), findsOneWidget);
+
+    state.selectView(TodoView.filter(state.filters.single.id));
+    await tester.pump();
+    expect(find.text('Home stuff'), findsWidgets);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byTooltip('Todo settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Daily summary'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Recently deleted'),
+      100,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Recently deleted'));
+    await settleSheet(tester);
+    expect(find.text('Old idea'), findsOneWidget);
+    await tester.tap(find.byTooltip('Restore'));
+    await settleSheet(tester);
+    expect(state.tasks.any((t) => t.title == 'Old idea'), isTrue);
+    expect(tester.takeException(), isNull);
     await settleDatabase(tester);
     state.dispose();
     await tester.pumpWidget(const SizedBox());

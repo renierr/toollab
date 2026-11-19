@@ -13,6 +13,8 @@ import de.renier.tool_lab.R
 object TodoNotifications {
     const val CHANNEL_REMINDERS = "todo_reminders"
     const val CHANNEL_ALARMS = "todo_alarms"
+    const val CHANNEL_DIGEST = "todo_digest"
+    private const val DIGEST_ID = 0x7D10
     private const val GROUP = "todo"
     private const val ALARM_TIMEOUT_MS = 10 * 60 * 1000L
 
@@ -25,6 +27,15 @@ object TodoNotifications {
                 NotificationChannel(
                     CHANNEL_REMINDERS,
                     context.getString(R.string.todo_channel_reminders),
+                    NotificationManager.IMPORTANCE_DEFAULT,
+                ),
+            )
+        }
+        if (nm.getNotificationChannel(CHANNEL_DIGEST) == null) {
+            nm.createNotificationChannel(
+                NotificationChannel(
+                    CHANNEL_DIGEST,
+                    context.getString(R.string.todo_channel_digest),
                     NotificationManager.IMPORTANCE_DEFAULT,
                 ),
             )
@@ -53,6 +64,11 @@ object TodoNotifications {
 
     fun show(context: Context, entry: TodoAlarmEntry) {
         ensureChannels(context)
+        if (entry.digest) {
+            showDigest(context, entry)
+            return
+        }
+        val snooze = TodoFiles.snoozeMinutes(context)
         val id = TodoIntents.notificationId(entry.taskId)
         val builder = NotificationCompat.Builder(
             context,
@@ -75,8 +91,8 @@ object TodoNotifications {
             )
             .addAction(
                 0,
-                context.getString(R.string.todo_action_snooze_10),
-                actionIntent(context, TodoActionReceiver.ACTION_SNOOZE, entry, id * 4 + 2, 10),
+                context.getString(R.string.todo_action_snooze, snooze),
+                actionIntent(context, TodoActionReceiver.ACTION_SNOOZE, entry, id * 4 + 2, snooze),
             )
             .addAction(
                 0,
@@ -107,6 +123,28 @@ object TodoNotifications {
         if (entry.alarm) notification.flags = notification.flags or Notification.FLAG_INSISTENT
         try {
             manager(context).notify(id, notification)
+        } catch (e: SecurityException) {
+            android.util.Log.w("TodoNotifications", "Notification permission missing")
+        }
+    }
+
+    private fun showDigest(context: Context, entry: TodoAlarmEntry) {
+        val notification = NotificationCompat.Builder(context, CHANNEL_DIGEST)
+            .setSmallIcon(R.drawable.ic_stat_todo)
+            .setColor(entry.color)
+            .setContentTitle(entry.title)
+            .setContentText(entry.body.substringBefore('\n'))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(entry.body))
+            .setWhen(entry.at)
+            .setShowWhen(true)
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setContentIntent(
+                TodoIntents.activity(context, DIGEST_ID, TodoIntents.launch(context, listId = entry.listId)),
+            )
+            .build()
+        try {
+            manager(context).notify(DIGEST_ID, notification)
         } catch (e: SecurityException) {
             android.util.Log.w("TodoNotifications", "Notification permission missing")
         }

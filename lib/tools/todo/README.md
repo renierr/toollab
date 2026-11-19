@@ -14,13 +14,22 @@ All JSON files are written atomically (write `<name>.tmp`, then rename).
 
 ### alarms.json  (Dart writes, Kotlin reads)
 ```json
-{"version":1,"generatedAt":1700000000000,"entries":[
+{"version":1,"generatedAt":1700000000000,"snoozeMinutes":10,"stopped":["def67890"],"entries":[
   {"key":"<taskId>@<atMs>","taskId":"abc12345","at":1700000000000,"alarm":false,
-   "title":"Pay rent","body":"Home · due today 18:00","color":4280391411}
+   "title":"Pay rent","body":"Home · due today 18:00","color":4280391411,"repeat":15},
+  {"key":"_digest@<atMs>","taskId":"_digest","at":1700000000000,"alarm":false,
+   "title":"Your day","body":"2 due today · 1 overdue\nPay rent, …","color":4280391411,
+   "kind":"digest","listId":"smart:myDay"}
 ]}
 ```
 Sorted by `at`, only future entries (>= now - 1 min), horizon 30 days, max 500.
 `alarm=true` -> loud alarm (alarm clock + full-screen). `color` = ARGB int of the list color (notification accent).
+- `snoozeMinutes`: length of the Snooze action and alarm button (setting, default 10).
+- `repeat` (optional): minutes until the reminder rings again while the task is open; see behaviour notes.
+- `kind:"digest"`: the daily summary (setting, off by default), at most the next 2 days. Shown on its own
+  channel without actions; a tap opens `listId`. The first body line is the collapsed text.
+- `stopped`: tasks that have entries in snoozes.json but are done or deleted by now (also from another device);
+  Kotlin ignores and drops their snoozes and repeats.
 
 ### snoozes.json  (Kotlin only)
 Same entry shape (`{"entries":[...]}`). Kotlin merges it with alarms.json when scheduling and drops entries once fired.
@@ -71,7 +80,12 @@ Dart schedules in-process timers while the app runs.
   `TodoAlarmActivity` with an insistent alarm-channel notification.
 - An inexact hourly recheck picks up files rewritten by a headless background run, which has no channel.
 - Entries missed by more than 24 h (device off) are skipped silently.
-- Notification actions: Done, Snooze 10 min, Tomorrow (the alarm screen also offers Tomorrow). Done and Tomorrow are queued in `pending_actions.jsonl`
+- Repeat: after showing an entry with `repeat > 0`, Kotlin writes a snooze for `now + repeat` with the same
+  fields, so it keeps ringing until Done, Tomorrow, Snooze (which restarts the cycle) or the alarm screen's
+  Dismiss. Swiping the notification away does not stop it. `cancelNotifications` from Dart (task done or
+  deleted in the app) also drops the task's snoozes.
+- Alarm sound and vibration are the `todo_alarms` channel's; the settings link opens that channel's system page.
+- Notification actions: Done, Snooze (`snoozeMinutes`), Tomorrow (the alarm screen also offers Tomorrow). Done and Tomorrow are queued in `pending_actions.jsonl`
   and applied by Dart on the next open, on `actionsPending`, or by the background task.
 - Rules with `X-FROM=COMPLETION` (repeat after completion) have no known future occurrences:
   only their stored reminders are published; the next due date is set when the task is done.
@@ -82,3 +96,12 @@ Dart schedules in-process timers while the app runs.
 - Widget title tap opens `TodoWidgetConfigActivity` (list picker), the open icon opens the app.
 - Android 12+ widget rows are inline `RemoteCollectionItems`; `TodoWidgetService` only serves Android 8–11.
 - Native may push `launchIntent` and also return it from `consumeLaunchIntent`; Dart ignores a repeat.
+
+## Local-only data
+- `todo_trash` table: snapshots of deleted tasks (JSON of the sync payload) for "Recently deleted"; kept 30 days,
+  never synced. Restoring re-saves the task with a newer `updatedAt`, which outranks the server tombstone.
+- Setting `cleanup_days` (default 90, 0 = off): completed tasks older than that are deleted (synced as deletions)
+  on app start and in the background task.
+- Setting `filters`: saved filters (list, tag, due range, important), JSON; device-local. Widget id `filter:<id>`.
+- Task field `startAt` / column `start_at` (synced): local midnight; the task is hidden from every view except
+  search and the collapsed "Later" section until that day, and from the widget and the daily summary.

@@ -82,6 +82,56 @@ class TodoPickers {
     );
   }
 
+  /// A day from tomorrow on, for hiding a task until then.
+  static Future<DateTime?> pickStart(
+    BuildContext context, {
+    DateTime? initial,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final nextWeek = DateTime(now.year, now.month, now.day + 8 - now.weekday);
+    final nextMonth = DateTime(now.year, now.month + 1);
+    final choice = await showModalBottomSheet<Object>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => _PresetSheet(
+        title: l10n.todoStartDate,
+        presets: [
+          _Preset(
+            Icons.event,
+            l10n.todoTomorrow,
+            TodoFormat.weekdayShort(tomorrow.weekday, l10n),
+            tomorrow,
+          ),
+          _Preset(
+            Icons.date_range,
+            l10n.todoNextWeek,
+            TodoFormat.day(nextWeek, l10n),
+            nextWeek,
+          ),
+          _Preset(
+            Icons.calendar_month_outlined,
+            l10n.todoNextMonth,
+            TodoFormat.day(nextMonth, l10n),
+            nextMonth,
+          ),
+        ],
+        customLabel: l10n.todoPickDate,
+      ),
+    );
+    if (choice is DateTime) return choice;
+    if (choice != _custom || !context.mounted) return null;
+    return showDatePicker(
+      context: context,
+      initialDate: initial != null && initial.isAfter(tomorrow)
+          ? initial
+          : tomorrow,
+      firstDate: tomorrow,
+      lastDate: DateTime(now.year + 20),
+    );
+  }
+
   static Future<TodoReminder?> pickReminder(
     BuildContext context, {
     TodoReminder? initial,

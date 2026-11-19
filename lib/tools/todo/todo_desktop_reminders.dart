@@ -6,6 +6,7 @@ import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/todo/config.dart';
 import 'package:tool_lab/tools/todo/todo_db_helper.dart';
 import 'package:tool_lab/tools/todo/todo_native.dart';
+import 'package:tool_lab/tools/todo/todo_notify_settings.dart';
 import 'package:tool_lab/tools/todo/todo_publisher.dart';
 
 /// Reminders on Linux and Windows: one timer to the next entry while the app
@@ -44,14 +45,31 @@ class TodoDesktopReminders {
       final now = DateTime.now();
       var from = DateTime.fromMillisecondsSinceEpoch(_lastFired);
       if (from.isAfter(now)) from = now;
-      final entries = TodoPublisher.buildEntries(
-        await db.getTasks(),
-        lists,
-        l10n,
-        now: from,
-        window: now.difference(from) + const Duration(days: 2),
-      ).where((e) => e.at > _lastFired).toList();
-      final due = entries.where((e) => e.at <= now.millisecondsSinceEpoch);
+      final tasks = await db.getTasks();
+      final entries =
+          [
+              ...TodoPublisher.buildEntries(
+                tasks,
+                lists,
+                l10n,
+                now: from,
+                window: now.difference(from) + const Duration(days: 2),
+              ),
+              ...TodoPublisher.buildDigests(
+                tasks,
+                l10n,
+                await TodoNotifySettings.load(),
+                from: from,
+                to: now.add(const Duration(days: 2)),
+                now: now,
+              ),
+            ].where((e) => e.at > _lastFired).toList()
+            ..sort((a, b) => a.at.compareTo(b.at));
+      final past = entries.where((e) => e.at <= now.millisecondsSinceEpoch);
+      // Only the latest missed summary is still worth showing.
+      final digests = past.where((e) => e.isDigest);
+      final lastDigest = digests.isEmpty ? null : digests.last;
+      final due = past.where((e) => !e.isDigest || e == lastDigest);
       for (final entry in due) {
         await TodoNative.showDesktopNotification(entry.title, entry.body);
       }

@@ -1,10 +1,20 @@
+import 'package:tool_lab/tools/todo/models/todo_filter.dart';
 import 'package:tool_lab/tools/todo/models/todo_task.dart';
 
-enum TodoSmartList { myDay, important, planned, all, completed }
+enum TodoSmartList {
+  myDay,
+  important,
+  planned,
+  thisWeek,
+  noDate,
+  all,
+  completed,
+}
 
-enum TodoViewKind { smart, list, tag }
+enum TodoViewKind { smart, list, tag, filter }
 
-/// What the task pane shows: a smart list, a user list or a tag.
+/// What the task pane shows: a smart list, a user list, a tag or a saved
+/// filter.
 class TodoView {
   final TodoViewKind kind;
   final String id;
@@ -13,6 +23,7 @@ class TodoView {
 
   const TodoView.list(String shortId) : this._(TodoViewKind.list, shortId);
   const TodoView.tag(String tag) : this._(TodoViewKind.tag, tag);
+  const TodoView.filter(String id) : this._(TodoViewKind.filter, id);
   TodoView.smart(TodoSmartList smart) : this._(TodoViewKind.smart, smart.name);
 
   static final TodoView myDay = TodoView.smart(TodoSmartList.myDay);
@@ -29,6 +40,7 @@ class TodoView {
     TodoViewKind.smart => 'smart:$id',
     TodoViewKind.list => id,
     TodoViewKind.tag => 'tag:$id',
+    TodoViewKind.filter => 'filter:$id',
   };
 
   static TodoView fromWidgetKey(String key) {
@@ -41,18 +53,31 @@ class TodoView {
       return TodoView.smart(smart);
     }
     if (key.startsWith('tag:')) return TodoView.tag(key.substring(4));
+    if (key.startsWith('filter:')) return TodoView.filter(key.substring(7));
     return TodoView.list(key);
   }
 
-  bool matches(TodoTask task, DateTime now) => switch (kind) {
+  /// [filters] resolves a filter view; without it a filter matches nothing.
+  bool matches(
+    TodoTask task,
+    DateTime now, [
+    Map<String, TodoFilter> filters = const {},
+  ]) => switch (kind) {
     TodoViewKind.list => task.listId == id,
     TodoViewKind.tag => task.tags.any(
       (t) => t.toLowerCase() == id.toLowerCase(),
     ),
+    TodoViewKind.filter => filters[id]?.matches(task, now) ?? false,
     TodoViewKind.smart => switch (smart!) {
       TodoSmartList.myDay => task.isInMyDay(now),
       TodoSmartList.important => task.important,
       TodoSmartList.planned => task.dueAt != null,
+      TodoSmartList.thisWeek => TodoFilter.dueMatches(
+        TodoFilterDue.thisWeek,
+        task,
+        now,
+      ),
+      TodoSmartList.noDate => task.dueAt == null,
       TodoSmartList.all => true,
       TodoSmartList.completed => task.completed,
     },

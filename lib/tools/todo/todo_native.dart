@@ -171,6 +171,10 @@ class TodoNative {
   static Future<void> openNotificationSettings() =>
       _invoke('openNotificationSettings');
 
+  /// Sound and vibration of loud alarms live in the system channel settings.
+  static Future<void> openAlarmChannelSettings() =>
+      _invoke('openAlarmChannelSettings');
+
   static Future<TodoLaunchIntent?> consumeLaunchIntent() async {
     if (!Platform.isAndroid) return null;
     try {

@@ -7,6 +7,7 @@ import 'package:tool_lab/tools/todo/todo_colors.dart';
 import 'package:tool_lab/tools/todo/todo_format.dart';
 import 'package:tool_lab/tools/todo/todo_state.dart';
 import 'package:tool_lab/tools/todo/todo_view.dart';
+import 'package:tool_lab/tools/todo/widgets/todo_filter_dialog.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_list_actions.dart';
 import 'package:tool_lab/tools/todo/todo_list_name.dart';
 
@@ -58,17 +59,26 @@ class TodoSidebar extends StatelessWidget {
                     _ListTile(list: list, onTap: select),
                   for (final folder in state.folders)
                     _FolderSection(folder: folder, onTap: select),
+                  if (state.filters.isNotEmpty) ...[
+                    const Divider(indent: 16, endIndent: 16),
+                    _SectionLabel(l10n.todoFilters),
+                    for (final filter in state.filters)
+                      _SidebarTile(
+                        icon: const Icon(
+                          Icons.filter_alt_outlined,
+                          color: TodoColors.filter,
+                        ),
+                        label: filter.name,
+                        count: state.openCount(TodoView.filter(filter.id)),
+                        selected: state.view == TodoView.filter(filter.id),
+                        onTap: () => select(TodoView.filter(filter.id)),
+                        onLongPress: () =>
+                            TodoFilterActions.showMenu(context, filter),
+                      ),
+                  ],
                   if (tags.isNotEmpty) ...[
                     const Divider(indent: 16, endIndent: 16),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 16, 4),
-                      child: Text(
-                        l10n.todoTags,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+                    _SectionLabel(l10n.todoTags),
                     for (final tag in tags)
                       _SidebarTile(
                         icon: Icon(
@@ -103,6 +113,14 @@ class TodoSidebar extends StatelessWidget {
                         if (created) onSelected?.call();
                       },
                     ),
+                  ),
+                  IconButton(
+                    tooltip: l10n.todoNewFilter,
+                    icon: const Icon(Icons.filter_alt_outlined),
+                    onPressed: () async {
+                      final created = await TodoFilterActions.edit(context);
+                      if (created) onSelected?.call();
+                    },
                   ),
                   IconButton(
                     tooltip: l10n.todoNewFolder,
@@ -187,6 +205,26 @@ class _FolderSection extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+
+  const _SectionLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 16, 4),
+      child: Text(
+        label,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

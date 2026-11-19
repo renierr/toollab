@@ -26,6 +26,7 @@ class TodoBackground {
       return const BackgroundTaskResult.skipped('Android only');
     }
     final applied = await TodoOperations.applyPendingActions();
+    await TodoOperations.cleanup(await TodoOperations.loadCleanupDays());
     String synced = 'sync off';
     try {
       synced = await syncIfEnabled() ?? synced;
