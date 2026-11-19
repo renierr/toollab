@@ -190,6 +190,8 @@ private fun itemViews(context: Context, task: TodoWidgetTask): RemoteViews {
         views.setViewVisibility(R.id.todo_item_meta, View.GONE)
     }
     views.setViewVisibility(R.id.todo_item_star, if (task.important) View.VISIBLE else View.GONE)
+    views.setViewVisibility(R.id.todo_item_bar, if (task.overdue) View.VISIBLE else View.GONE)
+    views.setInt(R.id.todo_item_root, "setBackgroundResource", if (task.overdue) R.drawable.todo_widget_item_overdue_bg else 0)
     views.setOnClickFillInIntent(
         R.id.todo_item_root,
         Intent()

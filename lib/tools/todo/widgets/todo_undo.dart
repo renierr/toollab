@@ -21,6 +21,8 @@ class TodoUndoNotifier {
       SnackBar(
         content: Text(message, maxLines: 2, overflow: TextOverflow.ellipsis),
         behavior: SnackBarBehavior.floating,
+        // Snackbars with an action persist by default.
+        persist: false,
         action: SnackBarAction(label: label, onPressed: () => state.undo(undo)),
       ),
     );

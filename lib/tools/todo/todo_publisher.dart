@@ -147,7 +147,9 @@ class TodoPublisher {
             {
               'id': t.shortId,
               'title': t.title,
-              'meta': TodoFormat.due(t, l10n, now: n),
+              'meta': t.isOverdue(n)
+                  ? '${l10n.todoGroupOverdue} · ${TodoFormat.due(t, l10n, now: n)}'
+                  : TodoFormat.due(t, l10n, now: n),
               'overdue': t.isOverdue(n),
               'important': t.important,
             },

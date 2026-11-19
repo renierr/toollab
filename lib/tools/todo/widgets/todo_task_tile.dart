@@ -33,6 +33,7 @@ class TodoTaskTile extends StatelessWidget {
     final scheme = theme.colorScheme;
     final list = state.listById(task.listId);
     final listColor = Color(list?.color ?? 0xFF4FC3F7);
+    final overdue = !task.completed && task.isOverdue(DateTime.now());
 
     return Dismissible(
       key: ValueKey('todo-dismiss-${task.shortId}'),
@@ -65,13 +66,25 @@ class TodoTaskTile extends StatelessWidget {
         child: Material(
           color: selected
               ? scheme.secondaryContainer
+              : overdue
+              ? Color.alphaBlend(
+                  TodoColors.overdue.withValues(alpha: 0.12),
+                  scheme.surfaceContainerHigh,
+                )
               : scheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(14),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onOpen,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
+            child: Container(
+              decoration: overdue
+                  ? const BoxDecoration(
+                      border: Border(
+                        left: BorderSide(color: TodoColors.overdue, width: 4),
+                      ),
+                    )
+                  : null,
+              padding: EdgeInsets.fromLTRB(overdue ? 0 : 4, 6, 4, 6),
               child: Row(
                 children: [
                   TodoCheckCircle(
@@ -171,15 +184,19 @@ class _TaskMeta extends StatelessWidget {
           icon: Icons.checklist,
           label: l10n.todoStepsProgress(task.stepsDone, task.steps.length),
         ),
-      if (task.dueAt != null)
+      if (task.dueAt != null && !task.completed && task.isOverdue(now))
+        _MetaItem(
+          icon: Icons.error_outline,
+          label:
+              '${l10n.todoGroupOverdue} · ${TodoFormat.due(task, l10n, now: now)}',
+          color: TodoColors.overdue,
+          bold: true,
+        )
+      else if (task.dueAt != null)
         _MetaItem(
           icon: Icons.event_outlined,
           label: TodoFormat.due(task, l10n, now: now),
-          color: task.isOverdue(now)
-              ? TodoColors.overdue
-              : _isToday(task.due!, now)
-              ? theme.colorScheme.primary
-              : null,
+          color: _isToday(task.due!, now) ? theme.colorScheme.primary : null,
         ),
       if (task.recurrence != null) const _MetaItem(icon: Icons.repeat),
       if (task.reminders.isNotEmpty)
@@ -214,8 +231,9 @@ class _MetaItem extends StatelessWidget {
   final IconData? icon;
   final String? label;
   final Color? color;
+  final bool bold;
 
-  const _MetaItem({this.icon, this.label, this.color});
+  const _MetaItem({this.icon, this.label, this.color, this.bold = false});
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +243,13 @@ class _MetaItem extends StatelessWidget {
         if (icon != null) Icon(icon, color: color),
         if (icon != null && label != null) const SizedBox(width: 3),
         if (label != null)
-          Text(label!, style: color == null ? null : TextStyle(color: color)),
+          Text(
+            label!,
+            style: TextStyle(
+              color: color,
+              fontWeight: bold ? FontWeight.w600 : null,
+            ),
+          ),
       ],
     );
   }

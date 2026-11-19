@@ -6,5 +6,6 @@
     <color name="todo_widget_accent">#FF4FC3F7</color>
     <color name="todo_widget_on_accent">#FF00344A</color>
     <color name="todo_widget_overdue">#FFEF5350</color>
+    <color name="todo_widget_overdue_bg">#33EF5350</color>
     <color name="todo_widget_star">#FFFFCA28</color>
 </resources>
