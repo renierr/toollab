@@ -17,11 +17,13 @@ import 'package:tool_lab/widgets/readable_width.dart';
 class TodoTaskPane extends StatelessWidget {
   final ValueChanged<TodoTask> onOpenTask;
   final FocusNode quickAddFocus;
+  final VoidCallback? onOpenLists;
 
   const TodoTaskPane({
     super.key,
     required this.onOpenTask,
     required this.quickAddFocus,
+    this.onOpenLists,
   });
 
   @override
@@ -89,6 +91,7 @@ class TodoTaskPane extends StatelessWidget {
                             ).format(DateTime.now())
                           : null,
                       color: accent,
+                      onTap: onOpenLists,
                     ),
                   ),
                 ),
@@ -246,35 +249,58 @@ class _PaneHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Color color;
+  final VoidCallback? onTap;
 
-  const _PaneHeader({required this.title, this.subtitle, required this.color});
+  const _PaneHeader({
+    required this.title,
+    this.subtitle,
+    required this.color,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final titleText = Text(
+      title,
+      style: theme.textTheme.headlineMedium?.copyWith(
+        color: color,
+        fontWeight: FontWeight.w700,
+      ),
+    );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          if (subtitle != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                subtitle!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (onTap == null)
+                titleText
+              else
+                Row(
+                  children: [
+                    Flexible(child: titleText),
+                    const SizedBox(width: 4),
+                    Icon(Icons.expand_more, color: color, size: 28),
+                  ],
                 ),
-              ),
-            ),
-        ],
+              if (subtitle != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    subtitle!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

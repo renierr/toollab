@@ -17,41 +17,66 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/todo_widget_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:textSize="18sp"
-            android:visibility="gone" />
+        <LinearLayout
+            android:id="@+id/todo_widget_switch"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:contentDescription="@string/todo_widget_config_title"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/todo_widget_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:textSize="18sp"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/todo_widget_dot"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="10dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/todo_widget_dot" />
+
+            <TextView
+                android:id="@+id/todo_widget_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:textColor="@color/todo_widget_text"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/todo_widget_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:textColor="@color/todo_widget_text_secondary"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="6dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/todo_ic_expand" />
+        </LinearLayout>
 
         <ImageView
-            android:id="@+id/todo_widget_dot"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:layout_marginEnd="10dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/todo_widget_dot" />
-
-        <TextView
-            android:id="@+id/todo_widget_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:fontFamily="sans-serif-medium"
-            android:maxLines="1"
-            android:textColor="@color/todo_widget_text"
-            android:textSize="17sp" />
-
-        <TextView
-            android:id="@+id/todo_widget_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginEnd="10dp"
-            android:textColor="@color/todo_widget_text_secondary"
-            android:textSize="14sp" />
+            android:id="@+id/todo_widget_open"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="@string/todo_widget_open"
+            android:padding="8dp"
+            android:src="@drawable/todo_ic_open" />
 
         <ImageView
             android:id="@+id/todo_widget_add"

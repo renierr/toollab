@@ -12,6 +12,7 @@
     <string name="todo_widget_empty">Alles erledigt 🎉</string>
     <string name="todo_widget_no_data">Todo einmal öffnen, um das Widget einzurichten</string>
     <string name="todo_widget_add">Aufgabe hinzufügen</string>
+    <string name="todo_widget_open">In der App öffnen</string>
     <string name="todo_widget_complete">Als erledigt markieren</string>
     <string name="todo_widget_config_title">Liste wählen</string>
     <string name="todo_widget_preview_task_1">Miete zahlen</string>

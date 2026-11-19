@@ -69,6 +69,17 @@ void main() {
     expect(find.text('Second task'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
+    await tester.tap(find.byTooltip('Lists'));
+    await tester.pumpAndSettle();
+    expect(find.text('Important'), findsOneWidget);
+    Navigator.of(tester.element(find.byType(Drawer))).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.expand_more));
+    await tester.pumpAndSettle();
+    expect(find.byType(Drawer), findsOneWidget);
+    Navigator.of(tester.element(find.byType(Drawer))).pop();
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Second task'));
     await tester.pumpAndSettle();
     expect(find.text('Add step'), findsOneWidget);

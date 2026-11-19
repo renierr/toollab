@@ -16578,4 +16578,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get todoQuickAddHelp =>
       'heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen';
+
+  @override
+  String get todoShowLists => 'Listen';
 }

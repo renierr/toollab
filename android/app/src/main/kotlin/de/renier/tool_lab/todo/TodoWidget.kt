@@ -8,6 +8,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
@@ -22,7 +23,7 @@ class TodoWidgetProvider : AppWidgetProvider() {
             TodoAlarmScheduler.widgetPrefs(context).getString("$KEY_PREFIX$widgetId", null)
 
         fun setListId(context: Context, widgetId: Int, listId: String) {
-            TodoAlarmScheduler.widgetPrefs(context).edit().putString("$KEY_PREFIX$widgetId", listId).apply()
+            TodoAlarmScheduler.widgetPrefs(context).edit().putString("$KEY_PREFIX$widgetId", listId).commit()
         }
 
         fun resolveList(context: Context, widgetId: Int): TodoWidgetList? {
@@ -65,7 +66,17 @@ class TodoWidgetProvider : AppWidgetProvider() {
             )
 
             views.setOnClickPendingIntent(
-                R.id.todo_widget_header,
+                R.id.todo_widget_switch,
+                TodoIntents.activity(
+                    context,
+                    base + 4,
+                    Intent(context, TodoWidgetConfigActivity::class.java)
+                        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                ),
+            )
+            views.setOnClickPendingIntent(
+                R.id.todo_widget_open,
                 TodoIntents.activity(context, base + 1, TodoIntents.launch(context, listId = list?.id)),
             )
             views.setOnClickPendingIntent(
@@ -73,11 +84,18 @@ class TodoWidgetProvider : AppWidgetProvider() {
                 TodoIntents.activity(context, base + 2, TodoIntents.launch(context, listId = list?.id, quickAdd = true)),
             )
 
-            val serviceIntent = Intent(context, TodoWidgetService::class.java)
-                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-            serviceIntent.data = Uri.parse(serviceIntent.toUri(Intent.URI_INTENT_SCHEME))
-            @Suppress("DEPRECATION")
-            views.setRemoteAdapter(R.id.todo_widget_list, serviceIntent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Inline items: a cached service factory would keep showing the previous list.
+                val items = RemoteViews.RemoteCollectionItems.Builder().setHasStableIds(true).setViewTypeCount(1)
+                list?.tasks?.forEach { items.addItem(itemId(it), itemViews(context, it)) }
+                views.setRemoteAdapter(R.id.todo_widget_list, items.build())
+            } else {
+                val serviceIntent = Intent(context, TodoWidgetService::class.java)
+                    .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+                serviceIntent.data = Uri.parse(serviceIntent.toUri(Intent.URI_INTENT_SCHEME))
+                @Suppress("DEPRECATION")
+                views.setRemoteAdapter(R.id.todo_widget_list, serviceIntent)
+            }
             views.setEmptyView(R.id.todo_widget_list, R.id.todo_widget_empty)
 
             // Collection rows can only fill in one template, so both row taps go through a trampoline.
@@ -143,42 +161,48 @@ private class TodoWidgetFactory(
     override fun getCount(): Int = tasks.size
 
     override fun getViewAt(position: Int): RemoteViews {
-        val views = RemoteViews(context.packageName, R.layout.todo_widget_item)
-        val task = tasks.getOrNull(position) ?: return views
-        views.setTextViewText(R.id.todo_item_title, task.title)
-        if (task.meta.isNotEmpty()) {
-            views.setViewVisibility(R.id.todo_item_meta, View.VISIBLE)
-            views.setTextViewText(R.id.todo_item_meta, task.meta)
-            views.setTextColor(
-                R.id.todo_item_meta,
-                context.getColor(if (task.overdue) R.color.todo_widget_overdue else R.color.todo_widget_text_secondary),
-            )
-        } else {
-            views.setViewVisibility(R.id.todo_item_meta, View.GONE)
-        }
-        views.setViewVisibility(R.id.todo_item_star, if (task.important) View.VISIBLE else View.GONE)
-        views.setOnClickFillInIntent(
-            R.id.todo_item_root,
-            Intent()
-                .putExtra(TodoWidgetActionActivity.EXTRA_OP, TodoWidgetActionActivity.OP_OPEN)
-                .putExtra(TodoIntents.EXTRA_TASK_ID, task.id),
-        )
-        views.setOnClickFillInIntent(
-            R.id.todo_item_check,
-            Intent()
-                .putExtra(TodoWidgetActionActivity.EXTRA_OP, TodoWidgetActionActivity.OP_COMPLETE)
-                .putExtra(TodoIntents.EXTRA_TASK_ID, task.id),
-        )
-        return views
+        val task = tasks.getOrNull(position) ?: return RemoteViews(context.packageName, R.layout.todo_widget_item)
+        return itemViews(context, task)
     }
 
     override fun getLoadingView(): RemoteViews? = null
 
     override fun getViewTypeCount(): Int = 1
 
-    override fun getItemId(position: Int): Long = tasks.getOrNull(position)?.id?.hashCode()?.toLong() ?: position.toLong()
+    override fun getItemId(position: Int): Long = tasks.getOrNull(position)?.let(::itemId) ?: position.toLong()
 
     override fun hasStableIds(): Boolean = true
+}
+
+private fun itemId(task: TodoWidgetTask): Long = task.id.hashCode().toLong()
+
+private fun itemViews(context: Context, task: TodoWidgetTask): RemoteViews {
+    val views = RemoteViews(context.packageName, R.layout.todo_widget_item)
+    views.setTextViewText(R.id.todo_item_title, task.title)
+    if (task.meta.isNotEmpty()) {
+        views.setViewVisibility(R.id.todo_item_meta, View.VISIBLE)
+        views.setTextViewText(R.id.todo_item_meta, task.meta)
+        views.setTextColor(
+            R.id.todo_item_meta,
+            context.getColor(if (task.overdue) R.color.todo_widget_overdue else R.color.todo_widget_text_secondary),
+        )
+    } else {
+        views.setViewVisibility(R.id.todo_item_meta, View.GONE)
+    }
+    views.setViewVisibility(R.id.todo_item_star, if (task.important) View.VISIBLE else View.GONE)
+    views.setOnClickFillInIntent(
+        R.id.todo_item_root,
+        Intent()
+            .putExtra(TodoWidgetActionActivity.EXTRA_OP, TodoWidgetActionActivity.OP_OPEN)
+            .putExtra(TodoIntents.EXTRA_TASK_ID, task.id),
+    )
+    views.setOnClickFillInIntent(
+        R.id.todo_item_check,
+        Intent()
+            .putExtra(TodoWidgetActionActivity.EXTRA_OP, TodoWidgetActionActivity.OP_COMPLETE)
+            .putExtra(TodoIntents.EXTRA_TASK_ID, task.id),
+    )
+    return views
 }
 
 class TodoWidgetActionActivity : Activity() {

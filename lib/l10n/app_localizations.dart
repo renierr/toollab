@@ -28953,6 +28953,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks'**
   String get todoQuickAddHelp;
+
+  /// No description provided for @todoShowLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists'**
+  String get todoShowLists;
 }
 
 class _AppLocalizationsDelegate

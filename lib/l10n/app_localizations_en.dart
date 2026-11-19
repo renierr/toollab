@@ -16449,4 +16449,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get todoQuickAddHelp =>
       'today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks';
+
+  @override
+  String get todoShowLists => 'Lists';
 }

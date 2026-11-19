@@ -77,4 +77,6 @@ Dart schedules in-process timers while the app runs.
   the background task (`todo-refresh`, default 6 h) re-extends the horizon and syncs.
 - The widget has no periodic update; Dart calls `refreshWidgets` after writing `widget.json`.
   Row taps go through `TodoWidgetActionActivity`, a trampoline for the single fill-in template.
+- Widget title tap opens `TodoWidgetConfigActivity` (list picker), the open icon opens the app.
+- Android 12+ widget rows are inline `RemoteCollectionItems`; `TodoWidgetService` only serves Android 8–11.
 - Native may push `launchIntent` and also return it from `consumeLaunchIntent`; Dart ignores a repeat.

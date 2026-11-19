@@ -7799,5 +7799,6 @@
   "todoDesktopRemindersTitle": "Desktop reminders",
   "todoDesktopRemindersSubtitle": "Reminders show as system notifications while ToolLab is running.",
   "todoQuickAddHelpTitle": "Quick add",
-  "todoQuickAddHelp": "today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks"
+  "todoQuickAddHelp": "today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks",
+  "todoShowLists": "Lists"
 }

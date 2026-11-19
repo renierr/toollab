@@ -9,9 +9,16 @@ List<Widget> todoPageActions(
   BuildContext context, {
   required bool searching,
   required VoidCallback onToggleSearch,
+  VoidCallback? onOpenLists,
 }) {
   final l10n = AppLocalizations.of(context);
   return [
+    if (onOpenLists != null)
+      IconButton(
+        tooltip: l10n.todoShowLists,
+        icon: const Icon(Icons.format_list_bulleted),
+        onPressed: onOpenLists,
+      ),
     IconButton(
       tooltip: l10n.commonSearch,
       icon: Icon(searching ? Icons.search_off : Icons.search),

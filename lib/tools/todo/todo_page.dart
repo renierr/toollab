@@ -102,6 +102,9 @@ class _TodoPageState extends State<TodoPage> with DisposeCleanup {
         // Sidebar + task list + detail need roughly 280 + 360 + 400.
         final threePanes = constraints.maxWidth >= 1040;
         _detailInline = threePanes;
+        final VoidCallback? openLists = split
+            ? null
+            : () => _scaffoldKey.currentState?.openDrawer();
 
         final pane = Column(
           children: [
@@ -110,6 +113,7 @@ class _TodoPageState extends State<TodoPage> with DisposeCleanup {
               child: TodoTaskPane(
                 onOpenTask: _openTask,
                 quickAddFocus: _quickAddFocus,
+                onOpenLists: openLists,
               ),
             ),
           ],
@@ -129,6 +133,7 @@ class _TodoPageState extends State<TodoPage> with DisposeCleanup {
             context,
             searching: _searching,
             onToggleSearch: _toggleSearch,
+            onOpenLists: openLists,
           ),
           child: split
               ? Row(

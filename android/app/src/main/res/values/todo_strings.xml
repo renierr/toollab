@@ -12,6 +12,7 @@
     <string name="todo_widget_empty">All done 🎉</string>
     <string name="todo_widget_no_data">Open Todo once to set up the widget</string>
     <string name="todo_widget_add">Add task</string>
+    <string name="todo_widget_open">Open in app</string>
     <string name="todo_widget_complete">Mark as done</string>
     <string name="todo_widget_config_title">Choose a list</string>
     <string name="todo_widget_preview_task_1">Pay rent</string>
