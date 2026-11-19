@@ -16262,6 +16262,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todoAtDueTime => 'At due time';
 
   @override
+  String get todoOnDueDate => 'On due date';
+
+  @override
+  String get todoDayBefore => 'Day before';
+
+  @override
   String todoMinutesBefore(int minutes) {
     return '$minutes min before';
   }
@@ -16473,6 +16479,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get todoSwipeMyDay => 'Toggle My Day';
+
+  @override
+  String get todoDefaultReminderTime => 'Default reminder time';
+
+  @override
+  String get todoDefaultReminderTimeHint =>
+      'Used for reminders on all-day due dates and for date presets.';
 
   @override
   String get todoQuickAddHelp =>

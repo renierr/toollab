@@ -86,13 +86,42 @@ class TodoPickers {
     BuildContext context, {
     TodoReminder? initial,
     DateTime? due,
+    bool dueHasTime = false,
+    required int defaultMinutes,
   }) async {
     final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final laterToday = DateTime(now.year, now.month, now.day, now.hour + 3);
+    DateTime atDefault(DateTime day) => DateTime(
+      day.year,
+      day.month,
+      day.day,
+      defaultMinutes ~/ 60,
+      defaultMinutes % 60,
+    );
+    final allDay = due == null || dueHasTime ? null : atDefault(due);
+    final dayBefore = allDay == null
+        ? null
+        : atDefault(due!.subtract(const Duration(days: 1)));
+    final tomorrow = atDefault(today.add(const Duration(days: 1)));
+    final nextWeek = atDefault(today.add(Duration(days: 8 - today.weekday)));
     final presets = <_Preset>[
-      if (due != null && due.isAfter(now)) ...[
+      if (allDay != null && allDay.isAfter(now))
+        _Preset(
+          Icons.event_available,
+          l10n.todoOnDueDate,
+          TodoFormat.dayTime(allDay, l10n),
+          allDay,
+        ),
+      if (dayBefore != null && dayBefore.isAfter(now))
+        _Preset(
+          Icons.event_note,
+          l10n.todoDayBefore,
+          TodoFormat.dayTime(dayBefore, l10n),
+          dayBefore,
+        ),
+      if (due != null && dueHasTime && due.isAfter(now)) ...[
         _Preset(
           Icons.schedule,
           l10n.todoAtDueTime,
@@ -122,17 +151,14 @@ class TodoPickers {
       _Preset(
         Icons.event,
         l10n.todoTomorrow,
-        TodoFormat.time(today.add(const Duration(days: 1, hours: 9)), l10n),
-        today.add(const Duration(days: 1, hours: 9)),
+        TodoFormat.time(tomorrow, l10n),
+        tomorrow,
       ),
       _Preset(
         Icons.date_range,
         l10n.todoNextWeek,
-        TodoFormat.dayTime(
-          today.add(Duration(days: 8 - today.weekday, hours: 9)),
-          l10n,
-        ),
-        today.add(Duration(days: 8 - today.weekday, hours: 9)),
+        TodoFormat.dayTime(nextWeek, l10n),
+        nextWeek,
       ),
     ];
     final choice = await showModalBottomSheet<Object>(
@@ -154,7 +180,7 @@ class TodoPickers {
     }
     if (choice is! _CustomChoice || !context.mounted) return null;
 
-    final start = initial?.time ?? today.add(const Duration(days: 1, hours: 9));
+    final start = initial?.time ?? allDay ?? due ?? tomorrow;
     final date = await showDatePicker(
       context: context,
       initialDate: start.isBefore(today) ? today : start,

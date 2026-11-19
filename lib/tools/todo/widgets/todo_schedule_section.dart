@@ -58,6 +58,9 @@ class TodoScheduleSection extends StatelessWidget {
               final picked = await TodoPickers.pickReminder(
                 context,
                 initial: reminder,
+                due: task.due,
+                dueHasTime: task.dueHasTime,
+                defaultMinutes: state.defaultReminderMinutes,
               );
               if (picked == null) return;
               await state.setReminders(task, [
@@ -77,7 +80,9 @@ class TodoScheduleSection extends StatelessWidget {
           onTap: () async {
             final picked = await TodoPickers.pickReminder(
               context,
-              due: task.dueHasTime ? task.due : null,
+              due: task.due,
+              dueHasTime: task.dueHasTime,
+              defaultMinutes: state.defaultReminderMinutes,
             );
             if (picked == null) return;
             await state.setReminders(task, [...task.reminders, picked]);

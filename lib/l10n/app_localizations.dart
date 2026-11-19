@@ -28624,6 +28624,18 @@ abstract class AppLocalizations {
   /// **'At due time'**
   String get todoAtDueTime;
 
+  /// No description provided for @todoOnDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'On due date'**
+  String get todoOnDueDate;
+
+  /// No description provided for @todoDayBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Day before'**
+  String get todoDayBefore;
+
   /// No description provided for @todoMinutesBefore.
   ///
   /// In en, this message translates to:
@@ -29001,6 +29013,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Toggle My Day'**
   String get todoSwipeMyDay;
+
+  /// No description provided for @todoDefaultReminderTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Default reminder time'**
+  String get todoDefaultReminderTime;
+
+  /// No description provided for @todoDefaultReminderTimeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for reminders on all-day due dates and for date presets.'**
+  String get todoDefaultReminderTimeHint;
 
   /// No description provided for @todoQuickAddHelp.
   ///

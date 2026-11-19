@@ -6148,6 +6148,8 @@
   "todoAllDay": "Ganztägig",
   "todoSetTime": "Uhrzeit festlegen",
   "todoAtDueTime": "Zur Fälligkeit",
+  "todoOnDueDate": "Am Fälligkeitstag",
+  "todoDayBefore": "Am Vortag",
   "todoMinutesBefore": "{minutes} Min. vorher",
   "todoHourBefore": "1 Stunde vorher",
   "todoRepeatDaily": "Täglich",
@@ -6211,6 +6213,8 @@
   "todoSwipeDelete": "Löschen",
   "todoSwipeImportant": "Wichtig umschalten",
   "todoSwipeMyDay": "Mein Tag umschalten",
+  "todoDefaultReminderTime": "Standard-Erinnerungszeit",
+  "todoDefaultReminderTimeHint": "Gilt für Erinnerungen bei ganztägiger Fälligkeit und für Datumsvorschläge.",
   "todoQuickAddHelp": "heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen",
   "todoShowLists": "Listen"
 }

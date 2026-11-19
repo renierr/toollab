@@ -7735,6 +7735,8 @@
   "todoAllDay": "All day",
   "todoSetTime": "Set time",
   "todoAtDueTime": "At due time",
+  "todoOnDueDate": "On due date",
+  "todoDayBefore": "Day before",
   "todoMinutesBefore": "{minutes} min before",
   "@todoMinutesBefore": {"placeholders": {"minutes": {"type": "int"}}},
   "todoHourBefore": "1 hour before",
@@ -7808,6 +7810,8 @@
   "todoSwipeDelete": "Delete",
   "todoSwipeImportant": "Toggle important",
   "todoSwipeMyDay": "Toggle My Day",
+  "todoDefaultReminderTime": "Default reminder time",
+  "todoDefaultReminderTimeHint": "Used for reminders on all-day due dates and for date presets.",
   "todoQuickAddHelp": "today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks",
   "todoShowLists": "Lists"
 }

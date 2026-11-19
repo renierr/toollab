@@ -16388,6 +16388,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get todoAtDueTime => 'Zur Fälligkeit';
 
   @override
+  String get todoOnDueDate => 'Am Fälligkeitstag';
+
+  @override
+  String get todoDayBefore => 'Am Vortag';
+
+  @override
   String todoMinutesBefore(int minutes) {
     return '$minutes Min. vorher';
   }
@@ -16602,6 +16608,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get todoSwipeMyDay => 'Mein Tag umschalten';
+
+  @override
+  String get todoDefaultReminderTime => 'Standard-Erinnerungszeit';
+
+  @override
+  String get todoDefaultReminderTimeHint =>
+      'Gilt für Erinnerungen bei ganztägiger Fälligkeit und für Datumsvorschläge.';
 
   @override
   String get todoQuickAddHelp =>

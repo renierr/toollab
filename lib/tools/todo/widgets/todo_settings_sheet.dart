@@ -101,6 +101,8 @@ class _TodoSettingsSheetState extends State<TodoSettingsSheet>
                 subtitle: Text(l10n.todoDesktopRemindersSubtitle),
               ),
             const Divider(),
+            const _ReminderTimeTile(),
+            const Divider(),
             const _SwipeSettings(),
             const Divider(),
             ListTile(
@@ -222,6 +224,32 @@ class _SwipeActionTile extends StatelessWidget {
         title: Text(title),
         trailing: Text(labels[value]!),
       ),
+    );
+  }
+}
+
+class _ReminderTimeTile extends StatelessWidget {
+  const _ReminderTimeTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final state = context.watch<TodoState>();
+    final minutes = state.defaultReminderMinutes;
+    final time = TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
+    return ListTile(
+      leading: const Icon(Icons.schedule_outlined),
+      title: Text(l10n.todoDefaultReminderTime),
+      subtitle: Text(l10n.todoDefaultReminderTimeHint),
+      trailing: Text(time.format(context)),
+      onTap: () async {
+        final picked = await showTimePicker(
+          context: context,
+          initialTime: time,
+        );
+        if (picked == null) return;
+        await state.setDefaultReminderMinutes(picked.hour * 60 + picked.minute);
+      },
     );
   }
 }

@@ -39,6 +39,8 @@ class TodoState extends ChangeNotifier {
   static const int maxAttachmentBytes = 25 * 1024 * 1024;
   static const String _swipeStartKey = 'swipe_start';
   static const String _swipeEndKey = 'swipe_end';
+  static const String _reminderTimeKey = 'default_reminder_time';
+  static const int defaultReminderMinutesFallback = 11 * 60;
   static const String _lastViewKey = 'last_view';
 
   static const List<int> listColors = [
@@ -64,6 +66,7 @@ class TodoState extends ChangeNotifier {
   Map<String, TodoSort> _sortModes = {};
   TodoSwipeAction _swipeStart = TodoSwipeAction.complete;
   TodoSwipeAction _swipeEnd = TodoSwipeAction.delete;
+  int _defaultReminderMinutes = defaultReminderMinutesFallback;
 
   bool _loaded = false;
   bool _loading = false;
@@ -125,6 +128,9 @@ class TodoState extends ChangeNotifier {
   /// Action for a swipe from the leading edge towards the trailing one.
   TodoSwipeAction get swipeStart => _swipeStart;
   TodoSwipeAction get swipeEnd => _swipeEnd;
+
+  /// Minutes after midnight for reminders that have no time of their own.
+  int get defaultReminderMinutes => _defaultReminderMinutes;
 
   bool completedExpanded(TodoView view) => _expandedCompleted.contains(view);
 
@@ -266,6 +272,16 @@ class TodoState extends ChangeNotifier {
       ),
       TodoSwipeAction.delete,
     );
+    final minutes = int.tryParse(
+      await DatabaseService.instance.getSetting(
+            TodoTool.config.id,
+            _reminderTimeKey,
+          ) ??
+          '',
+    );
+    if (minutes != null && minutes >= 0 && minutes < 24 * 60) {
+      _defaultReminderMinutes = minutes;
+    }
     final last = await DatabaseService.instance.getSetting(
       TodoTool.config.id,
       _lastViewKey,
@@ -363,6 +379,16 @@ class TodoState extends ChangeNotifier {
       TodoTool.config.id,
       start ? _swipeStartKey : _swipeEndKey,
       action.name,
+    );
+  }
+
+  Future<void> setDefaultReminderMinutes(int minutes) async {
+    _defaultReminderMinutes = minutes;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      TodoTool.config.id,
+      _reminderTimeKey,
+      '$minutes',
     );
   }
 
