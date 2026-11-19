@@ -7,6 +7,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/todo/config.dart';
 import 'package:tool_lab/tools/todo/models/todo_task.dart';
 import 'package:tool_lab/tools/todo/todo_native.dart';
+import 'package:tool_lab/tools/todo/todo_shortcuts.dart';
 import 'package:tool_lab/tools/todo/todo_state.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_detail_page.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_page_actions.dart';
@@ -39,6 +40,14 @@ class _TodoPageState extends State<TodoPage> with DisposeCleanup {
     final state = context.read<TodoState>();
     final sub = state.launchIntents.listen(_handleIntent);
     onDispose(sub.cancel);
+    final shortcuts = TodoShortcuts(
+      context: () => context,
+      onQuickAdd: _quickAddFocus.requestFocus,
+      onToggleSearch: _toggleSearch,
+      isSearching: () => _searching,
+      onOpenTask: _openTask,
+    )..attach();
+    onDispose(shortcuts.detach);
     WidgetsBinding.instance.addPostFrameCallback((_) => _start(state));
   }
 

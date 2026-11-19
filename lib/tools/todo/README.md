@@ -73,6 +73,8 @@ Dart schedules in-process timers while the app runs.
 - Entries missed by more than 24 h (device off) are skipped silently.
 - Notification actions: Done, Snooze 10 min, Snooze 1 h. Done is queued in `pending_actions.jsonl`
   and applied by Dart on the next open, on `actionsPending`, or by the background task.
+- Rules with `X-FROM=COMPLETION` (repeat after completion) have no known future occurrences:
+  only their stored reminders are published; the next due date is set when the task is done.
 - Recurring tasks: Dart projects every occurrence's reminder (same offset from the due date) for 30 days;
   the background task (`todo-refresh`, default 6 h) re-extends the horizon and syncs.
 - The widget has no periodic update; Dart calls `refreshWidgets` after writing `widget.json`.

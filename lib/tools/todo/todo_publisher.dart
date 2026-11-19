@@ -106,7 +106,8 @@ class TodoPublisher {
   ) sync* {
     final rule = task.recurrence;
     final due = task.due;
-    if (rule == null || due == null) {
+    // A rule counted from completion has no known future occurrences.
+    if (rule == null || due == null || rule.fromCompletion) {
       final at = reminder.time;
       if (!at.isBefore(from) && at.isBefore(to)) yield at;
       return;

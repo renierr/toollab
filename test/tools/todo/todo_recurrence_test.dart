@@ -104,4 +104,26 @@ void main() {
       expect(rule.nextAfter(start, DateTime(2026, 3, 3, 10)), isNull);
     });
   });
+
+  test('from-completion flag round-trips through encode', () {
+    const rule = TodoRecurrence(
+      freq: RecurrenceFreq.monthly,
+      interval: 2,
+      fromCompletion: true,
+    );
+    expect(rule.encode(), 'FREQ=MONTHLY;INTERVAL=2;X-FROM=COMPLETION');
+    expect(TodoRecurrence.tryParse(rule.encode()), rule);
+    expect(TodoRecurrence.tryParse(rule.encode())!.fromCompletion, isTrue);
+  });
+
+  test('from completion clamps the day of month', () {
+    const rule = TodoRecurrence(
+      freq: RecurrenceFreq.monthly,
+      fromCompletion: true,
+    );
+    expect(
+      rule.nextFromCompletion(DateTime(2026, 1, 1, 9), DateTime(2026, 1, 31)),
+      DateTime(2026, 2, 28, 9),
+    );
+  });
 }

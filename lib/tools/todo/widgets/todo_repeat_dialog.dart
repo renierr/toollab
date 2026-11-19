@@ -107,6 +107,7 @@ class _TodoRepeatDialogState extends State<TodoRepeatDialog> {
       RecurrenceFreq.yearly: l10n.todoUnitYears,
     };
     return ResponsiveAlertDialog(
+      scrollable: true,
       title: Text(l10n.todoRepeatCustom),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -144,14 +145,31 @@ class _TodoRepeatDialogState extends State<TodoRepeatDialog> {
                       freq: f!,
                       interval: _rule.interval,
                       until: _rule.until,
+                      fromCompletion: _rule.fromCompletion,
                     ),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          if (_rule.freq == RecurrenceFreq.weekly)
+          const SizedBox(height: 8),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.todoRepeatAfterCompletion),
+            subtitle: Text(l10n.todoRepeatAfterCompletionHint),
+            value: _rule.fromCompletion,
+            onChanged: (on) => setState(
+              () => _rule = on
+                  ? _rule.copyWith(
+                      fromCompletion: true,
+                      weekdays: {},
+                      monthlyNth: () => null,
+                    )
+                  : _rule.copyWith(fromCompletion: false),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (_rule.freq == RecurrenceFreq.weekly && !_rule.fromCompletion)
             Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -168,7 +186,7 @@ class _TodoRepeatDialogState extends State<TodoRepeatDialog> {
                   ),
               ],
             ),
-          if (_rule.freq == RecurrenceFreq.monthly)
+          if (_rule.freq == RecurrenceFreq.monthly && !_rule.fromCompletion)
             SegmentedButton<bool>(
               segments: [
                 ButtonSegment(

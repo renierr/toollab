@@ -9,6 +9,7 @@ import 'package:tool_lab/tools/todo/widgets/todo_attachments_section.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_check_circle.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_edit_field.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_meta_section.dart';
+import 'package:tool_lab/tools/todo/widgets/todo_note_field.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_schedule_section.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_steps_section.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_undo.dart';
@@ -95,12 +96,9 @@ class TodoTaskDetail extends StatelessWidget {
               _Card(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                  child: TodoEditField(
-                    value: task.note,
-                    hint: l10n.todoAddNote,
-                    minLines: 3,
-                    maxLines: null,
-                    multiline: true,
+                  child: TodoNoteField(
+                    note: task.note,
+                    color: color,
                     onSubmit: (v) => state.setNote(task, v),
                   ),
                 ),

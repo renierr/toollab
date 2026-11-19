@@ -6215,6 +6215,17 @@
   "todoSwipeMyDay": "Mein Tag umschalten",
   "todoDefaultReminderTime": "Standard-Erinnerungszeit",
   "todoDefaultReminderTimeHint": "Gilt für Erinnerungen bei ganztägiger Fälligkeit und für Datumsvorschläge.",
+  "todoSwipeTomorrow": "Auf morgen verschieben",
+  "todoSwipeNextWeek": "Auf nächste Woche verschieben",
+  "todoMovedTomorrowSnack": "\"{title}\" auf morgen verschoben",
+  "todoMovedNextWeekSnack": "\"{title}\" auf nächste Woche verschoben",
+  "todoMoveOverdue": "Verschieben",
+  "todoMovedOverdueSnack": "{count, plural, =1{1 Aufgabe verschoben} other{{count} Aufgaben verschoben}}",
+  "todoRepeatAfterCompletion": "Ab Erledigung",
+  "todoRepeatAfterCompletionHint": "Zählt den Abstand ab dem Tag, an dem die Aufgabe erledigt wird",
+  "todoEditNote": "Notiz bearbeiten",
+  "todoShortcutsTitle": "Tastenkürzel",
+  "todoShortcutsHelp": "Strg+N neue Aufgabe · Strg+F Suche\n↑ ↓ auswählen · Enter öffnen · Esc abwählen\nLeertaste erledigt · Entf löschen · I wichtig · M Mein Tag · T morgen",
   "todoQuickAddHelp": "heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen",
   "todoShowLists": "Listen"
 }

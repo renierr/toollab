@@ -17,7 +17,11 @@ class TodoOperations {
     final stamp = now.millisecondsSinceEpoch;
     final rule = task.recurrence;
     final due = task.due;
-    final next = rule == null || due == null ? null : rule.nextAfter(due, due);
+    final next = rule == null || due == null
+        ? null
+        : rule.fromCompletion
+        ? rule.nextFromCompletion(due, now)
+        : rule.nextAfter(due, due);
     if (next == null) {
       return [task.copyWith(completedAt: () => stamp, updatedAt: stamp)];
     }
@@ -44,6 +48,61 @@ class TodoOperations {
       updatedAt: stamp,
     );
     return [history, advanced];
+  }
+
+  /// Moves the due date to [day], keeping its time of day; reminders move
+  /// by the same number of days. A time already past today becomes all-day.
+  static TodoTask moveDue(
+    TodoTask task,
+    DateTime day, {
+    required DateTime now,
+  }) {
+    final old = task.due;
+    final stamp = now.millisecondsSinceEpoch;
+    final leavesMyDay =
+        task.isInMyDay(now) && TodoTask.dayKey(day) != TodoTask.dayKey(now);
+    final myDay = leavesMyDay ? () => null : null;
+    if (old == null) {
+      return task.copyWith(
+        dueAt: () =>
+            DateTime(day.year, day.month, day.day).millisecondsSinceEpoch,
+        dueHasTime: false,
+        myDay: myDay,
+        updatedAt: stamp,
+      );
+    }
+    var hasTime = task.dueHasTime;
+    var due = hasTime
+        ? DateTime(day.year, day.month, day.day, old.hour, old.minute)
+        : DateTime(day.year, day.month, day.day);
+    if (hasTime && due.isBefore(now)) {
+      hasTime = false;
+      due = DateTime(day.year, day.month, day.day);
+    }
+    final days = DateTime.utc(
+      day.year,
+      day.month,
+      day.day,
+    ).difference(DateTime.utc(old.year, old.month, old.day)).inDays;
+    return task.copyWith(
+      dueAt: () => due.millisecondsSinceEpoch,
+      dueHasTime: hasTime,
+      reminders: [
+        for (final r in task.reminders)
+          TodoReminder(
+            at: DateTime(
+              r.time.year,
+              r.time.month,
+              r.time.day + days,
+              r.time.hour,
+              r.time.minute,
+            ).millisecondsSinceEpoch,
+            alarm: r.alarm,
+          ),
+      ],
+      myDay: myDay,
+      updatedAt: stamp,
+    );
   }
 
   /// Applies "done" taps from notifications and the home screen widget.

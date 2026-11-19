@@ -11,6 +11,7 @@ import 'package:tool_lab/tools/todo/todo_view.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_permission_banner.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_quick_add_bar.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_task_tile.dart';
+import 'package:tool_lab/tools/todo/widgets/todo_undo.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
 /// Header, task list (grouped, reorderable or plain) and the quick-add bar.
@@ -102,7 +103,13 @@ class TodoTaskPane extends StatelessWidget {
                   )
                 else if (grouped)
                   for (final group in _plannedGroups(open, l10n)) ...[
-                    _SectionHeader(label: group.$1, padding: padding),
+                    _SectionHeader(
+                      label: group.$1,
+                      padding: padding,
+                      action: group.$1 == l10n.todoGroupOverdue
+                          ? _MoveOverdueButton(tasks: group.$2)
+                          : null,
+                    ),
                     SliverPadding(
                       padding: EdgeInsets.only(
                         left: padding.left,
@@ -401,25 +408,91 @@ class _EmptyState extends StatelessWidget {
 class _SectionHeader extends StatelessWidget {
   final String label;
   final EdgeInsets padding;
+  final Widget? action;
 
-  const _SectionHeader({required this.label, required this.padding});
+  const _SectionHeader({
+    required this.label,
+    required this.padding,
+    this.action,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final text = Text(
+      label,
+      style: theme.textTheme.titleSmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
     return SliverPadding(
       padding: EdgeInsets.fromLTRB(
         padding.left + 20,
-        14,
-        padding.right + 20,
-        6,
+        action == null ? 14 : 4,
+        padding.right + (action == null ? 20 : 8),
+        action == null ? 6 : 0,
       ),
       sliver: SliverToBoxAdapter(
-        child: Text(
-          label,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        child: action == null
+            ? text
+            : Row(
+                children: [
+                  Expanded(child: text),
+                  action!,
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _MoveOverdueButton extends StatelessWidget {
+  final List<TodoTask> tasks;
+
+  const _MoveOverdueButton({required this.tasks});
+
+  Future<void> _move(BuildContext context, DateTime day) async {
+    final l10n = AppLocalizations.of(context);
+    final notifier = TodoUndoNotifier.of(context);
+    final undo = await context.read<TodoState>().moveDue(tasks, day);
+    notifier.show(l10n.todoMovedOverdueSnack(tasks.length), undo);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final now = DateTime.now();
+    return PopupMenuButton<DateTime>(
+      tooltip: l10n.todoMoveOverdue,
+      onSelected: (day) => _move(context, day),
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: DateTime(now.year, now.month, now.day),
+          child: Text(l10n.todoToday),
+        ),
+        PopupMenuItem(
+          value: TodoState.tomorrow,
+          child: Text(l10n.todoTomorrow),
+        ),
+        PopupMenuItem(
+          value: TodoState.nextMonday,
+          child: Text(l10n.todoNextWeek),
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.event_repeat, size: 18, color: TodoColors.planned),
+            const SizedBox(width: 4),
+            Text(
+              l10n.todoMoveOverdue,
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(color: TodoColors.planned),
+            ),
+          ],
         ),
       ),
     );

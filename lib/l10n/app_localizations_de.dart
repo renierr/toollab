@@ -16617,6 +16617,53 @@ class AppLocalizationsDe extends AppLocalizations {
       'Gilt für Erinnerungen bei ganztägiger Fälligkeit und für Datumsvorschläge.';
 
   @override
+  String get todoSwipeTomorrow => 'Auf morgen verschieben';
+
+  @override
+  String get todoSwipeNextWeek => 'Auf nächste Woche verschieben';
+
+  @override
+  String todoMovedTomorrowSnack(String title) {
+    return '\"$title\" auf morgen verschoben';
+  }
+
+  @override
+  String todoMovedNextWeekSnack(String title) {
+    return '\"$title\" auf nächste Woche verschoben';
+  }
+
+  @override
+  String get todoMoveOverdue => 'Verschieben';
+
+  @override
+  String todoMovedOverdueSnack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufgaben verschoben',
+      one: '1 Aufgabe verschoben',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get todoRepeatAfterCompletion => 'Ab Erledigung';
+
+  @override
+  String get todoRepeatAfterCompletionHint =>
+      'Zählt den Abstand ab dem Tag, an dem die Aufgabe erledigt wird';
+
+  @override
+  String get todoEditNote => 'Notiz bearbeiten';
+
+  @override
+  String get todoShortcutsTitle => 'Tastenkürzel';
+
+  @override
+  String get todoShortcutsHelp =>
+      'Strg+N neue Aufgabe · Strg+F Suche\n↑ ↓ auswählen · Enter öffnen · Esc abwählen\nLeertaste erledigt · Entf löschen · I wichtig · M Mein Tag · T morgen';
+
+  @override
   String get todoQuickAddHelp =>
       'heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen';
 

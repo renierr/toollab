@@ -1,7 +1,8 @@
 enum RecurrenceFreq { daily, weekly, monthly, yearly }
 
 /// RRULE subset: `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TH;UNTIL=20261231`.
-/// Monthly by weekday uses `BYDAY=2TU` / `BYDAY=-1FR`.
+/// Monthly by weekday uses `BYDAY=2TU` / `BYDAY=-1FR`. `X-FROM=COMPLETION`
+/// counts the interval from the day the task is completed.
 class TodoRecurrence {
   final RecurrenceFreq freq;
   final int interval;
@@ -15,12 +16,15 @@ class TodoRecurrence {
   /// Inclusive last day, local date.
   final DateTime? until;
 
+  final bool fromCompletion;
+
   const TodoRecurrence({
     required this.freq,
     this.interval = 1,
     this.weekdays = const {},
     this.monthlyNth,
     this.until,
+    this.fromCompletion = false,
   });
 
   static const List<String> _dayCodes = [
@@ -69,6 +73,7 @@ class TodoRecurrence {
       final day = weekdays.isEmpty ? 1 : weekdays.first;
       parts.add('BYDAY=$monthlyNth${_dayCodes[day - 1]}');
     }
+    if (fromCompletion) parts.add('X-FROM=COMPLETION');
     final u = until;
     if (u != null) {
       parts.add(
@@ -122,6 +127,7 @@ class TodoRecurrence {
         weekdays: weekdays,
         monthlyNth: freq == RecurrenceFreq.monthly ? nth : null,
         until: until,
+        fromCompletion: fields['X-FROM'] == 'COMPLETION',
       );
     } catch (_) {
       return null;
@@ -134,13 +140,58 @@ class TodoRecurrence {
     Set<int>? weekdays,
     int? Function()? monthlyNth,
     DateTime? Function()? until,
+    bool? fromCompletion,
   }) => TodoRecurrence(
     freq: freq ?? this.freq,
     interval: interval ?? this.interval,
     weekdays: weekdays ?? this.weekdays,
     monthlyNth: monthlyNth != null ? monthlyNth() : this.monthlyNth,
     until: until != null ? until() : this.until,
+    fromCompletion: fromCompletion ?? this.fromCompletion,
   );
+
+  /// Next due date of a task completed on [done]: one interval after that
+  /// day, at [due]'s time of day. Null when the rule ended.
+  DateTime? nextFromCompletion(DateTime due, DateTime done) {
+    DateTime clamped(int year, int month) {
+      final last = DateTime(year, month + 1, 0).day;
+      return DateTime(
+        year,
+        month,
+        done.day.clamp(1, last),
+        due.hour,
+        due.minute,
+      );
+    }
+
+    final next = switch (freq) {
+      RecurrenceFreq.daily => DateTime(
+        done.year,
+        done.month,
+        done.day + interval,
+        due.hour,
+        due.minute,
+      ),
+      RecurrenceFreq.weekly => DateTime(
+        done.year,
+        done.month,
+        done.day + 7 * interval,
+        due.hour,
+        due.minute,
+      ),
+      RecurrenceFreq.monthly => clamped(
+        DateTime(done.year, done.month + interval).year,
+        DateTime(done.year, done.month + interval).month,
+      ),
+      RecurrenceFreq.yearly => clamped(done.year + interval, done.month),
+    };
+    final u = until;
+    if (u != null &&
+        next.isAfter(DateTime(u.year, u.month, u.day, 23, 59, 59))) {
+      return null;
+    }
+    return next;
+  }
 
   /// Occurrences on or after [start], in order; [start] itself is the first
   /// when it matches the rule. Time of day is taken from [start].

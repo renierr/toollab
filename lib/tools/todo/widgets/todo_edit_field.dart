@@ -10,6 +10,8 @@ class TodoEditField extends StatefulWidget {
   final int? minLines;
   final int? maxLines;
   final bool multiline;
+  final bool autofocus;
+  final VoidCallback? onEditingDone;
 
   const TodoEditField({
     super.key,
@@ -20,6 +22,8 @@ class TodoEditField extends StatefulWidget {
     this.minLines,
     this.maxLines = 1,
     this.multiline = false,
+    this.autofocus = false,
+    this.onEditingDone,
   });
 
   @override
@@ -36,7 +40,9 @@ class _TodoEditFieldState extends State<TodoEditField> {
   void initState() {
     super.initState();
     _focus.addListener(() {
-      if (!_focus.hasFocus) _commit();
+      if (_focus.hasFocus) return;
+      _commit();
+      widget.onEditingDone?.call();
     });
   }
 
@@ -64,6 +70,7 @@ class _TodoEditFieldState extends State<TodoEditField> {
     return TextField(
       controller: _controller,
       focusNode: _focus,
+      autofocus: widget.autofocus,
       style: widget.style,
       minLines: widget.minLines,
       maxLines: widget.maxLines,

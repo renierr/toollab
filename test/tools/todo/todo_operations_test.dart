@@ -77,6 +77,63 @@ void main() {
       final result = TodoOperations.complete(task, now: now, newId: newId);
       expect(result.single.completed, isTrue);
     });
+
+    test('rule from completion counts from the day it is done', () {
+      final task = _task(
+        recurrence: const TodoRecurrence(
+          freq: RecurrenceFreq.weekly,
+          fromCompletion: true,
+        ),
+        due: DateTime(2026, 11, 10, 8),
+      );
+      final result = TodoOperations.complete(task, now: now, newId: newId);
+      final advanced = result.firstWhere((t) => t.shortId == 'T1');
+      expect(advanced.due, DateTime(2026, 11, 26, 8));
+    });
+  });
+
+  group('TodoOperations.moveDue', () {
+    test('keeps the time and shifts reminders by whole days', () {
+      final due = DateTime(2026, 11, 18, 18);
+      final task = _task(
+        due: due,
+        reminders: [
+          TodoReminder(at: DateTime(2026, 11, 18, 9).millisecondsSinceEpoch),
+        ],
+      );
+      final moved = TodoOperations.moveDue(
+        task,
+        DateTime(2026, 11, 20),
+        now: now,
+      );
+      expect(moved.due, DateTime(2026, 11, 20, 18));
+      expect(moved.dueHasTime, isTrue);
+      expect(moved.reminders.single.time, DateTime(2026, 11, 20, 9));
+    });
+
+    test('a time already past today becomes all-day', () {
+      final task = _task(due: DateTime(2026, 11, 17, 8));
+      final moved = TodoOperations.moveDue(
+        task,
+        DateTime(2026, 11, 19),
+        now: now,
+      );
+      expect(moved.due, DateTime(2026, 11, 19));
+      expect(moved.dueHasTime, isFalse);
+      expect(moved.isOverdue(now), isFalse);
+    });
+
+    test('leaves My Day when moved to another day', () {
+      final task = _task(
+        due: DateTime(2026, 11, 19, 18),
+      ).copyWith(myDay: () => TodoTask.dayKey(now));
+      final moved = TodoOperations.moveDue(
+        task,
+        DateTime(2026, 11, 20),
+        now: now,
+      );
+      expect(moved.myDay, isNull);
+    });
   });
 
   group('TodoPublisher', () {

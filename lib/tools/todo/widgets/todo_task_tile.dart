@@ -175,6 +175,14 @@ class _SwipeActions extends StatelessWidget {
       case TodoSwipeAction.myDay:
         await state.toggleMyDay(task);
         return false;
+      case TodoSwipeAction.tomorrow:
+        final undo = await state.moveDue([task], TodoState.tomorrow);
+        notifier.show(l10n.todoMovedTomorrowSnack(task.title), undo);
+        return false;
+      case TodoSwipeAction.nextWeek:
+        final undo = await state.moveDue([task], TodoState.nextMonday);
+        notifier.show(l10n.todoMovedNextWeekSnack(task.title), undo);
+        return false;
     }
   }
 
@@ -371,6 +379,8 @@ class _SwipeBackground extends StatelessWidget {
             ? Icons.wb_sunny_outlined
             : Icons.wb_sunny,
       ),
+      TodoSwipeAction.tomorrow => (TodoColors.planned, Icons.redo),
+      TodoSwipeAction.nextWeek => (TodoColors.planned, Icons.date_range),
       TodoSwipeAction.none => (Colors.transparent, null),
     };
     return Container(

@@ -3,7 +3,9 @@ enum TodoSwipeAction {
   complete,
   delete,
   important,
-  myDay;
+  myDay,
+  tomorrow,
+  nextWeek;
 
   static TodoSwipeAction parse(String? raw, TodoSwipeAction fallback) =>
       values.asNameMap()[raw] ?? fallback;

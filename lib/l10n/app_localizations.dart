@@ -29026,6 +29026,72 @@ abstract class AppLocalizations {
   /// **'Used for reminders on all-day due dates and for date presets.'**
   String get todoDefaultReminderTimeHint;
 
+  /// No description provided for @todoSwipeTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to tomorrow'**
+  String get todoSwipeTomorrow;
+
+  /// No description provided for @todoSwipeNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to next week'**
+  String get todoSwipeNextWeek;
+
+  /// No description provided for @todoMovedTomorrowSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved \"{title}\" to tomorrow'**
+  String todoMovedTomorrowSnack(String title);
+
+  /// No description provided for @todoMovedNextWeekSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved \"{title}\" to next week'**
+  String todoMovedNextWeekSnack(String title);
+
+  /// No description provided for @todoMoveOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get todoMoveOverdue;
+
+  /// No description provided for @todoMovedOverdueSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Moved 1 task} other{Moved {count} tasks}}'**
+  String todoMovedOverdueSnack(int count);
+
+  /// No description provided for @todoRepeatAfterCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'After completion'**
+  String get todoRepeatAfterCompletion;
+
+  /// No description provided for @todoRepeatAfterCompletionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Counts the interval from the day the task is done'**
+  String get todoRepeatAfterCompletionHint;
+
+  /// No description provided for @todoEditNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit note'**
+  String get todoEditNote;
+
+  /// No description provided for @todoShortcutsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get todoShortcutsTitle;
+
+  /// No description provided for @todoShortcutsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl+N new task · Ctrl+F search\n↑ ↓ select · Enter open · Esc deselect\nSpace done · Del delete · I important · M My Day · T tomorrow'**
+  String get todoShortcutsHelp;
+
   /// No description provided for @todoQuickAddHelp.
   ///
   /// In en, this message translates to:

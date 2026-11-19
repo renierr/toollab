@@ -16488,6 +16488,53 @@ class AppLocalizationsEn extends AppLocalizations {
       'Used for reminders on all-day due dates and for date presets.';
 
   @override
+  String get todoSwipeTomorrow => 'Move to tomorrow';
+
+  @override
+  String get todoSwipeNextWeek => 'Move to next week';
+
+  @override
+  String todoMovedTomorrowSnack(String title) {
+    return 'Moved \"$title\" to tomorrow';
+  }
+
+  @override
+  String todoMovedNextWeekSnack(String title) {
+    return 'Moved \"$title\" to next week';
+  }
+
+  @override
+  String get todoMoveOverdue => 'Move';
+
+  @override
+  String todoMovedOverdueSnack(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Moved $count tasks',
+      one: 'Moved 1 task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get todoRepeatAfterCompletion => 'After completion';
+
+  @override
+  String get todoRepeatAfterCompletionHint =>
+      'Counts the interval from the day the task is done';
+
+  @override
+  String get todoEditNote => 'Edit note';
+
+  @override
+  String get todoShortcutsTitle => 'Keyboard shortcuts';
+
+  @override
+  String get todoShortcutsHelp =>
+      'Ctrl+N new task · Ctrl+F search\n↑ ↓ select · Enter open · Esc deselect\nSpace done · Del delete · I important · M My Day · T tomorrow';
+
+  @override
   String get todoQuickAddHelp =>
       'today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks';
 

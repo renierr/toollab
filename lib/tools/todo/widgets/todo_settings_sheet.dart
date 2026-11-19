@@ -104,6 +104,17 @@ class _TodoSettingsSheetState extends State<TodoSettingsSheet>
             const _ReminderTimeTile(),
             const Divider(),
             const _SwipeSettings(),
+            if (!Platform.isAndroid) ...[
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.keyboard_outlined),
+                title: Text(l10n.todoShortcutsTitle),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(l10n.todoShortcutsHelp),
+                ),
+              ),
+            ],
             const Divider(),
             ListTile(
               leading: const Icon(Icons.bolt_outlined),
@@ -206,6 +217,8 @@ class _SwipeActionTile extends StatelessWidget {
       TodoSwipeAction.delete: l10n.todoSwipeDelete,
       TodoSwipeAction.important: l10n.todoSwipeImportant,
       TodoSwipeAction.myDay: l10n.todoSwipeMyDay,
+      TodoSwipeAction.tomorrow: l10n.todoSwipeTomorrow,
+      TodoSwipeAction.nextWeek: l10n.todoSwipeNextWeek,
     };
     return PopupMenuButton<TodoSwipeAction>(
       tooltip: title,

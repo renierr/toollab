@@ -507,6 +507,25 @@ class TodoState extends ChangeNotifier {
     }
   }
 
+  /// Moves the due dates of [tasks] to [day]; see [TodoOperations.moveDue].
+  Future<TodoUndo> moveDue(List<TodoTask> tasks, DateTime day) async {
+    final now = DateTime.now();
+    await _saveTasks([
+      for (final t in tasks) TodoOperations.moveDue(t, day, now: now),
+    ]);
+    return TodoUndo(tasks);
+  }
+
+  static DateTime get tomorrow {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day + 1);
+  }
+
+  static DateTime get nextMonday {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day + 8 - now.weekday);
+  }
+
   Future<void> toggleImportant(TodoTask task) =>
       updateTask(task.copyWith(important: !task.important));
 

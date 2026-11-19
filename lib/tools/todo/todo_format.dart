@@ -75,6 +75,7 @@ class TodoFormat {
         '${nthLabel(r.monthlyNth!, l10n)} ${weekdayLong(weekday, l10n)}',
       );
     }
+    if (r.fromCompletion) details.add(l10n.todoRepeatAfterCompletion);
     if (r.until != null) {
       details.add(
         l10n.todoRepeatUntil(
