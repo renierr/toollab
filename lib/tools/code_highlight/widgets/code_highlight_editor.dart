@@ -15,11 +15,14 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
   SyntaxHighlightEditingController? _controller;
   final ScrollController _scrollController = ScrollController();
   CodeHighlightState? _state;
+  List<int>? _shownTokens;
+  int _lineCount = 1;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final state = context.watch<CodeHighlightState>();
+    // Listened to, not watched: rebuilding on every keystroke made typing lag.
+    final state = context.read<CodeHighlightState>();
     if (_state != state) {
       _state?.removeListener(_onStateChanged);
       _state = state;
@@ -28,17 +31,18 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
 
     if (_controller == null) {
       _controller = SyntaxHighlightEditingController(text: state.code ?? '');
-      _controller!.setHighlight(state.cachedTokens, state.cachedScopes);
+      _showHighlight(state);
+      _lineCount = _countLines(_controller!.text);
       _controller!.addListener(_onTextChanged);
-    } else if (state.code != null && state.code != _controller!.text) {
-      // Keep editor in sync if text changed externally (e.g. file loaded)
-      final selection = _controller!.selection;
-      _controller!.text = state.code!;
-      _controller!.selection = selection.copyWith(
-        baseOffset: selection.baseOffset.clamp(0, state.code!.length),
-        extentOffset: selection.extentOffset.clamp(0, state.code!.length),
-      );
     }
+  }
+
+  static int _countLines(String text) => '\n'.allMatches(text).length + 1;
+
+  void _showHighlight(CodeHighlightState state) {
+    if (identical(state.cachedTokens, _shownTokens)) return;
+    _shownTokens = state.cachedTokens;
+    _controller?.setHighlight(state.cachedTokens, state.cachedScopes);
   }
 
   @override
@@ -51,16 +55,29 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
 
   void _onStateChanged() {
     final state = _state;
-    if (mounted && state != null) {
-      _controller?.setHighlight(state.cachedTokens, state.cachedScopes);
+    final controller = _controller;
+    if (!mounted || state == null || controller == null) return;
+    final code = state.code;
+    if (code != null && code != controller.text) {
+      // Changed from outside, e.g. a file was loaded.
+      final selection = controller.selection;
+      controller.text = code;
+      controller.selection = selection.copyWith(
+        baseOffset: selection.baseOffset.clamp(0, code.length),
+        extentOffset: selection.extentOffset.clamp(0, code.length),
+      );
     }
+    _showHighlight(state);
   }
 
   void _onTextChanged() {
-    if (_controller != null && _state != null && _state!.code != null) {
-      _state!.setCode(_controller!.text);
-      setState(() {});
-    }
+    final controller = _controller;
+    final state = _state;
+    if (controller == null || state == null || state.code == null) return;
+    final lines = _countLines(controller.text);
+    if (lines != _lineCount) setState(() => _lineCount = lines);
+    if (controller.text == state.code) return;
+    state.setCode(controller.text);
   }
 
   void _insertTab() {
@@ -93,10 +110,8 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
     }
 
     final theme = Theme.of(context);
-    final text = _controller!.text;
-    final lineCount = '\n'.allMatches(text).length + 1;
     final lineNumbersText = List.generate(
-      lineCount,
+      _lineCount,
       (i) => '${i + 1}',
     ).join('\n');
 

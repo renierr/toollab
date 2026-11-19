@@ -22,6 +22,7 @@ class _SqliteSqlEditorState extends State<SqliteSqlEditor> {
       SyntaxHighlightEditingController();
   final ScrollController _scrollController = ScrollController();
   SqliteViewerState? _state;
+  int _lineCount = 1;
 
   @override
   void initState() {
@@ -35,15 +36,19 @@ class _SqliteSqlEditorState extends State<SqliteSqlEditor> {
     final state = context.read<SqliteViewerState>();
     if (_state != state) {
       _state?.removeListener(_onStateChanged);
+      _state?.sqlHighlightRevision.removeListener(_onHighlight);
       _state = state;
       state.addListener(_onStateChanged);
+      state.sqlHighlightRevision.addListener(_onHighlight);
     }
     _onStateChanged();
+    _onHighlight();
   }
 
   @override
   void dispose() {
     _state?.removeListener(_onStateChanged);
+    _state?.sqlHighlightRevision.removeListener(_onHighlight);
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -59,12 +64,22 @@ class _SqliteSqlEditorState extends State<SqliteSqlEditor> {
         offset: selection.baseOffset.clamp(0, state.sql.length),
       );
     }
+  }
+
+  void _onHighlight() {
+    final state = _state;
+    if (!mounted || state == null) return;
     _controller.setHighlight(state.sqlTokens, state.sqlScopes);
   }
 
+  static int _countLines(String text) => '\n'.allMatches(text).length + 1;
+
   void _onTextChanged() {
-    _state?.setSql(_controller.text);
-    setState(() {});
+    final lines = _countLines(_controller.text);
+    if (lines != _lineCount) setState(() => _lineCount = lines);
+    final state = _state;
+    if (state == null || state.sql == _controller.text) return;
+    state.setSql(_controller.text, notify: false);
   }
 
   void _insertTab() {
@@ -81,8 +96,7 @@ class _SqliteSqlEditorState extends State<SqliteSqlEditor> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final lineCount = '\n'.allMatches(_controller.text).length + 1;
-    final lineNumbers = List.generate(lineCount, (i) => '${i + 1}').join('\n');
+    final lineNumbers = List.generate(_lineCount, (i) => '${i + 1}').join('\n');
 
     return Container(
       decoration: BoxDecoration(

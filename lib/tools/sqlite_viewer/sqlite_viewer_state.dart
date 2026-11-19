@@ -96,6 +96,10 @@ class SqliteViewerState extends ChangeNotifier {
   List<int> get sqlTokens => _sqlTokens;
   List<String> get sqlScopes => _sqlScopes;
 
+  /// Bumped when [sqlTokens] change; the editor listens to this instead of
+  /// the whole state, so highlighting does not rebuild every watcher.
+  final ValueNotifier<int> sqlHighlightRevision = ValueNotifier(0);
+
   List<InternalDbEntry> get internalDatabases => _internalDatabases;
 
   List<DbObject> objectsOfType(DbObjectType type) =>
@@ -463,10 +467,12 @@ class SqliteViewerState extends ChangeNotifier {
 
   bool get sqlNeedsEditMode => sqlKind != SqlStatementKind.read;
 
-  void setSql(String value) {
+  /// The editor passes `notify: false` while typing: no widget renders the
+  /// text, and notifying rebuilt every watcher, result grid included.
+  void setSql(String value, {bool notify = true}) {
     if (_sql == value) return;
     _sql = value;
-    notifyListeners();
+    if (notify) notifyListeners();
     _highlightDebounce?.cancel();
     _highlightDebounce = Timer(
       const Duration(milliseconds: 150),
@@ -479,7 +485,7 @@ class SqliteViewerState extends ChangeNotifier {
     if (current.isEmpty) {
       _sqlTokens = const [];
       _sqlScopes = const [];
-      notifyListeners();
+      sqlHighlightRevision.value++;
       return;
     }
     try {
@@ -490,7 +496,7 @@ class SqliteViewerState extends ChangeNotifier {
       if (_sql != current) return;
       _sqlTokens = result.tokens;
       _sqlScopes = result.scopes;
-      notifyListeners();
+      sqlHighlightRevision.value++;
     } catch (e) {
       debugLog('SqliteViewer: SQL highlight failed: $e');
     }
@@ -585,6 +591,7 @@ class SqliteViewerState extends ChangeNotifier {
   void dispose() {
     _highlightDebounce?.cancel();
     _searchDebounce?.cancel();
+    sqlHighlightRevision.dispose();
     unawaited(_inspector.close());
     super.dispose();
   }

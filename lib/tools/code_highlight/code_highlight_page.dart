@@ -150,7 +150,9 @@ class _CodeHighlightToolPageState extends State<CodeHighlightToolPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = context.watch<CodeHighlightState>();
+    // Only whether a document is open; the text itself changes per keystroke.
+    context.select<CodeHighlightState, bool>((s) => s.code == null);
+    final state = context.read<CodeHighlightState>();
     final accent = CodeHighlightTool.config.accentColor;
 
     if (!state.initialized) {

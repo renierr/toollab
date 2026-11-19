@@ -14,7 +14,11 @@ class CodeHighlightToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<CodeHighlightState>();
+    // Not the code: watching it would rebuild the toolbar on every keystroke.
+    context.select<CodeHighlightState, (String?, String)>(
+      (s) => (s.fileName, s.language),
+    );
+    final state = context.read<CodeHighlightState>();
 
     final infoPanel = Card(
       margin: EdgeInsets.zero,
