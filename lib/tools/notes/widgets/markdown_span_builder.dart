@@ -6,6 +6,24 @@ class MarkdownSpanBuilder {
 
   MarkdownSpanBuilder({this.accentColor = AppTheme.accentTeal});
 
+  static final _trailingSpaces = RegExp(r'([ \t]+)$');
+  static final _header = RegExp(r'^(#{1,6})(\s+)(.*)$');
+  static final _bullet = RegExp(
+    r'^(\s*)([-*+]\s+\[([ xX])\]\s+|[-*+]\s+)(.*)$',
+  );
+  static final _ordered = RegExp(r'^(\s*)(\d+\.\s+)(.*)$');
+  static final _inlineCode = RegExp(r'`([^`\n]+)`');
+  static final _link = RegExp(r'\[([^\]\n]+)\]\(([^)\n]+)\)');
+  static final _bold = RegExp(r'\*\*([^*]+)\*\*|__([^_]+)__');
+  static final _italic = RegExp(r'\*([^*]+)\*|_([^_]+)_');
+  static final _strike = RegExp(r'~~([^~]+)~~');
+
+  /// Spans of the previous build by (in code block, line). A keystroke
+  /// changes one line, so all others are reused instead of re-parsed.
+  Map<(bool, String), TextSpan> _lineCache = {};
+  ThemeData? _cacheTheme;
+  TextStyle? _cacheStyle;
+
   TextSpan buildTextSpan({
     required BuildContext context,
     required String text,
@@ -14,6 +32,12 @@ class MarkdownSpanBuilder {
     final theme = Theme.of(context);
     final baseTextStyle =
         style ?? theme.textTheme.bodyMedium ?? const TextStyle();
+    final previous =
+        identical(theme, _cacheTheme) && baseTextStyle == _cacheStyle
+        ? _lineCache
+        : const <(bool, String), TextSpan>{};
+    final cache = <(bool, String), TextSpan>{};
+    final newline = TextSpan(text: '\n', style: baseTextStyle);
 
     final lines = text.split('\n');
     final spans = <TextSpan>[];
@@ -22,9 +46,19 @@ class MarkdownSpanBuilder {
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
       final isLastLine = i == lines.length - 1;
+      final isFence = line.trimLeft().startsWith('```');
+      final key = (inCodeBlock, line);
+      if (isFence) inCodeBlock = !inCodeBlock;
+      final cached = previous[key] ?? cache[key];
+      if (cached != null) {
+        cache[key] = cached;
+        spans.add(cached);
+        if (!isLastLine) spans.add(newline);
+        continue;
+      }
 
       // Extract trailing spaces to prevent cursor layout issues on styled spans
-      final trailingMatch = RegExp(r'([ \t]+)$').firstMatch(line);
+      final trailingMatch = _trailingSpaces.firstMatch(line);
       final String trailingSpaces;
       final String styledPart;
       if (trailingMatch != null) {
@@ -37,15 +71,12 @@ class MarkdownSpanBuilder {
 
       TextSpan? lineSpan;
 
-      if (styledPart.trimLeft().startsWith('```')) {
-        inCodeBlock = !inCodeBlock;
+      if (isFence) {
         lineSpan = _styleCodeBlockLine(styledPart, baseTextStyle, theme);
-      } else if (inCodeBlock) {
+      } else if (key.$1) {
         lineSpan = _styleCodeLine(styledPart, baseTextStyle, theme);
       } else {
-        final headerMatch = RegExp(
-          r'^(#{1,6})(\s+)(.*)$',
-        ).firstMatch(styledPart);
+        final headerMatch = _header.firstMatch(styledPart);
         if (headerMatch != null) {
           final hashes = headerMatch.group(1)!;
           final gap = headerMatch.group(2)!;
@@ -70,9 +101,7 @@ class MarkdownSpanBuilder {
           );
         }
 
-        final bulletMatch = RegExp(
-          r'^(\s*)([-*+]\s+\[([ xX])\]\s+|[-*+]\s+)(.*)$',
-        ).firstMatch(styledPart);
+        final bulletMatch = _bullet.firstMatch(styledPart);
         if (bulletMatch != null) {
           final prefix = bulletMatch.group(1) ?? '';
           final marker = bulletMatch.group(2) ?? '';
@@ -88,9 +117,7 @@ class MarkdownSpanBuilder {
           );
         }
 
-        final orderedMatch = RegExp(
-          r'^(\s*)(\d+\.\s+)(.*)$',
-        ).firstMatch(styledPart);
+        final orderedMatch = _ordered.firstMatch(styledPart);
         if (orderedMatch != null) {
           final prefix = orderedMatch.group(1) ?? '';
           final marker = orderedMatch.group(2) ?? '';
@@ -119,12 +146,14 @@ class MarkdownSpanBuilder {
             )
           : lineSpan;
 
+      cache[key] = finalSpan;
       spans.add(finalSpan);
-      if (!isLastLine) {
-        spans.add(TextSpan(text: '\n', style: baseTextStyle));
-      }
+      if (!isLastLine) spans.add(newline);
     }
 
+    _lineCache = cache;
+    _cacheTheme = theme;
+    _cacheStyle = baseTextStyle;
     return TextSpan(children: spans);
   }
 
@@ -313,7 +342,7 @@ class MarkdownSpanBuilder {
 
     List<_Segment> segments = [_Segment(lineText, baseStyle, isLocked: false)];
 
-    segments = _applyRegexRule(segments, RegExp(r'`([^`\n]+)`'), (match) {
+    segments = _applyRegexRule(segments, _inlineCode, (match) {
       final content = match.group(1)!;
       return [
         _Segment('`', codeStyle.copyWith(color: fadedColor), isLocked: true),
@@ -322,52 +351,42 @@ class MarkdownSpanBuilder {
       ];
     });
 
-    segments = _applyRegexRule(
-      segments,
-      RegExp(r'\[([^\]\n]+)\]\(([^)\n]+)\)'),
-      (match) {
-        final linkText = match.group(1)!;
-        final url = match.group(2)!;
+    segments = _applyRegexRule(segments, _link, (match) {
+      final linkText = match.group(1)!;
+      final url = match.group(2)!;
 
-        final linkTextStyle = baseStyle.copyWith(
-          color: accentColor,
-          decoration: TextDecoration.underline,
-          decorationColor: accentColor,
-        );
-        final linkMarkerStyle = TextStyle(color: fadedColor);
+      final linkTextStyle = baseStyle.copyWith(
+        color: accentColor,
+        decoration: TextDecoration.underline,
+        decorationColor: accentColor,
+      );
+      final linkMarkerStyle = TextStyle(color: fadedColor);
 
-        return [
-          _Segment('[', linkMarkerStyle, isLocked: true),
-          _Segment(linkText, linkTextStyle, isLocked: false),
-          _Segment('](', linkMarkerStyle, isLocked: true),
-          _Segment(url, linkMarkerStyle, isLocked: true),
-          _Segment(')', linkMarkerStyle, isLocked: true),
-        ];
-      },
-    );
+      return [
+        _Segment('[', linkMarkerStyle, isLocked: true),
+        _Segment(linkText, linkTextStyle, isLocked: false),
+        _Segment('](', linkMarkerStyle, isLocked: true),
+        _Segment(url, linkMarkerStyle, isLocked: true),
+        _Segment(')', linkMarkerStyle, isLocked: true),
+      ];
+    });
 
-    segments = _applyRegexRule(
-      segments,
-      RegExp(r'\*\*([^*]+)\*\*|__([^_]+)__'),
-      (match) {
-        final content = match.group(1) ?? match.group(2) ?? '';
-        final marker = match.group(0)!.substring(0, 2);
+    segments = _applyRegexRule(segments, _bold, (match) {
+      final content = match.group(1) ?? match.group(2) ?? '';
+      final marker = match.group(0)!.substring(0, 2);
 
-        return [
-          _Segment(marker, TextStyle(color: fadedColor), isLocked: true),
-          _Segment(
-            content,
-            const TextStyle(fontWeight: FontWeight.bold),
-            isLocked: false,
-          ),
-          _Segment(marker, TextStyle(color: fadedColor), isLocked: true),
-        ];
-      },
-    );
+      return [
+        _Segment(marker, TextStyle(color: fadedColor), isLocked: true),
+        _Segment(
+          content,
+          const TextStyle(fontWeight: FontWeight.bold),
+          isLocked: false,
+        ),
+        _Segment(marker, TextStyle(color: fadedColor), isLocked: true),
+      ];
+    });
 
-    segments = _applyRegexRule(segments, RegExp(r'\*([^*]+)\*|_([^_]+)_'), (
-      match,
-    ) {
+    segments = _applyRegexRule(segments, _italic, (match) {
       final content = match.group(1) ?? match.group(2) ?? '';
       final marker = match.group(0)!.substring(0, 1);
 
@@ -382,7 +401,7 @@ class MarkdownSpanBuilder {
       ];
     });
 
-    segments = _applyRegexRule(segments, RegExp(r'~~([^~]+)~~'), (match) {
+    segments = _applyRegexRule(segments, _strike, (match) {
       final content = match.group(1)!;
       return [
         _Segment('~~', TextStyle(color: fadedColor), isLocked: true),

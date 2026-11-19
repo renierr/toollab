@@ -53,6 +53,9 @@ class NoteEditor extends StatefulWidget {
 
 class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
   late final MarkdownTextEditingController _controller;
+  late bool _isEmpty;
+
+  bool get _hasChanges => _controller.text != _initialBody;
   late final FocusNode _focusNode;
   late List<String> _tags;
   late String _initialBody;
@@ -272,8 +275,12 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     _previewScrollController = ScrollController();
     onDispose(_previewScrollController.dispose);
     _tags = List.from(widget.initialTags);
+    _isEmpty = _initialBody.trim().isEmpty;
+    // Only the save buttons depend on the text; rebuilding the whole editor
+    // on every keystroke and caret move made typing lag.
     _controller.addListener(() {
-      setState(() {});
+      final isEmpty = _controller.text.trim().isEmpty;
+      if (isEmpty != _isEmpty) setState(() => _isEmpty = isEmpty);
     });
   }
 
@@ -449,13 +456,12 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final hasChanges = _controller.text != _initialBody;
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (!didPop) {
-          if (hasChanges) {
+          if (_hasChanges) {
             final shouldDiscard = await _showDiscardDialog(context);
             if (shouldDiscard) {
               widget.onCancel();
@@ -490,7 +496,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                             IconButton(
                               icon: const Icon(Icons.close),
                               onPressed: () async {
-                                if (hasChanges) {
+                                if (_hasChanges) {
                                   final shouldDiscard =
                                       await _showDiscardDialog(context);
                                   if (shouldDiscard) {
@@ -518,30 +524,28 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                               IconButton(
                                 icon: Icon(
                                   Icons.save_outlined,
-                                  color: _controller.text.trim().isEmpty
+                                  color: _isEmpty
                                       ? theme.colorScheme.onSurface.withValues(
                                           alpha: 0.3,
                                         )
                                       : AppTheme.accentTeal,
                                 ),
                                 tooltip: l10n.notesSaveKeepEditing,
-                                onPressed: _controller.text.trim().isEmpty
+                                onPressed: _isEmpty
                                     ? null
                                     : _saveAndKeepEditing,
                               ),
                             IconButton(
                               icon: Icon(
                                 Icons.save,
-                                color: _controller.text.trim().isEmpty
+                                color: _isEmpty
                                     ? theme.colorScheme.onSurface.withValues(
                                         alpha: 0.3,
                                       )
                                     : AppTheme.accentTeal,
                               ),
                               tooltip: l10n.commonSave,
-                              onPressed: _controller.text.trim().isEmpty
-                                  ? null
-                                  : _saveNote,
+                              onPressed: _isEmpty ? null : _saveNote,
                             ),
                             const SizedBox(width: 4),
                             AnimatedRotation(
@@ -633,16 +637,14 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                                     Icons.picture_as_pdf_outlined,
                                   ),
                                   tooltip: l10n.notesExportPdf,
-                                  onPressed: _controller.text.trim().isEmpty
+                                  onPressed: _isEmpty
                                       ? null
                                       : () => _exportPdf(context),
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.auto_awesome_outlined),
                                   tooltip: l10n.textAiOpen,
-                                  onPressed: _controller.text.trim().isEmpty
-                                      ? null
-                                      : _openTextAi,
+                                  onPressed: _isEmpty ? null : _openTextAi,
                                 ),
                               ],
                             ),
