@@ -80,8 +80,8 @@ object TodoNotifications {
             )
             .addAction(
                 0,
-                context.getString(R.string.todo_action_snooze_60),
-                actionIntent(context, TodoActionReceiver.ACTION_SNOOZE, entry, id * 4 + 3, 60),
+                context.getString(R.string.todo_action_tomorrow),
+                actionIntent(context, TodoActionReceiver.ACTION_TOMORROW, entry, id * 4 + 3),
             )
         if (entry.body.isNotEmpty()) {
             builder.setContentText(entry.body)

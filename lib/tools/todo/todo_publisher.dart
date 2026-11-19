@@ -32,6 +32,15 @@ class TodoAlarmEntry {
     required this.color,
   });
 
+  factory TodoAlarmEntry.fromJson(Map<String, dynamic> json) => TodoAlarmEntry(
+    taskId: json['taskId'] as String? ?? '',
+    at: (json['at'] as num?)?.toInt() ?? 0,
+    alarm: json['alarm'] as bool? ?? false,
+    title: json['title'] as String? ?? '',
+    body: json['body'] as String? ?? '',
+    color: (json['color'] as num?)?.toInt() ?? TodoPublisher.defaultColor,
+  );
+
   String get key => '$taskId@$at';
 
   Map<String, Object?> toJson() => {

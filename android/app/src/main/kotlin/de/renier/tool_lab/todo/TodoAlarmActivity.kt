@@ -106,6 +106,10 @@ class TodoAlarmActivity : Activity() {
             TodoActions.snooze(this, entry, 10)
             finish()
         })
+        root.addView(button(getString(R.string.todo_action_tomorrow_long), Color.rgb(0x2A, 0x31, 0x3C), Color.WHITE) {
+            TodoActions.moveToTomorrow(this, entry.taskId)
+            finish()
+        })
         root.addView(button(getString(R.string.todo_action_dismiss), Color.TRANSPARENT, Color.argb(0xB3, 0xFF, 0xFF, 0xFF)) {
             TodoActions.dismiss(this, entry.taskId)
             finish()

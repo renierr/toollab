@@ -16664,6 +16664,42 @@ class AppLocalizationsDe extends AppLocalizations {
       'Strg+N neue Aufgabe · Strg+F Suche\n↑ ↓ auswählen · Enter öffnen · Esc abwählen\nLeertaste erledigt · Entf löschen · I wichtig · M Mein Tag · T morgen';
 
   @override
+  String get todoUpcomingTitle => 'Anstehende Erinnerungen';
+
+  @override
+  String get todoUpcomingSubtitle => 'Was als Nächstes geplant ist';
+
+  @override
+  String get todoUpcomingEmpty => 'Keine Erinnerungen geplant';
+
+  @override
+  String get todoSnoozed => 'Geschlummert';
+
+  @override
+  String get todoCalendarView => 'Kalenderansicht';
+
+  @override
+  String get todoListView => 'Listenansicht';
+
+  @override
+  String get todoPreviousMonth => 'Vorheriger Monat';
+
+  @override
+  String get todoNextMonth => 'Nächster Monat';
+
+  @override
+  String get todoCalendarEmptyDay => 'An diesem Tag ist nichts fällig';
+
+  @override
+  String get todoCalendarDragHint =>
+      'Aufgabe lange drücken und auf einen Tag ziehen, um sie zu verschieben';
+
+  @override
+  String todoMovedToDaySnack(String title, String day) {
+    return '\"$title\" auf $day verschoben';
+  }
+
+  @override
   String get todoQuickAddHelp =>
       'heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen';
 

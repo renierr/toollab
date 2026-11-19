@@ -113,16 +113,21 @@ class TodoOperations {
     final db = TodoDbHelper.instance;
     var changed = false;
     for (final action in actions) {
-      if (action.type != 'complete') continue;
       final task = await db.getTask(action.taskId);
       if (task == null || task.deleted || task.completed) continue;
-      await db.upsertTasks(
-        complete(
-          task,
-          now: DateTime.fromMillisecondsSinceEpoch(action.at),
-          newId: db.generateShortId,
-        ),
-      );
+      final at = DateTime.fromMillisecondsSinceEpoch(action.at);
+      switch (action.type) {
+        case 'complete':
+          await db.upsertTasks(
+            complete(task, now: at, newId: db.generateShortId),
+          );
+        case 'tomorrow':
+          await db.upsertTasks([
+            moveDue(task, DateTime(at.year, at.month, at.day + 1), now: at),
+          ]);
+        default:
+          continue;
+      }
       changed = true;
     }
     return changed;

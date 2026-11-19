@@ -3,7 +3,8 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_edit_field.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 
-/// Note rendered as Markdown; a tap outside a link switches to the editor.
+/// Note rendered as Markdown with tappable checkboxes; a tap elsewhere
+/// switches to the editor.
 class TodoNoteField extends StatefulWidget {
   final String note;
   final Color color;
@@ -54,6 +55,7 @@ class _TodoNoteFieldState extends State<TodoNoteField> {
               data: widget.note,
               selectable: false,
               accentColor: widget.color,
+              onCheckboxToggled: widget.onSubmit,
             ),
           ),
         ),

@@ -38,10 +38,29 @@ object TodoActions {
     }
 
     fun complete(context: Context, taskId: String) {
+        queue(context, "complete", taskId)
+        TodoFiles.removeTaskFromWidget(context, taskId)
+        TodoWidgetProvider.refreshAll(context)
+        TodoNative.notifyActionsPending()
+    }
+
+    /** Dart moves the due date and republishes the reminders; until then the
+     *  task's pending reminders are dropped so none fires for the old day. */
+    fun moveToTomorrow(context: Context, taskId: String) {
+        queue(context, "tomorrow", taskId)
+        val alarms = TodoFiles.readEntries(context, TodoFiles.ALARMS)
+        if (alarms.any { it.taskId == taskId }) {
+            TodoFiles.writeEntries(context, TodoFiles.ALARMS, alarms.filter { it.taskId != taskId })
+            TodoAlarmScheduler.reschedule(context)
+        }
+        TodoNative.notifyActionsPending()
+    }
+
+    private fun queue(context: Context, type: String, taskId: String) {
         TodoFiles.appendAction(
             context,
             JSONObject()
-                .put("type", "complete")
+                .put("type", type)
                 .put("taskId", taskId)
                 .put("at", System.currentTimeMillis()),
         )
@@ -51,9 +70,6 @@ object TodoActions {
             TodoFiles.writeSnoozes(context, snoozes.filter { it.taskId != taskId })
             TodoAlarmScheduler.reschedule(context)
         }
-        TodoFiles.removeTaskFromWidget(context, taskId)
-        TodoWidgetProvider.refreshAll(context)
-        TodoNative.notifyActionsPending()
     }
 
     fun snooze(context: Context, entry: TodoAlarmEntry, minutes: Int) {

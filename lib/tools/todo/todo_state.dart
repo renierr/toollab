@@ -40,6 +40,7 @@ class TodoState extends ChangeNotifier {
   static const String _swipeStartKey = 'swipe_start';
   static const String _swipeEndKey = 'swipe_end';
   static const String _reminderTimeKey = 'default_reminder_time';
+  static const String _plannedCalendarKey = 'planned_calendar';
   static const int defaultReminderMinutesFallback = 11 * 60;
   static const String _lastViewKey = 'last_view';
 
@@ -67,6 +68,7 @@ class TodoState extends ChangeNotifier {
   TodoSwipeAction _swipeStart = TodoSwipeAction.complete;
   TodoSwipeAction _swipeEnd = TodoSwipeAction.delete;
   int _defaultReminderMinutes = defaultReminderMinutesFallback;
+  bool _plannedCalendar = false;
 
   bool _loaded = false;
   bool _loading = false;
@@ -131,6 +133,9 @@ class TodoState extends ChangeNotifier {
 
   /// Minutes after midnight for reminders that have no time of their own.
   int get defaultReminderMinutes => _defaultReminderMinutes;
+
+  /// Planned shows a month calendar instead of the grouped list.
+  bool get plannedCalendar => _plannedCalendar;
 
   bool completedExpanded(TodoView view) => _expandedCompleted.contains(view);
 
@@ -282,6 +287,12 @@ class TodoState extends ChangeNotifier {
     if (minutes != null && minutes >= 0 && minutes < 24 * 60) {
       _defaultReminderMinutes = minutes;
     }
+    _plannedCalendar =
+        await DatabaseService.instance.getSetting(
+          TodoTool.config.id,
+          _plannedCalendarKey,
+        ) ==
+        'true';
     final last = await DatabaseService.instance.getSetting(
       TodoTool.config.id,
       _lastViewKey,
@@ -379,6 +390,16 @@ class TodoState extends ChangeNotifier {
       TodoTool.config.id,
       start ? _swipeStartKey : _swipeEndKey,
       action.name,
+    );
+  }
+
+  Future<void> setPlannedCalendar(bool on) async {
+    _plannedCalendar = on;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      TodoTool.config.id,
+      _plannedCalendarKey,
+      '$on',
     );
   }
 

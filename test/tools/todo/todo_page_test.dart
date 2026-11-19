@@ -45,6 +45,18 @@ void main() {
     await tester.pump();
   }
 
+  // Lets debounced writes and the sync run their (real) database work to
+  // completion, so no sqflite lock timer outlives the test.
+  Future<void> settleDatabase(WidgetTester tester) async {
+    await tester.pump(const Duration(seconds: 5));
+    for (var i = 0; i < 5; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(seconds: 11));
+    }
+  }
+
   testWidgets('renders lists, tasks and detail on phone and desktop', (
     tester,
   ) async {
@@ -115,14 +127,33 @@ void main() {
     expect(task.dueHasTime, isTrue);
     expect(task.reminders, hasLength(1));
     expect(tester.takeException(), isNull);
-    // Let the debounced sync run its (real) database reads to completion.
-    await tester.pump(const Duration(seconds: 5));
-    for (var i = 0; i < 5; i++) {
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    await settleDatabase(tester);
+    state.dispose();
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('planned calendar renders on phone and selects a day', (
+    tester,
+  ) async {
+    state = TodoState();
+    await tester.runAsync(() async {
+      await state.load();
+      state.selectView(TodoView.smart(TodoSmartList.planned));
+      await state.setPlannedCalendar(true);
+      await state.addTask(
+        TodoQuickDraft(title: 'Dentist', due: DateTime.now()),
       );
-      await tester.pump(const Duration(seconds: 11));
-    }
+    });
+    await pumpPage(tester, const Size(360, 800));
+    expect(find.text('Dentist'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byTooltip('Next month'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.byTooltip('List view'));
+    await tester.pump();
+    expect(state.plannedCalendar, isFalse);
+    await settleDatabase(tester);
     state.dispose();
     await tester.pumpWidget(const SizedBox());
   });

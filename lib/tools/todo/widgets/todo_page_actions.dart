@@ -24,6 +24,7 @@ List<Widget> todoPageActions(
       icon: Icon(searching ? Icons.search_off : Icons.search),
       onPressed: onToggleSearch,
     ),
+    const _PlannedModeButton(),
     const _SortMenu(),
     const _SyncButton(),
     IconButton(
@@ -32,6 +33,26 @@ List<Widget> todoPageActions(
       onPressed: () => TodoSettingsSheet.show(context),
     ),
   ];
+}
+
+class _PlannedModeButton extends StatelessWidget {
+  const _PlannedModeButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<TodoState>();
+    if (state.view.smart != TodoSmartList.planned ||
+        state.query.trim().isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+    final l10n = AppLocalizations.of(context);
+    final calendar = state.plannedCalendar;
+    return IconButton(
+      tooltip: calendar ? l10n.todoListView : l10n.todoCalendarView,
+      icon: Icon(calendar ? Icons.view_agenda_outlined : Icons.calendar_month),
+      onPressed: () => state.setPlannedCalendar(!calendar),
+    );
+  }
 }
 
 class _SortMenu extends StatelessWidget {

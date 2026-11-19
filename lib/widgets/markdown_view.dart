@@ -37,6 +37,10 @@ class MarkdownView extends StatefulWidget {
   final List<md.InlineSyntax> inlineSyntaxes;
   final Map<String, MarkdownElementBuilder> builders;
 
+  /// Makes task-list checkboxes tappable; receives [data] with the tapped
+  /// one flipped.
+  final ValueChanged<String>? onCheckboxToggled;
+
   const MarkdownView({
     super.key,
     required this.data,
@@ -48,7 +52,44 @@ class MarkdownView extends StatefulWidget {
     this.initialAnchor,
     this.inlineSyntaxes = const [],
     this.builders = const {},
+    this.onCheckboxToggled,
   });
+
+  static final RegExp _taskItem = RegExp(
+    r'^([\s>]*(?:[-*+]|\d+[.)])\s+\[)([ xX])(\])',
+  );
+
+  /// Flips the [index]-th task-list checkbox (document order, fenced code
+  /// skipped) in [data]; returns [data] unchanged when there is none.
+  static String toggleCheckbox(String data, int index) {
+    final lines = data.split('\n');
+    String? fence;
+    var seen = 0;
+    for (var i = 0; i < lines.length; i++) {
+      final fenceMatch = _MarkdownViewState._fencePattern.firstMatch(lines[i]);
+      if (fenceMatch != null) {
+        final marker = fenceMatch.group(1)!;
+        if (fence == null) {
+          fence = marker;
+        } else if (marker[0] == fence[0] && marker.length >= fence.length) {
+          fence = null;
+        }
+        continue;
+      }
+      if (fence != null) continue;
+      final match = _taskItem.firstMatch(lines[i]);
+      if (match == null) continue;
+      if (seen++ != index) continue;
+      final checked = match.group(2) != ' ';
+      lines[i] = lines[i].replaceRange(
+        match.group(1)!.length,
+        match.group(1)!.length + 1,
+        checked ? ' ' : 'x',
+      );
+      return lines.join('\n');
+    }
+    return data;
+  }
 
   @override
   State<MarkdownView> createState() => _MarkdownViewState();
@@ -333,6 +374,7 @@ class _MarkdownViewState extends State<MarkdownView>
             ),
           ),
         );
+    var checkboxIndex = 0;
     final MarkdownBuilder builder = MarkdownBuilder(
       delegate: this,
       selectable: false,
@@ -413,8 +455,24 @@ class _MarkdownViewState extends State<MarkdownView>
           child: imageWidget,
         );
       },
-      checkboxBuilder: (checked) =>
-          MarkdownCheckbox(checked: checked, checkedColor: widget.accentColor),
+      checkboxBuilder: (checked) {
+        final box = MarkdownCheckbox(
+          checked: checked,
+          checkedColor: widget.accentColor,
+        );
+        final onToggled = widget.onCheckboxToggled;
+        if (onToggled == null) return box;
+        final index = checkboxIndex++;
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () =>
+                onToggled(MarkdownView.toggleCheckbox(widget.data, index)),
+            child: box,
+          ),
+        );
+      },
       bulletBuilder: null,
       builders: {
         'pre': MarkdownCodeBlockBuilder(scale: widget.scale),
@@ -444,7 +502,9 @@ class _MarkdownViewState extends State<MarkdownView>
         widget.copyImages != oldWidget.copyImages ||
         widget.accentColor != oldWidget.accentColor ||
         !listEquals(widget.inlineSyntaxes, oldWidget.inlineSyntaxes) ||
-        !mapEquals(widget.builders, oldWidget.builders)) {
+        !mapEquals(widget.builders, oldWidget.builders) ||
+        (widget.onCheckboxToggled == null) !=
+            (oldWidget.onCheckboxToggled == null)) {
       _parseMarkdown();
       if (widget.data != oldWidget.data) {
         _preloadGrammars();

@@ -4,7 +4,8 @@
     <string name="todo_channel_alarms">Todo-Alarme</string>
     <string name="todo_action_done">Erledigt</string>
     <string name="todo_action_snooze_10">10 Min.</string>
-    <string name="todo_action_snooze_60">1 Std.</string>
+    <string name="todo_action_tomorrow">Morgen</string>
+    <string name="todo_action_tomorrow_long">Auf morgen verschieben</string>
     <string name="todo_action_snooze_10_long">10 Min. schlummern</string>
     <string name="todo_action_dismiss">Schließen</string>
     <string name="todo_widget_label">Todo</string>

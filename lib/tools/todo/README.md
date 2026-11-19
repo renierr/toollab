@@ -26,7 +26,7 @@ Sorted by `at`, only future entries (>= now - 1 min), horizon 30 days, max 500.
 Same entry shape (`{"entries":[...]}`). Kotlin merges it with alarms.json when scheduling and drops entries once fired.
 
 ### pending_actions.jsonl  (Kotlin appends one JSON object per line, Dart drains)
-`{"type":"complete","taskId":"abc12345","at":1700000000000}`
+`{"type":"complete","taskId":"abc12345","at":1700000000000}`; `type` is `complete` or `tomorrow` (move the due date to the next day).
 Dart drains by renaming to `pending_actions.jsonl.draining`, reading, deleting.
 
 ### widget.json  (Dart writes, Kotlin reads)
@@ -71,7 +71,7 @@ Dart schedules in-process timers while the app runs.
   `TodoAlarmActivity` with an insistent alarm-channel notification.
 - An inexact hourly recheck picks up files rewritten by a headless background run, which has no channel.
 - Entries missed by more than 24 h (device off) are skipped silently.
-- Notification actions: Done, Snooze 10 min, Snooze 1 h. Done is queued in `pending_actions.jsonl`
+- Notification actions: Done, Snooze 10 min, Tomorrow (the alarm screen also offers Tomorrow). Done and Tomorrow are queued in `pending_actions.jsonl`
   and applied by Dart on the next open, on `actionsPending`, or by the background task.
 - Rules with `X-FROM=COMPLETION` (repeat after completion) have no known future occurrences:
   only their stored reminders are published; the next due date is set when the task is done.

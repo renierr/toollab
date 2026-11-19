@@ -16535,6 +16535,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ctrl+N new task · Ctrl+F search\n↑ ↓ select · Enter open · Esc deselect\nSpace done · Del delete · I important · M My Day · T tomorrow';
 
   @override
+  String get todoUpcomingTitle => 'Upcoming reminders';
+
+  @override
+  String get todoUpcomingSubtitle => 'What is scheduled to ring next';
+
+  @override
+  String get todoUpcomingEmpty => 'No reminders scheduled';
+
+  @override
+  String get todoSnoozed => 'Snoozed';
+
+  @override
+  String get todoCalendarView => 'Calendar view';
+
+  @override
+  String get todoListView => 'List view';
+
+  @override
+  String get todoPreviousMonth => 'Previous month';
+
+  @override
+  String get todoNextMonth => 'Next month';
+
+  @override
+  String get todoCalendarEmptyDay => 'Nothing due on this day';
+
+  @override
+  String get todoCalendarDragHint =>
+      'Long-press a task and drop it on a day to move it';
+
+  @override
+  String todoMovedToDaySnack(String title, String day) {
+    return 'Moved \"$title\" to $day';
+  }
+
+  @override
   String get todoQuickAddHelp =>
       'today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks';
 

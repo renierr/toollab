@@ -8,6 +8,7 @@ import 'package:tool_lab/tools/todo/todo_format.dart';
 import 'package:tool_lab/tools/todo/todo_list_name.dart';
 import 'package:tool_lab/tools/todo/todo_state.dart';
 import 'package:tool_lab/tools/todo/todo_view.dart';
+import 'package:tool_lab/tools/todo/widgets/todo_calendar.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_permission_banner.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_quick_add_bar.dart';
 import 'package:tool_lab/tools/todo/widgets/todo_task_tile.dart';
@@ -44,7 +45,16 @@ class TodoTaskPane extends StatelessWidget {
         !searching &&
         state.sortFor(view) == TodoSort.manual &&
         view.smart != TodoSmartList.completed;
-    final grouped = !searching && view.smart == TodoSmartList.planned;
+    final planned = !searching && view.smart == TodoSmartList.planned;
+    final calendar = planned && state.plannedCalendar;
+    final grouped = planned && !calendar;
+    final now = DateTime.now();
+    final overdue = calendar
+        ? [
+            for (final t in open)
+              if (t.isOverdue(now)) t,
+          ]
+        : const <TodoTask>[];
 
     Widget tile(TodoTask task, {int? index}) => TodoTaskTile(
       key: ValueKey(task.shortId),
@@ -96,7 +106,26 @@ class TodoTaskPane extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (open.isEmpty && completed.isEmpty)
+                if (calendar) ...[
+                  if (overdue.isNotEmpty)
+                    _SectionHeader(
+                      label: '${l10n.todoGroupOverdue} (${overdue.length})',
+                      padding: padding,
+                      action: _MoveOverdueButton(tasks: overdue),
+                    ),
+                  SliverPadding(
+                    padding: EdgeInsets.only(
+                      left: padding.left,
+                      right: padding.right,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: TodoCalendar(
+                        tasks: open,
+                        tileBuilder: tile,
+                      ),
+                    ),
+                  ),
+                ] else if (open.isEmpty && completed.isEmpty)
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: _EmptyState(view: view, searching: searching),

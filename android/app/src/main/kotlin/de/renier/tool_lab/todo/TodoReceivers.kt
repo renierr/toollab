@@ -17,6 +17,7 @@ class TodoActionReceiver : BroadcastReceiver() {
     companion object {
         const val ACTION_COMPLETE = "de.renier.tool_lab.todo.COMPLETE"
         const val ACTION_SNOOZE = "de.renier.tool_lab.todo.SNOOZE"
+        const val ACTION_TOMORROW = "de.renier.tool_lab.todo.TOMORROW"
         const val EXTRA_MINUTES = "todo_snooze_minutes"
     }
 
@@ -24,6 +25,7 @@ class TodoActionReceiver : BroadcastReceiver() {
         val taskId = intent.getStringExtra(TodoIntents.EXTRA_TASK_ID) ?: return
         when (intent.action) {
             ACTION_COMPLETE -> TodoActions.complete(context, taskId)
+            ACTION_TOMORROW -> TodoActions.moveToTomorrow(context, taskId)
             ACTION_SNOOZE -> {
                 val entry = TodoActions.entryFrom(intent) ?: return
                 TodoActions.snooze(context, entry, intent.getIntExtra(EXTRA_MINUTES, 10).coerceAtLeast(1))

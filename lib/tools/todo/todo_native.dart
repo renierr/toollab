@@ -68,6 +68,7 @@ class TodoNative {
   );
 
   static const String alarmsFile = 'alarms.json';
+  static const String snoozesFile = 'snoozes.json';
   static const String widgetFile = 'widget.json';
   static const String actionsFile = 'pending_actions.jsonl';
 
@@ -95,6 +96,23 @@ class TodoNative {
     final dir = Directory(p.join(base.path, 'todo'));
     if (!await dir.exists()) await dir.create(recursive: true);
     return dir;
+  }
+
+  /// The `entries` array of an alarm file; empty when missing or unreadable.
+  static Future<List<Map<String, dynamic>>> readEntries(String name) async {
+    try {
+      final file = File(p.join((await directory()).path, name));
+      if (!await file.exists()) return const [];
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      return [
+        for (final e in json['entries'] as List? ?? const [])
+          if (e is Map<String, dynamic>) e,
+      ];
+    } catch (e) {
+      errorLog('[TodoNative] reading $name failed: $e');
+      return const [];
+    }
   }
 
   static Future<void> writeJson(String name, Object json) async {

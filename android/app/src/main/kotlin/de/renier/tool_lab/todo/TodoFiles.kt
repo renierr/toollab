@@ -106,10 +106,19 @@ object TodoFiles {
         }
     }
 
-    fun writeSnoozes(context: Context, entries: List<TodoAlarmEntry>) {
+    fun writeSnoozes(context: Context, entries: List<TodoAlarmEntry>) = writeEntries(context, SNOOZES, entries)
+
+    fun writeEntries(context: Context, name: String, entries: List<TodoAlarmEntry>) {
         val array = JSONArray()
         entries.sortedBy { it.at }.forEach { array.put(it.toJson()) }
-        writeAtomic(context, SNOOZES, JSONObject().put("version", 1).put("entries", array))
+        writeAtomic(
+            context,
+            name,
+            JSONObject()
+                .put("version", 1)
+                .put("generatedAt", System.currentTimeMillis())
+                .put("entries", array),
+        )
     }
 
     fun readWidgetLists(context: Context): List<TodoWidgetList> {

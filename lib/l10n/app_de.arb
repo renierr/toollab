@@ -6226,6 +6226,17 @@
   "todoEditNote": "Notiz bearbeiten",
   "todoShortcutsTitle": "Tastenkürzel",
   "todoShortcutsHelp": "Strg+N neue Aufgabe · Strg+F Suche\n↑ ↓ auswählen · Enter öffnen · Esc abwählen\nLeertaste erledigt · Entf löschen · I wichtig · M Mein Tag · T morgen",
+  "todoUpcomingTitle": "Anstehende Erinnerungen",
+  "todoUpcomingSubtitle": "Was als Nächstes geplant ist",
+  "todoUpcomingEmpty": "Keine Erinnerungen geplant",
+  "todoSnoozed": "Geschlummert",
+  "todoCalendarView": "Kalenderansicht",
+  "todoListView": "Listenansicht",
+  "todoPreviousMonth": "Vorheriger Monat",
+  "todoNextMonth": "Nächster Monat",
+  "todoCalendarEmptyDay": "An diesem Tag ist nichts fällig",
+  "todoCalendarDragHint": "Aufgabe lange drücken und auf einen Tag ziehen, um sie zu verschieben",
+  "todoMovedToDaySnack": "\"{title}\" auf {day} verschoben",
   "todoQuickAddHelp": "heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen",
   "todoShowLists": "Listen"
 }

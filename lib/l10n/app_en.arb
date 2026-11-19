@@ -7826,6 +7826,18 @@
   "todoEditNote": "Edit note",
   "todoShortcutsTitle": "Keyboard shortcuts",
   "todoShortcutsHelp": "Ctrl+N new task · Ctrl+F search\n↑ ↓ select · Enter open · Esc deselect\nSpace done · Del delete · I important · M My Day · T tomorrow",
+  "todoUpcomingTitle": "Upcoming reminders",
+  "todoUpcomingSubtitle": "What is scheduled to ring next",
+  "todoUpcomingEmpty": "No reminders scheduled",
+  "todoSnoozed": "Snoozed",
+  "todoCalendarView": "Calendar view",
+  "todoListView": "List view",
+  "todoPreviousMonth": "Previous month",
+  "todoNextMonth": "Next month",
+  "todoCalendarEmptyDay": "Nothing due on this day",
+  "todoCalendarDragHint": "Long-press a task and drop it on a day to move it",
+  "todoMovedToDaySnack": "Moved \"{title}\" to {day}",
+  "@todoMovedToDaySnack": {"placeholders": {"title": {"type": "String"}, "day": {"type": "String"}}},
   "todoQuickAddHelp": "today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks",
   "todoShowLists": "Lists"
 }

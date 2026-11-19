@@ -29092,6 +29092,72 @@ abstract class AppLocalizations {
   /// **'Ctrl+N new task · Ctrl+F search\n↑ ↓ select · Enter open · Esc deselect\nSpace done · Del delete · I important · M My Day · T tomorrow'**
   String get todoShortcutsHelp;
 
+  /// No description provided for @todoUpcomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming reminders'**
+  String get todoUpcomingTitle;
+
+  /// No description provided for @todoUpcomingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is scheduled to ring next'**
+  String get todoUpcomingSubtitle;
+
+  /// No description provided for @todoUpcomingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders scheduled'**
+  String get todoUpcomingEmpty;
+
+  /// No description provided for @todoSnoozed.
+  ///
+  /// In en, this message translates to:
+  /// **'Snoozed'**
+  String get todoSnoozed;
+
+  /// No description provided for @todoCalendarView.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar view'**
+  String get todoCalendarView;
+
+  /// No description provided for @todoListView.
+  ///
+  /// In en, this message translates to:
+  /// **'List view'**
+  String get todoListView;
+
+  /// No description provided for @todoPreviousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get todoPreviousMonth;
+
+  /// No description provided for @todoNextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get todoNextMonth;
+
+  /// No description provided for @todoCalendarEmptyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing due on this day'**
+  String get todoCalendarEmptyDay;
+
+  /// No description provided for @todoCalendarDragHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press a task and drop it on a day to move it'**
+  String get todoCalendarDragHint;
+
+  /// No description provided for @todoMovedToDaySnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved \"{title}\" to {day}'**
+  String todoMovedToDaySnack(String title, String day);
+
   /// No description provided for @todoQuickAddHelp.
   ///
   /// In en, this message translates to:

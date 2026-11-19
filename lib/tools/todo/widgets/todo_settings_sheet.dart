@@ -8,6 +8,7 @@ import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/tools/todo/todo_background.dart';
 import 'package:tool_lab/tools/todo/todo_native.dart';
 import 'package:tool_lab/tools/todo/todo_state.dart';
+import 'package:tool_lab/tools/todo/widgets/todo_upcoming_sheet.dart';
 import 'package:tool_lab/widgets/background_task_tile.dart';
 
 /// Reminder permissions, background refresh, swipe gestures and the
@@ -101,6 +102,13 @@ class _TodoSettingsSheetState extends State<TodoSettingsSheet>
                 subtitle: Text(l10n.todoDesktopRemindersSubtitle),
               ),
             const Divider(),
+            ListTile(
+              leading: const Icon(Icons.upcoming_outlined),
+              title: Text(l10n.todoUpcomingTitle),
+              subtitle: Text(l10n.todoUpcomingSubtitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => TodoUpcomingSheet.show(context),
+            ),
             const _ReminderTimeTile(),
             const Divider(),
             const _SwipeSettings(),
