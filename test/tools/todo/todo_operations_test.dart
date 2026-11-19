@@ -6,6 +6,7 @@ import 'package:tool_lab/tools/todo/models/todo_task.dart';
 import 'package:tool_lab/tools/todo/todo_operations.dart';
 import 'package:tool_lab/tools/todo/todo_publisher.dart';
 import 'package:tool_lab/tools/todo/todo_recurrence.dart';
+import 'package:tool_lab/tools/todo/todo_sort.dart';
 
 TodoTask _task({
   TodoRecurrence? recurrence,
@@ -163,6 +164,25 @@ void main() {
       ]);
       final important = (snapshot['lists']! as List)[1] as Map;
       expect(important['openCount'], 1);
+    });
+
+    test('widget snapshot follows the stored sort mode of a list', () {
+      final a = _task().copyWith(shortId: 'A', title: 'Zebra', sortOrder: 0);
+      final b = _task().copyWith(shortId: 'B', title: 'Apple', sortOrder: 1);
+      List<Object?> order(Map<String, TodoSort> modes) {
+        final snapshot = TodoPublisher.buildWidgetSnapshot(
+          [a, b],
+          lists.values.toList(),
+          l10n,
+          sortModes: modes,
+          now: now,
+        );
+        final list = (snapshot['lists']! as List).last as Map;
+        return [for (final t in list['tasks'] as List) (t as Map)['id']];
+      }
+
+      expect(order({}), ['A', 'B']);
+      expect(order({'L1': TodoSort.alphabetical}), ['B', 'A']);
     });
   });
 }

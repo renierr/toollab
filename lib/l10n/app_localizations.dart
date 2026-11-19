@@ -28948,6 +28948,60 @@ abstract class AppLocalizations {
   /// **'Quick add'**
   String get todoQuickAddHelpTitle;
 
+  /// No description provided for @todoSwipeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe gestures'**
+  String get todoSwipeTitle;
+
+  /// No description provided for @todoSwipeRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe right'**
+  String get todoSwipeRight;
+
+  /// No description provided for @todoSwipeLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left'**
+  String get todoSwipeLeft;
+
+  /// No description provided for @todoSwipeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipes starting at the screen edge are ignored so the back gesture stays safe.'**
+  String get todoSwipeHint;
+
+  /// No description provided for @todoSwipeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get todoSwipeNone;
+
+  /// No description provided for @todoSwipeComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark done'**
+  String get todoSwipeComplete;
+
+  /// No description provided for @todoSwipeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get todoSwipeDelete;
+
+  /// No description provided for @todoSwipeImportant.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle important'**
+  String get todoSwipeImportant;
+
+  /// No description provided for @todoSwipeMyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle My Day'**
+  String get todoSwipeMyDay;
+
   /// No description provided for @todoQuickAddHelp.
   ///
   /// In en, this message translates to:

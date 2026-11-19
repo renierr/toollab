@@ -16576,6 +16576,34 @@ class AppLocalizationsDe extends AppLocalizations {
   String get todoQuickAddHelpTitle => 'Schnell hinzufügen';
 
   @override
+  String get todoSwipeTitle => 'Wischgesten';
+
+  @override
+  String get todoSwipeRight => 'Nach rechts wischen';
+
+  @override
+  String get todoSwipeLeft => 'Nach links wischen';
+
+  @override
+  String get todoSwipeHint =>
+      'Wischgesten, die am Bildschirmrand beginnen, werden ignoriert, damit die Zurück-Geste nichts auslöst.';
+
+  @override
+  String get todoSwipeNone => 'Aus';
+
+  @override
+  String get todoSwipeComplete => 'Als erledigt markieren';
+
+  @override
+  String get todoSwipeDelete => 'Löschen';
+
+  @override
+  String get todoSwipeImportant => 'Wichtig umschalten';
+
+  @override
+  String get todoSwipeMyDay => 'Mein Tag umschalten';
+
+  @override
   String get todoQuickAddHelp =>
       'heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen';
 

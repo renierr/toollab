@@ -38,7 +38,7 @@ Dart drains by renaming to `pending_actions.jsonl.draining`, reading, deleting.
  ]}
 ```
 Smart ids: `smart:myday`, `smart:important`, `smart:planned`, `smart:all`; user lists use their shortId.
-Up to 50 open tasks per list. `meta` is pre-formatted and localized by Dart (may be empty).
+Up to 50 open tasks per list, ordered by the list's sort mode from the app (setting `sort_modes`, keyed by widget id). `meta` is pre-formatted and localized by Dart (may be empty).
 First list = default for a newly added widget.
 
 ## Kotlin native state

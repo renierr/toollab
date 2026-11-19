@@ -6202,6 +6202,15 @@
   "todoDesktopRemindersTitle": "Desktop-Erinnerungen",
   "todoDesktopRemindersSubtitle": "Erinnerungen erscheinen als Systembenachrichtigung, solange ToolLab läuft.",
   "todoQuickAddHelpTitle": "Schnell hinzufügen",
+  "todoSwipeTitle": "Wischgesten",
+  "todoSwipeRight": "Nach rechts wischen",
+  "todoSwipeLeft": "Nach links wischen",
+  "todoSwipeHint": "Wischgesten, die am Bildschirmrand beginnen, werden ignoriert, damit die Zurück-Geste nichts auslöst.",
+  "todoSwipeNone": "Aus",
+  "todoSwipeComplete": "Als erledigt markieren",
+  "todoSwipeDelete": "Löschen",
+  "todoSwipeImportant": "Wichtig umschalten",
+  "todoSwipeMyDay": "Mein Tag umschalten",
   "todoQuickAddHelp": "heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen",
   "todoShowLists": "Listen"
 }

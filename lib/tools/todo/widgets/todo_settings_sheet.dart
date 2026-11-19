@@ -1,14 +1,17 @@
 import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/tools/todo/todo_background.dart';
 import 'package:tool_lab/tools/todo/todo_native.dart';
+import 'package:tool_lab/tools/todo/todo_state.dart';
 import 'package:tool_lab/widgets/background_task_tile.dart';
 
-/// Reminder permissions, background refresh and the quick-add syntax.
+/// Reminder permissions, background refresh, swipe gestures and the
+/// quick-add syntax.
 class TodoSettingsSheet extends StatefulWidget {
   const TodoSettingsSheet({super.key});
 
@@ -98,6 +101,8 @@ class _TodoSettingsSheetState extends State<TodoSettingsSheet>
                 subtitle: Text(l10n.todoDesktopRemindersSubtitle),
               ),
             const Divider(),
+            const _SwipeSettings(),
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.bolt_outlined),
               title: Text(l10n.todoQuickAddHelpTitle),
@@ -141,6 +146,82 @@ class _PermissionTile extends StatelessWidget {
         color: granted ? scheme.primary : scheme.error,
       ),
       onTap: onTap,
+    );
+  }
+}
+
+class _SwipeSettings extends StatelessWidget {
+  const _SwipeSettings();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final state = context.watch<TodoState>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          leading: const Icon(Icons.swipe_outlined),
+          title: Text(l10n.todoSwipeTitle),
+          subtitle: Text(l10n.todoSwipeHint),
+        ),
+        _SwipeActionTile(
+          icon: Icons.east,
+          title: l10n.todoSwipeRight,
+          value: state.swipeStart,
+          onChanged: (a) => state.setSwipeAction(start: true, action: a),
+        ),
+        _SwipeActionTile(
+          icon: Icons.west,
+          title: l10n.todoSwipeLeft,
+          value: state.swipeEnd,
+          onChanged: (a) => state.setSwipeAction(start: false, action: a),
+        ),
+      ],
+    );
+  }
+}
+
+class _SwipeActionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final TodoSwipeAction value;
+  final ValueChanged<TodoSwipeAction> onChanged;
+
+  const _SwipeActionTile({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final labels = {
+      TodoSwipeAction.none: l10n.todoSwipeNone,
+      TodoSwipeAction.complete: l10n.todoSwipeComplete,
+      TodoSwipeAction.delete: l10n.todoSwipeDelete,
+      TodoSwipeAction.important: l10n.todoSwipeImportant,
+      TodoSwipeAction.myDay: l10n.todoSwipeMyDay,
+    };
+    return PopupMenuButton<TodoSwipeAction>(
+      tooltip: title,
+      initialValue: value,
+      onSelected: onChanged,
+      itemBuilder: (_) => [
+        for (final e in labels.entries)
+          CheckedPopupMenuItem(
+            value: e.key,
+            checked: e.key == value,
+            child: Text(e.value),
+          ),
+      ],
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        trailing: Text(labels[value]!),
+      ),
     );
   }
 }

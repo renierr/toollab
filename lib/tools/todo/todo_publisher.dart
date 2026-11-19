@@ -12,6 +12,7 @@ import 'package:tool_lab/tools/todo/todo_db_helper.dart';
 import 'package:tool_lab/tools/todo/todo_format.dart';
 import 'package:tool_lab/tools/todo/todo_list_name.dart';
 import 'package:tool_lab/tools/todo/todo_native.dart';
+import 'package:tool_lab/tools/todo/todo_sort.dart';
 import 'package:tool_lab/tools/todo/todo_view.dart';
 
 class TodoAlarmEntry {
@@ -122,6 +123,7 @@ class TodoPublisher {
     List<TodoTask> tasks,
     List<TodoList> lists,
     AppLocalizations l10n, {
+    Map<String, TodoSort> sortModes = const {},
     DateTime? now,
   }) {
     final n = now ?? DateTime.now();
@@ -134,8 +136,8 @@ class TodoPublisher {
       required String icon,
       required TodoView view,
     }) {
-      final matching = open.where((t) => view.matches(t, n)).toList()
-        ..sort((a, b) => _widgetOrder(a, b, view));
+      final matching = open.where((t) => view.matches(t, n)).toList();
+      TodoSorting.sort(matching, TodoSorting.forView(view, sortModes));
       return {
         'id': id,
         'name': name,
@@ -187,18 +189,12 @@ class TodoPublisher {
     };
   }
 
-  static int _widgetOrder(TodoTask a, TodoTask b, TodoView view) {
-    if (view.smart == TodoSmartList.planned) {
-      return (a.dueAt ?? 0).compareTo(b.dueAt ?? 0);
-    }
-    return a.sortOrder.compareTo(b.sortOrder);
-  }
-
   /// Writes both files and nudges native to re-read them. Android only.
   static Future<void> publish({
     required List<TodoTask> tasks,
     required List<TodoList> lists,
     required AppLocalizations l10n,
+    required Map<String, TodoSort> sortModes,
   }) async {
     if (!Platform.isAndroid) return;
     try {
@@ -211,7 +207,7 @@ class TodoPublisher {
       });
       await TodoNative.writeJson(
         TodoNative.widgetFile,
-        buildWidgetSnapshot(tasks, lists, l10n),
+        buildWidgetSnapshot(tasks, lists, l10n, sortModes: sortModes),
       );
       await TodoNative.reschedule();
       await TodoNative.refreshWidgets();
@@ -227,6 +223,7 @@ class TodoPublisher {
       tasks: await db.getTasks(),
       lists: await db.getLists(),
       l10n: await localizations(),
+      sortModes: await TodoSorting.load(),
     );
   }
 

@@ -7799,6 +7799,15 @@
   "todoDesktopRemindersTitle": "Desktop reminders",
   "todoDesktopRemindersSubtitle": "Reminders show as system notifications while ToolLab is running.",
   "todoQuickAddHelpTitle": "Quick add",
+  "todoSwipeTitle": "Swipe gestures",
+  "todoSwipeRight": "Swipe right",
+  "todoSwipeLeft": "Swipe left",
+  "todoSwipeHint": "Swipes starting at the screen edge are ignored so the back gesture stays safe.",
+  "todoSwipeNone": "Off",
+  "todoSwipeComplete": "Mark done",
+  "todoSwipeDelete": "Delete",
+  "todoSwipeImportant": "Toggle important",
+  "todoSwipeMyDay": "Toggle My Day",
   "todoQuickAddHelp": "today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks",
   "todoShowLists": "Lists"
 }

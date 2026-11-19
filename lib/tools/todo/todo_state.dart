@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -19,9 +18,12 @@ import 'package:tool_lab/tools/todo/todo_operations.dart';
 import 'package:tool_lab/tools/todo/todo_publisher.dart';
 import 'package:tool_lab/tools/todo/todo_quick_parser.dart';
 import 'package:tool_lab/tools/todo/todo_recurrence.dart';
+import 'package:tool_lab/tools/todo/todo_sort.dart';
+import 'package:tool_lab/tools/todo/todo_swipe_action.dart';
 import 'package:tool_lab/tools/todo/todo_view.dart';
 
-enum TodoSort { manual, dueDate, importance, alphabetical, created }
+export 'package:tool_lab/tools/todo/todo_sort.dart' show TodoSort;
+export 'package:tool_lab/tools/todo/todo_swipe_action.dart';
 
 /// What an undo restores: the tasks as they were, minus the ones it created.
 class TodoUndo {
@@ -35,7 +37,8 @@ class TodoState extends ChangeNotifier {
   /// Fixed id so the default list of every device merges into one on sync.
   static const String defaultListId = 'INBOX';
   static const int maxAttachmentBytes = 25 * 1024 * 1024;
-  static const String _sortKey = 'sort_modes';
+  static const String _swipeStartKey = 'swipe_start';
+  static const String _swipeEndKey = 'swipe_end';
   static const String _lastViewKey = 'last_view';
 
   static const List<int> listColors = [
@@ -59,6 +62,8 @@ class TodoState extends ChangeNotifier {
   List<TodoTask> _tasks = [];
   Map<String, List<TodoAttachment>> _attachments = {};
   Map<String, TodoSort> _sortModes = {};
+  TodoSwipeAction _swipeStart = TodoSwipeAction.complete;
+  TodoSwipeAction _swipeEnd = TodoSwipeAction.delete;
 
   bool _loaded = false;
   bool _loading = false;
@@ -115,11 +120,11 @@ class TodoState extends ChangeNotifier {
   List<TodoAttachment> attachmentsFor(String taskId) =>
       _attachments[taskId] ?? const [];
 
-  TodoSort sortFor(TodoView view) =>
-      _sortModes[view.widgetKey] ??
-      (view.smart == TodoSmartList.planned
-          ? TodoSort.dueDate
-          : TodoSort.manual);
+  TodoSort sortFor(TodoView view) => TodoSorting.forView(view, _sortModes);
+
+  /// Action for a swipe from the leading edge towards the trailing one.
+  TodoSwipeAction get swipeStart => _swipeStart;
+  TodoSwipeAction get swipeEnd => _swipeEnd;
 
   bool completedExpanded(TodoView view) => _expandedCompleted.contains(view);
 
@@ -161,7 +166,7 @@ class TodoState extends ChangeNotifier {
       if (needle.isNotEmpty) return _matchesQuery(t, needle);
       return view.matches(t, now);
     }).toList();
-    _sort(result, sortFor(view));
+    TodoSorting.sort(result, sortFor(view));
     return result;
   }
 
@@ -189,37 +194,6 @@ class TodoState extends ChangeNotifier {
       t.note.toLowerCase().contains(needle) ||
       t.tags.any((tag) => tag.toLowerCase().contains(needle)) ||
       t.steps.any((s) => s.title.toLowerCase().contains(needle));
-
-  void _sort(List<TodoTask> tasks, TodoSort sort) {
-    int byDue(TodoTask a, TodoTask b) {
-      if (a.dueAt == null && b.dueAt == null) return 0;
-      if (a.dueAt == null) return 1;
-      if (b.dueAt == null) return -1;
-      return a.dueAt!.compareTo(b.dueAt!);
-    }
-
-    switch (sort) {
-      case TodoSort.manual:
-        tasks.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      case TodoSort.dueDate:
-        tasks.sort((a, b) {
-          final c = byDue(a, b);
-          return c != 0 ? c : a.sortOrder.compareTo(b.sortOrder);
-        });
-      case TodoSort.importance:
-        tasks.sort((a, b) {
-          if (a.important != b.important) return a.important ? -1 : 1;
-          final c = byDue(a, b);
-          return c != 0 ? c : a.sortOrder.compareTo(b.sortOrder);
-        });
-      case TodoSort.alphabetical:
-        tasks.sort(
-          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
-        );
-      case TodoSort.created:
-        tasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    }
-  }
 
   // ---------------------------------------------------------------- loading
 
@@ -277,22 +251,21 @@ class TodoState extends ChangeNotifier {
   }
 
   Future<void> _loadSettings() async {
-    final raw = await DatabaseService.instance.getSetting(
-      TodoTool.config.id,
-      _sortKey,
+    _sortModes = await TodoSorting.load();
+    _swipeStart = TodoSwipeAction.parse(
+      await DatabaseService.instance.getSetting(
+        TodoTool.config.id,
+        _swipeStartKey,
+      ),
+      TodoSwipeAction.complete,
     );
-    if (raw != null) {
-      try {
-        final map = jsonDecode(raw) as Map<String, dynamic>;
-        _sortModes = {
-          for (final e in map.entries)
-            e.key: TodoSort.values.firstWhere(
-              (s) => s.name == e.value,
-              orElse: () => TodoSort.manual,
-            ),
-        };
-      } catch (_) {}
-    }
+    _swipeEnd = TodoSwipeAction.parse(
+      await DatabaseService.instance.getSetting(
+        TodoTool.config.id,
+        _swipeEndKey,
+      ),
+      TodoSwipeAction.delete,
+    );
     final last = await DatabaseService.instance.getSetting(
       TodoTool.config.id,
       _lastViewKey,
@@ -372,10 +345,24 @@ class TodoState extends ChangeNotifier {
   Future<void> setSort(TodoView view, TodoSort sort) async {
     _sortModes[view.widgetKey] = sort;
     notifyListeners();
+    await TodoSorting.save(_sortModes);
+    _schedulePublish();
+  }
+
+  Future<void> setSwipeAction({
+    required bool start,
+    required TodoSwipeAction action,
+  }) async {
+    if (start) {
+      _swipeStart = action;
+    } else {
+      _swipeEnd = action;
+    }
+    notifyListeners();
     await DatabaseService.instance.setSetting(
       TodoTool.config.id,
-      _sortKey,
-      jsonEncode({for (final e in _sortModes.entries) e.key: e.value.name}),
+      start ? _swipeStartKey : _swipeEndKey,
+      action.name,
     );
   }
 
@@ -796,6 +783,7 @@ class TodoState extends ChangeNotifier {
         await TodoPublisher.publish(
           tasks: _loaded ? _tasks : await _db.getTasks(),
           lists: _loaded ? _lists : await _db.getLists(),
+          sortModes: _loaded ? _sortModes : await TodoSorting.load(),
           l10n: await TodoPublisher.localizations(),
         );
       } else {

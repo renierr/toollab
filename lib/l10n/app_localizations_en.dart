@@ -16447,6 +16447,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todoQuickAddHelpTitle => 'Quick add';
 
   @override
+  String get todoSwipeTitle => 'Swipe gestures';
+
+  @override
+  String get todoSwipeRight => 'Swipe right';
+
+  @override
+  String get todoSwipeLeft => 'Swipe left';
+
+  @override
+  String get todoSwipeHint =>
+      'Swipes starting at the screen edge are ignored so the back gesture stays safe.';
+
+  @override
+  String get todoSwipeNone => 'Off';
+
+  @override
+  String get todoSwipeComplete => 'Mark done';
+
+  @override
+  String get todoSwipeDelete => 'Delete';
+
+  @override
+  String get todoSwipeImportant => 'Toggle important';
+
+  @override
+  String get todoSwipeMyDay => 'Toggle My Day';
+
+  @override
   String get todoQuickAddHelp =>
       'today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks';
 

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -35,126 +37,210 @@ class TodoTaskTile extends StatelessWidget {
     final listColor = Color(list?.color ?? 0xFF4FC3F7);
     final overdue = !task.completed && task.isOverdue(DateTime.now());
 
-    return Dismissible(
-      key: ValueKey('todo-dismiss-${task.shortId}'),
-      background: _SwipeBackground(
-        color: TodoColors.completed,
-        icon: task.completed ? Icons.undo : Icons.check,
-        alignment: Alignment.centerLeft,
-      ),
-      secondaryBackground: _SwipeBackground(
-        color: scheme.error,
-        icon: Icons.delete_outline,
-        alignment: Alignment.centerRight,
-      ),
-      confirmDismiss: (direction) async {
-        if (direction == DismissDirection.startToEnd) {
-          final notifier = TodoUndoNotifier.of(context);
-          final undo = await state.toggleCompleted(task);
-          if (!task.completed) {
-            notifier.show(l10n.todoCompletedSnack(task.title), undo);
-          }
-          return false;
-        }
-        final notifier = TodoUndoNotifier.of(context);
-        final undo = await state.deleteTask(task);
-        notifier.show(l10n.todoDeletedSnack(task.title), undo);
-        return true;
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-        child: Material(
-          color: selected
-              ? scheme.secondaryContainer
-              : overdue
-              ? Color.alphaBlend(
-                  TodoColors.overdue.withValues(alpha: 0.12),
-                  scheme.surfaceContainerHigh,
-                )
-              : scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onOpen,
-            child: Container(
-              decoration: overdue
-                  ? const BoxDecoration(
-                      border: Border(
-                        left: BorderSide(color: TodoColors.overdue, width: 4),
-                      ),
-                    )
-                  : null,
-              padding: EdgeInsets.fromLTRB(overdue ? 0 : 4, 6, 4, 6),
-              child: Row(
-                children: [
-                  TodoCheckCircle(
-                    checked: task.completed,
-                    color: listColor,
-                    onTap: () async {
-                      final notifier = TodoUndoNotifier.of(context);
-                      final undo = await state.toggleCompleted(task);
-                      if (!task.completed) {
-                        notifier.show(
-                          l10n.todoCompletedSnack(task.title),
-                          undo,
-                        );
-                      }
-                    },
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            task.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              decoration: task.completed
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                              color: task.completed
-                                  ? scheme.onSurfaceVariant
-                                  : scheme.onSurface,
-                            ),
-                          ),
-                          _TaskMeta(
-                            task: task,
-                            listName: showList && list != null
-                                ? todoListName(list, l10n)
+    final card = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      child: Material(
+        color: selected
+            ? scheme.secondaryContainer
+            : overdue
+            ? Color.alphaBlend(
+                TodoColors.overdue.withValues(alpha: 0.12),
+                scheme.surfaceContainerHigh,
+              )
+            : scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onOpen,
+          child: Container(
+            decoration: overdue
+                ? const BoxDecoration(
+                    border: Border(
+                      left: BorderSide(color: TodoColors.overdue, width: 4),
+                    ),
+                  )
+                : null,
+            padding: EdgeInsets.fromLTRB(overdue ? 0 : 4, 6, 4, 6),
+            child: Row(
+              children: [
+                TodoCheckCircle(
+                  checked: task.completed,
+                  color: listColor,
+                  onTap: () async {
+                    final notifier = TodoUndoNotifier.of(context);
+                    final undo = await state.toggleCompleted(task);
+                    if (!task.completed) {
+                      notifier.show(l10n.todoCompletedSnack(task.title), undo);
+                    }
+                  },
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            decoration: task.completed
+                                ? TextDecoration.lineThrough
                                 : null,
+                            color: task.completed
+                                ? scheme.onSurfaceVariant
+                                : scheme.onSurface,
                           ),
-                        ],
-                      ),
+                        ),
+                        _TaskMeta(
+                          task: task,
+                          listName: showList && list != null
+                              ? todoListName(list, l10n)
+                              : null,
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    tooltip: l10n.todoImportant,
-                    icon: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (child, anim) =>
-                          ScaleTransition(scale: anim, child: child),
-                      child: Icon(
-                        task.important ? Icons.star : Icons.star_border,
-                        key: ValueKey(task.important),
-                        color: task.important
-                            ? TodoColors.star
-                            : scheme.onSurfaceVariant,
-                      ),
+                ),
+                IconButton(
+                  tooltip: l10n.todoImportant,
+                  icon: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, anim) =>
+                        ScaleTransition(scale: anim, child: child),
+                    child: Icon(
+                      task.important ? Icons.star : Icons.star_border,
+                      key: ValueKey(task.important),
+                      color: task.important
+                          ? TodoColors.star
+                          : scheme.onSurfaceVariant,
                     ),
-                    onPressed: () => state.toggleImportant(task),
                   ),
-                  ?dragHandle,
-                ],
-              ),
+                  onPressed: () => state.toggleImportant(task),
+                ),
+                ?dragHandle,
+              ],
             ),
           ),
         ),
       ),
     );
+    return _SwipeActions(
+      task: task,
+      start: state.swipeStart,
+      end: state.swipeEnd,
+      child: card,
+    );
   }
+}
+
+/// Swipe actions from settings. Drags starting at the tile edges are
+/// swallowed so the system back gesture does not complete or delete a task.
+class _SwipeActions extends StatelessWidget {
+  final TodoTask task;
+  final TodoSwipeAction start;
+  final TodoSwipeAction end;
+  final Widget child;
+
+  const _SwipeActions({
+    required this.task,
+    required this.start,
+    required this.end,
+    required this.child,
+  });
+
+  static const double _edgeMargin = 32;
+
+  Future<bool> _run(BuildContext context, TodoSwipeAction action) async {
+    final state = context.read<TodoState>();
+    final l10n = AppLocalizations.of(context);
+    final notifier = TodoUndoNotifier.of(context);
+    switch (action) {
+      case TodoSwipeAction.none:
+        return false;
+      case TodoSwipeAction.complete:
+        final undo = await state.toggleCompleted(task);
+        if (!task.completed) {
+          notifier.show(l10n.todoCompletedSnack(task.title), undo);
+        }
+        return false;
+      case TodoSwipeAction.delete:
+        final undo = await state.deleteTask(task);
+        notifier.show(l10n.todoDeletedSnack(task.title), undo);
+        return true;
+      case TodoSwipeAction.important:
+        await state.toggleImportant(task);
+        return false;
+      case TodoSwipeAction.myDay:
+        await state.toggleMyDay(task);
+        return false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasStart = start != TodoSwipeAction.none;
+    final hasEnd = end != TodoSwipeAction.none;
+    if (!hasStart && !hasEnd) return child;
+    final insets = MediaQuery.systemGestureInsetsOf(context);
+    final left = math.max(_edgeMargin, insets.left + 16);
+    final right = math.max(_edgeMargin, insets.right + 16);
+    final startBackground = _SwipeBackground(
+      action: start,
+      task: task,
+      alignment: AlignmentDirectional.centerStart,
+    );
+    final endBackground = _SwipeBackground(
+      action: end,
+      task: task,
+      alignment: AlignmentDirectional.centerEnd,
+    );
+    return Stack(
+      children: [
+        Dismissible(
+          key: ValueKey('todo-dismiss-${task.shortId}'),
+          direction: hasStart && hasEnd
+              ? DismissDirection.horizontal
+              : hasStart
+              ? DismissDirection.startToEnd
+              : DismissDirection.endToStart,
+          background: hasStart ? startBackground : endBackground,
+          secondaryBackground: hasStart && hasEnd ? endBackground : null,
+          confirmDismiss: (direction) => _run(
+            context,
+            direction == DismissDirection.startToEnd ? start : end,
+          ),
+          child: child,
+        ),
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: left,
+          child: const _EdgeGuard(),
+        ),
+        Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: right,
+          child: const _EdgeGuard(),
+        ),
+      ],
+    );
+  }
+}
+
+/// Wins the horizontal drag arena over [Dismissible]; taps still pass through.
+class _EdgeGuard extends StatelessWidget {
+  const _EdgeGuard();
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.translucent,
+    onHorizontalDragStart: (_) {},
+  );
 }
 
 class _TaskMeta extends StatelessWidget {
@@ -256,18 +342,37 @@ class _MetaItem extends StatelessWidget {
 }
 
 class _SwipeBackground extends StatelessWidget {
-  final Color color;
-  final IconData icon;
-  final Alignment alignment;
+  final TodoSwipeAction action;
+  final TodoTask task;
+  final AlignmentGeometry alignment;
 
   const _SwipeBackground({
-    required this.color,
-    required this.icon,
+    required this.action,
+    required this.task,
     required this.alignment,
   });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final (color, icon) = switch (action) {
+      TodoSwipeAction.complete => (
+        TodoColors.completed,
+        task.completed ? Icons.undo : Icons.check,
+      ),
+      TodoSwipeAction.delete => (scheme.error, Icons.delete_outline),
+      TodoSwipeAction.important => (
+        TodoColors.star,
+        task.important ? Icons.star_border : Icons.star,
+      ),
+      TodoSwipeAction.myDay => (
+        TodoColors.myDay,
+        task.isInMyDay(DateTime.now())
+            ? Icons.wb_sunny_outlined
+            : Icons.wb_sunny,
+      ),
+      TodoSwipeAction.none => (Colors.transparent, null),
+    };
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -276,7 +381,7 @@ class _SwipeBackground extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(icon, color: Theme.of(context).colorScheme.surface),
+      child: icon == null ? null : Icon(icon, color: scheme.surface),
     );
   }
 }
