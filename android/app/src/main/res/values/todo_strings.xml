@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="todo_channel_reminders">Todo reminders</string>
+    <string name="todo_channel_alarms">Todo alarms</string>
+    <string name="todo_action_done">Done</string>
+    <string name="todo_action_snooze_10">10 min</string>
+    <string name="todo_action_snooze_60">1 h</string>
+    <string name="todo_action_snooze_10_long">Snooze 10 min</string>
+    <string name="todo_action_dismiss">Dismiss</string>
+    <string name="todo_widget_label">Todo</string>
+    <string name="todo_widget_description">Your tasks at a glance. Tick them off right from the home screen.</string>
+    <string name="todo_widget_empty">All done 🎉</string>
+    <string name="todo_widget_no_data">Open Todo once to set up the widget</string>
+    <string name="todo_widget_add">Add task</string>
+    <string name="todo_widget_complete">Mark as done</string>
+    <string name="todo_widget_config_title">Choose a list</string>
+    <string name="todo_widget_preview_task_1">Pay rent</string>
+    <string name="todo_widget_preview_task_2">Call the dentist</string>
+    <string name="todo_widget_preview_task_3">Buy flowers</string>
+    <string name="todo_widget_preview_meta">Today 18:00</string>
+    <string name="todo_widget_preview_list">My Day</string>
+</resources>

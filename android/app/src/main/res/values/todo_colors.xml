@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="todo_widget_bg">#FFF7F9FC</color>
+    <color name="todo_widget_text">#FF1B1F24</color>
+    <color name="todo_widget_text_secondary">#FF5F6670</color>
+    <color name="todo_widget_accent">#FF0288D1</color>
+    <color name="todo_widget_on_accent">#FFFFFFFF</color>
+    <color name="todo_widget_overdue">#FFD32F2F</color>
+    <color name="todo_widget_star">#FFF9A825</color>
+</resources>

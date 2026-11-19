@@ -16,6 +16,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -240,6 +245,22 @@
         </activity>
 
         <activity
+            android:name="de.renier.tool_lab.TodoActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":todo"
+            android:taskAffinity="de.renier.tool_lab.todo"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+        </activity>
+
+        <activity
             android:name="de.renier.tool_lab.TextEditorActivity"
             android:exported="false"
             android:launchMode="singleTask"
@@ -405,6 +426,19 @@
             android:targetActivity="de.renier.tool_lab.FileManagerActivity"
             android:label="File Manager"
             android:icon="@mipmap/ic_launcher_file_manager"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.TodoAlias"
+            android:targetActivity="de.renier.tool_lab.TodoActivity"
+            android:label="Todo"
+            android:icon="@mipmap/ic_launcher_todo"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1072,6 +1106,72 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Todo: alarms, notification actions and the home screen widget run natively in the tool's process. -->
+        <activity
+            android:name="de.renier.tool_lab.todo.TodoAlarmActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:process=":todo"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/TodoAlarmTheme"
+            android:turnScreenOn="true" />
+        <activity
+            android:name="de.renier.tool_lab.todo.TodoWidgetActionActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:process=":todo"
+            android:taskAffinity=""
+            android:theme="@style/TodoTrampolineTheme" />
+        <activity
+            android:name="de.renier.tool_lab.todo.TodoWidgetConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:process=":todo"
+            android:taskAffinity=""
+            android:theme="@style/TodoDialogTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <receiver
+            android:name="de.renier.tool_lab.todo.TodoAlarmReceiver"
+            android:exported="false"
+            android:process=":todo" />
+        <receiver
+            android:name="de.renier.tool_lab.todo.TodoActionReceiver"
+            android:exported="false"
+            android:process=":todo" />
+        <receiver
+            android:name="de.renier.tool_lab.todo.TodoBootReceiver"
+            android:exported="true"
+            android:process=":todo">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="de.renier.tool_lab.todo.TodoWidgetProvider"
+            android:exported="true"
+            android:label="@string/todo_widget_label"
+            android:process=":todo">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/todo_widget_info" />
+        </receiver>
+        <service
+            android:name="de.renier.tool_lab.todo.TodoWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:process=":todo" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

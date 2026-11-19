@@ -12,6 +12,7 @@ add_executable(${BINARY_NAME} WIN32
   "main.cpp"
   "media_controls_handler.cpp"
   "ocr_handler.cpp"
+  "todo_notify_handler.cpp"
   "utils.cpp"
   "win32_window.cpp"
   "window_placement.cpp"

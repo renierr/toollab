@@ -16157,4 +16157,425 @@ class AppLocalizationsDe extends AppLocalizations {
   String videoPlayerToolProgress(String position, String duration) {
     return '$position von $duration';
   }
+
+  @override
+  String get toolNameTodo => 'Aufgaben';
+
+  @override
+  String get toolDescTodo =>
+      'Aufgaben mit Listen, Ordnern, Tags, Fälligkeiten, wiederkehrenden Erinnerungen und Weckern';
+
+  @override
+  String get todoMyDay => 'Mein Tag';
+
+  @override
+  String get todoImportant => 'Wichtig';
+
+  @override
+  String get todoPlanned => 'Geplant';
+
+  @override
+  String get todoAllTasks => 'Alle Aufgaben';
+
+  @override
+  String get todoCompleted => 'Erledigt';
+
+  @override
+  String get todoDefaultList => 'Aufgaben';
+
+  @override
+  String get todoTags => 'Tags';
+
+  @override
+  String get todoNewList => 'Neue Liste';
+
+  @override
+  String get todoNewFolder => 'Neuer Ordner';
+
+  @override
+  String get todoFolderEmpty => 'Keine Listen in diesem Ordner';
+
+  @override
+  String get todoFolderName => 'Ordnername';
+
+  @override
+  String get todoFolder => 'Ordner';
+
+  @override
+  String get todoNoFolder => 'Kein Ordner';
+
+  @override
+  String get todoRenameFolder => 'Ordner umbenennen';
+
+  @override
+  String get todoDeleteFolder => 'Ordner löschen';
+
+  @override
+  String get todoDeleteFolderHint => 'Enthaltene Listen bleiben erhalten';
+
+  @override
+  String get todoEditList => 'Liste bearbeiten';
+
+  @override
+  String get todoListName => 'Listenname';
+
+  @override
+  String get todoEmoji => 'Symbol';
+
+  @override
+  String get todoDeleteListTitle => 'Liste löschen';
+
+  @override
+  String todoDeleteListMessage(String name) {
+    return '\"$name\" und alle Aufgaben darin löschen?';
+  }
+
+  @override
+  String get todoList => 'Liste';
+
+  @override
+  String get todoToday => 'Heute';
+
+  @override
+  String get todoTomorrow => 'Morgen';
+
+  @override
+  String get todoYesterday => 'Gestern';
+
+  @override
+  String get todoNextWeek => 'Nächste Woche';
+
+  @override
+  String get todoLaterToday => 'Später heute';
+
+  @override
+  String get todoAddTaskHint =>
+      'Aufgabe hinzufügen – z. B. \"morgen 9:00 #haus !\"';
+
+  @override
+  String get todoSearchHint =>
+      'Aufgaben, Notizen, Schritte und Tags durchsuchen';
+
+  @override
+  String get todoSearchResults => 'Suchergebnisse';
+
+  @override
+  String todoCompletedCount(int count) {
+    return 'Erledigt ($count)';
+  }
+
+  @override
+  String todoCompletedSnack(String title) {
+    return '\"$title\" erledigt';
+  }
+
+  @override
+  String todoDeletedSnack(String title) {
+    return '\"$title\" gelöscht';
+  }
+
+  @override
+  String get todoUndo => 'Rückgängig';
+
+  @override
+  String todoStepsProgress(int done, int total) {
+    return '$done von $total';
+  }
+
+  @override
+  String get todoGroupOverdue => 'Überfällig';
+
+  @override
+  String get todoGroupThisWeek => 'Diese Woche';
+
+  @override
+  String get todoGroupLater => 'Später';
+
+  @override
+  String get todoEmptyMyDay =>
+      'Konzentriere dich auf deinen Tag. Füge hier Aufgaben hinzu oder wähle sie aus deinen Listen.';
+
+  @override
+  String get todoEmptyImportant =>
+      'Markiere Aufgaben mit einem Stern, um sie hier zu sehen.';
+
+  @override
+  String get todoEmptyPlanned =>
+      'Aufgaben mit Fälligkeitsdatum erscheinen hier.';
+
+  @override
+  String get todoEmptyCompleted => 'Noch nichts erledigt.';
+
+  @override
+  String get todoEmptyList => 'Noch keine Aufgaben. Füge unten eine hinzu.';
+
+  @override
+  String get todoEmptySearch => 'Keine passenden Aufgaben.';
+
+  @override
+  String get todoTaskMissing => 'Diese Aufgabe existiert nicht mehr.';
+
+  @override
+  String get todoAddNote => 'Notiz hinzufügen';
+
+  @override
+  String get todoAddStep => 'Schritt hinzufügen';
+
+  @override
+  String get todoNextStep => 'Nächster Schritt';
+
+  @override
+  String get todoAddToMyDay => 'Zu „Mein Tag“ hinzufügen';
+
+  @override
+  String get todoAddedToMyDay => 'Zu „Mein Tag“ hinzugefügt';
+
+  @override
+  String get todoRemindMe => 'Erinnern';
+
+  @override
+  String get todoAddReminder => 'Weitere Erinnerung hinzufügen';
+
+  @override
+  String get todoReminder => 'Erinnerung';
+
+  @override
+  String get todoAlarm => 'Wecker';
+
+  @override
+  String get todoAlarmHint =>
+      'Klingelt und erscheint im Vollbild, auch bei gesperrtem Telefon';
+
+  @override
+  String get todoMakeAlarm => 'In Wecker umwandeln';
+
+  @override
+  String get todoMakeReminder => 'In Erinnerung umwandeln';
+
+  @override
+  String get todoAddDueDate => 'Fälligkeitsdatum hinzufügen';
+
+  @override
+  String todoDueOn(String date) {
+    return 'Fällig $date';
+  }
+
+  @override
+  String get todoDue => 'Fällig';
+
+  @override
+  String get todoRepeat => 'Wiederholen';
+
+  @override
+  String get todoRemove => 'Entfernen';
+
+  @override
+  String get todoPickDate => 'Datum wählen';
+
+  @override
+  String get todoPickDateTime => 'Datum und Uhrzeit wählen';
+
+  @override
+  String get todoAddTimeQuestion => 'Uhrzeit hinzufügen?';
+
+  @override
+  String get todoAllDay => 'Ganztägig';
+
+  @override
+  String get todoSetTime => 'Uhrzeit festlegen';
+
+  @override
+  String get todoAtDueTime => 'Zur Fälligkeit';
+
+  @override
+  String todoMinutesBefore(int minutes) {
+    return '$minutes Min. vorher';
+  }
+
+  @override
+  String get todoHourBefore => '1 Stunde vorher';
+
+  @override
+  String get todoRepeatDaily => 'Täglich';
+
+  @override
+  String get todoRepeatWeekdays => 'Werktags';
+
+  @override
+  String get todoRepeatWeekly => 'Wöchentlich';
+
+  @override
+  String get todoRepeatMonthly => 'Monatlich';
+
+  @override
+  String get todoRepeatYearly => 'Jährlich';
+
+  @override
+  String todoRepeatEveryDays(int count) {
+    return 'Alle $count Tage';
+  }
+
+  @override
+  String todoRepeatEveryWeeks(int count) {
+    return 'Alle $count Wochen';
+  }
+
+  @override
+  String todoRepeatEveryMonths(int count) {
+    return 'Alle $count Monate';
+  }
+
+  @override
+  String todoRepeatEveryYears(int count) {
+    return 'Alle $count Jahre';
+  }
+
+  @override
+  String todoRepeatUntil(String date) {
+    return 'bis $date';
+  }
+
+  @override
+  String get todoRepeatForever => 'Endet nie';
+
+  @override
+  String get todoRepeatCustom => 'Benutzerdefiniert';
+
+  @override
+  String get todoRepeatEvery => 'Alle';
+
+  @override
+  String get todoUnitDays => 'Tage';
+
+  @override
+  String get todoUnitWeeks => 'Wochen';
+
+  @override
+  String get todoUnitMonths => 'Monate';
+
+  @override
+  String get todoUnitYears => 'Jahre';
+
+  @override
+  String todoMonthlyOnDay(int day) {
+    return 'Am $day.';
+  }
+
+  @override
+  String get todoNthFirst => 'Ersten';
+
+  @override
+  String get todoNthSecond => 'Zweiten';
+
+  @override
+  String get todoNthThird => 'Dritten';
+
+  @override
+  String get todoNthFourth => 'Vierten';
+
+  @override
+  String get todoNthLast => 'Letzten';
+
+  @override
+  String get todoAddTag => 'Tag hinzufügen';
+
+  @override
+  String get todoAddFile => 'Datei hinzufügen';
+
+  @override
+  String get todoTakePhoto => 'Foto aufnehmen';
+
+  @override
+  String get todoShare => 'Teilen';
+
+  @override
+  String get todoDeleteAttachment => 'Anhang löschen?';
+
+  @override
+  String todoAttachmentTooLarge(String size) {
+    return 'Anhänge dürfen höchstens $size groß sein.';
+  }
+
+  @override
+  String todoCreatedOn(String date) {
+    return 'Erstellt $date';
+  }
+
+  @override
+  String todoCompletedOn(String date) {
+    return 'Erledigt $date';
+  }
+
+  @override
+  String get todoSort => 'Sortieren';
+
+  @override
+  String get todoSortManual => 'Manuell';
+
+  @override
+  String get todoSortDue => 'Fälligkeitsdatum';
+
+  @override
+  String get todoSortImportance => 'Wichtigkeit';
+
+  @override
+  String get todoSortAlphabetical => 'Alphabetisch';
+
+  @override
+  String get todoSortCreated => 'Erstellungsdatum';
+
+  @override
+  String get todoSyncNow => 'Jetzt synchronisieren';
+
+  @override
+  String get todoSyncNotConfigured =>
+      'Sync ist aus. Richte in den Sync-Einstellungen einen Server ein und aktiviere ihn für Aufgaben.';
+
+  @override
+  String get todoSyncFailed =>
+      'Synchronisierung fehlgeschlagen. Neuer Versuch später.';
+
+  @override
+  String get todoSettings => 'Aufgaben-Einstellungen';
+
+  @override
+  String get todoPermissionBanner =>
+      'Erinnerungen kommen eventuell verspätet oder gar nicht an.';
+
+  @override
+  String get todoPermissionNotifications => 'Benachrichtigungen erlauben';
+
+  @override
+  String get todoPermissionExact => 'Exakte Wecker erlauben';
+
+  @override
+  String get todoPermissionFullScreen => 'Vollbild-Wecker erlauben';
+
+  @override
+  String get todoPermissionGranted => 'Erlaubt';
+
+  @override
+  String get todoPermissionMissing =>
+      'Nicht erlaubt – tippen zum Öffnen der Einstellungen';
+
+  @override
+  String get todoBackgroundTitle => 'Hintergrundaktualisierung';
+
+  @override
+  String get todoBackgroundSubtitle =>
+      'Synchronisiert, übernimmt Widget-Aktionen und plant wiederkehrende Erinnerungen';
+
+  @override
+  String get todoDesktopRemindersTitle => 'Desktop-Erinnerungen';
+
+  @override
+  String get todoDesktopRemindersSubtitle =>
+      'Erinnerungen erscheinen als Systembenachrichtigung, solange ToolLab läuft.';
+
+  @override
+  String get todoQuickAddHelpTitle => 'Schnell hinzufügen';
+
+  @override
+  String get todoQuickAddHelp =>
+      'heute, morgen, freitag, 24.12., in 3 tagen · 9:00, um 18 · #tag · ! wichtig · täglich, werktags, jeden montag, alle 2 wochen';
 }

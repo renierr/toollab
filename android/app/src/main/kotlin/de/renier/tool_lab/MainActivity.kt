@@ -11,6 +11,7 @@ import android.os.Environment
 import android.provider.Settings
 import android.provider.OpenableColumns
 import androidx.core.app.ActivityCompat
+import de.renier.tool_lab.todo.TodoNative
 import io.flutter.embedding.android.FlutterFragment
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -81,6 +82,7 @@ open class MainActivity : FlutterFragmentActivity() {
         separateWebViewDataPerProcess()
         super.onCreate(savedInstanceState)
         resolveLaunchRoute(intent)
+        TodoNative.handleIntent(intent)
         retainedEngine?.takeIf { it.dartExecutor.isExecutingDart }?.let {
             pushLaunchRoute(it.dartExecutor.binaryMessenger)
         }
@@ -122,6 +124,7 @@ open class MainActivity : FlutterFragmentActivity() {
         setIntent(intent)
         val messenger = flutterEngine?.dartExecutor?.binaryMessenger
         resolveLaunchRoute(intent)
+        TodoNative.handleIntent(intent)
         SharingHelper.handleIntent(this, intent, messenger)
         if (messenger != null) pushLaunchRoute(messenger)
     }
@@ -313,6 +316,8 @@ open class MainActivity : FlutterFragmentActivity() {
         val messenger = flutterEngine.dartExecutor.binaryMessenger
 
         HealthConnectSettingsHelper(this).registerChannel(messenger)
+
+        TodoNative.register(this, messenger)
 
         InstalledAppsHelper.register(this, messenger)
 
@@ -711,3 +716,4 @@ class XFeedActivity : MainActivity() {
     override val foregroundServiceClass: Class<out ToolLabForegroundService>
         get() = XFeedForegroundService::class.java
 }
+class TodoActivity : MainActivity()

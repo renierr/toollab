@@ -2,6 +2,7 @@
 #include "clipboard_handler.h"
 #include "media_controls_handler.h"
 #include "ocr_handler.h"
+#include "todo_notify_handler.h"
 
 #include <optional>
 #include <vector>
@@ -270,6 +271,8 @@ bool FlutterWindow::OnCreate() {
 
   RegisterClipboardHandler(messenger, GetHandle());
 
+  RegisterTodoNotifyHandler(messenger, GetHandle());
+
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   GetWindowRect(GetHandle(), &placement_.frame);
@@ -294,6 +297,8 @@ void FlutterWindow::RegisterMediaControlsHandler(
 }
 
 void FlutterWindow::OnDestroy() {
+  DisposeTodoNotifyHandler();
+
   DisposeMediaControls(media_controls_ctx_);
   media_controls_ctx_ = nullptr;
 

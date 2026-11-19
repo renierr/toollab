@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="TodoDialogTheme" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:windowMinWidthMajor">80%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+    </style>
+    <style name="TodoTrampolineTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+    <style name="TodoAlarmTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF10141B</item>
+        <item name="android:statusBarColor">#FF10141B</item>
+        <item name="android:navigationBarColor">#FF10141B</item>
+    </style>
+</resources>

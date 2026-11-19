@@ -9,6 +9,7 @@ import 'package:tool_lab/tools/nfc_tag_lab/config.dart';
 import 'package:tool_lab/tools/pdf_viewer/config.dart';
 import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/grocery_list/config.dart';
+import 'package:tool_lab/tools/todo/config.dart';
 import 'package:tool_lab/tools/markdown_viewer/config.dart';
 import 'package:tool_lab/tools/image_viewer/config.dart';
 import 'package:tool_lab/tools/fast_drop/config.dart';
@@ -85,6 +86,7 @@ class ToolRegistry {
     PdfViewerTool.config,
     NotesTool.config,
     GroceryListTool.config,
+    TodoTool.config,
     MarkdownViewerTool.config,
     ImageViewerTool.config,
     VideoPlayerTool.config,

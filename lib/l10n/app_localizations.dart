@@ -28203,6 +28203,756 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{position} of {duration}'**
   String videoPlayerToolProgress(String position, String duration);
+
+  /// No description provided for @toolNameTodo.
+  ///
+  /// In en, this message translates to:
+  /// **'Todo'**
+  String get toolNameTodo;
+
+  /// No description provided for @toolDescTodo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks with lists, folders, tags, due dates, recurring reminders and alarms'**
+  String get toolDescTodo;
+
+  /// No description provided for @todoMyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'My Day'**
+  String get todoMyDay;
+
+  /// No description provided for @todoImportant.
+  ///
+  /// In en, this message translates to:
+  /// **'Important'**
+  String get todoImportant;
+
+  /// No description provided for @todoPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned'**
+  String get todoPlanned;
+
+  /// No description provided for @todoAllTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'All tasks'**
+  String get todoAllTasks;
+
+  /// No description provided for @todoCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get todoCompleted;
+
+  /// No description provided for @todoDefaultList.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get todoDefaultList;
+
+  /// No description provided for @todoTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get todoTags;
+
+  /// No description provided for @todoNewList.
+  ///
+  /// In en, this message translates to:
+  /// **'New list'**
+  String get todoNewList;
+
+  /// No description provided for @todoNewFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New folder'**
+  String get todoNewFolder;
+
+  /// No description provided for @todoFolderEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No lists in this folder'**
+  String get todoFolderEmpty;
+
+  /// No description provided for @todoFolderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get todoFolderName;
+
+  /// No description provided for @todoFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get todoFolder;
+
+  /// No description provided for @todoNoFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'No folder'**
+  String get todoNoFolder;
+
+  /// No description provided for @todoRenameFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename folder'**
+  String get todoRenameFolder;
+
+  /// No description provided for @todoDeleteFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete folder'**
+  String get todoDeleteFolder;
+
+  /// No description provided for @todoDeleteFolderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists inside are kept'**
+  String get todoDeleteFolderHint;
+
+  /// No description provided for @todoEditList.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit list'**
+  String get todoEditList;
+
+  /// No description provided for @todoListName.
+  ///
+  /// In en, this message translates to:
+  /// **'List name'**
+  String get todoListName;
+
+  /// No description provided for @todoEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get todoEmoji;
+
+  /// No description provided for @todoDeleteListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete list'**
+  String get todoDeleteListTitle;
+
+  /// No description provided for @todoDeleteListMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\" and all of its tasks?'**
+  String todoDeleteListMessage(String name);
+
+  /// No description provided for @todoList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get todoList;
+
+  /// No description provided for @todoToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todoToday;
+
+  /// No description provided for @todoTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow'**
+  String get todoTomorrow;
+
+  /// No description provided for @todoYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get todoYesterday;
+
+  /// No description provided for @todoNextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get todoNextWeek;
+
+  /// No description provided for @todoLaterToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Later today'**
+  String get todoLaterToday;
+
+  /// No description provided for @todoAddTaskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a task – try \"tomorrow 9:00 #home !\"'**
+  String get todoAddTaskHint;
+
+  /// No description provided for @todoSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search tasks, notes, steps and tags'**
+  String get todoSearchHint;
+
+  /// No description provided for @todoSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Search results'**
+  String get todoSearchResults;
+
+  /// No description provided for @todoCompletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed ({count})'**
+  String todoCompletedCount(int count);
+
+  /// No description provided for @todoCompletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed \"{title}\"'**
+  String todoCompletedSnack(String title);
+
+  /// No description provided for @todoDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted \"{title}\"'**
+  String todoDeletedSnack(String title);
+
+  /// No description provided for @todoUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get todoUndo;
+
+  /// No description provided for @todoStepsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String todoStepsProgress(int done, int total);
+
+  /// No description provided for @todoGroupOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get todoGroupOverdue;
+
+  /// No description provided for @todoGroupThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get todoGroupThisWeek;
+
+  /// No description provided for @todoGroupLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get todoGroupLater;
+
+  /// No description provided for @todoEmptyMyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus on your day. Add tasks here or pick them from your lists.'**
+  String get todoEmptyMyDay;
+
+  /// No description provided for @todoEmptyImportant.
+  ///
+  /// In en, this message translates to:
+  /// **'Star tasks to see them here.'**
+  String get todoEmptyImportant;
+
+  /// No description provided for @todoEmptyPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks with a due date show up here.'**
+  String get todoEmptyPlanned;
+
+  /// No description provided for @todoEmptyCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing completed yet.'**
+  String get todoEmptyCompleted;
+
+  /// No description provided for @todoEmptyList.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks yet. Add one below.'**
+  String get todoEmptyList;
+
+  /// No description provided for @todoEmptySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching tasks.'**
+  String get todoEmptySearch;
+
+  /// No description provided for @todoTaskMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This task no longer exists.'**
+  String get todoTaskMissing;
+
+  /// No description provided for @todoAddNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get todoAddNote;
+
+  /// No description provided for @todoAddStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Add step'**
+  String get todoAddStep;
+
+  /// No description provided for @todoNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Next step'**
+  String get todoNextStep;
+
+  /// No description provided for @todoAddToMyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to My Day'**
+  String get todoAddToMyDay;
+
+  /// No description provided for @todoAddedToMyDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to My Day'**
+  String get todoAddedToMyDay;
+
+  /// No description provided for @todoRemindMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me'**
+  String get todoRemindMe;
+
+  /// No description provided for @todoAddReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another reminder'**
+  String get todoAddReminder;
+
+  /// No description provided for @todoReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder'**
+  String get todoReminder;
+
+  /// No description provided for @todoAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarm'**
+  String get todoAlarm;
+
+  /// No description provided for @todoAlarmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings and shows full screen, even when the phone is locked'**
+  String get todoAlarmHint;
+
+  /// No description provided for @todoMakeAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn into alarm'**
+  String get todoMakeAlarm;
+
+  /// No description provided for @todoMakeReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn into reminder'**
+  String get todoMakeReminder;
+
+  /// No description provided for @todoAddDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Add due date'**
+  String get todoAddDueDate;
+
+  /// No description provided for @todoDueOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String todoDueOn(String date);
+
+  /// No description provided for @todoDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get todoDue;
+
+  /// No description provided for @todoRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat'**
+  String get todoRepeat;
+
+  /// No description provided for @todoRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get todoRemove;
+
+  /// No description provided for @todoPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get todoPickDate;
+
+  /// No description provided for @todoPickDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick date & time'**
+  String get todoPickDateTime;
+
+  /// No description provided for @todoAddTimeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a time?'**
+  String get todoAddTimeQuestion;
+
+  /// No description provided for @todoAllDay.
+  ///
+  /// In en, this message translates to:
+  /// **'All day'**
+  String get todoAllDay;
+
+  /// No description provided for @todoSetTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Set time'**
+  String get todoSetTime;
+
+  /// No description provided for @todoAtDueTime.
+  ///
+  /// In en, this message translates to:
+  /// **'At due time'**
+  String get todoAtDueTime;
+
+  /// No description provided for @todoMinutesBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min before'**
+  String todoMinutesBefore(int minutes);
+
+  /// No description provided for @todoHourBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour before'**
+  String get todoHourBefore;
+
+  /// No description provided for @todoRepeatDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get todoRepeatDaily;
+
+  /// No description provided for @todoRepeatWeekdays.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekdays'**
+  String get todoRepeatWeekdays;
+
+  /// No description provided for @todoRepeatWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get todoRepeatWeekly;
+
+  /// No description provided for @todoRepeatMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get todoRepeatMonthly;
+
+  /// No description provided for @todoRepeatYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get todoRepeatYearly;
+
+  /// No description provided for @todoRepeatEveryDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count} days'**
+  String todoRepeatEveryDays(int count);
+
+  /// No description provided for @todoRepeatEveryWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count} weeks'**
+  String todoRepeatEveryWeeks(int count);
+
+  /// No description provided for @todoRepeatEveryMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count} months'**
+  String todoRepeatEveryMonths(int count);
+
+  /// No description provided for @todoRepeatEveryYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count} years'**
+  String todoRepeatEveryYears(int count);
+
+  /// No description provided for @todoRepeatUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'until {date}'**
+  String todoRepeatUntil(String date);
+
+  /// No description provided for @todoRepeatForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never ends'**
+  String get todoRepeatForever;
+
+  /// No description provided for @todoRepeatCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get todoRepeatCustom;
+
+  /// No description provided for @todoRepeatEvery.
+  ///
+  /// In en, this message translates to:
+  /// **'Every'**
+  String get todoRepeatEvery;
+
+  /// No description provided for @todoUnitDays.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get todoUnitDays;
+
+  /// No description provided for @todoUnitWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'weeks'**
+  String get todoUnitWeeks;
+
+  /// No description provided for @todoUnitMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'months'**
+  String get todoUnitMonths;
+
+  /// No description provided for @todoUnitYears.
+  ///
+  /// In en, this message translates to:
+  /// **'years'**
+  String get todoUnitYears;
+
+  /// No description provided for @todoMonthlyOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On day {day}'**
+  String todoMonthlyOnDay(int day);
+
+  /// No description provided for @todoNthFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First'**
+  String get todoNthFirst;
+
+  /// No description provided for @todoNthSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Second'**
+  String get todoNthSecond;
+
+  /// No description provided for @todoNthThird.
+  ///
+  /// In en, this message translates to:
+  /// **'Third'**
+  String get todoNthThird;
+
+  /// No description provided for @todoNthFourth.
+  ///
+  /// In en, this message translates to:
+  /// **'Fourth'**
+  String get todoNthFourth;
+
+  /// No description provided for @todoNthLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Last'**
+  String get todoNthLast;
+
+  /// No description provided for @todoAddTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag'**
+  String get todoAddTag;
+
+  /// No description provided for @todoAddFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add file'**
+  String get todoAddFile;
+
+  /// No description provided for @todoTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get todoTakePhoto;
+
+  /// No description provided for @todoShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get todoShare;
+
+  /// No description provided for @todoDeleteAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete attachment?'**
+  String get todoDeleteAttachment;
+
+  /// No description provided for @todoAttachmentTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments can be at most {size}.'**
+  String todoAttachmentTooLarge(String size);
+
+  /// No description provided for @todoCreatedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Created {date}'**
+  String todoCreatedOn(String date);
+
+  /// No description provided for @todoCompletedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed {date}'**
+  String todoCompletedOn(String date);
+
+  /// No description provided for @todoSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get todoSort;
+
+  /// No description provided for @todoSortManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get todoSortManual;
+
+  /// No description provided for @todoSortDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get todoSortDue;
+
+  /// No description provided for @todoSortImportance.
+  ///
+  /// In en, this message translates to:
+  /// **'Importance'**
+  String get todoSortImportance;
+
+  /// No description provided for @todoSortAlphabetical.
+  ///
+  /// In en, this message translates to:
+  /// **'Alphabetical'**
+  String get todoSortAlphabetical;
+
+  /// No description provided for @todoSortCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Creation date'**
+  String get todoSortCreated;
+
+  /// No description provided for @todoSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get todoSyncNow;
+
+  /// No description provided for @todoSyncNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync is off. Set up a server in the sync settings and enable it for Todo.'**
+  String get todoSyncNotConfigured;
+
+  /// No description provided for @todoSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed. Will retry later.'**
+  String get todoSyncFailed;
+
+  /// No description provided for @todoSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Todo settings'**
+  String get todoSettings;
+
+  /// No description provided for @todoPermissionBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders may arrive late or not at all.'**
+  String get todoPermissionBanner;
+
+  /// No description provided for @todoPermissionNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications'**
+  String get todoPermissionNotifications;
+
+  /// No description provided for @todoPermissionExact.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow exact alarms'**
+  String get todoPermissionExact;
+
+  /// No description provided for @todoPermissionFullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow full-screen alarms'**
+  String get todoPermissionFullScreen;
+
+  /// No description provided for @todoPermissionGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get todoPermissionGranted;
+
+  /// No description provided for @todoPermissionMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed – tap to open settings'**
+  String get todoPermissionMissing;
+
+  /// No description provided for @todoBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background refresh'**
+  String get todoBackgroundTitle;
+
+  /// No description provided for @todoBackgroundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncs, applies widget taps and keeps recurring reminders scheduled'**
+  String get todoBackgroundSubtitle;
+
+  /// No description provided for @todoDesktopRemindersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop reminders'**
+  String get todoDesktopRemindersTitle;
+
+  /// No description provided for @todoDesktopRemindersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders show as system notifications while ToolLab is running.'**
+  String get todoDesktopRemindersSubtitle;
+
+  /// No description provided for @todoQuickAddHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick add'**
+  String get todoQuickAddHelpTitle;
+
+  /// No description provided for @todoQuickAddHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'today, tomorrow, friday, 24.12., in 3 days · 9:00, 7pm, at 18 · #tag · ! important · daily, weekdays, every monday, every 2 weeks'**
+  String get todoQuickAddHelp;
 }
 
 class _AppLocalizationsDelegate
