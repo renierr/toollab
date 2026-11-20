@@ -8066,6 +8066,8 @@
   "weatherRadarRainStops": "Rain eases in about {minutes} min",
   "@weatherRadarRainStops": {"placeholders": {"minutes": {"type": "int"}}},
   "weatherRadarNoRain": "No rain expected in the next 2 hours",
+  "weatherRadarLoadingShort": "Loading radar…",
+  "weatherRadarNoRainNow": "No rain right now",
   "weatherRadarLayers": "Map layers",
   "weatherRadarBaseLight": "Light",
   "weatherRadarBaseDark": "Dark",

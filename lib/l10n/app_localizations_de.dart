@@ -17366,6 +17366,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get weatherRadarNoRain => 'Kein Regen in den nächsten 2 Stunden';
 
   @override
+  String get weatherRadarLoadingShort => 'Radar wird geladen…';
+
+  @override
+  String get weatherRadarNoRainNow => 'Gerade kein Regen';
+
+  @override
   String get weatherRadarLayers => 'Kartenebenen';
 
   @override

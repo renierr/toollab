@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'radar_frame_store.dart';
 import 'weather_page.dart';
 import 'weather_radar_state.dart';
 import 'weather_state.dart';
@@ -28,7 +29,7 @@ class WeatherTool {
     stateProviders: () => [
       ChangeNotifierProvider<WeatherState>(create: (_) => WeatherState()),
       ChangeNotifierProvider<WeatherRadarState>(
-        create: (_) => WeatherRadarState(),
+        create: (_) => WeatherRadarState(lasting: RadarLastingStore()),
       ),
     ],
   );

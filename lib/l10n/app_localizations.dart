@@ -30346,6 +30346,18 @@ abstract class AppLocalizations {
   /// **'No rain expected in the next 2 hours'**
   String get weatherRadarNoRain;
 
+  /// No description provided for @weatherRadarLoadingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading radar…'**
+  String get weatherRadarLoadingShort;
+
+  /// No description provided for @weatherRadarNoRainNow.
+  ///
+  /// In en, this message translates to:
+  /// **'No rain right now'**
+  String get weatherRadarNoRainNow;
+
   /// No description provided for @weatherRadarLayers.
   ///
   /// In en, this message translates to:

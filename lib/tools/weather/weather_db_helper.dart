@@ -126,12 +126,12 @@ class WeatherDbHelper {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> pruneCache(DateTime olderThan) async {
+  Future<void> pruneCache(DateTime olderThan, {String prefix = ''}) async {
     final db = await _getDb();
     await db.delete(
       _cache,
-      where: 'fetched_at < ?',
-      whereArgs: [olderThan.millisecondsSinceEpoch],
+      where: 'fetched_at < ? AND key LIKE ?',
+      whereArgs: [olderThan.millisecondsSinceEpoch, '$prefix%'],
     );
   }
 }

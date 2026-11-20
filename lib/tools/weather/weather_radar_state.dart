@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 
@@ -108,6 +108,7 @@ class WeatherRadarState extends ChangeNotifier {
   WeatherRadarState({
     Future<Uint8List> Function(Uri uri)? fetch,
     RadarFrameStore? store,
+    this._lasting,
   }) : _fetch =
            fetch ??
            ((uri) => WeatherHttp.getBytes(uri, timeout: _requestTimeout)),
@@ -127,6 +128,10 @@ class WeatherRadarState extends ChangeNotifier {
 
   final Future<Uint8List> Function(Uri uri) _fetch;
   final RadarFrameStore _store;
+  final RadarLastingStore? _lasting;
+
+  /// An older saved current frame is too misleading to show while loading.
+  static const Duration _lastFrameMaxAge = Duration(hours: 3);
 
   /// Changes every pan/zoom frame; painters listen to it directly instead of
   /// rebuilding widgets through [notifyListeners].
@@ -251,8 +256,8 @@ class WeatherRadarState extends ChangeNotifier {
     _blockGeneration++;
     _disposeImages();
     _store.dropMemory();
-    _timeline = null;
-    _timelineFetchedAt = null;
+    // The timeline stays so a reopen serves frames from the store at once.
+    _index = _timeline?.nowIndex ?? 0;
     _block = null;
     _focus = null;
     viewport.value = null;
@@ -398,6 +403,7 @@ class WeatherRadarState extends ChangeNotifier {
     _rain.clear();
     unawaited(_loadBase(_blockGeneration));
     unawaited(_loadExtras(_blockGeneration));
+    if (_previousFrame == null) unawaited(_showLastFrame(block));
     if (_timeline != null) unawaited(_loadFrames(_generation));
     _notify();
   }
@@ -417,11 +423,18 @@ class WeatherRadarState extends ChangeNotifier {
         utf8.decode(bytes, allowMalformed: true),
       );
       if (_disposed) return;
-      final previousTime = currentTime;
-      _timeline = timeline;
+      final old = _timeline;
       _timelineFetchedAt = DateTime.now();
       _failed = false;
-      _index = previousTime == null
+      if (old != null &&
+          old.latestObserved == timeline.latestObserved &&
+          listEquals(old.times, timeline.times)) {
+        return;
+      }
+      final previousTime = currentTime;
+      final wasNow = old == null || _index == old.nowIndex;
+      _timeline = timeline;
+      _index = wasNow || previousTime == null
           ? timeline.nowIndex
           : _closestIndex(previousTime);
       for (final img in _decoded.values) {
@@ -464,31 +477,42 @@ class WeatherRadarState extends ChangeNotifier {
     return 'radar:${block.key}:${time.toIso8601String()}$run';
   }
 
-  static bool _isPng(Uint8List b) =>
+  static bool _isImage(Uint8List b) =>
       b.length > 8 &&
-      b[0] == 0x89 &&
-      b[1] == 0x50 &&
-      b[2] == 0x4E &&
-      b[3] == 0x47;
+      ((b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47) ||
+          (b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF));
 
   /// Null when nothing usable arrived. A WMS error document (HTTP 200 with
   /// XML, e.g. for a nowcast step that is not computed yet) is never cached
   /// and not retried.
-  Future<Uint8List?> _bytes(String key, Uri uri, {bool cache = true}) async {
+  Future<Uint8List?> _bytes(
+    String key,
+    Uri uri, {
+    bool cache = true,
+    bool lasting = false,
+  }) async {
     if (cache) {
       final hit = await _store.read(key);
-      if (hit != null && _isPng(hit)) return hit;
+      if (hit != null && _isImage(hit)) return hit;
+    }
+    if (lasting) {
+      final saved = await _lasting?.read(key);
+      if (saved != null && _isImage(saved.bytes)) {
+        await _store.write(key, saved.bytes);
+        return saved.bytes;
+      }
     }
     for (var attempt = 0; attempt <= _retries; attempt++) {
       try {
         final bytes = await _fetch(uri);
-        if (!_isPng(bytes)) {
+        if (!_isImage(bytes)) {
           debugLog(
             '[WeatherRadarState] $key: no image, ${utf8.decode(bytes.take(200).toList(), allowMalformed: true)}',
           );
           return null;
         }
         if (cache) await _store.write(key, bytes);
+        if (lasting) unawaited(_lasting?.write(key, bytes));
         return bytes;
       } catch (e) {
         debugLog('[WeatherRadarState] $key attempt ${attempt + 1} failed: $e');
@@ -514,7 +538,7 @@ class WeatherRadarState extends ChangeNotifier {
     if (block == null) return;
     final bbox = block.bbox;
     Future<RadarImage?> load(String name, Uri uri) async {
-      final bytes = await _bytes('base:$name:${block.key}', uri);
+      final bytes = await _bytes('base:$name:${block.key}', uri, lasting: true);
       if (bytes == null || gen != _blockGeneration) return null;
       return _decode(bytes, bbox);
     }
@@ -527,6 +551,7 @@ class WeatherRadarState extends ChangeNotifier {
           bbox: bbox,
           width: _basePixels,
           height: _basePixels,
+          jpeg: true,
         ),
       ),
       load(
@@ -641,6 +666,9 @@ class WeatherRadarState extends ChangeNotifier {
           continue;
         }
         _available.add(i);
+        if (i == timeline.nowIndex) {
+          unawaited(_lasting?.write(_lastFrameKey(block), bytes!));
+        }
         _rain[i] = await _sampleRain(img);
         if (_inWindow(i) && !_decoded.containsKey(i)) {
           _decoded[i] = img;
@@ -653,6 +681,28 @@ class WeatherRadarState extends ChangeNotifier {
     }
 
     await Future.wait(List.generate(_concurrency, (_) => worker()));
+  }
+
+  String _lastFrameKey(RadarBlock block) => 'last:${block.key}';
+
+  /// Bridges the wait for the first download with the frame saved last time.
+  Future<void> _showLastFrame(RadarBlock block) async {
+    final saved = await _lasting?.read(_lastFrameKey(block));
+    if (saved == null ||
+        DateTime.now().difference(saved.savedAt) > _lastFrameMaxAge) {
+      return;
+    }
+    final img = await _decode(saved.bytes, block.bbox);
+    if (img == null) return;
+    if (_disposed ||
+        block != _block ||
+        _previousFrame != null ||
+        _decoded.containsKey(_index)) {
+      img.dispose();
+      return;
+    }
+    _previousFrame = img;
+    _notify();
   }
 
   void _dropPrevious() {

@@ -121,6 +121,7 @@ class DwdRadarClient {
     required int width,
     required int height,
     DateTime? time,
+    bool jpeg = false,
   }) => Uri.https('maps.dwd.de', '/geoserver/dwd/wms', {
     'service': 'WMS',
     'version': '1.3.0',
@@ -136,8 +137,8 @@ class DwdRadarClient {
     ].map((v) => v.toStringAsFixed(0)).join(','),
     'width': '$width',
     'height': '$height',
-    'format': 'image/png',
-    'transparent': 'true',
+    'format': jpeg ? 'image/jpeg' : 'image/png',
+    'transparent': jpeg ? 'false' : 'true',
     if (time != null) 'time': time.toUtc().toIso8601String(),
   });
 

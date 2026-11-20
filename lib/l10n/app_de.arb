@@ -6435,6 +6435,8 @@
   "weatherRadarRainNow": "Es regnet gerade",
   "weatherRadarRainStops": "Regen lässt in etwa {minutes} Min. nach",
   "weatherRadarNoRain": "Kein Regen in den nächsten 2 Stunden",
+  "weatherRadarLoadingShort": "Radar wird geladen…",
+  "weatherRadarNoRainNow": "Gerade kein Regen",
   "weatherRadarLayers": "Kartenebenen",
   "weatherRadarBaseLight": "Hell",
   "weatherRadarBaseDark": "Dunkel",

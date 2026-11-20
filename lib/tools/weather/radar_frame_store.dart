@@ -7,6 +7,8 @@ import 'package:crypto/crypto.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 
+import 'weather_db_helper.dart';
+
 /// Compressed radar images for the app session: an LRU in memory backed by
 /// session temp files, so reopening the tool or panning back loads nothing.
 class RadarFrameStore {
@@ -72,5 +74,46 @@ class RadarFrameStore {
     dropMemory();
     _onDisk.clear();
     await _scope?.cleanTracked();
+  }
+}
+
+/// Radar images worth keeping across app starts: the static base map and the
+/// last current frame, so the map shows instantly while fresh data loads.
+class RadarLastingStore {
+  RadarLastingStore();
+
+  static const String _prefix = 'radar:';
+  static const Duration _keep = Duration(days: 30);
+  bool _pruned = false;
+
+  Future<({Uint8List bytes, DateTime savedAt})?> read(String key) async {
+    try {
+      if (!_pruned) {
+        _pruned = true;
+        await WeatherDbHelper.instance.pruneCache(
+          DateTime.now().subtract(_keep),
+          prefix: _prefix,
+        );
+      }
+      final entry = await WeatherDbHelper.instance.getCache('$_prefix$key');
+      return entry == null
+          ? null
+          : (bytes: entry.body, savedAt: entry.fetchedAt);
+    } catch (e) {
+      debugLog('[RadarLastingStore] read failed: $e');
+      return null;
+    }
+  }
+
+  Future<void> write(String key, Uint8List bytes) async {
+    try {
+      await WeatherDbHelper.instance.putCache(
+        '$_prefix$key',
+        bytes,
+        DateTime.now(),
+      );
+    } catch (e) {
+      debugLog('[RadarLastingStore] write failed: $e');
+    }
   }
 }

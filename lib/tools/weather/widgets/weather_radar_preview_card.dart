@@ -74,19 +74,25 @@ class _PreviewStatus extends StatelessWidget {
     final radar = context.watch<WeatherRadarState>();
     final timeline = radar.timeline;
     final time = radar.currentTime;
-    if (timeline == null || time == null) return const SizedBox.shrink();
-    final outlook = RainOutlook.from(
-      radar.rainSeries,
-      timeline.times,
-      timeline.nowIndex,
-    );
-    final text = switch (outlook?.kind) {
+    if (radar.failed) return const SizedBox.shrink();
+    final outlook = timeline == null
+        ? null
+        : RainOutlook.from(radar.rainSeries, timeline.times, timeline.nowIndex);
+    final rainNow = timeline == null || radar.isLoading
+        ? null
+        : radar.rainSeries.elementAtOrNull(radar.index);
+    final status = switch (outlook?.kind) {
       RainOutlookKind.rainingNow => l10n.weatherRadarRainNow,
       RainOutlookKind.rainStops => l10n.weatherRadarRainStops(outlook!.minutes),
       RainOutlookKind.rainSoon => l10n.weatherRadarRainIn(outlook!.minutes),
       RainOutlookKind.dry => l10n.weatherRadarNoRain,
-      null => null,
+      null when rainNow == null || rainNow.isNaN => null,
+      null =>
+        rainNow! > 0 ? l10n.weatherRadarRainNow : l10n.weatherRadarNoRainNow,
     };
+    final text = status == null || time == null
+        ? l10n.weatherRadarLoadingShort
+        : '${format.time(time)} · $status';
     return Align(
       alignment: Alignment.bottomLeft,
       child: DecoratedBox(
@@ -96,10 +102,7 @@ class _PreviewStatus extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Text(
-            '${format.time(time)} · $text',
-            style: theme.textTheme.labelMedium,
-          ),
+          child: Text(text, style: theme.textTheme.labelMedium),
         ),
       ),
     );

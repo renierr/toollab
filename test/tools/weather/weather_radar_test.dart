@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
@@ -164,7 +165,7 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 20));
       }
       expect(radar.loadedCount, 49);
-      expect(requests - before, 1, reason: 'only the capabilities request');
+      expect(requests - before, 0, reason: 'timeline and frames are kept');
       radar.dispose();
     },
   );
@@ -250,6 +251,49 @@ void main() {
     },
   );
 
+  test(
+    'a reopened map shows the frame saved last time while loading',
+    () async {
+      final frame = File('$_fixtures/radar_frame.png').readAsBytesSync();
+      final lasting = _MemoryLasting();
+      WeatherRadarState open(Future<Uint8List> Function(Uri) fetch) =>
+          WeatherRadarState(
+              store: _MemoryStore(),
+              lasting: lasting,
+              fetch: fetch,
+            )
+            ..focusOn(50.15, 8.56)
+            ..attach(full: false)
+            ..resize(const Size(400, 240));
+
+      final first = open(
+        (uri) async => uri.queryParameters['request'] == 'GetCapabilities'
+            ? Uint8List.fromList(caps.codeUnits)
+            : frame,
+      );
+      for (
+        var i = 0;
+        i < 500 && (first.timeline == null || first.isLoading);
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      first.dispose();
+      expect(lasting.keys.where((k) => k.startsWith('last:')), isNotEmpty);
+      expect(lasting.keys.where((k) => k.startsWith('base:')), hasLength(2));
+
+      final never = Completer<Uint8List>();
+      final second = open((_) => never.future);
+      for (var i = 0; i < 100 && second.frameAt(0) == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      expect(second.timeline, isNull);
+      expect(second.frameAt(0), isNotNull);
+      expect(second.base, isNotNull);
+      second.dispose();
+    },
+  );
+
   test('preview and full-screen views share one block', () {
     final small = RadarViewport.around(50.15, 8.56, const Size(380, 240));
     final large = RadarViewport.around(50.15, 8.56, const Size(380, 760));
@@ -284,4 +328,19 @@ class _MemoryStore extends RadarFrameStore {
 
   @override
   Future<void> clear() async {}
+}
+
+class _MemoryLasting extends RadarLastingStore {
+  final Map<String, Uint8List> _data = {};
+
+  Iterable<String> get keys => _data.keys;
+
+  @override
+  Future<({Uint8List bytes, DateTime savedAt})?> read(String key) async {
+    final bytes = _data[key];
+    return bytes == null ? null : (bytes: bytes, savedAt: DateTime.now());
+  }
+
+  @override
+  Future<void> write(String key, Uint8List bytes) async => _data[key] = bytes;
 }
