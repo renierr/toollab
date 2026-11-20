@@ -4,15 +4,18 @@ import 'dart:typed_data';
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'api/mosmix_client.dart';
+import 'api/nowcast_client.dart';
 import 'api/observation_client.dart';
 import 'api/station_catalog.dart';
 import 'api/warnwetter_client.dart';
 import 'api/weather_http.dart';
+import 'models/area_warning.dart';
 import 'models/mosmix_forecast.dart';
 import 'models/station_overview.dart';
 import 'models/weather_location.dart';
 import 'models/weather_observation.dart';
 import 'models/weather_snapshot.dart';
+import 'models/weather_warning.dart';
 import 'weather_db_helper.dart';
 
 /// Loads a [WeatherSnapshot] with a raw-payload cache in the tool database.
@@ -29,6 +32,7 @@ class WeatherRepository {
   static const Duration forecastMaxAge = Duration(minutes: 60);
   static const Duration observationMaxAge = Duration(minutes: 10);
   static const Duration overviewMaxAge = Duration(minutes: 15);
+  static const Duration nowcastMaxAge = Duration(minutes: 5);
   static const int _candidates = 3;
   static const int _overviewFallbacks = 6;
 
@@ -51,9 +55,11 @@ class WeatherRepository {
     final results = await Future.wait([
       _loadForecast(location, catalog, mode),
       _loadObservations(location, catalog, mode),
+      _loadNowcast(location, mode),
     ]);
     final forecast = results[0] as _Loaded<MosmixForecast>?;
     final observations = results[1] as _Loaded<ObservationSeries>?;
+    final nowcast = results[2] as List<WeatherWarning>;
     final forecastStation = forecast?.station;
     final overview = forecastStation == null
         ? null
@@ -77,6 +83,7 @@ class WeatherRepository {
       forecast: forecast?.value,
       observations: observations?.value,
       overview: overview?.value,
+      nowcastWarnings: nowcast,
       isStale: [forecast, observations, overview].any((l) => l?.stale ?? false),
       error: forecast?.value == null
           ? (forecast?.error ?? WeatherError.notFound)
@@ -174,6 +181,25 @@ class WeatherRepository {
       }
     }
     return null;
+  }
+
+  /// One file covers all of Germany; a place gets the areas it lies in.
+  /// A failure only costs the short-term warnings, never the snapshot.
+  Future<List<WeatherWarning>> _loadNowcast(
+    WeatherLocation location,
+    _Mode mode,
+  ) async {
+    final loaded = await _cached<List<AreaWarning>>(
+      'nowcast',
+      NowcastClient.url(),
+      nowcastMaxAge,
+      mode,
+      NowcastClient.parse,
+    );
+    return [
+      for (final a in loaded.value ?? const <AreaWarning>[])
+        if (a.contains(location.latitude, location.longitude)) a.warning,
+    ];
   }
 
   /// The WarnWetter backend knows only part of the MOSMIX stations, so the

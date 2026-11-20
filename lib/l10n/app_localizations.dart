@@ -30154,6 +30154,12 @@ abstract class AppLocalizations {
   /// **'What to do'**
   String get weatherWarningInstruction;
 
+  /// No description provided for @weatherWarningNowcast.
+  ///
+  /// In en, this message translates to:
+  /// **'Short-term warning'**
+  String get weatherWarningNowcast;
+
   /// No description provided for @weatherWarningSource.
   ///
   /// In en, this message translates to:

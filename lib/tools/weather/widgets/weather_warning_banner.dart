@@ -54,6 +54,7 @@ class WeatherWarningBanner extends StatelessWidget {
                     ),
                     Text(
                       [
+                        if (top.isNowcast) l10n.weatherWarningNowcast,
                         if (timing.isNotEmpty) timing,
                         if (warnings.length > 1)
                           l10n.weatherWarningsMore(warnings.length - 1),

@@ -30,6 +30,7 @@ Future<Uint8List> _fetch(
     'opendata.dwd.de' when uri.path.endsWith('.kmz') => 'mosmix_L841.kmz',
     'opendata.dwd.de' => 'beob_10637.csv',
     'app-prod-ws.warnwetter.de' => 'warnwetter_L841.json',
+    's3.eu-central-1.amazonaws.com' => 'warnings_nowcast.json.gz',
     _ => throw const WeatherException(WeatherError.notFound),
   };
   return File('$_fixtures/$file').readAsBytesSync();

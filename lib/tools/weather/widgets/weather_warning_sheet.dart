@@ -92,6 +92,13 @@ class _WarningCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (warning.isNowcast)
+                  Text(
+                    l10n.weatherWarningNowcast,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 Text(
                   [
                     l10n.weatherWarningFrom(format.dayTime(warning.start)),

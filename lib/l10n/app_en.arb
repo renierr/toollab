@@ -8025,6 +8025,7 @@
   "weatherWarningUntil": "until {time}",
   "@weatherWarningUntil": {"placeholders": {"time": {"type": "String"}}},
   "weatherWarningInstruction": "What to do",
+  "weatherWarningNowcast": "Short-term warning",
   "weatherWarningSource": "Source: Deutscher Wetterdienst",
   "weatherWarningsMore": "+{count} more",
   "@weatherWarningsMore": {"placeholders": {"count": {"type": "int"}}},

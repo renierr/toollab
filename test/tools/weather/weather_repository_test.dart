@@ -9,10 +9,12 @@ import 'package:tool_lab/tools/weather/api/station_catalog.dart';
 import 'package:tool_lab/tools/weather/api/weather_http.dart';
 import 'package:tool_lab/tools/weather/models/geo_place.dart';
 import 'package:tool_lab/tools/weather/models/weather_location.dart';
+import 'package:tool_lab/tools/weather/models/weather_warning.dart';
 import 'package:tool_lab/tools/weather/weather_db_helper.dart';
 import 'package:tool_lab/tools/weather/weather_repository.dart';
 import 'package:tool_lab/tools/weather/weather_settings.dart';
 import 'package:tool_lab/tools/weather/weather_state.dart';
+import 'package:tool_lab/tools/weather/weather_warning_alerts.dart';
 
 const _fixtures = 'test/fixtures/weather';
 
@@ -34,6 +36,7 @@ class _FakeNetwork {
       'opendata.dwd.de' when uri.path.endsWith('.kmz') => 'mosmix_L841.kmz',
       'opendata.dwd.de' => 'beob_10637.csv',
       'app-prod-ws.warnwetter.de' => 'warnwetter_L841.json',
+      's3.eu-central-1.amazonaws.com' => 'warnings_nowcast.json.gz',
       _ => throw const WeatherException(WeatherError.notFound),
     };
     return File('$_fixtures/$file').readAsBytesSync();
@@ -82,6 +85,23 @@ void main() {
       expect(snapshot.overview!.warnings, isNotEmpty);
       expect(snapshot.error, isNull);
       expect(snapshot.isStale, isFalse);
+    });
+
+    test('adds nowcast warnings only for places inside the area', () async {
+      final net = _FakeNetwork();
+      final repo = WeatherRepository(fetch: net.fetch, clock: () => now);
+      final inside = await repo.load(
+        eschborn.copyWith(latitude: 50.20, longitude: 8.58),
+        catalog,
+      );
+      final nowcast = inside.warnings(now).where((w) => w.isNowcast);
+      expect(nowcast, hasLength(1));
+      expect(nowcast.single.event, 'Starkregen');
+      final levels = inside.warnings(now).map((w) => w.level).toList();
+      expect(levels, [...levels]..sort((a, b) => b.compareTo(a)));
+
+      final outside = await repo.load(eschborn, catalog);
+      expect(outside.warnings(now).where((w) => w.isNowcast), isEmpty);
     });
 
     test('falls back to a nearby station the warning service knows', () async {
@@ -251,6 +271,62 @@ void main() {
       await state.reorder(0, 1);
       final stored = await WeatherDbHelper.instance.getLocations();
       expect(stored.map((l) => l.name), ['Berlin', 'Zuhause']);
+    });
+  });
+
+  group('WeatherWarningAlerts', () {
+    final start = DateTime.utc(2026, 11, 20, 15);
+    WeatherWarning warning(String id, int level, {String event = 'GEWITTER'}) =>
+        WeatherWarning(
+          id: id,
+          type: 0,
+          level: level,
+          start: start,
+          end: start.add(const Duration(hours: 2)),
+          event: event,
+          headline: event,
+          description: '',
+          instruction: '',
+        );
+
+    test('announces each warning once, from the chosen level up', () async {
+      final alerts = WeatherWarningAlerts();
+      final now = start.subtract(const Duration(minutes: 10));
+      final first = await alerts.takeNew(
+        [warning('a', 1), warning('b', 2)],
+        2,
+        now,
+      );
+      expect(first.map((w) => w.id), ['b']);
+      expect(await alerts.takeNew([warning('b', 2)], 2, now), isEmpty);
+      // A new nowcast run renames the same warning.
+      expect(await alerts.takeNew([warning('b2', 2)], 2, now), isEmpty);
+      // An upgrade is news.
+      expect(await alerts.takeNew([warning('b3', 3)], 2, now), hasLength(1));
+      expect(
+        await alerts.takeNew([warning('c', 2, event: 'FROST')], 2, now),
+        hasLength(1),
+      );
+      expect(await alerts.takeNew([warning('d', 4)], 0, now), isEmpty);
+    });
+
+    test('forgets warnings once they have ended', () async {
+      final alerts = WeatherWarningAlerts();
+      final w = warning('late', 2, event: 'GLATTEIS');
+      expect(await alerts.takeNew([w], 2, start), hasLength(1));
+      final later = start.add(const Duration(hours: 3));
+      final again = WeatherWarning(
+        id: 'late2',
+        type: 0,
+        level: 2,
+        start: later,
+        end: later.add(const Duration(hours: 1)),
+        event: 'GLATTEIS',
+        headline: '',
+        description: '',
+        instruction: '',
+      );
+      expect(await alerts.takeNew([again], 2, later), hasLength(1));
     });
   });
 }

@@ -9,9 +9,13 @@ class WeatherWarning {
     required this.headline,
     required this.description,
     required this.instruction,
+    this.isNowcast = false,
   });
 
-  factory WeatherWarning.fromJson(Map<String, dynamic> json) => WeatherWarning(
+  factory WeatherWarning.fromJson(
+    Map<String, dynamic> json, {
+    bool isNowcast = false,
+  }) => WeatherWarning(
     id: json['warnId'] as String? ?? '',
     type: (json['type'] as num?)?.toInt() ?? 0,
     level: (json['level'] as num?)?.toInt() ?? 0,
@@ -26,12 +30,16 @@ class WeatherWarning {
             isUtc: true,
           ),
     event: json['event'] as String? ?? '',
-    headline: json['headline'] as String? ?? '',
+    // Nowcast items carry only the generator name ("NowCastMIX") as headline.
+    headline: isNowcast
+        ? json['event'] as String? ?? ''
+        : json['headline'] as String? ?? '',
     description:
         json['description'] as String? ??
         json['descriptionText'] as String? ??
         '',
     instruction: json['instruction'] as String? ?? '',
+    isNowcast: isNowcast,
   );
 
   final String id;
@@ -45,6 +53,9 @@ class WeatherWarning {
   final String headline;
   final String description;
   final String instruction;
+
+  /// Automatic short-term warning for an area, e.g. a thunderstorm cell.
+  final bool isNowcast;
 
   bool isActiveAt(DateTime time) =>
       !time.isBefore(start) && (end == null || time.isBefore(end!));

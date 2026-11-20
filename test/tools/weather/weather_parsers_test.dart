@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/tools/weather/api/geocoding_client.dart';
 import 'package:tool_lab/tools/weather/api/mosmix_client.dart';
+import 'package:tool_lab/tools/weather/api/nowcast_client.dart';
 import 'package:tool_lab/tools/weather/api/observation_client.dart';
 import 'package:tool_lab/tools/weather/api/warnwetter_client.dart';
 import 'package:tool_lab/tools/weather/api/weather_http.dart';
@@ -114,6 +115,27 @@ void main() {
       expect(WeatherCondition.fromDwdCode(8), WeatherCondition.rain);
       expect(WeatherCondition.fromDwdCode(27), WeatherCondition.thunderstorm);
       expect(WeatherCondition.fromDwdCode(32767), isNull);
+    });
+  });
+
+  group('NowcastClient', () {
+    final areas = NowcastClient.parse(
+      File('$_fixtures/warnings_nowcast.json.gz').readAsBytesSync(),
+    );
+
+    test('reads gzip-compressed area warnings', () {
+      expect(areas, hasLength(4));
+      final w = areas.first.warning;
+      expect(w.isNowcast, isTrue);
+      expect(w.headline, 'Starkregen');
+      expect(w.level, 3);
+      expect(w.end!.isAfter(w.start), isTrue);
+    });
+
+    test('matches places by polygon', () {
+      expect(areas.where((a) => a.contains(50.20, 8.58)), hasLength(1));
+      expect(areas.where((a) => a.contains(50.150, 8.561)), isEmpty);
+      expect(areas.where((a) => a.contains(52.52, 13.40)), isEmpty);
     });
   });
 }

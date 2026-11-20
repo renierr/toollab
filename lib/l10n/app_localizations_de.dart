@@ -17250,6 +17250,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get weatherWarningInstruction => 'Handlungsempfehlung';
 
   @override
+  String get weatherWarningNowcast => 'Kurzfristwarnung';
+
+  @override
   String get weatherWarningSource => 'Quelle: Deutscher Wetterdienst';
 
   @override

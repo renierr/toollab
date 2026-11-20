@@ -19,6 +19,7 @@ class WeatherSnapshot {
     this.forecast,
     this.observations,
     this.overview,
+    this.nowcastWarnings = const [],
     this.isStale = false,
     this.error,
   });
@@ -33,6 +34,7 @@ class WeatherSnapshot {
   final MosmixForecast? forecast;
   final ObservationSeries? observations;
   final StationOverview? overview;
+  final List<WeatherWarning> nowcastWarnings;
 
   /// Some data came from the cache because the network failed.
   final bool isStale;
@@ -96,10 +98,19 @@ class WeatherSnapshot {
 
   bool isDayAt(DateTime time) => sunTimes(time).isDayAt(time);
 
-  List<WeatherWarning> warnings(DateTime now) => [
-    for (final w in overview?.warnings ?? const <WeatherWarning>[])
-      if (w.end == null || w.end!.isAfter(now)) w,
-  ];
+  /// Station and nowcast warnings still running, most severe first.
+  List<WeatherWarning> warnings(DateTime now) {
+    final seen = <String>{};
+    return [
+      for (final w in [...?overview?.warnings, ...nowcastWarnings])
+        if ((w.end == null || w.end!.isAfter(now)) &&
+            (w.id.isEmpty || seen.add(w.id)))
+          w,
+    ]..sort((a, b) {
+      final byLevel = b.level.compareTo(a.level);
+      return byLevel != 0 ? byLevel : a.start.compareTo(b.start);
+    });
+  }
 }
 
 class CurrentConditions {

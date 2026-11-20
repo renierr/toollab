@@ -6403,6 +6403,7 @@
   "weatherWarningFrom": "ab {time}",
   "weatherWarningUntil": "bis {time}",
   "weatherWarningInstruction": "Handlungsempfehlung",
+  "weatherWarningNowcast": "Kurzfristwarnung",
   "weatherWarningSource": "Quelle: Deutscher Wetterdienst",
   "weatherWarningsMore": "+{count} weitere",
   "weatherStationForecast": "Vorhersagestation",
