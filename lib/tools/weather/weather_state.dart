@@ -12,6 +12,7 @@ import 'models/weather_snapshot.dart';
 import 'weather_background.dart';
 import 'weather_db_helper.dart';
 import 'weather_device_location.dart';
+import 'weather_publisher.dart';
 import 'weather_repository.dart';
 import 'weather_settings.dart';
 
@@ -23,7 +24,9 @@ class WeatherState extends ChangeNotifier {
     this._geocoding = const GeocodingClient(),
     Future<WeatherSettings> Function()? settingsLoader,
     Future<DeviceFix> Function({required bool mayPrompt})? deviceLocation,
-  }) : _db = db ?? WeatherDbHelper.instance,
+    Future<void> Function()? publish,
+  }) : _publish = publish ?? WeatherPublisher.publish,
+       _db = db ?? WeatherDbHelper.instance,
        _repository = repository ?? WeatherRepository(db: db),
        _catalogLoader = catalogLoader ?? StationCatalog.load,
        _settingsLoader = settingsLoader ?? WeatherSettings.load,
@@ -32,12 +35,17 @@ class WeatherState extends ChangeNotifier {
   /// Nominatim allows one request per second.
   static const Duration _searchSpacing = Duration(seconds: 1);
 
+  /// Collects a burst of refreshes or edits into one widget publish.
+  static const Duration _publishDelay = Duration(seconds: 3);
+
   final WeatherDbHelper _db;
   final WeatherRepository _repository;
   final Future<StationCatalog> Function() _catalogLoader;
   final GeocodingClient _geocoding;
   final Future<WeatherSettings> Function() _settingsLoader;
   final Future<DeviceFix> Function({required bool mayPrompt}) _deviceLocation;
+  final Future<void> Function() _publish;
+  Timer? _publishTimer;
 
   Future<void>? _loading;
   StationCatalog? _catalog;
@@ -143,6 +151,7 @@ class WeatherState extends ChangeNotifier {
           ? await _updateDevicePosition(location)
           : location;
       _snapshots[id] = await _repository.load(target, catalog, force: force);
+      _schedulePublish();
     } catch (e) {
       errorLog('[WeatherState] refresh $id failed: $e');
     } finally {
@@ -253,6 +262,7 @@ class WeatherState extends ChangeNotifier {
       await updateSettings(_settings.copyWith(defaultLocationId: () => null));
     }
     _notify();
+    _schedulePublish();
     return removed;
   }
 
@@ -277,6 +287,7 @@ class WeatherState extends ChangeNotifier {
     await _db.saveLocation(renamed);
     _replace(renamed);
     _notify();
+    _schedulePublish();
   }
 
   /// [newIndex] is the final position, as `onReorderItem` reports it.
@@ -322,6 +333,7 @@ class WeatherState extends ChangeNotifier {
     _settings = settings;
     _notify();
     await settings.save();
+    _schedulePublish();
     if (previous.wifiOnly != settings.wifiOnly ||
         previous.batteryNotLow != settings.batteryNotLow) {
       await BackgroundTaskService.reschedule(WeatherBackground.task);
@@ -353,6 +365,12 @@ class WeatherState extends ChangeNotifier {
     ];
   }
 
+  /// Widget data and warning notifications follow the saved weather.
+  void _schedulePublish() {
+    _publishTimer?.cancel();
+    _publishTimer = Timer(_publishDelay, () => unawaited(_publish()));
+  }
+
   void _notify() {
     if (!_disposed) notifyListeners();
   }
@@ -360,6 +378,7 @@ class WeatherState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _publishTimer?.cancel();
     super.dispose();
   }
 }

@@ -1,0 +1,20 @@
+name: tool_lab_bridge
+description: ToolLab's own Android bridge for headless engines, e.g. background runs that must reach native tool code.
+version: 1.0.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.12.1
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: de.renier.tool_lab.bridge
+        pluginClass: ToolLabBridgePlugin

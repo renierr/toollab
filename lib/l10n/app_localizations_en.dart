@@ -17175,7 +17175,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weatherNotifyLevelHint =>
-      'Notify from this level on, for the default place';
+      'Notify from this level on, for the default place. While the app is closed, this needs background updates.';
+
+  @override
+  String get weatherNotificationsBlocked =>
+      'Notifications are turned off for ToolLab';
+
+  @override
+  String get weatherNotificationsAllow => 'Allow';
 
   @override
   String get weatherAnimatedIcons => 'Animated weather icons';

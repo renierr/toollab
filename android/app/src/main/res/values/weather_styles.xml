@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="WeatherWidgetValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="WeatherWidgetSmall" parent="WeatherWidgetValue">
+        <item name="android:textColor">#DDFFFFFF</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="WeatherDialogTheme" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+        <item name="android:windowMinWidthMajor">80%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+    </style>
+    <dimen name="weather_widget_radius">24dp</dimen>
+</resources>

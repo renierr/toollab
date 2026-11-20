@@ -1,11 +1,9 @@
 import 'dart:io';
-import 'dart:ui';
 
-import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/headless_localizations.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/tools/todo/models/todo_filter.dart';
 import 'package:tool_lab/tools/todo/models/todo_list.dart';
 import 'package:tool_lab/tools/todo/models/todo_task.dart';
@@ -396,25 +394,5 @@ class TodoPublisher {
     );
   }
 
-  /// Works without a widget tree: a headless background run has neither
-  /// localizations nor initialized intl date data.
-  static Future<AppLocalizations> localizations() async {
-    Locale? locale;
-    try {
-      locale = (await SettingsService.init()).getLocale();
-    } catch (_) {}
-    locale ??= PlatformDispatcher.instance.locale;
-    AppLocalizations l10n;
-    try {
-      l10n = lookupAppLocalizations(Locale(locale.languageCode));
-    } catch (_) {
-      l10n = lookupAppLocalizations(const Locale('en'));
-    }
-    try {
-      await initializeDateFormatting(l10n.localeName);
-    } catch (e) {
-      errorLog('[TodoPublisher] date data for ${l10n.localeName}: $e');
-    }
-    return l10n;
-  }
+  static Future<AppLocalizations> localizations() => headlessLocalizations();
 }

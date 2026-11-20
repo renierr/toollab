@@ -1,7 +1,11 @@
 import 'dart:io';
+import 'dart:ui';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/tools/weather/models/weather_condition.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/weather/api/observation_client.dart';
@@ -13,6 +17,7 @@ import 'package:tool_lab/tools/weather/models/weather_warning.dart';
 import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/tools/weather/weather_background.dart';
 import 'package:tool_lab/tools/weather/weather_db_helper.dart';
+import 'package:tool_lab/tools/weather/weather_publisher.dart';
 import 'package:tool_lab/tools/weather/weather_repository.dart';
 import 'package:tool_lab/tools/weather/weather_settings.dart';
 import 'package:tool_lab/tools/weather/weather_state.dart';
@@ -395,6 +400,96 @@ void main() {
         BackgroundTaskOutcome.done,
         reason: 'cache fresh',
       );
+    });
+  });
+
+  group('WeatherPublisher', () {
+    late AppLocalizations l10n;
+
+    setUpAll(() async {
+      l10n = lookupAppLocalizations(const Locale('de'));
+      await initializeDateFormatting('de');
+    });
+
+    test('widget data is ready to show in the user\'s units', () async {
+      final net = _FakeNetwork();
+      final repo = WeatherRepository(fetch: net.fetch, clock: () => now);
+      final inside = eschborn.copyWith(id: 7, latitude: 50.20, longitude: 8.58);
+      final snapshots = {
+        1: await repo.load(eschborn, catalog),
+        7: await repo.load(inside, catalog),
+      };
+      final json = WeatherPublisher.widgetJson(
+        locations: [eschborn, inside],
+        snapshots: snapshots,
+        settings: const WeatherSettings(defaultLocationId: 7),
+        l10n: l10n,
+        now: now,
+      );
+      expect(json['defaultId'], 7);
+      final places = json['places']! as List;
+      expect(places, hasLength(2));
+      final first = places.first as Map<String, Object?>;
+      expect(first['name'], 'Eschborn');
+      expect(first['temp'], matches(RegExp(r'^-?\d+°$')));
+      expect(first['icon'], matches(RegExp(r'^[a-z_]+_[dn]$')));
+      expect(first['hours'], hasLength(5));
+      expect((first['days']! as List).first, containsPair('label', 'Heute'));
+      final warning = first['warning']! as Map<String, Object?>;
+      expect(warning['text'], isNotEmpty);
+      expect(warning['color'], isA<int>());
+
+      final fahrenheit = WeatherPublisher.widgetJson(
+        locations: [eschborn],
+        snapshots: snapshots,
+        settings: const WeatherSettings(
+          temperatureUnit: TemperatureUnit.fahrenheit,
+        ),
+        l10n: l10n,
+        now: now,
+      );
+      final f = (fahrenheit['places']! as List).single as Map<String, Object?>;
+      expect(f['temp'], isNot(first['temp']));
+    });
+
+    test('icons and backgrounds follow condition and daylight', () {
+      expect(
+        WeatherPublisher.iconKey(WeatherCondition.partlyCloudy, false),
+        'partly_cloudy_n',
+      );
+      expect(WeatherPublisher.theme(WeatherCondition.clear, true), 'day');
+      expect(WeatherPublisher.theme(WeatherCondition.clear, false), 'night');
+      expect(WeatherPublisher.theme(WeatherCondition.rain, true), 'gray');
+      expect(
+        WeatherPublisher.theme(WeatherCondition.thunderstorm, false),
+        'storm',
+      );
+    });
+
+    test('a notification names the place and fits an Android int colour', () {
+      final w = WeatherWarning(
+        id: 'x',
+        type: 0,
+        level: 4,
+        start: DateTime.utc(2026, 11, 20, 15),
+        end: DateTime.utc(2026, 11, 20, 18),
+        event: 'ORKAN',
+        headline: 'Amtliche Unwetterwarnung vor ORKANBÖEN',
+        description: 'Es treten Orkanböen auf. ' * 40,
+        instruction: '',
+      );
+      final n = WeatherPublisher.notification(
+        w,
+        place: 'Eschborn',
+        placeId: 3,
+        l10n: l10n,
+      );
+      expect(n['title'], 'Amtliche Unwetterwarnung vor ORKANBÖEN · Eschborn');
+      expect(n['key'], 'x');
+      expect(n['placeId'], 3);
+      expect((n['body']! as String).length, lessThanOrEqualTo(401));
+      final color = n['color']! as int;
+      expect(color, inInclusiveRange(-0x80000000, 0x7FFFFFFF));
     });
   });
 }

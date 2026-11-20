@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="weather_widget_label">Weather</string>
+    <string name="weather_widget_description">Current weather, the next hours and days for a place</string>
+    <string name="weather_widget_config_title">Choose a place</string>
+    <string name="weather_widget_no_data">Open the weather tool once to show weather here.</string>
+    <string name="weather_channel_warnings">Weather warnings</string>
+    <string name="weather_channel_warnings_description">Warnings from the German Weather Service for your default place</string>
+</resources>

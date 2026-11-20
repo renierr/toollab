@@ -64,7 +64,7 @@ class _WeatherIconViewState extends State<WeatherIconView>
     return RepaintBoundary(
       child: CustomPaint(
         size: Size.square(widget.size),
-        painter: _WeatherIconPainter(
+        painter: WeatherIconPainter(
           condition: widget.condition,
           isDay: widget.isDay,
           animation: _controller,
@@ -74,8 +74,8 @@ class _WeatherIconViewState extends State<WeatherIconView>
   }
 }
 
-class _WeatherIconPainter extends CustomPainter {
-  _WeatherIconPainter({
+class WeatherIconPainter extends CustomPainter {
+  WeatherIconPainter({
     required this.condition,
     required this.isDay,
     required this.animation,
@@ -428,7 +428,7 @@ class _WeatherIconPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_WeatherIconPainter old) =>
+  bool shouldRepaint(WeatherIconPainter old) =>
       old.condition != condition ||
       old.isDay != isDay ||
       old.animation != animation;

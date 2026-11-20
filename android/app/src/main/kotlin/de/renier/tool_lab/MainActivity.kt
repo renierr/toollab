@@ -717,3 +717,4 @@ class XFeedActivity : MainActivity() {
         get() = XFeedForegroundService::class.java
 }
 class TodoActivity : MainActivity()
+class WeatherActivity : MainActivity()

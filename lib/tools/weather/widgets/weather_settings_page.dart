@@ -1,11 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/widgets/background_task_tile.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
+import 'package:tool_lab_bridge/tool_lab_bridge.dart';
 
 import '../weather_background.dart';
 import '../weather_l10n.dart';
@@ -80,6 +82,8 @@ class WeatherSettingsPage extends StatelessWidget {
               onChanged: (level) =>
                   update(s.copyWith(warningNotifyLevel: level)),
             ),
+            if (BackgroundTaskService.isSupported && s.warningNotifyLevel > 0)
+              const _NotificationPermissionTile(),
             SettingsSectionLabel(title: l10n.weatherSettingsRadar),
             _RadarSettings(settings: s, onChanged: update),
             SettingsSectionLabel(title: l10n.weatherSettingsData),
@@ -334,6 +338,52 @@ class _RadarSettings extends StatelessWidget {
           onChanged: (v) => onChanged(s.copyWith(radarPanel: v)),
         ),
       ],
+    );
+  }
+}
+
+/// Shown only while the system blocks the app's notifications.
+class _NotificationPermissionTile extends StatefulWidget {
+  const _NotificationPermissionTile();
+
+  @override
+  State<_NotificationPermissionTile> createState() =>
+      _NotificationPermissionTileState();
+}
+
+class _NotificationPermissionTileState
+    extends State<_NotificationPermissionTile>
+    with DisposeCleanup {
+  bool _enabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+    // Returning from the system settings page.
+    final listener = AppLifecycleListener(onResume: _check);
+    onDispose(listener.dispose);
+  }
+
+  Future<void> _check() async {
+    final enabled = await ToolLabBridge.notificationsEnabled();
+    if (mounted && enabled != _enabled) setState(() => _enabled = enabled);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_enabled) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+    return ListTile(
+      leading: Icon(
+        Icons.notifications_off_outlined,
+        color: Theme.of(context).colorScheme.error,
+      ),
+      title: Text(l10n.weatherNotificationsBlocked),
+      trailing: TextButton(
+        onPressed: ToolLabBridge.openNotificationSettings,
+        child: Text(l10n.weatherNotificationsAllow),
+      ),
     );
   }
 }

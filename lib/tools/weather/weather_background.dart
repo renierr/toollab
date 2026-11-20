@@ -5,6 +5,7 @@ import 'api/station_catalog.dart';
 import 'config.dart';
 import 'models/weather_location.dart';
 import 'weather_db_helper.dart';
+import 'weather_publisher.dart';
 import 'weather_repository.dart';
 import 'weather_settings.dart';
 
@@ -56,7 +57,7 @@ class WeatherBackground {
         failed++;
       }
     }
-    // Warning notifications hook in here once the Android channel exists.
+    await WeatherPublisher.publish(repository: repo, catalog: catalog);
     final detail = '$updated/${targets.length} places';
     return updated == 0 && failed > 0
         ? BackgroundTaskResult.failed(detail)

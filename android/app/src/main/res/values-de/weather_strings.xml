@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="weather_widget_label">Wetter</string>
+    <string name="weather_widget_description">Aktuelles Wetter, die nächsten Stunden und Tage für einen Ort</string>
+    <string name="weather_widget_config_title">Ort wählen</string>
+    <string name="weather_widget_no_data">Öffne einmal das Wetter-Tool, damit hier Wetter erscheint.</string>
+    <string name="weather_channel_warnings">Wetterwarnungen</string>
+    <string name="weather_channel_warnings_description">Warnungen des Deutschen Wetterdienstes für deinen Standard-Ort</string>
+</resources>

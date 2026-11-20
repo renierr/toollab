@@ -261,6 +261,22 @@
         </activity>
 
         <activity
+            android:name="de.renier.tool_lab.WeatherActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":weather"
+            android:taskAffinity="de.renier.tool_lab.weather"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+        </activity>
+
+        <activity
             android:name="de.renier.tool_lab.TextEditorActivity"
             android:exported="false"
             android:launchMode="singleTask"
@@ -439,6 +455,19 @@
             android:targetActivity="de.renier.tool_lab.TodoActivity"
             android:label="Todo"
             android:icon="@mipmap/ic_launcher_todo"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.WeatherAlias"
+            android:targetActivity="de.renier.tool_lab.WeatherActivity"
+            android:label="Weather"
+            android:icon="@mipmap/ic_launcher_weather"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -1172,6 +1201,40 @@
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:process=":todo" />
+        <!-- Weather: the home screen widget, its place picker and warning notifications run in the tool's process. -->
+        <activity
+            android:name="de.renier.tool_lab.weather.WeatherWidgetConfigActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:process=":weather"
+            android:taskAffinity=""
+            android:theme="@style/WeatherDialogTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <receiver
+            android:name="de.renier.tool_lab.weather.WeatherReceiver"
+            android:exported="false"
+            android:process=":weather">
+            <intent-filter>
+                <action android:name="de.renier.tool_lab.weather.REFRESH_WIDGETS" />
+                <action android:name="de.renier.tool_lab.weather.NOTIFY" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="de.renier.tool_lab.weather.WeatherWidgetProvider"
+            android:exported="true"
+            android:label="@string/weather_widget_label"
+            android:process=":weather">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_info" />
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

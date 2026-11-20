@@ -30247,8 +30247,20 @@ abstract class AppLocalizations {
   /// No description provided for @weatherNotifyLevelHint.
   ///
   /// In en, this message translates to:
-  /// **'Notify from this level on, for the default place'**
+  /// **'Notify from this level on, for the default place. While the app is closed, this needs background updates.'**
   String get weatherNotifyLevelHint;
+
+  /// No description provided for @weatherNotificationsBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are turned off for ToolLab'**
+  String get weatherNotificationsBlocked;
+
+  /// No description provided for @weatherNotificationsAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get weatherNotificationsAllow;
 
   /// No description provided for @weatherAnimatedIcons.
   ///

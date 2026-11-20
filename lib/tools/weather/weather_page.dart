@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -32,6 +33,9 @@ class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  /// The `place` query a widget or notification opened the tool with.
+  int? _openedPlace;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +46,22 @@ class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
       (_) => _autoRefresh(),
     );
     onDispose(timer.cancel);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final place = int.tryParse(
+      GoRouterState.of(context).uri.queryParameters['place'] ?? '',
+    );
+    if (place == null || place == _openedPlace) return;
+    _openedPlace = place;
+    final state = context.read<WeatherState>();
+    unawaited(
+      state.ensureLoaded().then((_) {
+        if (mounted && state.locationById(place) != null) state.select(place);
+      }),
+    );
   }
 
   void _autoRefresh() {

@@ -16,6 +16,7 @@ workspace:
   - packages/media_kit_video
   - packages/nfc_manager
   - packages/whisper_ggml
+  - packages/tool_lab_bridge
 
 dependencies:
   flutter:
@@ -28,6 +29,8 @@ dependencies:
   http: ^1.6.0
   rhttp:
     path: ./packages/rhttp
+  tool_lab_bridge:
+    path: ./packages/tool_lab_bridge
   file_selector: ^1.1.0
   share_plus: ^13.1.0
   sensors_plus: ^7.0.0

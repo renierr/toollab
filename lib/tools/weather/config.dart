@@ -20,6 +20,7 @@ class WeatherTool {
     route: '/weather',
     accentColor: AppTheme.accentBlue,
     sectionId: 'utilities',
+    androidProcessIsolated: true,
     nameL10n: (l10n) => l10n.toolNameWeather,
     descriptionL10n: (l10n) => l10n.toolDescWeather,
     createPage: (_) => const WeatherPage(),
