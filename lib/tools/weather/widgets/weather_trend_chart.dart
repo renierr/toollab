@@ -1,14 +1,20 @@
 import 'dart:math' as math;
 
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/health_chart_tooltip.dart';
 
 import '../models/hourly_forecast.dart';
 import '../weather_colors.dart';
+import '../weather_l10n.dart';
 import '../weather_units.dart';
 
 enum WeatherTrendMetric { temperature, precipitation, wind, pressure }
 
-class WeatherTrendChart extends StatelessWidget {
+class WeatherTrendChart extends StatefulWidget {
   const WeatherTrendChart({
     super.key,
     required this.hours,
@@ -27,23 +33,173 @@ class WeatherTrendChart extends StatelessWidget {
   final double height;
 
   @override
+  State<WeatherTrendChart> createState() => _WeatherTrendChartState();
+}
+
+class _WeatherTrendChartState extends State<WeatherTrendChart>
+    with DisposeCleanup {
+  /// Touch has no "leave" event, so the readout hides itself.
+  static const Duration _touchLinger = Duration(seconds: 3);
+  static const Duration _mouseLinger = Duration(seconds: 6);
+
+  int? _selected;
+  Timer? _hideTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    onDispose(() => _hideTimer?.cancel());
+  }
+
+  void _select(Offset local, double width, {required bool touch}) {
+    final hours = widget.hours;
+    if (hours.length < 2) return;
+    final t =
+        ((local.dx - _TrendPainter.left) /
+                (width - _TrendPainter.left - _TrendPainter.right))
+            .clamp(0.0, 1.0);
+    final start = hours.first.time.millisecondsSinceEpoch;
+    final target = start + t * (hours.last.time.millisecondsSinceEpoch - start);
+    var best = 0;
+    for (var i = 1; i < hours.length; i++) {
+      if ((hours[i].time.millisecondsSinceEpoch - target).abs() <
+          (hours[best].time.millisecondsSinceEpoch - target).abs()) {
+        best = i;
+      }
+    }
+    if (best != _selected) setState(() => _selected = best);
+    _hideTimer?.cancel();
+    _hideTimer = Timer(touch ? _touchLinger : _mouseLinger, _clear);
+  }
+
+  void _clear() {
+    _hideTimer?.cancel();
+    if (mounted && _selected != null) setState(() => _selected = null);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final selected = _selected;
     return SizedBox(
-      height: height,
-      child: CustomPaint(
-        size: Size.infinite,
-        painter: _TrendPainter(
-          hours: hours,
-          metric: metric,
-          units: units,
-          dayLabel: dayLabel,
-          axisStyle: theme.textTheme.labelSmall!.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          gridColor: theme.dividerColor.withValues(alpha: .5),
-        ),
+      height: widget.height,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final hour = selected == null || selected >= widget.hours.length
+              ? null
+              : widget.hours[selected];
+          final x = hour == null
+              ? 0.0
+              : _TrendPainter.xFor(widget.hours, hour.time, width);
+          return MouseRegion(
+            onHover: (e) => _select(e.localPosition, width, touch: false),
+            onExit: (_) => _clear(),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (d) => _select(d.localPosition, width, touch: true),
+              onHorizontalDragStart: (d) =>
+                  _select(d.localPosition, width, touch: true),
+              onHorizontalDragUpdate: (d) =>
+                  _select(d.localPosition, width, touch: true),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _TrendPainter(
+                        hours: widget.hours,
+                        metric: widget.metric,
+                        units: widget.units,
+                        dayLabel: widget.dayLabel,
+                        selected: selected,
+                        axisStyle: theme.textTheme.labelSmall!.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        gridColor: theme.dividerColor.withValues(alpha: .5),
+                        cursorColor: theme.colorScheme.onSurface.withValues(
+                          alpha: .5,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (hour != null)
+                    Positioned(
+                      top: 4,
+                      left: x < width / 2 ? x + 12 : null,
+                      right: x >= width / 2 ? width - x + 12 : null,
+                      child: IgnorePointer(
+                        child: _HourReadout(hour: hour, units: widget.units),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
+    );
+  }
+}
+
+class _HourReadout extends StatelessWidget {
+  const _HourReadout({required this.hour, required this.units});
+
+  final HourlyForecast hour;
+  final WeatherUnits units;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final format = WeatherTimeFormat(context);
+    final rain = hour.precipitation;
+    final prob = hour.precipitationProbability;
+    final direction = hour.windDirection;
+    return HealthChartTooltip(
+      title: '${format.dayTime(hour.time)} · ${hour.condition.label(l10n)}',
+      readings: [
+        if (hour.temperature != null)
+          (
+            color: WeatherColors.temperature(hour.temperature!),
+            text:
+                '${l10n.weatherTemperature} ${units.temperatureText(hour.temperature)}',
+          ),
+        if (rain != null || prob != null)
+          (
+            color: WeatherColors.precipitationBar,
+            text: [
+              '${l10n.weatherPrecipitation} ${units.precipitationText(rain ?? 0)}',
+              if (prob != null) WeatherUnits.percentText(prob),
+            ].join(' · '),
+          ),
+        if (hour.windSpeed != null)
+          (
+            color: WeatherColors.windLine,
+            text: [
+              '${l10n.weatherWind} ${units.windText(hour.windSpeed)}',
+              if (direction != null) WeatherL10n.direction(l10n, direction),
+              if (hour.windGust != null)
+                l10n.weatherGusts(units.windText(hour.windGust)),
+            ].join(' · '),
+          ),
+        if (hour.pressure != null)
+          (
+            color: WeatherColors.pressureLine,
+            text:
+                '${l10n.weatherPressure} ${units.pressureText(hour.pressure)}',
+          ),
+        if (hour.humidity != null)
+          (
+            color: WeatherColors.rain,
+            text:
+                '${l10n.weatherHumidity} ${WeatherUnits.percentText(hour.humidity)}',
+          ),
+        if (hour.cloudCover != null)
+          (
+            color: WeatherColors.cloudDark,
+            text:
+                '${l10n.weatherCloudCover} ${WeatherUnits.percentText(hour.cloudCover)}',
+          ),
+      ],
     );
   }
 }
@@ -54,19 +210,33 @@ class _TrendPainter extends CustomPainter {
     required this.metric,
     required this.units,
     required this.dayLabel,
+    required this.selected,
     required this.axisStyle,
     required this.gridColor,
+    required this.cursorColor,
   });
 
   final List<HourlyForecast> hours;
   final WeatherTrendMetric metric;
   final WeatherUnits units;
   final String Function(DateTime localTime) dayLabel;
+  final int? selected;
   final TextStyle axisStyle;
   final Color gridColor;
+  final Color cursorColor;
 
-  static const double _left = 40;
+  static const double left = 40;
+  static const double right = 4;
   static const double _bottom = 20;
+
+  static double xFor(List<HourlyForecast> hours, DateTime t, double width) {
+    final start = hours.first.time.millisecondsSinceEpoch.toDouble();
+    final end = hours.last.time.millisecondsSinceEpoch.toDouble();
+    return left +
+        (t.millisecondsSinceEpoch - start) /
+            (end - start) *
+            (width - left - right);
+  }
 
   double? _value(HourlyForecast h) => switch (metric) {
     WeatherTrendMetric.temperature =>
@@ -92,6 +262,29 @@ class _TrendPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    _paintChart(canvas, size);
+    final i = selected;
+    if (i == null || i >= hours.length || hours.length < 2) return;
+    final x = xFor(hours, hours[i].time, size.width);
+    canvas.drawLine(
+      Offset(x, 8),
+      Offset(x, size.height - _bottom),
+      Paint()
+        ..color = cursorColor
+        ..strokeWidth = 1.5,
+    );
+    final v = _value(hours[i]);
+    final y = _lastY;
+    if (v != null && y != null) {
+      final py = y(v);
+      canvas.drawCircle(Offset(x, py), 6, Paint()..color = Colors.white);
+      canvas.drawCircle(Offset(x, py), 4, Paint()..color = _color);
+    }
+  }
+
+  double Function(double v)? _lastY;
+
+  void _paintChart(Canvas canvas, Size size) {
     if (hours.length < 2) return;
     final values = [for (final h in hours) _value(h)];
     final extra = [for (final h in hours) _secondary(h)];
@@ -114,13 +307,19 @@ class _TrendPainter extends CustomPainter {
     }
     hi += pad;
 
-    final plot = Rect.fromLTRB(_left, 8, size.width - 4, size.height - _bottom);
+    final plot = Rect.fromLTRB(
+      left,
+      8,
+      size.width - right,
+      size.height - _bottom,
+    );
     final start = hours.first.time.millisecondsSinceEpoch.toDouble();
     final end = hours.last.time.millisecondsSinceEpoch.toDouble();
     double x(DateTime t) =>
         plot.left +
         (t.millisecondsSinceEpoch - start) / (end - start) * plot.width;
     double y(double v) => plot.bottom - (v - lo) / (hi - lo) * plot.height;
+    _lastY = y;
 
     final grid = Paint()
       ..color = gridColor

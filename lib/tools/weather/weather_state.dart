@@ -85,7 +85,7 @@ class WeatherState extends ChangeNotifier {
       _locations = results[2] as List<WeatherLocation>;
       _notify();
       final initial = selected;
-      if (initial != null) unawaited(refresh(initial.id!));
+      if (initial != null) unawaited(_refreshInOrder(initial.id!));
     } catch (e) {
       errorLog('[WeatherState] load failed: $e');
       _loading = null;
@@ -125,6 +125,18 @@ class WeatherState extends ChangeNotifier {
     bool force,
   ) async {
     try {
+      // Last known weather first, so the screen never waits on the network.
+      if (!_snapshots.containsKey(id)) {
+        final cached = await _repository.load(
+          location,
+          catalog,
+          cacheOnly: true,
+        );
+        if (cached.hasData && !_snapshots.containsKey(id)) {
+          _snapshots[id] = cached;
+          _notify();
+        }
+      }
       final target = location.isDeviceLocation
           ? await _updateDevicePosition(location)
           : location;
@@ -134,6 +146,14 @@ class WeatherState extends ChangeNotifier {
     } finally {
       _refreshing.removeWhere((key, _) => key == id);
       _notify();
+    }
+  }
+
+  /// The shown place first, then the others one by one for the place list.
+  Future<void> _refreshInOrder(int first) async {
+    await refresh(first);
+    for (final l in [..._locations]) {
+      if (l.id != first && !_disposed) await refresh(l.id!);
     }
   }
 

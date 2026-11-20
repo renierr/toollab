@@ -26,6 +26,7 @@ class WeatherSettings {
     this.radarSpeed = 1.0,
     this.radarLightning = false,
     this.radarWarnings = false,
+    this.radarPanel = false,
   });
 
   static const List<int> refreshChoices = [0, 15, 30, 60, 120];
@@ -49,6 +50,9 @@ class WeatherSettings {
   final bool radarLightning;
   final bool radarWarnings;
 
+  /// Desktop only: radar as a side panel instead of a preview card.
+  final bool radarPanel;
+
   static const _kTemp = 'unit_temperature';
   static const _kWind = 'unit_wind';
   static const _kPressure = 'unit_pressure';
@@ -61,6 +65,7 @@ class WeatherSettings {
   static const _kSpeed = 'radar_speed';
   static const _kLightning = 'radar_lightning';
   static const _kWarnings = 'radar_warnings';
+  static const _kPanel = 'radar_panel';
 
   static Future<WeatherSettings> load() async {
     final s = await DatabaseService.instance.getAllSettings(
@@ -89,6 +94,7 @@ class WeatherSettings {
       radarSpeed: double.tryParse(s[_kSpeed] ?? '') ?? 1.0,
       radarLightning: s[_kLightning] == 'true',
       radarWarnings: s[_kWarnings] == 'true',
+      radarPanel: s[_kPanel] == 'true',
     );
   }
 
@@ -111,6 +117,7 @@ class WeatherSettings {
       db.setSetting(id, _kSpeed, '$radarSpeed'),
       db.setSetting(id, _kLightning, '$radarLightning'),
       db.setSetting(id, _kWarnings, '$radarWarnings'),
+      db.setSetting(id, _kPanel, '$radarPanel'),
     ]);
   }
 
@@ -127,6 +134,7 @@ class WeatherSettings {
     double? radarSpeed,
     bool? radarLightning,
     bool? radarWarnings,
+    bool? radarPanel,
   }) => WeatherSettings(
     temperatureUnit: temperatureUnit ?? this.temperatureUnit,
     windUnit: windUnit ?? this.windUnit,
@@ -142,5 +150,6 @@ class WeatherSettings {
     radarSpeed: radarSpeed ?? this.radarSpeed,
     radarLightning: radarLightning ?? this.radarLightning,
     radarWarnings: radarWarnings ?? this.radarWarnings,
+    radarPanel: radarPanel ?? this.radarPanel,
   );
 }

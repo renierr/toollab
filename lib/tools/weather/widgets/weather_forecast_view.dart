@@ -24,6 +24,7 @@ class WeatherForecastView extends StatelessWidget {
     super.key,
     required this.locationId,
     this.showRadarPreview = true,
+    this.onOpenRadar,
   });
 
   static const double _maxContentWidth = 1200;
@@ -32,6 +33,7 @@ class WeatherForecastView extends StatelessWidget {
 
   /// Off when the page already shows the radar beside the forecast.
   final bool showRadarPreview;
+  final VoidCallback? onOpenRadar;
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +127,10 @@ class WeatherForecastView extends StatelessWidget {
                 WeatherWarningBanner(warnings: warnings),
               ],
               if (hourly != null) ...[gap, hourly],
-              if (showRadarPreview) ...[gap, const WeatherRadarPreviewCard()],
+              if (showRadarPreview) ...[
+                gap,
+                WeatherRadarPreviewCard(onOpen: onOpenRadar),
+              ],
               gap,
               if (twoColumns)
                 Row(

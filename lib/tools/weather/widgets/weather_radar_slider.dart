@@ -129,7 +129,7 @@ class _SliderPainter extends CustomPainter {
     // Rain intensity at the place, one bar per frame.
     for (var i = 0; i < count; i++) {
       final v = i < rain.length ? rain[i] : null;
-      if (v == null || v < 0.1) continue;
+      if (v == null || v.isNaN || v < 0.1) continue;
       final h =
           math.min(1.0, (math.log(v * 10) / math.ln10) / 3.2) * _rainHeight;
       final color = RadarPalette.classes

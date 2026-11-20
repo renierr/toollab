@@ -25,7 +25,8 @@ class RadarViewport {
     size: size,
   ).clamped();
 
-  static const double minResolution = 150;
+  /// Closer than this the 1 km radar cells only turn into big blobs.
+  static const double minResolution = 220;
 
   final double centerX;
   final double centerY;

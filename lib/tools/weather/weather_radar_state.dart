@@ -11,6 +11,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'api/dwd_radar.dart';
 import 'api/weather_http.dart';
 import 'models/radar_viewport.dart';
+import 'radar_frame_store.dart';
 import 'weather_settings.dart';
 
 /// A decoded WMS image and the Mercator box it covers.
@@ -23,52 +24,155 @@ class RadarImage {
   void dispose() => image.dispose();
 }
 
-class WeatherRadarState extends ChangeNotifier {
-  WeatherRadarState({Future<Uint8List> Function(Uri uri)? fetch})
-    : _fetch = fetch ?? WeatherHttp.getBytes;
+/// A fixed square of the map the radar is fetched for. Blocks sit on a grid
+/// and depend only on zoom level and position, never on the view size, so the
+/// preview and the full-screen radar share them and small pans reuse them.
+class RadarBlock {
+  const RadarBlock(this.resolution, this.cellX, this.cellY);
 
+  static const int pixels = 1280;
+
+  /// Radar data is a 1 km grid; finer requests only bake in hard blocks.
+  static const List<double> levels = [600, 1200, 2400];
+
+  final double resolution;
+  final int cellX;
+  final int cellY;
+
+  double get span => pixels * resolution;
+
+  /// Fine enough that a block snapped to it still holds a view of 85 % of
+  /// its span.
+  double get _step => span / 8;
+
+  Rect get bbox {
+    final cx = cellX * _step;
+    final cy = cellY * _step;
+    return Rect.fromLTRB(
+      cx - span / 2,
+      cy - span / 2,
+      cx + span / 2,
+      cy + span / 2,
+    );
+  }
+
+  String get key => '${resolution.round()}:$cellX:$cellY';
+
+  /// Keeps [current] while the view still fits it at the same level, so a
+  /// pan across a grid line does not reload every frame.
+  static RadarBlock forViewport(RadarViewport vp, {RadarBlock? current}) {
+    final level = _levelFor(vp);
+    if (current != null &&
+        current.resolution == level &&
+        current._fits(vp.bounds)) {
+      return current;
+    }
+    final step = pixels * level / 8;
+    return RadarBlock(
+      level,
+      (vp.centerX / step).round(),
+      (vp.centerY / step).round(),
+    );
+  }
+
+  /// The finest level not finer than the view whose block can hold it.
+  static double _levelFor(RadarViewport vp) {
+    final extent = math.max(vp.bounds.width, vp.bounds.height);
+    for (final res in levels) {
+      if (res < vp.resolution * .8) continue;
+      if (extent <= pixels * res * .85) return res;
+    }
+    return levels.last;
+  }
+
+  bool _fits(Rect b) {
+    final box = bbox;
+    return b.left >= box.left &&
+        b.right <= box.right &&
+        b.top >= box.top &&
+        b.bottom <= box.bottom;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is RadarBlock &&
+      other.resolution == resolution &&
+      other.cellX == cellX &&
+      other.cellY == cellY;
+
+  @override
+  int get hashCode => Object.hash(resolution, cellX, cellY);
+}
+
+class WeatherRadarState extends ChangeNotifier {
+  WeatherRadarState({
+    Future<Uint8List> Function(Uri uri)? fetch,
+    RadarFrameStore? store,
+  }) : _fetch =
+           fetch ??
+           ((uri) => WeatherHttp.getBytes(uri, timeout: _requestTimeout)),
+       _store = store ?? RadarFrameStore();
+
+  static const Duration _requestTimeout = Duration(seconds: 60);
   static const int _concurrency = 6;
-  static const int _maxRadarPixels = 900;
-  static const int _maxBasePixels = 1400;
+  static const int _retries = 2;
+  static const int _basePixels = 1536;
+
+  /// Decoded frames kept around the current one; the rest stay compressed.
+  static const int _decodeBehind = 2;
+  static const int _decodeAhead = 5;
   static const Duration _frameInterval = Duration(milliseconds: 550);
-  static const Duration _viewportSettle = Duration(milliseconds: 350);
+  static const Duration _viewportSettle = Duration(milliseconds: 300);
   static const int _endHoldTicks = 3;
 
   final Future<Uint8List> Function(Uri uri) _fetch;
+  final RadarFrameStore _store;
 
   /// Changes every pan/zoom frame; painters listen to it directly instead of
   /// rebuilding widgets through [notifyListeners].
   final ValueNotifier<RadarViewport?> viewport = ValueNotifier(null);
 
   RadarTimeline? _timeline;
+  DateTime? _timelineFetchedAt;
+  bool _loadingTimeline = false;
+  bool _failed = false;
   int _index = 0;
   bool _playing = false;
   double _speed = 1;
-  bool _failed = false;
-  bool _loadingTimeline = false;
   int _users = 0;
-  int _generation = 0;
+
+  /// Views that show the time slider; without one only the current frame loads.
+  int _fullUsers = 0;
+  final Set<int> _inFlight = {};
   int _endHold = 0;
   Timer? _playTimer;
   Timer? _settleTimer;
-  DateTime? _timelineFetchedAt;
+  bool _disposed = false;
 
-  Rect? _coverage;
-  double? _coverageResolution;
+  RadarBlock? _block;
+
+  /// Bumped when the block changes; base and extras check it.
+  int _blockGeneration = 0;
+
+  /// Bumped on block or timeline changes; frame downloads check it.
+  int _generation = 0;
   RadarImage? _base;
   RadarImage? _overlay;
   RadarImage? _lightning;
   RadarImage? _warnings;
-  final Map<int, RadarImage> _frames = {};
-  final Map<int, RadarImage> _staleFrames = {};
+  final Set<int> _available = {};
+
+  /// Frames the server has no image for, e.g. a nowcast step not computed yet.
+  final Set<int> _missing = {};
+  final Map<int, RadarImage> _decoded = {};
+  final Set<int> _decoding = {};
+  RadarImage? _previousFrame;
   final Map<int, double?> _rain = {};
-  final Set<int> _pending = {};
 
   RadarBaseMap _baseMap = RadarBaseMap.light;
   bool _showLightning = false;
   bool _showWarnings = false;
   ({double lat, double lon})? _focus;
-  bool _disposed = false;
 
   RadarTimeline? get timeline => _timeline;
   int get index => _index;
@@ -83,8 +187,14 @@ class WeatherRadarState extends ChangeNotifier {
   ({double lat, double lon})? get focus => _focus;
 
   int get frameCount => _timeline?.times.length ?? 0;
-  int get loadedCount => _frames.length;
-  bool isLoaded(int i) => _frames.containsKey(i);
+  int get loadedCount => _available.length;
+
+  bool get wantsAllFrames => _fullUsers > 0;
+
+  bool get isLoading => wantsAllFrames
+      ? _available.length + _missing.length < frameCount
+      : !_available.contains(_index) && !_missing.contains(_index);
+  bool isLoaded(int i) => _available.contains(i);
 
   DateTime? get currentTime {
     final t = _timeline;
@@ -93,38 +203,57 @@ class WeatherRadarState extends ChangeNotifier {
         : t.times[_index.clamp(0, t.times.length - 1)];
   }
 
-  /// Frame for [index], falling back to the same time of the previous view.
-  RadarImage? frameAt(int index) => _frames[index] ?? _staleFrames[index];
+  /// The frame to draw for [index]: its own image once decoded, else the
+  /// nearest decoded neighbour, else the last frame of the previous block.
+  RadarImage? frameAt(int index) {
+    final exact = _decoded[index];
+    if (exact != null) return exact;
+    for (var d = 1; d <= 3; d++) {
+      final near = _decoded[index - d] ?? _decoded[index + d];
+      if (near != null) return near;
+    }
+    return _previousFrame;
+  }
 
   /// Radar intensity in mm/h at the focus per frame; null = not loaded yet.
+  /// [double.nan] marks a frame the server has no image for.
   List<double?> get rainSeries => [
-    for (var i = 0; i < frameCount; i++) _rain[i],
+    for (var i = 0; i < frameCount; i++)
+      _missing.contains(i) ? double.nan : _rain[i],
   ];
-
-  bool hasRainValue(int i) => _rain.containsKey(i);
 
   // Lifecycle -----------------------------------------------------------------
 
   /// Views call this while visible; loading and playback run only then.
-  void attach() {
+  /// A preview passes `full: false` and gets just the current frame.
+  void attach({bool full = true}) {
     _users++;
-    if (_users == 1) unawaited(_ensureTimeline());
+    if (full) _fullUsers++;
+    if (_users == 1) {
+      unawaited(_ensureTimeline());
+    } else if (full && _fullUsers == 1 && _block != null) {
+      unawaited(_loadFrames(_generation));
+    }
   }
 
-  void detach() {
+  void detach({bool full = true}) {
     _users = math.max(0, _users - 1);
-    if (_users == 0) _stopPlayback();
+    if (full) _fullUsers = math.max(0, _fullUsers - 1);
+    if (_fullUsers == 0) _stopPlayback();
   }
 
-  /// Drops every image when the tool closes.
+  /// Drops decoded images and memory when the tool closes; the compressed
+  /// frames stay in session temp files for the next open.
   void release() {
     _stopPlayback();
     _settleTimer?.cancel();
     _generation++;
-    _disposeAll();
+    _blockGeneration++;
+    _disposeImages();
+    _store.dropMemory();
     _timeline = null;
     _timelineFetchedAt = null;
-    _coverage = null;
+    _block = null;
     _focus = null;
     viewport.value = null;
   }
@@ -133,32 +262,35 @@ class WeatherRadarState extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     release();
+    unawaited(_store.clear());
     viewport.dispose();
     super.dispose();
   }
 
-  void _disposeAll() {
+  void _disposeImages() {
     for (final img in [
       _base,
       _overlay,
       _lightning,
       _warnings,
-      ..._frames.values,
-      ..._staleFrames.values,
+      _previousFrame,
+      ..._decoded.values,
     ]) {
       img?.dispose();
     }
-    _base = _overlay = _lightning = _warnings = null;
-    _frames.clear();
-    _staleFrames.clear();
+    _base = _overlay = _lightning = _warnings = _previousFrame = null;
+    _decoded.clear();
+    _decoding.clear();
+    _available.clear();
+    _missing.clear();
+    _inFlight.clear();
     _rain.clear();
-    _pending.clear();
   }
 
   // Options -------------------------------------------------------------------
 
   void applySettings(WeatherSettings settings) {
-    final changedLayers =
+    final layersChanged =
         settings.radarLightning != _showLightning ||
         settings.radarWarnings != _showWarnings;
     _speed = settings.radarSpeed;
@@ -166,7 +298,9 @@ class WeatherRadarState extends ChangeNotifier {
     _showLightning = settings.radarLightning;
     _showWarnings = settings.radarWarnings;
     if (_playing) _restartTimer();
-    if (changedLayers && _coverage != null) unawaited(_loadExtras(_generation));
+    if (layersChanged && _block != null) {
+      unawaited(_loadExtras(_blockGeneration));
+    }
     _notify();
   }
 
@@ -175,7 +309,6 @@ class WeatherRadarState extends ChangeNotifier {
     final previous = _focus;
     if (previous != null && previous.lat == lat && previous.lon == lon) return;
     _focus = (lat: lat, lon: lon);
-    _rain.clear();
     final vp = viewport.value;
     if (vp != null) {
       viewport.value = RadarViewport.around(
@@ -184,9 +317,9 @@ class WeatherRadarState extends ChangeNotifier {
         vp.size,
         resolution: vp.resolution,
       );
-      _scheduleCoverage(immediate: true);
+      _scheduleBlock(immediate: true);
     }
-    unawaited(_recomputeRain());
+    unawaited(_resampleRain());
     _notify();
   }
 
@@ -200,7 +333,7 @@ class WeatherRadarState extends ChangeNotifier {
       vp.size,
       resolution: math.min(vp.resolution, 1200),
     );
-    _scheduleCoverage();
+    _scheduleBlock();
   }
 
   // Viewport ------------------------------------------------------------------
@@ -211,10 +344,10 @@ class WeatherRadarState extends ChangeNotifier {
     if (vp == null) {
       final f = _focus ?? (lat: 51.0, lon: 10.4);
       viewport.value = RadarViewport.around(f.lat, f.lon, size);
-      _scheduleCoverage(immediate: true);
+      _scheduleBlock(immediate: true);
     } else if (vp.size != size) {
       viewport.value = vp.copyWith(size: size).clamped();
-      _scheduleCoverage();
+      _scheduleBlock();
     }
   }
 
@@ -222,75 +355,51 @@ class WeatherRadarState extends ChangeNotifier {
     final vp = viewport.value;
     if (vp == null) return;
     viewport.value = vp.panBy(delta);
-    _scheduleCoverage();
+    _scheduleBlock();
   }
 
   void zoomAt(double factor, Offset focal) {
     final vp = viewport.value;
     if (vp == null) return;
     viewport.value = vp.zoomAt(factor, focal);
-    _scheduleCoverage();
+    _scheduleBlock();
   }
 
-  void _scheduleCoverage({bool immediate = false}) {
+  void _scheduleBlock({bool immediate = false}) {
     _settleTimer?.cancel();
     if (immediate) {
-      _updateCoverage();
+      _updateBlock();
     } else {
-      _settleTimer = Timer(_viewportSettle, _updateCoverage);
+      _settleTimer = Timer(_viewportSettle, _updateBlock);
     }
   }
 
-  void _updateCoverage() {
+  void _updateBlock() {
     final vp = viewport.value;
     if (vp == null || _disposed) return;
-    final coverage = _coverage;
-    final res = _coverageResolution;
-    final ratio = res == null ? 0 : vp.resolution / res;
-    final fits =
-        coverage != null &&
-        _contains(coverage, vp.bounds) &&
-        ratio > .6 &&
-        ratio < 1.7;
-    if (fits) return;
-
-    final b = vp.bounds;
-    final next = Rect.fromLTRB(
-      b.left - b.width / 2,
-      b.top - b.height / 2,
-      b.right + b.width / 2,
-      b.bottom + b.height / 2,
-    );
-    _coverage = next;
-    _coverageResolution = vp.resolution;
+    final block = RadarBlock.forViewport(vp, current: _block);
+    if (block == _block) return;
+    _block = block;
+    _blockGeneration++;
     _generation++;
-    for (final entry in _frames.entries) {
-      _staleFrames.remove(entry.key)?.dispose();
-      _staleFrames[entry.key] = entry.value;
+    final current = _decoded.remove(_index) ?? frameAt(_index);
+    if (current != null && current != _previousFrame) {
+      _previousFrame?.dispose();
+      _previousFrame = current;
     }
-    _frames.clear();
-    _pending.clear();
+    for (final img in _decoded.values) {
+      if (img != _previousFrame) img.dispose();
+    }
+    _decoded.clear();
+    _decoding.clear();
+    _available.clear();
+    _missing.clear();
+    _inFlight.clear();
     _rain.clear();
-    final gen = _generation;
-    unawaited(_loadBase(gen));
-    unawaited(_loadExtras(gen));
-    if (_timeline != null) unawaited(_loadFrames(gen));
-  }
-
-  static bool _contains(Rect outer, Rect inner) =>
-      inner.left >= outer.left &&
-      inner.right <= outer.right &&
-      inner.top >= outer.top &&
-      inner.bottom <= outer.bottom;
-
-  (int, int) _pixels(Rect bbox, int cap) {
-    final res = _coverageResolution ?? 1000;
-    var w = bbox.width / res;
-    var h = bbox.height / res;
-    final scale = math.min(1.0, cap / math.max(w, h));
-    w *= scale;
-    h *= scale;
-    return (math.max(1, w.round()), math.max(1, h.round()));
+    unawaited(_loadBase(_blockGeneration));
+    unawaited(_loadExtras(_blockGeneration));
+    if (_timeline != null) unawaited(_loadFrames(_generation));
+    _notify();
   }
 
   // Loading -------------------------------------------------------------------
@@ -315,20 +424,17 @@ class WeatherRadarState extends ChangeNotifier {
       _index = previousTime == null
           ? timeline.nowIndex
           : _closestIndex(previousTime);
-      for (final img in [..._frames.values, ..._staleFrames.values]) {
+      for (final img in _decoded.values) {
         img.dispose();
       }
-      _frames.clear();
-      _staleFrames.clear();
+      _decoded.clear();
+      _decoding.clear();
+      _available.clear();
+      _missing.clear();
       _rain.clear();
-      _pending.clear();
       _generation++;
-      final gen = _generation;
-      if (_coverage != null) {
-        unawaited(_loadFrames(gen));
-        unawaited(_loadExtras(gen));
-      }
-    } on WeatherException catch (e) {
+      if (_block != null) unawaited(_loadFrames(_generation));
+    } catch (e) {
       debugLog('[WeatherRadarState] timeline failed: $e');
       _failed = _timeline == null;
     } finally {
@@ -341,52 +447,98 @@ class WeatherRadarState extends ChangeNotifier {
     final times = _timeline!.times;
     var best = 0;
     for (var i = 0; i < times.length; i++) {
-      if ((times[i].difference(t)).abs() < (times[best].difference(t)).abs()) {
+      if (times[i].difference(t).abs() < times[best].difference(t).abs()) {
         best = i;
       }
     }
     return best;
   }
 
-  Future<RadarImage?> _download(Uri uri, Rect bbox, int gen) async {
+  /// Observed frames never change; nowcast frames belong to one DWD run.
+  String _frameKey(RadarBlock block, int i) {
+    final t = _timeline!;
+    final time = t.times[i];
+    final run = t.isForecast(time)
+        ? '@${t.latestObserved.toIso8601String()}'
+        : '';
+    return 'radar:${block.key}:${time.toIso8601String()}$run';
+  }
+
+  static bool _isPng(Uint8List b) =>
+      b.length > 8 &&
+      b[0] == 0x89 &&
+      b[1] == 0x50 &&
+      b[2] == 0x4E &&
+      b[3] == 0x47;
+
+  /// Null when nothing usable arrived. A WMS error document (HTTP 200 with
+  /// XML, e.g. for a nowcast step that is not computed yet) is never cached
+  /// and not retried.
+  Future<Uint8List?> _bytes(String key, Uri uri, {bool cache = true}) async {
+    if (cache) {
+      final hit = await _store.read(key);
+      if (hit != null && _isPng(hit)) return hit;
+    }
+    for (var attempt = 0; attempt <= _retries; attempt++) {
+      try {
+        final bytes = await _fetch(uri);
+        if (!_isPng(bytes)) {
+          debugLog(
+            '[WeatherRadarState] $key: no image, ${utf8.decode(bytes.take(200).toList(), allowMalformed: true)}',
+          );
+          return null;
+        }
+        if (cache) await _store.write(key, bytes);
+        return bytes;
+      } catch (e) {
+        debugLog('[WeatherRadarState] $key attempt ${attempt + 1} failed: $e');
+      }
+    }
+    return null;
+  }
+
+  Future<RadarImage?> _decode(Uint8List bytes, Rect bbox) async {
     try {
-      final bytes = await _fetch(uri);
-      if (gen != _generation || _disposed) return null;
       final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
       codec.dispose();
-      if (gen != _generation || _disposed) {
-        frame.image.dispose();
-        return null;
-      }
       return RadarImage(frame.image, bbox);
     } catch (e) {
-      debugLog('[WeatherRadarState] $uri failed: $e');
+      debugLog('[WeatherRadarState] decode failed: $e');
       return null;
     }
   }
 
   Future<void> _loadBase(int gen) async {
-    final bbox = _coverage!;
-    final (w, h) = _pixels(bbox, _maxBasePixels);
+    final block = _block;
+    if (block == null) return;
+    final bbox = block.bbox;
+    Future<RadarImage?> load(String name, Uri uri) async {
+      final bytes = await _bytes('base:$name:${block.key}', uri);
+      if (bytes == null || gen != _blockGeneration) return null;
+      return _decode(bytes, bbox);
+    }
+
     final results = await Future.wait([
-      _download(
+      load(
+        'satellite',
         DwdRadarClient.mapUrl(
           layers: const [DwdRadarClient.satelliteLayer],
           bbox: bbox,
-          width: w,
-          height: h,
+          width: _basePixels,
+          height: _basePixels,
         ),
-        bbox,
-        gen,
       ),
-      _download(
-        DwdRadarClient.overlayUrl(bbox: bbox, width: w, height: h),
-        bbox,
-        gen,
+      load(
+        'borders',
+        DwdRadarClient.overlayUrl(
+          bbox: bbox,
+          width: _basePixels,
+          height: _basePixels,
+        ),
       ),
     ]);
-    if (gen != _generation) {
+    if (gen != _blockGeneration || _disposed) {
       for (final r in results) {
         r?.dispose();
       }
@@ -403,38 +555,33 @@ class WeatherRadarState extends ChangeNotifier {
     _notify();
   }
 
+  /// Lightning and warnings change constantly, so they skip the cache.
   Future<void> _loadExtras(int gen) async {
-    final bbox = _coverage;
-    if (bbox == null) return;
-    final (w, h) = _pixels(bbox, _maxRadarPixels);
-    if (_showLightning) {
-      final img = await _download(
-        DwdRadarClient.mapUrl(
-          layers: const [DwdRadarClient.lightningLayer],
-          bbox: bbox,
-          width: w,
-          height: h,
-        ),
-        bbox,
-        gen,
+    final block = _block;
+    if (block == null) return;
+    final bbox = block.bbox;
+    Future<RadarImage?> load(String layer) async {
+      final uri = DwdRadarClient.mapUrl(
+        layers: [layer],
+        bbox: bbox,
+        width: RadarBlock.pixels,
+        height: RadarBlock.pixels,
       );
-      if (img != null) {
+      final bytes = await _bytes(layer, uri, cache: false);
+      if (bytes == null || gen != _blockGeneration) return null;
+      return _decode(bytes, bbox);
+    }
+
+    if (_showLightning) {
+      final img = await load(DwdRadarClient.lightningLayer);
+      if (img != null && gen == _blockGeneration) {
         _lightning?.dispose();
         _lightning = img;
       }
     }
     if (_showWarnings) {
-      final img = await _download(
-        DwdRadarClient.mapUrl(
-          layers: const [DwdRadarClient.warningsLayer],
-          bbox: bbox,
-          width: w,
-          height: h,
-        ),
-        bbox,
-        gen,
-      );
-      if (img != null) {
+      final img = await load(DwdRadarClient.warningsLayer);
+      if (img != null && gen == _blockGeneration) {
         _warnings?.dispose();
         _warnings = img;
       }
@@ -442,12 +589,12 @@ class WeatherRadarState extends ChangeNotifier {
     _notify();
   }
 
-  /// Loads the current frame first, then quarter-hours, then the rest, each
-  /// nearest to now first, so the slider is usable long before all arrive.
+  /// Current frame first, then quarter-hours, then the rest, each nearest to
+  /// now first, so the slider is usable long before everything has arrived.
   Future<void> _loadFrames(int gen) async {
     final timeline = _timeline;
-    final bbox = _coverage;
-    if (timeline == null || bbox == null) return;
+    final block = _block;
+    if (timeline == null || block == null) return;
     final now = timeline.nowIndex;
     int rank(int i) => i == _index
         ? 0
@@ -457,36 +604,92 @@ class WeatherRadarState extends ChangeNotifier {
         final r = rank(a).compareTo(rank(b));
         return r != 0 ? r : (a - now).abs().compareTo((b - now).abs());
       });
+    final wanted = wantsAllFrames ? order : order.where((i) => i == _index);
     final queue = Queue.of(
-      order.where((i) => !_frames.containsKey(i) && !_pending.contains(i)),
+      wanted.where(
+        (i) =>
+            !_available.contains(i) &&
+            !_missing.contains(i) &&
+            !_inFlight.contains(i),
+      ),
     );
-    final (w, h) = _pixels(bbox, _maxRadarPixels);
 
     Future<void> worker() async {
       while (queue.isNotEmpty && gen == _generation && !_disposed) {
         final i = queue.removeFirst();
-        _pending.add(i);
-        final img = await _download(
-          DwdRadarClient.mapUrl(
-            layers: const [DwdRadarClient.radarLayer],
-            bbox: bbox,
-            width: w,
-            height: h,
-            time: timeline.times[i],
-          ),
-          bbox,
-          gen,
+        if (!_inFlight.add(i)) continue;
+        final uri = DwdRadarClient.mapUrl(
+          layers: const [DwdRadarClient.radarLayer],
+          bbox: block.bbox,
+          width: RadarBlock.pixels,
+          height: RadarBlock.pixels,
+          time: timeline.times[i],
         );
-        _pending.remove(i);
-        if (img == null || gen != _generation) continue;
-        _frames[i] = img;
-        _staleFrames.remove(i)?.dispose();
+        final bytes = await _bytes(_frameKey(block, i), uri);
+        _inFlight.remove(i);
+        if (gen != _generation) continue;
+        final img = bytes == null ? null : await _decode(bytes, block.bbox);
+        if (img == null) {
+          if (gen == _generation) {
+            _missing.add(i);
+            _notify();
+          }
+          continue;
+        }
+        if (gen != _generation || _disposed) {
+          img.dispose();
+          continue;
+        }
+        _available.add(i);
         _rain[i] = await _sampleRain(img);
+        if (_inWindow(i) && !_decoded.containsKey(i)) {
+          _decoded[i] = img;
+          if (i == _index) _dropPrevious();
+        } else {
+          img.dispose();
+        }
         _notify();
       }
     }
 
     await Future.wait(List.generate(_concurrency, (_) => worker()));
+  }
+
+  void _dropPrevious() {
+    final prev = _previousFrame;
+    if (prev != null && !_decoded.containsValue(prev)) prev.dispose();
+    _previousFrame = null;
+  }
+
+  bool _inWindow(int i) =>
+      i >= _index - _decodeBehind && i <= _index + _decodeAhead;
+
+  /// Keeps decoded only the frames around [_index], decoding missing ones
+  /// from the compressed store.
+  void _syncWindow() {
+    final block = _block;
+    if (block == null || _timeline == null) return;
+    for (final i in _decoded.keys.toList()) {
+      if (!_inWindow(i)) _decoded.remove(i)!.dispose();
+    }
+    final gen = _generation;
+    for (var i = _index - _decodeBehind; i <= _index + _decodeAhead; i++) {
+      if (i < 0 || i >= frameCount || !_available.contains(i)) continue;
+      if (_decoded.containsKey(i) || !_decoding.add(i)) continue;
+      unawaited(() async {
+        final bytes = await _store.read(_frameKey(block, i));
+        final img = bytes == null ? null : await _decode(bytes, block.bbox);
+        _decoding.remove(i);
+        if (img == null) return;
+        if (gen != _generation || !_inWindow(i) || _decoded.containsKey(i)) {
+          img.dispose();
+          return;
+        }
+        _decoded[i] = img;
+        if (i == _index) _dropPrevious();
+        _notify();
+      }());
+    }
   }
 
   Future<double?> _sampleRain(RadarImage img) async {
@@ -496,23 +699,18 @@ class WeatherRadarState extends ChangeNotifier {
     final y = Mercator.y(f.lat);
     final b = img.bbox;
     if (x < b.left || x > b.right || y < b.top || y > b.bottom) return null;
-    final px = ((x - b.left) / b.width * img.image.width).floor().clamp(
-      0,
-      img.image.width - 1,
-    );
-    final py = ((b.bottom - y) / b.height * img.image.height).floor().clamp(
-      0,
-      img.image.height - 1,
-    );
+    final w = img.image.width;
+    final h = img.image.height;
+    final px = ((x - b.left) / b.width * w).floor().clamp(0, w - 1);
+    final py = ((b.bottom - y) / b.height * h).floor().clamp(0, h - 1);
     final data = await img.image.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (data == null) return null;
     double? best;
     // A 3×3 neighbourhood so a single noisy pixel does not decide.
     for (var dy = -1; dy <= 1; dy++) {
       for (var dx = -1; dx <= 1; dx++) {
-        final sx = (px + dx).clamp(0, img.image.width - 1);
-        final sy = (py + dy).clamp(0, img.image.height - 1);
-        final o = (sy * img.image.width + sx) * 4;
+        final o =
+            ((py + dy).clamp(0, h - 1) * w + (px + dx).clamp(0, w - 1)) * 4;
         final v = RadarPalette.intensity(
           data.getUint8(o),
           data.getUint8(o + 1),
@@ -525,12 +723,18 @@ class WeatherRadarState extends ChangeNotifier {
     return best ?? 0;
   }
 
-  Future<void> _recomputeRain() async {
+  Future<void> _resampleRain() async {
+    final block = _block;
+    if (block == null || _timeline == null) return;
+    _rain.clear();
     final gen = _generation;
-    for (final entry in _frames.entries.toList()) {
-      final value = await _sampleRain(entry.value);
-      if (gen != _generation) return;
-      _rain[entry.key] = value;
+    for (final i in _available.toList()) {
+      final bytes = await _store.read(_frameKey(block, i));
+      if (bytes == null || gen != _generation) continue;
+      final img = await _decode(bytes, block.bbox);
+      if (img == null) continue;
+      _rain[i] = await _sampleRain(img);
+      img.dispose();
     }
     _notify();
   }
@@ -541,6 +745,10 @@ class WeatherRadarState extends ChangeNotifier {
     final count = frameCount;
     if (count == 0) return;
     _index = index.clamp(0, count - 1);
+    _syncWindow();
+    if (!wantsAllFrames && !_available.contains(_index)) {
+      unawaited(_loadFrames(_generation));
+    }
     _notify();
   }
 
@@ -579,22 +787,19 @@ class WeatherRadarState extends ChangeNotifier {
   void _tick() {
     final count = frameCount;
     if (count == 0) return;
-    if (_index >= count - 1) {
+    int? next;
+    for (var i = _index + 1; i < count; i++) {
+      if (_available.contains(i)) {
+        next = i;
+        break;
+      }
+    }
+    if (next == null) {
       if (_endHold++ < _endHoldTicks) return;
       _endHold = 0;
-      _index = _nextLoaded(-1) ?? 0;
-    } else {
-      _index = _nextLoaded(_index) ?? _index;
-      if (_nextLoaded(_index) == null) _index = count - 1;
+      next = _available.isEmpty ? 0 : _available.reduce(math.min);
     }
-    _notify();
-  }
-
-  int? _nextLoaded(int from) {
-    for (var i = from + 1; i < frameCount; i++) {
-      if (frameAt(i) != null) return i;
-    }
-    return null;
+    seek(next);
   }
 
   void _notify() {

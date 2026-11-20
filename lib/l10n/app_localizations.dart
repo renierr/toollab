@@ -30453,6 +30453,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Radar © Deutscher Wetterdienst'**
   String get weatherRadarAttribution;
+
+  /// No description provided for @weatherRadarClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide rain radar'**
+  String get weatherRadarClose;
 }
 
 class _AppLocalizationsDelegate

@@ -6452,5 +6452,6 @@
   "weatherRadarCenter": "Auf Ort zentrieren",
   "weatherRadarZoomIn": "Vergrößern",
   "weatherRadarZoomOut": "Verkleinern",
-  "weatherRadarAttribution": "Radar © Deutscher Wetterdienst"
+  "weatherRadarAttribution": "Radar © Deutscher Wetterdienst",
+  "weatherRadarClose": "Regenradar ausblenden"
 }

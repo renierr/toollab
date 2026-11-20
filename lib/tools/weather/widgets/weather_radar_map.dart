@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../api/radar_cities.dart';
 import '../models/radar_viewport.dart';
 import '../weather_radar_state.dart';
 import '../weather_settings.dart';
@@ -126,7 +127,7 @@ class _RadarPainter extends CustomPainter {
       Paint()..color = mode == RadarBaseMap.light ? _light : _dark,
     );
     if (vp == null) return;
-    final image = Paint()..filterQuality = FilterQuality.medium;
+    final image = Paint()..filterQuality = FilterQuality.high;
 
     void draw(RadarImage? img, {double opacity = 1}) {
       if (img == null) return;
@@ -156,7 +157,65 @@ class _RadarPainter extends CustomPainter {
     draw(radar.warnings, opacity: .45);
     draw(radar.frameAt(radar.index), opacity: .88);
     draw(radar.lightning);
+    final placed = <Rect>[
+      for (final pin in pins)
+        Rect.fromCircle(
+          center: vp.toScreenLatLon(pin.lat, pin.lon),
+          radius: 14,
+        ),
+    ];
+    _cities(canvas, size, vp, mode == RadarBaseMap.light, placed);
     _pins(canvas, vp, mode == RadarBaseMap.light);
+  }
+
+  /// Subtle place names for orientation; bigger cities first, and labels
+  /// that would collide with a pin or another label are skipped.
+  void _cities(
+    Canvas canvas,
+    Size size,
+    RadarViewport vp,
+    bool light,
+    List<Rect> placed,
+  ) {
+    final maxTier = vp.resolution > 2500 ? 1 : (vp.resolution > 1100 ? 2 : 3);
+    final ink = light ? const Color(0xFF3C4450) : const Color(0xFFE4E8EE);
+    final halo = light
+        ? Colors.white.withValues(alpha: .8)
+        : Colors.black.withValues(alpha: .7);
+    final dot = Paint()..color = ink.withValues(alpha: .55);
+    for (final city in radarCities) {
+      if (city.tier > maxTier) continue;
+      final p = vp.toScreenLatLon(city.lat, city.lon);
+      if (p.dx < -40 ||
+          p.dy < -20 ||
+          p.dx > size.width + 40 ||
+          p.dy > size.height + 20) {
+        continue;
+      }
+      final tp = TextPainter(
+        text: TextSpan(
+          text: city.name,
+          style: labelStyle.copyWith(
+            fontSize: city.tier == 1 ? 12 : 11,
+            fontWeight: city.tier == 1 ? FontWeight.w600 : FontWeight.w500,
+            color: ink.withValues(alpha: city.tier == 1 ? .85 : .7),
+            shadows: [Shadow(color: halo, blurRadius: 3)],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      final rect = Rect.fromLTWH(
+        p.dx + 5,
+        p.dy - tp.height / 2,
+        tp.width,
+        tp.height,
+      ).inflate(3);
+      final dotRect = Rect.fromCircle(center: p, radius: 3);
+      if (placed.any((r) => r.overlaps(rect) || r.overlaps(dotRect))) continue;
+      placed.add(rect);
+      canvas.drawCircle(p, city.tier == 1 ? 2.6 : 2, dot);
+      tp.paint(canvas, Offset(p.dx + 5, p.dy - tp.height / 2));
+    }
   }
 
   void _pins(Canvas canvas, RadarViewport vp, bool light) {

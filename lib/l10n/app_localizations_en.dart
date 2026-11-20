@@ -17289,4 +17289,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weatherRadarAttribution => 'Radar © Deutscher Wetterdienst';
+
+  @override
+  String get weatherRadarClose => 'Hide rain radar';
 }

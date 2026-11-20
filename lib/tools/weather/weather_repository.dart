@@ -30,27 +30,39 @@ class WeatherRepository {
   static const Duration observationMaxAge = Duration(minutes: 10);
   static const Duration overviewMaxAge = Duration(minutes: 15);
   static const int _candidates = 3;
+  static const int _overviewFallbacks = 6;
 
   final WeatherDbHelper _db;
   final Future<Uint8List> Function(Uri uri, {Map<String, String> headers})
   _fetch;
   final DateTime Function() _clock;
 
+  /// [cacheOnly] answers from the tool database alone, whatever its age, so
+  /// the screen can show the last known weather while the network loads.
   Future<WeatherSnapshot> load(
     WeatherLocation location,
     StationCatalog catalog, {
     bool force = false,
+    bool cacheOnly = false,
   }) async {
+    final mode = cacheOnly
+        ? _Mode.cacheOnly
+        : (force ? _Mode.force : _Mode.normal);
     final results = await Future.wait([
-      _loadForecast(location, catalog, force),
-      _loadObservations(location, catalog, force),
+      _loadForecast(location, catalog, mode),
+      _loadObservations(location, catalog, mode),
     ]);
     final forecast = results[0] as _Loaded<MosmixForecast>?;
     final observations = results[1] as _Loaded<ObservationSeries>?;
     final forecastStation = forecast?.station;
     final overview = forecastStation == null
         ? null
-        : await _loadOverview(forecastStation.station.id, force);
+        : await _loadOverview(
+            location,
+            forecastStation.station.id,
+            catalog,
+            mode,
+          );
 
     final errors = [
       forecast?.error,
@@ -59,7 +71,7 @@ class WeatherRepository {
     ].nonNulls;
     return WeatherSnapshot(
       location: location,
-      fetchedAt: _clock(),
+      fetchedAt: cacheOnly ? (forecast?.time ?? _clock()) : _clock(),
       forecastStation: forecast?.station,
       observationStation: observations?.station,
       forecast: forecast?.value,
@@ -100,7 +112,7 @@ class WeatherRepository {
   Future<_Loaded<MosmixForecast>?> _loadForecast(
     WeatherLocation location,
     StationCatalog catalog,
-    bool force,
+    _Mode mode,
   ) async {
     WeatherError? lastError;
     for (final match in _stations(
@@ -114,11 +126,17 @@ class WeatherRepository {
         'mosmix:$id',
         MosmixClient.url(id),
         forecastMaxAge,
-        force,
+        mode,
         (bytes) => MosmixClient.parseKmz(bytes, id),
       );
       if (loaded.value != null) {
-        return _Loaded(match, loaded.value, loaded.stale, loaded.error);
+        return _Loaded(
+          match,
+          loaded.value,
+          loaded.stale,
+          loaded.error,
+          loaded.time,
+        );
       }
       lastError = loaded.error;
     }
@@ -128,7 +146,7 @@ class WeatherRepository {
   Future<_Loaded<ObservationSeries>?> _loadObservations(
     WeatherLocation location,
     StationCatalog catalog,
-    bool force,
+    _Mode mode,
   ) async {
     for (final match in _stations(
       location,
@@ -141,7 +159,7 @@ class WeatherRepository {
         'obs:$id',
         ObservationClient.url(id),
         observationMaxAge,
-        force,
+        mode,
         (bytes) => ObservationClient.parseCsv(
           utf8.decode(bytes, allowMalformed: true),
           id,
@@ -158,16 +176,37 @@ class WeatherRepository {
     return null;
   }
 
+  /// The WarnWetter backend knows only part of the MOSMIX stations, so the
+  /// nearest others are asked along in the same request as fallbacks.
   Future<_Loaded<StationOverview>> _loadOverview(
+    WeatherLocation location,
     String stationId,
-    bool force,
+    StationCatalog catalog,
+    _Mode mode,
   ) async {
+    final ids = <String>{
+      stationId,
+      for (final m in catalog.nearest(
+        location.latitude,
+        location.longitude,
+        limit: _overviewFallbacks,
+        maxDistanceKm: 60,
+      ))
+        m.station.id,
+    }.toList();
     final loaded = await _cached(
-      'overview:$stationId',
-      WarnwetterClient.url([stationId]),
+      'overview:${ids.join(',')}',
+      WarnwetterClient.url(ids),
       overviewMaxAge,
-      force,
-      (bytes) => WarnwetterClient.parse(utf8.decode(bytes))[stationId],
+      mode,
+      (bytes) {
+        final stations = WarnwetterClient.parse(utf8.decode(bytes));
+        for (final id in ids) {
+          final hit = stations[id];
+          if (hit != null) return hit;
+        }
+        return null;
+      },
       headers: const {'Accept': 'application/json'},
     );
     return _Loaded(null, loaded.value, loaded.stale, loaded.error);
@@ -177,7 +216,7 @@ class WeatherRepository {
     String key,
     Uri uri,
     Duration maxAge,
-    bool force,
+    _Mode mode,
     T? Function(Uint8List bytes) parse, {
     Map<String, String> headers = const {},
   }) async {
@@ -193,37 +232,57 @@ class WeatherRepository {
       }
     }
 
-    if (!force && cached != null && cached.isFresh(maxAge, now)) {
+    if (mode == _Mode.cacheOnly) {
       final value = fromCache();
-      if (value != null) return _CacheResult(value, false, null);
+      return _CacheResult(
+        value,
+        false,
+        value == null ? WeatherError.notFound : null,
+        cached?.fetchedAt,
+      );
+    }
+    if (mode == _Mode.normal && cached != null && cached.isFresh(maxAge, now)) {
+      final value = fromCache();
+      if (value != null) {
+        return _CacheResult(value, false, null, cached.fetchedAt);
+      }
     }
     try {
       final bytes = await _fetch(uri, headers: headers);
       final value = parse(bytes);
       if (value == null) throw const WeatherException(WeatherError.invalidData);
       await _db.putCache(key, bytes, now);
-      return _CacheResult(value, false, null);
+      return _CacheResult(value, false, null, now);
     } on WeatherException catch (e) {
       debugLog('[WeatherRepository] $key failed: $e');
+      // A station that is gone should hand over to the next one, not live on
+      // from the cache.
+      if (e.error == WeatherError.notFound) {
+        return _CacheResult(null, false, e.error, null);
+      }
       final value = fromCache();
-      return _CacheResult(value, value != null, e.error);
+      return _CacheResult(value, value != null, e.error, cached?.fetchedAt);
     }
   }
 }
 
+enum _Mode { normal, force, cacheOnly }
+
 class _CacheResult<T> {
-  const _CacheResult(this.value, this.stale, this.error);
+  const _CacheResult(this.value, this.stale, this.error, this.time);
 
   final T? value;
   final bool stale;
   final WeatherError? error;
+  final DateTime? time;
 }
 
 class _Loaded<T> {
-  const _Loaded(this.station, this.value, this.stale, this.error);
+  const _Loaded(this.station, this.value, this.stale, this.error, [this.time]);
 
   final StationMatch? station;
   final T? value;
   final bool stale;
   final WeatherError? error;
+  final DateTime? time;
 }

@@ -84,6 +84,35 @@ void main() {
       expect(snapshot.isStale, isFalse);
     });
 
+    test('falls back to a nearby station the warning service knows', () async {
+      final net = _FakeNetwork();
+      final repo = WeatherRepository(fetch: net.fetch, clock: () => now);
+      final pinned = eschborn.withStations(forecast: 'K2561');
+      final snapshot = await repo.load(pinned, catalog, force: true);
+      expect(snapshot.forecastStation!.station.id, 'K2561');
+      expect(snapshot.overview, isNotNull);
+      expect(net.requests.last.queryParameters['stationIds'], contains('L841'));
+    });
+
+    test('cache-only answers from the database even when outdated', () async {
+      final net = _FakeNetwork();
+      await WeatherRepository(
+        fetch: net.fetch,
+        clock: () => now,
+      ).load(eschborn, catalog, force: true);
+      net
+        ..requests.clear()
+        ..offline = true;
+      final later = WeatherRepository(
+        fetch: net.fetch,
+        clock: () => now.add(const Duration(days: 1)),
+      );
+      final snapshot = await later.load(eschborn, catalog, cacheOnly: true);
+      expect(net.requests, isEmpty);
+      expect(snapshot.forecast, isNotNull);
+      expect(snapshot.fetchedAt.isAtSameMomentAs(now), isTrue);
+    });
+
     test('serves fresh cache without network', () async {
       final net = _FakeNetwork();
       final repo = WeatherRepository(fetch: net.fetch, clock: () => now);

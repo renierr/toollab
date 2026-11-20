@@ -17421,4 +17421,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get weatherRadarAttribution => 'Radar © Deutscher Wetterdienst';
+
+  @override
+  String get weatherRadarClose => 'Regenradar ausblenden';
 }

@@ -82,24 +82,16 @@ class WeatherL10n {
       };
 }
 
-/// Locale- and 24h-aware time formatting for the weather widgets.
+/// Locale-aware date formatting; times always use the 24-hour clock.
 class WeatherTimeFormat {
   WeatherTimeFormat(BuildContext context)
-    : _locale = Localizations.localeOf(context).toLanguageTag(),
-      _use24h = MediaQuery.alwaysUse24HourFormatOf(context);
+    : _locale = Localizations.localeOf(context).toLanguageTag();
 
   final String _locale;
-  final bool _use24h;
 
-  String time(DateTime t) =>
-      (_use24h ? DateFormat.Hm(_locale) : DateFormat.jm(_locale)).format(
-        t.toLocal(),
-      );
+  String time(DateTime t) => DateFormat.Hm(_locale).format(t.toLocal());
 
-  String hour(DateTime t) =>
-      (_use24h ? DateFormat.H(_locale) : DateFormat.j(_locale)).format(
-        t.toLocal(),
-      );
+  String hour(DateTime t) => DateFormat.H(_locale).format(t.toLocal());
 
   String weekdayShort(DateTime t) => DateFormat.E(_locale).format(t);
 

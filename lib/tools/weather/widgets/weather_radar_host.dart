@@ -11,7 +11,10 @@ import 'weather_radar_map.dart';
 
 /// Keeps the radar loading while visible and in sync with place and settings.
 class WeatherRadarHost extends StatefulWidget {
-  const WeatherRadarHost({super.key, required this.builder});
+  const WeatherRadarHost({super.key, required this.builder, this.full = true});
+
+  /// False for the preview, which needs only the current frame.
+  final bool full;
 
   final Widget Function(
     BuildContext context,
@@ -31,8 +34,9 @@ class _WeatherRadarHostState extends State<WeatherRadarHost>
   @override
   void initState() {
     super.initState();
-    final radar = context.read<WeatherRadarState>()..attach();
-    onDispose(radar.detach);
+    final full = widget.full;
+    final radar = context.read<WeatherRadarState>()..attach(full: full);
+    onDispose(() => radar.detach(full: full));
   }
 
   @override

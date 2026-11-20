@@ -28,6 +28,7 @@ class WeatherHttp {
   static Future<Uint8List> getBytes(
     Uri uri, {
     Map<String, String> headers = const {},
+    Duration timeout = _timeout,
   }) async {
     final abort = Completer<void>();
     final request = http.AbortableRequest(
@@ -36,7 +37,7 @@ class WeatherHttp {
       abortTrigger: abort.future,
     )..headers.addAll({'User-Agent': userAgent, ...headers});
     try {
-      return await _send(request).timeout(_timeout);
+      return await _send(request).timeout(timeout);
     } on TimeoutException {
       debugLog('[WeatherHttp] $uri timed out');
       throw const WeatherException(WeatherError.unreachable);

@@ -11,10 +11,17 @@ import 'weather_radar_timeline.dart';
 
 /// Interactive radar: map, map buttons, legend and the time slider card.
 class WeatherRadarView extends StatelessWidget {
-  const WeatherRadarView({super.key, this.showLayerButton = true});
+  const WeatherRadarView({
+    super.key,
+    this.showLayerButton = true,
+    this.onClose,
+  });
 
   /// The full-screen page puts the layer button into its app bar instead.
   final bool showLayerButton;
+
+  /// Shows a close button, used by the desktop side panel.
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {

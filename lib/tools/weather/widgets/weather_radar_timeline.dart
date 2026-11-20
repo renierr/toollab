@@ -44,7 +44,7 @@ class WeatherRadarTimeline extends StatelessWidget {
       timeline.times,
       timeline.nowIndex,
     );
-    final loading = radar.loadedCount < radar.frameCount;
+    final loading = radar.isLoading;
     final accent = isForecast
         ? theme.colorScheme.tertiary
         : theme.colorScheme.primary;

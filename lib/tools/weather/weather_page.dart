@@ -66,7 +66,10 @@ class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
     return LayoutBuilder(
       builder: (context, constraints) {
         final split = constraints.canSplit && hasPlaces;
-        final radarInline = split && constraints.maxWidth >= _radarInlineWidth;
+        final canShowPanel = split && constraints.maxWidth >= _radarInlineWidth;
+        final radarInline = canShowPanel && state.settings.radarPanel;
+        void setPanel(bool open) =>
+            state.updateSettings(state.settings.copyWith(radarPanel: open));
         final Widget body;
         if (!state.isLoaded) {
           body = const Center(child: CircularProgressIndicator());
@@ -85,6 +88,7 @@ class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
                   key: ValueKey(selectedId),
                   locationId: selectedId!,
                   showRadarPreview: !radarInline,
+                  onOpenRadar: canShowPanel ? () => setPanel(true) : null,
                 ),
               ),
               if (radarInline) ...[
@@ -118,6 +122,15 @@ class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
                 tooltip: l10n.weatherPlaces,
                 icon: const Icon(Icons.format_list_bulleted),
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              ),
+            if (canShowPanel)
+              IconButton(
+                tooltip: radarInline
+                    ? l10n.weatherRadarClose
+                    : l10n.weatherRadarOpen,
+                isSelected: radarInline,
+                icon: const Icon(Icons.radar),
+                onPressed: () => setPanel(!radarInline),
               ),
             if (selectedId != null)
               IconButton(

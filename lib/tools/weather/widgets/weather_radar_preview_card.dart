@@ -11,14 +11,19 @@ import 'weather_radar_map.dart';
 import 'weather_section_card.dart';
 
 class WeatherRadarPreviewCard extends StatelessWidget {
-  const WeatherRadarPreviewCard({super.key});
+  const WeatherRadarPreviewCard({super.key, this.onOpen});
+
+  /// Replaces opening the full-screen page, e.g. with the desktop side panel.
+  final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    void open() => Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const WeatherRadarPage()));
+    void open() => onOpen != null
+        ? onOpen!()
+        : Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const WeatherRadarPage()),
+          );
     return WeatherSectionCard(
       title: l10n.weatherRadarTitle,
       icon: Icons.radar,
@@ -33,6 +38,7 @@ class WeatherRadarPreviewCard extends StatelessWidget {
         child: InkWell(
           onTap: open,
           child: WeatherRadarHost(
+            full: false,
             builder: (context, radar, pins) => Stack(
               children: [
                 Positioned.fill(
@@ -79,7 +85,7 @@ class _PreviewStatus extends StatelessWidget {
       RainOutlookKind.rainStops => l10n.weatherRadarRainStops(outlook!.minutes),
       RainOutlookKind.rainSoon => l10n.weatherRadarRainIn(outlook!.minutes),
       RainOutlookKind.dry => l10n.weatherRadarNoRain,
-      null => l10n.weatherRadarLoading(radar.loadedCount, radar.frameCount),
+      null => null,
     };
     return Align(
       alignment: Alignment.bottomLeft,

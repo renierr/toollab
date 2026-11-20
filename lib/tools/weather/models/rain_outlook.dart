@@ -8,7 +8,8 @@ class RainOutlook {
   final RainOutlookKind kind;
   final int minutes;
 
-  /// Null until the frames needed for an answer have arrived.
+  /// Null until the frames needed for an answer have arrived; NaN entries
+  /// (frames without an image) are skipped.
   static RainOutlook? from(
     List<double?> series,
     List<DateTime> times,
@@ -16,12 +17,17 @@ class RainOutlook {
   ) {
     if (series.isEmpty || nowIndex >= series.length) return null;
     final now = series[nowIndex];
-    if (now == null) return null;
+    if (now == null || now.isNaN) return null;
     int minutesTo(int i) => times[i].difference(times[nowIndex]).inMinutes;
     if (now >= threshold) {
-      for (var i = nowIndex + 1; i < series.length - 1; i++) {
+      final known = [
+        for (var i = nowIndex + 1; i < series.length; i++)
+          if (series[i] == null || !series[i]!.isNaN) i,
+      ];
+      for (var k = 0; k < known.length - 1; k++) {
+        final i = known[k];
         final a = series[i];
-        final b = series[i + 1];
+        final b = series[known[k + 1]];
         if (a == null || b == null) {
           return const RainOutlook(RainOutlookKind.rainingNow);
         }
@@ -34,6 +40,7 @@ class RainOutlook {
     for (var i = nowIndex + 1; i < series.length; i++) {
       final v = series[i];
       if (v == null) return null;
+      if (v.isNaN) continue;
       if (v >= threshold) {
         return RainOutlook(RainOutlookKind.rainSoon, minutesTo(i));
       }

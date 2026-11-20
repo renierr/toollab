@@ -8084,5 +8084,6 @@
   "weatherRadarCenter": "Center on place",
   "weatherRadarZoomIn": "Zoom in",
   "weatherRadarZoomOut": "Zoom out",
-  "weatherRadarAttribution": "Radar © Deutscher Wetterdienst"
+  "weatherRadarAttribution": "Radar © Deutscher Wetterdienst",
+  "weatherRadarClose": "Hide rain radar"
 }

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/tools/weather/api/dwd_radar.dart';
 import 'package:tool_lab/tools/weather/models/radar_viewport.dart';
 import 'package:tool_lab/tools/weather/models/rain_outlook.dart';
+import 'package:tool_lab/tools/weather/radar_frame_store.dart';
 import 'package:tool_lab/tools/weather/weather_radar_state.dart';
 
 const _fixtures = 'test/fixtures/weather';
@@ -67,6 +68,15 @@ void main() {
       expect(o.minutes, 10);
     });
 
+    test('frames without an image are skipped', () {
+      final o = RainOutlook.from([0, 0, double.nan, 0.5, 1, 1], times, 1)!;
+      expect(o.kind, RainOutlookKind.rainSoon);
+      expect(
+        RainOutlook.from([0, 0, 0, 0, 0, double.nan], times, 1)!.kind,
+        RainOutlookKind.dry,
+      );
+    });
+
     test('dry and unknown', () {
       expect(
         RainOutlook.from([0, 0, 0, 0, 0, 0], times, 1)!.kind,
@@ -119,10 +129,19 @@ void main() {
         return frame;
       }
 
-      final radar = WeatherRadarState(fetch: fetch)
-        ..focusOn(50.15, 8.56)
-        ..attach()
-        ..resize(const Size(400, 400));
+      var requests = 0;
+      final store = _MemoryStore();
+      final radar =
+          WeatherRadarState(
+              fetch: (uri) {
+                requests++;
+                return fetch(uri);
+              },
+              store: store,
+            )
+            ..focusOn(50.15, 8.56)
+            ..attach()
+            ..resize(const Size(400, 400));
       for (var i = 0; i < 1500 && radar.loadedCount < 49; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 20));
       }
@@ -131,7 +150,138 @@ void main() {
       expect(maxInFlight, lessThanOrEqualTo(8));
       expect(radar.rainSeries.every((v) => v != null), isTrue);
       expect(radar.index, radar.timeline!.nowIndex);
+
+      // Reopening the tool serves every frame from the session store.
+      radar
+        ..detach()
+        ..release();
+      final before = requests;
+      radar
+        ..focusOn(50.15, 8.56)
+        ..attach()
+        ..resize(const Size(400, 400));
+      for (var i = 0; i < 1500 && radar.loadedCount < 49; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      expect(radar.loadedCount, 49);
+      expect(requests - before, 1, reason: 'only the capabilities request');
       radar.dispose();
     },
   );
+
+  test('a frame the server cannot render does not block loading', () async {
+    final frame = File('$_fixtures/radar_frame.png').readAsBytesSync();
+    final last = RadarTimeline.parseCapabilities(
+      caps,
+    ).times.last.toIso8601String();
+    final radar =
+        WeatherRadarState(
+            store: _MemoryStore(),
+            fetch: (uri) async {
+              final q = uri.queryParameters;
+              if (q['request'] == 'GetCapabilities') {
+                return Uint8List.fromList(caps.codeUnits);
+              }
+              if (q['time'] == last) {
+                return Uint8List.fromList(
+                  '<ServiceExceptionReport>InvalidDimensionValue</ServiceExceptionReport>'
+                      .codeUnits,
+                );
+              }
+              return frame;
+            },
+          )
+          ..focusOn(50.15, 8.56)
+          ..attach()
+          ..resize(const Size(400, 400));
+    for (
+      var i = 0;
+      i < 1500 && (radar.timeline == null || radar.isLoading);
+      i++
+    ) {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+    expect(radar.isLoading, isFalse);
+    expect(radar.loadedCount, 48);
+    expect(radar.rainSeries.last!.isNaN, isTrue);
+    radar.dispose();
+  });
+
+  test(
+    'a preview loads only the current frame until the radar is enlarged',
+    () async {
+      final frame = File('$_fixtures/radar_frame.png').readAsBytesSync();
+      var frames = 0;
+      final radar =
+          WeatherRadarState(
+              store: _MemoryStore(),
+              fetch: (uri) async {
+                final q = uri.queryParameters;
+                if (q['request'] == 'GetCapabilities') {
+                  return Uint8List.fromList(caps.codeUnits);
+                }
+                if ((q['layers'] ?? '').contains('Niederschlagsradar')) {
+                  frames++;
+                }
+                return frame;
+              },
+            )
+            ..focusOn(50.15, 8.56)
+            ..attach(full: false)
+            ..resize(const Size(400, 240));
+      for (
+        var i = 0;
+        i < 500 && (radar.timeline == null || radar.isLoading);
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(frames, 1);
+      expect(radar.isLoaded(radar.timeline!.nowIndex), isTrue);
+
+      radar.attach();
+      for (var i = 0; i < 1500 && radar.isLoading; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      expect(radar.loadedCount, 49);
+      expect(frames, 49);
+      radar.dispose();
+    },
+  );
+
+  test('preview and full-screen views share one block', () {
+    final small = RadarViewport.around(50.15, 8.56, const Size(380, 240));
+    final large = RadarViewport.around(50.15, 8.56, const Size(380, 760));
+    expect(RadarBlock.forViewport(small), RadarBlock.forViewport(large));
+    final block = RadarBlock.forViewport(small);
+    final panned = small.panBy(const Offset(30, 10));
+    expect(RadarBlock.forViewport(panned, current: block), same(block));
+  });
+
+  test('blocks never request finer than the radar grid', () {
+    final close = RadarViewport.around(
+      50.15,
+      8.56,
+      const Size(380, 760),
+      resolution: 100,
+    );
+    expect(RadarBlock.forViewport(close).resolution, greaterThanOrEqualTo(600));
+  });
+}
+
+class _MemoryStore extends RadarFrameStore {
+  final Map<String, Uint8List> _data = {};
+
+  @override
+  Future<Uint8List?> read(String key) async => _data[key];
+
+  @override
+  Future<void> write(String key, Uint8List bytes) async => _data[key] = bytes;
+
+  @override
+  void dropMemory() {}
+
+  @override
+  Future<void> clear() async {}
 }
