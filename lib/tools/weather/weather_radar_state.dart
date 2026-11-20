@@ -551,7 +551,7 @@ class WeatherRadarState extends ChangeNotifier {
           bbox: bbox,
           width: _basePixels,
           height: _basePixels,
-          jpeg: true,
+          format: WmsFormat.jpeg,
         ),
       ),
       load(
@@ -597,19 +597,27 @@ class WeatherRadarState extends ChangeNotifier {
       return _decode(bytes, bbox);
     }
 
-    if (_showLightning) {
-      final img = await load(DwdRadarClient.lightningLayer);
-      if (img != null && gen == _blockGeneration) {
-        _lightning?.dispose();
-        _lightning = img;
+    final results = await Future.wait([
+      _showLightning
+          ? load(DwdRadarClient.lightningLayer)
+          : Future<RadarImage?>.value(),
+      _showWarnings
+          ? load(DwdRadarClient.warningsLayer)
+          : Future<RadarImage?>.value(),
+    ]);
+    if (gen != _blockGeneration || _disposed) {
+      for (final r in results) {
+        r?.dispose();
       }
+      return;
     }
-    if (_showWarnings) {
-      final img = await load(DwdRadarClient.warningsLayer);
-      if (img != null && gen == _blockGeneration) {
-        _warnings?.dispose();
-        _warnings = img;
-      }
+    if (results[0] != null) {
+      _lightning?.dispose();
+      _lightning = results[0];
+    }
+    if (results[1] != null) {
+      _warnings?.dispose();
+      _warnings = results[1];
     }
     _notify();
   }

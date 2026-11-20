@@ -100,6 +100,16 @@ class RadarTimeline {
   }
 }
 
+/// PNG8 keeps transparency and the exact legend colours at about half the
+/// size of full PNG; JPEG suits only the opaque satellite base.
+enum WmsFormat {
+  png8('image/png8'),
+  jpeg('image/jpeg');
+
+  const WmsFormat(this.mime);
+  final String mime;
+}
+
 class DwdRadarClient {
   DwdRadarClient._();
 
@@ -121,7 +131,7 @@ class DwdRadarClient {
     required int width,
     required int height,
     DateTime? time,
-    bool jpeg = false,
+    WmsFormat format = WmsFormat.png8,
   }) => Uri.https('maps.dwd.de', '/geoserver/dwd/wms', {
     'service': 'WMS',
     'version': '1.3.0',
@@ -137,8 +147,8 @@ class DwdRadarClient {
     ].map((v) => v.toStringAsFixed(0)).join(','),
     'width': '$width',
     'height': '$height',
-    'format': jpeg ? 'image/jpeg' : 'image/png',
-    'transparent': jpeg ? 'false' : 'true',
+    'format': format.mime,
+    'transparent': format == WmsFormat.jpeg ? 'false' : 'true',
     if (time != null) 'time': time.toUtc().toIso8601String(),
   });
 
