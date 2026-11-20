@@ -16625,10 +16625,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'For the snooze button on reminders and alarms';
 
   @override
-  String get todoAlarmSound => 'Alarm sound and vibration';
+  String get todoAlarmSound => 'Alarm tone';
 
   @override
-  String get todoAlarmSoundHint => 'Opens the system settings for Todo alarms';
+  String get todoAlarmSoundHint => 'Choose the tone in the system settings';
+
+  @override
+  String get todoAlarmPlaySound => 'Alarm sound';
+
+  @override
+  String get todoAlarmVibrate => 'Vibrate on alarm';
+
+  @override
+  String get todoAlarmRingHint =>
+      'Stops after one minute; the notification stays';
 
   @override
   String get todoRepeatReminders => 'Repeat reminders';

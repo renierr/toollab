@@ -22,4 +22,6 @@
     <string name="todo_action_snooze">%d Min.</string>
     <string name="todo_action_snooze_long">%d Min. schlummern</string>
     <string name="todo_channel_digest">Todo-Tagesübersicht</string>
+    <string name="todo_widget_confirm_title">Als erledigt markieren?</string>
+    <string name="todo_channel_alarms_rung">Todo-Alarme (abgelaufen)</string>
 </resources>

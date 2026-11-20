@@ -9,6 +9,7 @@ class TodoAlarmReceiver : BroadcastReceiver() {
         when (intent.action) {
             TodoAlarmScheduler.ACTION_FIRE -> TodoAlarmScheduler.fireDue(context)
             TodoAlarmScheduler.ACTION_RECHECK -> TodoAlarmScheduler.fireDue(context)
+            TodoAlarmScheduler.ACTION_SILENCE -> TodoActions.entryFrom(intent)?.let { TodoNotifications.silence(context, it) }
         }
     }
 }

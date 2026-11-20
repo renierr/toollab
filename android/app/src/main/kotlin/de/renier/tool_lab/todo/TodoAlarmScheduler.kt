@@ -4,6 +4,8 @@ import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 
 object TodoAlarmScheduler {
     private const val PREFS = "todo_native"
@@ -18,6 +20,10 @@ object TodoAlarmScheduler {
 
     const val ACTION_FIRE = "de.renier.tool_lab.todo.FIRE"
     const val ACTION_RECHECK = "de.renier.tool_lab.todo.RECHECK"
+    const val ACTION_SILENCE = "de.renier.tool_lab.todo.SILENCE"
+
+    /** How long an alarm rings before its notification is reposted silently. */
+    const val RING_MS = 60_000L
 
     private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -87,6 +93,30 @@ object TodoAlarmScheduler {
         if (next == null || next.at > now + RECHECK_INTERVAL_MS) {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, now + RECHECK_INTERVAL_MS, recheck)
         }
+    }
+
+    // The handler is the prompt path while the process lives; the alarm covers a killed process.
+    fun scheduleSilence(context: Context, entry: TodoAlarmEntry) {
+        val app = context.applicationContext
+        val at = System.currentTimeMillis() + RING_MS
+        val am = app.getSystemService(AlarmManager::class.java)
+        val silence = TodoIntents.broadcast(
+            app,
+            TodoIntents.notificationId(entry.taskId),
+            Intent(app, TodoAlarmReceiver::class.java)
+                .setAction(ACTION_SILENCE)
+                .putExtras(TodoActions.entryExtras(entry)),
+        )
+        try {
+            if (canScheduleExact(app)) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, silence)
+            } else {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, silence)
+            }
+        } catch (e: SecurityException) {
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, silence)
+        }
+        Handler(Looper.getMainLooper()).postDelayed({ TodoNotifications.silence(app, entry) }, RING_MS)
     }
 
     fun fireDue(context: Context) {

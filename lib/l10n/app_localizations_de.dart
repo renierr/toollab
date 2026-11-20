@@ -16754,11 +16754,20 @@ class AppLocalizationsDe extends AppLocalizations {
       'Für die Schlummern-Taste bei Erinnerungen und Alarmen';
 
   @override
-  String get todoAlarmSound => 'Alarmton und Vibration';
+  String get todoAlarmSound => 'Alarmton';
 
   @override
-  String get todoAlarmSoundHint =>
-      'Öffnet die Systemeinstellungen für Todo-Alarme';
+  String get todoAlarmSoundHint => 'Ton in den Systemeinstellungen wählen';
+
+  @override
+  String get todoAlarmPlaySound => 'Alarmton abspielen';
+
+  @override
+  String get todoAlarmVibrate => 'Bei Alarm vibrieren';
+
+  @override
+  String get todoAlarmRingHint =>
+      'Endet nach einer Minute; die Benachrichtigung bleibt';
 
   @override
   String get todoRepeatReminders => 'Erinnerungen wiederholen';

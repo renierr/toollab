@@ -12,53 +12,66 @@ import de.renier.tool_lab.R
 
 object TodoNotifications {
     const val CHANNEL_REMINDERS = "todo_reminders"
-    const val CHANNEL_ALARMS = "todo_alarms"
     const val CHANNEL_DIGEST = "todo_digest"
+
+    // Channel sound is fixed once created, so each sound/vibration choice has its own channel.
+    // The original id stays the sound+vibration one so a tone picked there survives.
+    private const val CHANNEL_ALARMS = "todo_alarms"
+    private const val CHANNEL_ALARMS_SOUND = "todo_alarms_sound"
+    private const val CHANNEL_ALARMS_VIBRATE = "todo_alarms_vibrate"
+    private const val CHANNEL_ALARMS_QUIET = "todo_alarms_quiet"
+    private val ALARM_CHANNELS = listOf(CHANNEL_ALARMS, CHANNEL_ALARMS_SOUND, CHANNEL_ALARMS_VIBRATE, CHANNEL_ALARMS_QUIET)
+
+    /** An alarm after [TodoAlarmScheduler.RING_MS]: still listed, no sound or vibration. */
+    private const val CHANNEL_ALARMS_RUNG = "todo_alarms_rung"
     private const val DIGEST_ID = 0x7D10
     private const val GROUP = "todo"
-    private const val ALARM_TIMEOUT_MS = 10 * 60 * 1000L
 
     private fun manager(context: Context) = context.getSystemService(NotificationManager::class.java)
 
+    fun alarmChannel(context: Context): String {
+        val sound = TodoFiles.alarmSound(context)
+        val vibrate = TodoFiles.alarmVibrate(context)
+        return when {
+            sound && vibrate -> CHANNEL_ALARMS
+            sound -> CHANNEL_ALARMS_SOUND
+            vibrate -> CHANNEL_ALARMS_VIBRATE
+            else -> CHANNEL_ALARMS_QUIET
+        }
+    }
+
     fun ensureChannels(context: Context) {
         val nm = manager(context)
-        if (nm.getNotificationChannel(CHANNEL_REMINDERS) == null) {
-            nm.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL_REMINDERS,
-                    context.getString(R.string.todo_channel_reminders),
-                    NotificationManager.IMPORTANCE_DEFAULT,
-                ),
-            )
+        fun create(id: String, name: Int, importance: Int, setup: NotificationChannel.() -> Unit = {}) {
+            if (nm.getNotificationChannel(id) == null) {
+                nm.createNotificationChannel(NotificationChannel(id, context.getString(name), importance).apply(setup))
+            }
         }
-        if (nm.getNotificationChannel(CHANNEL_DIGEST) == null) {
-            nm.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL_DIGEST,
-                    context.getString(R.string.todo_channel_digest),
-                    NotificationManager.IMPORTANCE_DEFAULT,
-                ),
-            )
+        create(CHANNEL_REMINDERS, R.string.todo_channel_reminders, NotificationManager.IMPORTANCE_DEFAULT)
+        create(CHANNEL_DIGEST, R.string.todo_channel_digest, NotificationManager.IMPORTANCE_DEFAULT)
+        create(CHANNEL_ALARMS_RUNG, R.string.todo_channel_alarms_rung, NotificationManager.IMPORTANCE_DEFAULT) {
+            setSound(null, null)
+            enableVibration(false)
         }
-        if (nm.getNotificationChannel(CHANNEL_ALARMS) == null) {
-            nm.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL_ALARMS,
-                    context.getString(R.string.todo_channel_alarms),
-                    NotificationManager.IMPORTANCE_HIGH,
-                ).apply {
-                    setSound(
-                        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
-                        AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_ALARM)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                            .build(),
-                    )
-                    enableVibration(true)
-                    vibrationPattern = longArrayOf(0, 600, 400, 600, 400, 600)
-                },
-            )
+        val current = alarmChannel(context)
+        ALARM_CHANNELS.filter { it != current && nm.getNotificationChannel(it) != null }
+            .forEach { nm.deleteNotificationChannel(it) }
+        create(current, R.string.todo_channel_alarms, NotificationManager.IMPORTANCE_HIGH) {
+            if (current == CHANNEL_ALARMS || current == CHANNEL_ALARMS_SOUND) {
+                setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                        ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build(),
+                )
+            } else {
+                setSound(null, null)
+            }
+            val vibrate = current == CHANNEL_ALARMS || current == CHANNEL_ALARMS_VIBRATE
+            enableVibration(vibrate)
+            if (vibrate) vibrationPattern = longArrayOf(0, 600, 400, 600, 400, 600)
         }
     }
 
@@ -68,12 +81,30 @@ object TodoNotifications {
             showDigest(context, entry)
             return
         }
+        post(context, entry, ringing = entry.alarm)
+        if (entry.alarm) TodoAlarmScheduler.scheduleSilence(context, entry)
+    }
+
+    /** Reposts a still ringing alarm on the silent channel; no-op once acted on or rung again. */
+    fun silence(context: Context, entry: TodoAlarmEntry) {
+        val id = TodoIntents.notificationId(entry.taskId)
+        val nm = manager(context)
+        val active = nm.activeNotifications.firstOrNull { it.id == id }?.notification ?: return
+        if (active.channelId !in ALARM_CHANNELS || active.`when` != entry.at) return
+        nm.cancel(id)
+        ensureChannels(context)
+        post(context, entry, ringing = false)
+    }
+
+    private fun post(context: Context, entry: TodoAlarmEntry, ringing: Boolean) {
         val snooze = TodoFiles.snoozeMinutes(context)
         val id = TodoIntents.notificationId(entry.taskId)
-        val builder = NotificationCompat.Builder(
-            context,
-            if (entry.alarm) CHANNEL_ALARMS else CHANNEL_REMINDERS,
-        )
+        val channel = when {
+            ringing -> alarmChannel(context)
+            entry.alarm -> CHANNEL_ALARMS_RUNG
+            else -> CHANNEL_REMINDERS
+        }
+        val builder = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_stat_todo)
             .setColor(entry.color)
             .setContentTitle(entry.title)
@@ -103,7 +134,7 @@ object TodoNotifications {
             builder.setContentText(entry.body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(entry.body))
         }
-        if (entry.alarm) {
+        if (ringing) {
             val fullScreen = TodoIntents.activity(
                 context,
                 id * 4,
@@ -112,7 +143,6 @@ object TodoNotifications {
             builder.setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setFullScreenIntent(fullScreen, true)
-                .setTimeoutAfter(ALARM_TIMEOUT_MS)
                 .setOngoing(true)
                 .setAutoCancel(false)
         } else {
@@ -120,7 +150,7 @@ object TodoNotifications {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         }
         val notification = builder.build()
-        if (entry.alarm) notification.flags = notification.flags or Notification.FLAG_INSISTENT
+        if (ringing) notification.flags = notification.flags or Notification.FLAG_INSISTENT
         try {
             manager(context).notify(id, notification)
         } catch (e: SecurityException) {

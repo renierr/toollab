@@ -29245,14 +29245,32 @@ abstract class AppLocalizations {
   /// No description provided for @todoAlarmSound.
   ///
   /// In en, this message translates to:
-  /// **'Alarm sound and vibration'**
+  /// **'Alarm tone'**
   String get todoAlarmSound;
 
   /// No description provided for @todoAlarmSoundHint.
   ///
   /// In en, this message translates to:
-  /// **'Opens the system settings for Todo alarms'**
+  /// **'Choose the tone in the system settings'**
   String get todoAlarmSoundHint;
+
+  /// No description provided for @todoAlarmPlaySound.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarm sound'**
+  String get todoAlarmPlaySound;
+
+  /// No description provided for @todoAlarmVibrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate on alarm'**
+  String get todoAlarmVibrate;
+
+  /// No description provided for @todoAlarmRingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops after one minute; the notification stays'**
+  String get todoAlarmRingHint;
 
   /// No description provided for @todoRepeatReminders.
   ///

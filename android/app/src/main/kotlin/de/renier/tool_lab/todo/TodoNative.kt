@@ -62,7 +62,7 @@ object TodoNative {
                         context.startActivity(
                             Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                                 .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                                .putExtra(Settings.EXTRA_CHANNEL_ID, TodoNotifications.CHANNEL_ALARMS)
+                                .putExtra(Settings.EXTRA_CHANNEL_ID, TodoNotifications.alarmChannel(context))
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                         )
                         result.success(null)

@@ -22,4 +22,6 @@
     <string name="todo_action_snooze">%d min</string>
     <string name="todo_action_snooze_long">Snooze %d min</string>
     <string name="todo_channel_digest">Todo daily summary</string>
+    <string name="todo_widget_confirm_title">Mark as done?</string>
+    <string name="todo_channel_alarms_rung">Todo alarms (rung)</string>
 </resources>

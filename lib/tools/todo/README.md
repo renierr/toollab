@@ -14,7 +14,7 @@ All JSON files are written atomically (write `<name>.tmp`, then rename).
 
 ### alarms.json  (Dart writes, Kotlin reads)
 ```json
-{"version":1,"generatedAt":1700000000000,"snoozeMinutes":10,"stopped":["def67890"],"entries":[
+{"version":1,"generatedAt":1700000000000,"snoozeMinutes":10,"alarmSound":true,"alarmVibrate":true,"stopped":["def67890"],"entries":[
   {"key":"<taskId>@<atMs>","taskId":"abc12345","at":1700000000000,"alarm":false,
    "title":"Pay rent","body":"Home · due today 18:00","color":4280391411,"repeat":15},
   {"key":"_digest@<atMs>","taskId":"_digest","at":1700000000000,"alarm":false,
@@ -25,6 +25,7 @@ All JSON files are written atomically (write `<name>.tmp`, then rename).
 Sorted by `at`, only future entries (>= now - 1 min), horizon 30 days, max 500.
 `alarm=true` -> loud alarm (alarm clock + full-screen). `color` = ARGB int of the list color (notification accent).
 - `snoozeMinutes`: length of the Snooze action and alarm button (setting, default 10).
+- `alarmSound` / `alarmVibrate` (optional, default true): pick the alarm channel; see behaviour notes.
 - `repeat` (optional): minutes until the reminder rings again while the task is open; see behaviour notes.
 - `kind:"digest"`: the daily summary (setting, off by default), at most the next 2 days. Shown on its own
   channel without actions; a tap opens `listId`. The first body line is the collapsed text.
@@ -84,7 +85,13 @@ Dart schedules in-process timers while the app runs.
   fields, so it keeps ringing until Done, Tomorrow, Snooze (which restarts the cycle) or the alarm screen's
   Dismiss. Swiping the notification away does not stop it. `cancelNotifications` from Dart (task done or
   deleted in the app) also drops the task's snoozes.
-- Alarm sound and vibration are the `todo_alarms` channel's; the settings link opens that channel's system page.
+- Alarm sound and vibration: a channel's sound is fixed once created, so each combination has its own
+  channel (`todo_alarms` = both, `todo_alarms_sound`, `todo_alarms_vibrate`, `todo_alarms_quiet`); the unused
+  ones are deleted. The tone link opens the current channel's system page.
+- An alarm rings (insistent) for at most 1 minute: a handler plus an exact `SILENCE` alarm repost the still
+  ringing notification on the silent `todo_alarms_rung` channel, swipeable, actions kept. The alarm screen
+  stops keeping the screen on at the same time.
+- Widget check circle asks for confirmation (dialog in `TodoWidgetActionActivity`) before completing.
 - Notification actions: Done, Snooze (`snoozeMinutes`), Tomorrow (the alarm screen also offers Tomorrow). Done and Tomorrow are queued in `pending_actions.jsonl`
   and applied by Dart on the next open, on `actionsPending`, or by the background task.
 - Rules with `X-FROM=COMPLETION` (repeat after completion) have no known future occurrences:

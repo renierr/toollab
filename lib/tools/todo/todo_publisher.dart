@@ -344,6 +344,8 @@ class TodoPublisher {
         'version': 1,
         'generatedAt': DateTime.now().millisecondsSinceEpoch,
         'snoozeMinutes': settings.snoozeMinutes,
+        'alarmSound': settings.alarmSound,
+        'alarmVibrate': settings.alarmVibrate,
         'stopped': await _stoppedSnoozes(tasks),
         'entries': [for (final e in entries) e.toJson()],
       });

@@ -1,6 +1,7 @@
 package de.renier.tool_lab.todo
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -202,7 +203,8 @@ private fun itemViews(context: Context, task: TodoWidgetTask): RemoteViews {
         R.id.todo_item_check,
         Intent()
             .putExtra(TodoWidgetActionActivity.EXTRA_OP, TodoWidgetActionActivity.OP_COMPLETE)
-            .putExtra(TodoIntents.EXTRA_TASK_ID, task.id),
+            .putExtra(TodoIntents.EXTRA_TASK_ID, task.id)
+            .putExtra(TodoWidgetActionActivity.EXTRA_TITLE, task.title),
     )
     return views
 }
@@ -210,6 +212,7 @@ private fun itemViews(context: Context, task: TodoWidgetTask): RemoteViews {
 class TodoWidgetActionActivity : Activity() {
     companion object {
         const val EXTRA_OP = "todo_widget_op"
+        const val EXTRA_TITLE = "todo_widget_title"
         const val OP_OPEN = "open"
         const val OP_COMPLETE = "complete"
     }
@@ -217,12 +220,28 @@ class TodoWidgetActionActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val taskId = intent.getStringExtra(TodoIntents.EXTRA_TASK_ID)
-        if (taskId != null) {
-            when (intent.getStringExtra(EXTRA_OP)) {
-                OP_COMPLETE -> TodoActions.complete(this, taskId)
-                OP_OPEN -> startActivity(TodoIntents.launch(this, taskId))
+        when {
+            taskId == null -> close()
+            intent.getStringExtra(EXTRA_OP) == OP_COMPLETE -> confirmComplete(taskId)
+            else -> {
+                startActivity(TodoIntents.launch(this, taskId))
+                close()
             }
         }
+    }
+
+    // A stray tap on the check circle must not finish a task.
+    private fun confirmComplete(taskId: String) {
+        AlertDialog.Builder(this, R.style.TodoDialogTheme)
+            .setTitle(R.string.todo_widget_confirm_title)
+            .setMessage(intent.getStringExtra(EXTRA_TITLE).orEmpty())
+            .setPositiveButton(R.string.todo_action_done) { _, _ -> TodoActions.complete(this, taskId) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .setOnDismissListener { close() }
+            .show()
+    }
+
+    private fun close() {
         finish()
         @Suppress("DEPRECATION")
         overridePendingTransition(0, 0)

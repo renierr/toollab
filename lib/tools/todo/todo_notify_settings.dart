@@ -12,6 +12,8 @@ class TodoNotifySettings {
   static const String _repeatAllKey = 'repeat_all_tasks';
   static const String _digestKey = 'digest_enabled';
   static const String _digestTimeKey = 'digest_time';
+  static const String _alarmSoundKey = 'alarm_sound';
+  static const String _alarmVibrateKey = 'alarm_vibrate';
 
   final int snoozeMinutes;
 
@@ -24,6 +26,8 @@ class TodoNotifySettings {
 
   /// Minutes after midnight.
   final int digestMinutes;
+  final bool alarmSound;
+  final bool alarmVibrate;
 
   const TodoNotifySettings({
     this.snoozeMinutes = 10,
@@ -31,6 +35,8 @@ class TodoNotifySettings {
     this.repeatAll = false,
     this.digestEnabled = false,
     this.digestMinutes = 8 * 60,
+    this.alarmSound = true,
+    this.alarmVibrate = true,
   });
 
   bool repeats({required bool important}) =>
@@ -42,12 +48,16 @@ class TodoNotifySettings {
     bool? repeatAll,
     bool? digestEnabled,
     int? digestMinutes,
+    bool? alarmSound,
+    bool? alarmVibrate,
   }) => TodoNotifySettings(
     snoozeMinutes: snoozeMinutes ?? this.snoozeMinutes,
     repeatMinutes: repeatMinutes ?? this.repeatMinutes,
     repeatAll: repeatAll ?? this.repeatAll,
     digestEnabled: digestEnabled ?? this.digestEnabled,
     digestMinutes: digestMinutes ?? this.digestMinutes,
+    alarmSound: alarmSound ?? this.alarmSound,
+    alarmVibrate: alarmVibrate ?? this.alarmVibrate,
   );
 
   static Future<TodoNotifySettings> load() async {
@@ -71,6 +81,8 @@ class TodoNotifySettings {
       digestMinutes:
           number(await db.getSetting(id, _digestTimeKey), 24 * 60) ??
           defaults.digestMinutes,
+      alarmSound: await db.getSetting(id, _alarmSoundKey) != 'false',
+      alarmVibrate: await db.getSetting(id, _alarmVibrateKey) != 'false',
     );
   }
 
@@ -82,5 +94,7 @@ class TodoNotifySettings {
     await db.setSetting(id, _repeatAllKey, '$repeatAll');
     await db.setSetting(id, _digestKey, '$digestEnabled');
     await db.setSetting(id, _digestTimeKey, '$digestMinutes');
+    await db.setSetting(id, _alarmSoundKey, '$alarmSound');
+    await db.setSetting(id, _alarmVibrateKey, '$alarmVibrate');
   }
 }

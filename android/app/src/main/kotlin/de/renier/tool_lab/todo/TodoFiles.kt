@@ -121,6 +121,10 @@ object TodoFiles {
     fun snoozeMinutes(context: Context): Int =
         (readJson(context, ALARMS)?.optInt("snoozeMinutes", 10) ?: 10).coerceAtLeast(1)
 
+    fun alarmSound(context: Context): Boolean = readJson(context, ALARMS)?.optBoolean("alarmSound", true) ?: true
+
+    fun alarmVibrate(context: Context): Boolean = readJson(context, ALARMS)?.optBoolean("alarmVibrate", true) ?: true
+
     /** Tasks Dart saw done or deleted; their snoozes and repeats are dropped. */
     fun stoppedTasks(context: Context): Set<String> {
         val array = readJson(context, ALARMS)?.optJSONArray("stopped") ?: return emptySet()

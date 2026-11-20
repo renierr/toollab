@@ -43,6 +43,10 @@ class TodoAlarmActivity : Activity() {
             )
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        window.decorView.postDelayed(
+            { window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) },
+            TodoAlarmScheduler.RING_MS,
+        )
         bind(intent)
     }
 

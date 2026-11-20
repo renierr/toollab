@@ -58,12 +58,29 @@ class TodoReminderSettings extends StatelessWidget {
               onChanged: (v) =>
                   state.setNotifySettings(settings.copyWith(repeatAll: v)),
             ),
-          ListTile(
-            leading: const Icon(Icons.music_note_outlined),
-            title: Text(l10n.todoAlarmSound),
-            subtitle: Text(l10n.todoAlarmSoundHint),
-            trailing: const Icon(Icons.open_in_new, size: 20),
-            onTap: TodoNative.openAlarmChannelSettings,
+          SwitchListTile(
+            secondary: const Icon(Icons.volume_up_outlined),
+            title: Text(l10n.todoAlarmPlaySound),
+            subtitle: Text(l10n.todoAlarmRingHint),
+            value: settings.alarmSound,
+            onChanged: (v) =>
+                state.setNotifySettings(settings.copyWith(alarmSound: v)),
+          ),
+          if (settings.alarmSound)
+            ListTile(
+              leading: const SizedBox(width: 24),
+              title: Text(l10n.todoAlarmSound),
+              subtitle: Text(l10n.todoAlarmSoundHint),
+              trailing: const Icon(Icons.open_in_new, size: 20),
+              onTap: TodoNative.openAlarmChannelSettings,
+            ),
+          SwitchListTile(
+            secondary: const Icon(Icons.vibration),
+            title: Text(l10n.todoAlarmVibrate),
+            subtitle: Text(l10n.todoAlarmRingHint),
+            value: settings.alarmVibrate,
+            onChanged: (v) =>
+                state.setNotifySettings(settings.copyWith(alarmVibrate: v)),
           ),
         ],
         SwitchListTile(
