@@ -15574,6 +15574,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get xFeedHideReplies => 'Antworten ausblenden';
 
   @override
+  String get xFeedCropPortrait => 'Hochkant-Medien zuschneiden';
+
+  @override
+  String get xFeedCropPortraitSubtitle =>
+      'Hochformatige Bilder und Videos breiter im Format 4:5 zeigen, oben und unten beschnitten';
+
+  @override
+  String get xFeedNotInterested => 'Kein Interesse an diesem Beitrag';
+
+  @override
+  String get xFeedNotInterestedDone =>
+      'Danke. Du siehst künftig weniger Beiträge wie diesen.';
+
+  @override
+  String get xFeedUndo => 'Rückgängig';
+
+  @override
   String get xFeedTextSize => 'Schriftgröße der Beiträge';
 
   @override

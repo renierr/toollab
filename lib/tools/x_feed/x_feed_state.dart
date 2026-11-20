@@ -32,6 +32,7 @@ class XFeedState extends ChangeNotifier {
   static const String _startTabKey = 'start_tab';
   static const String _seenKey = 'seen_pending';
   static const String _textScaleKey = 'text_scale';
+  static const String _cropPortraitKey = 'crop_portrait';
 
   /// Only bounds the memory of what was already sent; pending ids never drop.
   static const int _seenSentMemory = 5000;
@@ -51,11 +52,15 @@ class XFeedState extends ChangeNotifier {
 
   bool _hideReposts = false;
   bool _hideReplies = false;
+  bool _cropPortrait = false;
   double _textScale = 1.0;
   XFeedTab _startTab = XFeedTab.forYou;
   XFeedTab _tab = XFeedTab.forYou;
 
   final Map<String, XEngagement> _engagement = {};
+
+  /// Posts marked "Not interested" this session; their cards collapse.
+  final Set<String> _notInterested = {};
 
   late final XTranslator translator = XTranslator(
     () => _api,
@@ -101,6 +106,9 @@ class XFeedState extends ChangeNotifier {
   String? get screenName => _screenName;
   bool get hideReposts => _hideReposts;
   bool get hideReplies => _hideReplies;
+
+  /// Tall single media fill a 4:5 tile instead of showing whole.
+  bool get cropPortrait => _cropPortrait;
 
   /// Multiplies the system text scale inside posts.
   double get textScale => _textScale;
@@ -172,6 +180,7 @@ class XFeedState extends ChangeNotifier {
     final id = XFeedTool.config.id;
     _hideReposts = await db.getSetting(id, _hideRepostsKey) == 'true';
     _hideReplies = await db.getSetting(id, _hideRepliesKey) == 'true';
+    _cropPortrait = await db.getSetting(id, _cropPortraitKey) == 'true';
     final textScale = double.tryParse(
       await db.getSetting(id, _textScaleKey) ?? '',
     );
@@ -279,6 +288,7 @@ class XFeedState extends ChangeNotifier {
       t.reset();
     }
     _engagement.clear();
+    _notInterested.clear();
     _read.clear();
     _readMarks.ping();
     translator.clear();
@@ -365,6 +375,7 @@ class XFeedState extends ChangeNotifier {
     _sessionExpired = false;
     _screenName = null;
     _engagement.clear();
+    _notInterested.clear();
     translator.clear();
     _clearSeen();
     for (final t in [forYou, following, bookmarks]) {
@@ -383,6 +394,7 @@ class XFeedState extends ChangeNotifier {
     _sessionExpired = false;
     _screenName = null;
     _engagement.clear();
+    _notInterested.clear();
     translator.clear();
     _clearSeen();
     _read.clear();
@@ -443,6 +455,16 @@ class XFeedState extends ChangeNotifier {
     );
   }
 
+  Future<void> setCropPortrait(bool value) async {
+    _cropPortrait = value;
+    _notify();
+    await DatabaseService.instance.setSetting(
+      XFeedTool.config.id,
+      _cropPortraitKey,
+      '$value',
+    );
+  }
+
   Future<void> setTextScale(double value) async {
     _textScale = value;
     _notify();
@@ -495,6 +517,28 @@ class XFeedState extends ChangeNotifier {
       current.copyWith(bookmarked: !current.bookmarked),
       () => _requireApi().setBookmarked(post.id, !current.bookmarked),
     );
+  }
+
+  bool isNotInterested(XPost post) => _notInterested.contains(post.id);
+
+  /// Tells X the post is not of interest, or takes that back.
+  Future<bool> setNotInterested(XPost post, bool value) async {
+    final feedback = post.notInterested;
+    if (feedback == null || isNotInterested(post) == value) return true;
+    void apply(bool on) =>
+        on ? _notInterested.add(post.id) : _notInterested.remove(post.id);
+    apply(value);
+    _notify();
+    try {
+      await _requireApi().sendFeedback(feedback, undo: !value);
+      return true;
+    } on XApiException catch (e) {
+      errorLog('[XFeedState] Feedback on ${post.id} failed: $e');
+      apply(!value);
+      _onApiError(e);
+      _notify();
+      return false;
+    }
   }
 
   /// Applies [next] at once and rolls it back if X refuses.

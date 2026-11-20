@@ -79,6 +79,20 @@ double check once X got it (`XReadMark`). The marks have their own notifier
 during a frame (a scroll notification sent from layout) is delivered after it, with a new
 frame scheduled, or the icon would only update on the next input.
 
+## Not interested
+
+For you entries carry `content.feedbackInfo.feedbackKeys`, which point into the
+response's `responseObjects.feedbackActions`. A key may be a menu whose `childKeys` hold
+the actions; `XTimelineParser` follows them to the `DontLike` action, x.com's "Not
+interested in this post", and stores it as `XPost.notInterested`. Only posts that have it
+show the action bar button, the menu entry and the D key.
+
+`XApi.sendFeedback` does what x.com does: a form POST to `/i/api` + the action's
+`feedbackUrl`, whose query carries `feedback_type` and the base64 `action_metadata`
+unchanged, with `feedback_type=DontLike&undo=false` in the body (`undo=true` takes it
+back). The card collapses to X's confirmation text, with Undo when `hasUndoAction` is
+set. The collapsed state lasts for the session.
+
 ## Live broadcasts
 
 A post with a live video carries a card named `…:broadcast` whose binding values hold
@@ -186,6 +200,7 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
   | List | Home | First post |
   | List | R | Reload, like pull-to-refresh |
   | Post | L / B | Like / bookmark |
+  | Post | D | Not interested / undo (For you only) |
   | Post | U | Author's profile |
   | Post | T | Translate / show original |
   | Feed | 1 – 4 | For you, Following, Bookmarks, Search; focus returns to where it was |

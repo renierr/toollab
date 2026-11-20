@@ -184,6 +184,13 @@ class XSettingsPage extends StatelessWidget {
               value: state.hideReplies,
               onChanged: state.setHideReplies,
             ),
+            SwitchListTile(
+              secondary: const Icon(Icons.crop_portrait),
+              title: Text(l10n.xFeedCropPortrait),
+              subtitle: Text(l10n.xFeedCropPortraitSubtitle),
+              value: state.cropPortrait,
+              onChanged: state.setCropPortrait,
+            ),
             if (loggedIn) ...[
               SettingsSectionLabel(
                 title: l10n.xFeedAdvancedSection,

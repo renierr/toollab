@@ -1,10 +1,12 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/focus_outline.dart';
 
 import '../models/x_media.dart';
+import '../x_feed_state.dart';
 
 /// One to four media tiles in X's familiar arrangement.
 class XMediaGrid extends StatelessWidget {
@@ -29,14 +31,17 @@ class XMediaGrid extends StatelessWidget {
   /// Narrower single tiles get blurred side fill instead of becoming a strip.
   static const double _minSingleWidth = 280;
 
+  /// The narrowest a cropped tall single tile gets, as width / height.
+  static const double _cropRatio = 4 / 5;
+
   @override
   Widget build(BuildContext context) {
     if (media.isEmpty) return const SizedBox.shrink();
     final shown = media.take(4).toList();
-    Widget tile(int i, {bool contain = false}) => _MediaTile(
+    Widget tile(int i, {double? fitRatio}) => _MediaTile(
       media: shown[i],
       onTap: () => onOpen(i),
-      contain: contain,
+      fitRatio: fitRatio,
       focusNode: focusNodes != null && i < focusNodes!.length
           ? focusNodes![i]
           : null,
@@ -44,7 +49,10 @@ class XMediaGrid extends StatelessWidget {
 
     final Widget grid;
     if (shown.length == 1) {
-      final ratio = shown.first.aspectRatio;
+      final crop = context.select<XFeedState, bool>((s) => s.cropPortrait);
+      final ratio = crop
+          ? shown.first.aspectRatio.clamp(_cropRatio, double.infinity)
+          : shown.first.aspectRatio;
       return LayoutBuilder(
         builder: (context, constraints) {
           final maxWidth = constraints.maxWidth;
@@ -64,7 +72,7 @@ class XMediaGrid extends StatelessWidget {
               child: SizedBox(
                 width: width,
                 height: height,
-                child: tile(0, contain: true),
+                child: tile(0, fitRatio: ratio),
               ),
             ),
           );
@@ -131,13 +139,14 @@ class _MediaTile extends StatelessWidget {
   final VoidCallback onTap;
   final FocusNode? focusNode;
 
-  /// Shows the whole preview over a blurred copy instead of cropping it.
-  final bool contain;
+  /// Shows the preview at this aspect over a blurred copy instead of
+  /// cropping it to the tile.
+  final double? fitRatio;
 
   const _MediaTile({
     required this.media,
     required this.onTap,
-    required this.contain,
+    this.fitRatio,
     this.focusNode,
   });
 
@@ -145,6 +154,16 @@ class _MediaTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final preview = Semantics(
+      label: media.altText,
+      image: true,
+      child: Image.network(
+        media.previewUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) =>
+            Icon(Icons.broken_image_outlined, color: scheme.onSurfaceVariant),
+      ),
+    );
     final tile = Material(
       color: scheme.surfaceContainerHighest,
       child: InkWell(
@@ -154,19 +173,13 @@ class _MediaTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (contain) _BlurredBackdrop(url: media.previewUrl),
-            Semantics(
-              label: media.altText,
-              image: true,
-              child: Image.network(
-                media.previewUrl,
-                fit: contain ? BoxFit.contain : BoxFit.cover,
-                errorBuilder: (_, _, _) => Icon(
-                  Icons.broken_image_outlined,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
+            if (fitRatio != null) _BlurredBackdrop(url: media.previewUrl),
+            if (fitRatio case final ratio?)
+              Center(
+                child: AspectRatio(aspectRatio: ratio, child: preview),
+              )
+            else
+              preview,
             if (media.isPlayable)
               const Center(
                 child: DecoratedBox(

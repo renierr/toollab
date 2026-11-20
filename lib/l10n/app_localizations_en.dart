@@ -15452,6 +15452,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get xFeedHideReplies => 'Hide replies';
 
   @override
+  String get xFeedCropPortrait => 'Crop tall media';
+
+  @override
+  String get xFeedCropPortraitSubtitle =>
+      'Show tall images and videos wider at 4:5, trimmed at the top and bottom';
+
+  @override
+  String get xFeedNotInterested => 'Not interested in this post';
+
+  @override
+  String get xFeedNotInterestedDone =>
+      'Thanks. You\'ll see fewer posts like this.';
+
+  @override
+  String get xFeedUndo => 'Undo';
+
+  @override
   String get xFeedTextSize => 'Post text size';
 
   @override

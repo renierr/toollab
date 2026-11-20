@@ -30,9 +30,10 @@ class XTimelineParser {
   static XTimelinePage parse(Object? json) {
     final posts = <XPost>[];
     final seen = <String>{};
+    final feedback = _feedbackActions(json);
     String? bottom;
 
-    void addItem(Map? itemContent) {
+    void addItem(Map? itemContent, Object? feedbackInfo) {
       if (itemContent == null) return;
       if (itemContent['promotedMetadata'] != null) return;
       if (itemContent['itemType'] == 'TimelineTimelineCursor' ||
@@ -43,7 +44,10 @@ class XTimelineParser {
         }
         return;
       }
-      final post = parseTweet(_path(itemContent, ['tweet_results', 'result']));
+      final post = parseTweet(
+        _path(itemContent, ['tweet_results', 'result']),
+        notInterested: _notInterested(feedbackInfo, feedback),
+      );
       if (post != null && seen.add(post.id)) posts.add(post);
     }
 
@@ -60,10 +64,13 @@ class XTimelineParser {
         return;
       }
       if (type == 'TimelineTimelineItem') {
-        addItem(content['itemContent'] as Map?);
+        addItem(content['itemContent'] as Map?, content['feedbackInfo']);
       } else if (type == 'TimelineTimelineModule') {
         for (final item in content['items'] as List? ?? const []) {
-          addItem(_path(item, ['item', 'itemContent']) as Map?);
+          addItem(
+            _path(item, ['item', 'itemContent']) as Map?,
+            _path(item, ['item', 'feedbackInfo']),
+          );
         }
       }
     }
@@ -81,11 +88,66 @@ class XTimelineParser {
           if (entry is Map) addEntry(entry);
         case 'TimelineAddToModule':
           for (final item in instruction['moduleItems'] as List? ?? const []) {
-            addItem(_path(item, ['item', 'itemContent']) as Map?);
+            addItem(
+              _path(item, ['item', 'itemContent']) as Map?,
+              _path(item, ['item', 'feedbackInfo']),
+            );
           }
       }
     }
     return XTimelinePage(posts: posts, bottomCursor: bottom);
+  }
+
+  /// X's "Not interested in this post"; the feedback type x.com sends for it.
+  static const String _notInterestedType = 'DontLike';
+
+  /// `responseObjects.feedbackActions`, keyed by the keys entries refer to.
+  static Map<String, Map> _feedbackActions(Object? json) {
+    final list = _path(_findKey(json, 'responseObjects'), ['feedbackActions']);
+    if (list is! List) return const {};
+    return {
+      for (final action in list)
+        if (action is Map && action['key'] is String && action['value'] is Map)
+          action['key'] as String: action['value'] as Map,
+    };
+  }
+
+  /// An entry's feedback keys may point at a menu whose children hold the
+  /// actual actions, so those are searched too.
+  static XFeedback? _notInterested(
+    Object? feedbackInfo,
+    Map<String, Map> actions,
+  ) {
+    if (feedbackInfo is! Map || actions.isEmpty) return null;
+    final queue = [...?(feedbackInfo['feedbackKeys'] as List?)];
+    final visited = <Object?>{};
+    while (queue.isNotEmpty) {
+      final key = queue.removeAt(0);
+      if (!visited.add(key)) continue;
+      final action = actions[key];
+      if (action == null) continue;
+      final url = action['feedbackUrl'];
+      if (action['feedbackType'] == _notInterestedType && url is String) {
+        return XFeedback(
+          url: url,
+          type: _notInterestedType,
+          confirmation: action['confirmation'] as String?,
+          canUndo: action['hasUndoAction'] == true,
+        );
+      }
+      queue.addAll(action['childKeys'] as List? ?? const []);
+    }
+    return null;
+  }
+
+  static Object? _findKey(Object? node, String key, [int depth = 0]) {
+    if (depth > 12 || node is! Map) return null;
+    if (node.containsKey(key)) return node[key];
+    for (final value in node.values) {
+      final found = _findKey(value, key, depth + 1);
+      if (found != null) return found;
+    }
+    return null;
   }
 
   static List<Object?> _findInstructions(Object? node, [int depth = 0]) {
@@ -138,7 +200,7 @@ class XTimelineParser {
     );
   }
 
-  static XPost? parseTweet(Object? raw) {
+  static XPost? parseTweet(Object? raw, {XFeedback? notInterested}) {
     var result = raw;
     if (result is Map && result['__typename'] == 'TweetWithVisibilityResults') {
       result = result['tweet'];
@@ -175,6 +237,7 @@ class XTimelineParser {
           lang: inner.lang,
           translatable: inner.translatable,
           inlineTranslation: inner.inlineTranslation,
+          notInterested: notInterested,
         );
       }
     }
@@ -202,6 +265,7 @@ class XTimelineParser {
       lang: legacy['lang'] as String?,
       translatable: _translatable(result, legacy['lang'] as String?),
       inlineTranslation: _grokTranslation(result, media.isNotEmpty),
+      notInterested: notInterested,
       engagement: XEngagement(
         liked: legacy['favorited'] == true,
         reposted: legacy['retweeted'] == true,

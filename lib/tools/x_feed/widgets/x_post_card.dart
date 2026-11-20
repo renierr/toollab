@@ -18,6 +18,7 @@ import 'x_avatar.dart';
 import 'x_broadcast_tile.dart';
 import 'x_link_card.dart';
 import 'x_media_grid.dart';
+import 'x_not_interested_notice.dart';
 import 'x_post_actions.dart';
 import 'x_post_header.dart';
 import 'x_post_menu.dart';
@@ -120,6 +121,18 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
+    final state = context.read<XFeedState>();
+    final dismissed = state.isNotInterested(widget.post);
+    final feedback = widget.post.notInterested;
+    if (key == LogicalKeyboardKey.keyD &&
+        XKeys.plain &&
+        feedback != null &&
+        (!dismissed || feedback.canUndo)) {
+      unawaited(_engage(() => state.setNotInterested(widget.post, !dismissed)));
+      return KeyEventResult.handled;
+    }
+    // A collapsed post only takes D back; list keys still move on from it.
+    if (dismissed) return KeyEventResult.ignored;
     if (_mediaNodes.isNotEmpty && !HardwareKeyboard.instance.isShiftPressed) {
       if (key == LogicalKeyboardKey.arrowDown && _cardNode.hasPrimaryFocus) {
         _focusMedia(0);
@@ -186,7 +199,6 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
       return KeyEventResult.handled;
     }
     if (!XKeys.plain) return KeyEventResult.ignored;
-    final state = context.read<XFeedState>();
     if (key == LogicalKeyboardKey.keyL) {
       unawaited(_engage(() => state.toggleLike(widget.post)));
       return KeyEventResult.handled;
@@ -227,6 +239,10 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
     final card = post.card;
     final broadcast = post.media.isEmpty ? post.broadcast : null;
     final quoted = post.quoted;
+    final notInterested = post.notInterested;
+    final dismissed =
+        notInterested != null &&
+        context.select<XFeedState, bool>((s) => s.isNotInterested(post));
     final translation = post.canTranslate
         ? context.select<XFeedState, XTranslation?>(
             (s) => s.translator.shownOf(post),
@@ -317,8 +333,8 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
       child: FocusOutline(
         borderRadius: BorderRadius.circular(12),
         glow: false,
-        onTap: _open,
-        onLongPress: _menu,
+        onTap: dismissed ? null : _open,
+        onLongPress: dismissed ? null : _menu,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -326,57 +342,71 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
             focusNode: _cardNode,
             focusColor: Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            onTap: widget.focal ? null : _open,
-            onLongPress: _menu,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (reposter != null)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 28, bottom: 4),
-                      child: Row(
-                        children: [
-                          Icon(Icons.repeat, size: 16, color: muted?.color),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              l10n.xFeedReposted(reposter.name),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: muted,
-                            ),
-                          ),
-                        ],
+            onTap: widget.focal || dismissed ? null : _open,
+            onLongPress: dismissed ? null : _menu,
+            child: dismissed
+                ? XNotInterestedNotice(
+                    feedback: notInterested,
+                    onUndo: () => _engage(
+                      () => context.read<XFeedState>().setNotInterested(
+                        post,
+                        false,
                       ),
                     ),
-                  _ThreadLines(
-                    above: widget.threadAbove,
-                    below: widget.threadBelow,
-                    child: Row(
+                  )
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          children: [
-                            GestureDetector(
-                              onTap: () => XNavigation.openUser(
-                                context,
-                                post.author.screenName,
-                              ),
-                              child: XAvatar(url: post.author.avatarUrl),
+                        if (reposter != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 28, bottom: 4),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.repeat,
+                                  size: 16,
+                                  color: muted?.color,
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    l10n.xFeedReposted(reposter.name),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: muted,
+                                  ),
+                                ),
+                              ],
                             ),
-                            _ReadMark(post: post),
-                          ],
+                          ),
+                        _ThreadLines(
+                          above: widget.threadAbove,
+                          below: widget.threadBelow,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => XNavigation.openUser(
+                                      context,
+                                      post.author.screenName,
+                                    ),
+                                    child: XAvatar(url: post.author.avatarUrl),
+                                  ),
+                                  _ReadMark(post: post),
+                                ],
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: body),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(child: body),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
           ),
         ),
       ),

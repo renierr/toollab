@@ -236,6 +236,70 @@ void main() {
     );
   });
 
+  test('reads "Not interested" from the feedback actions', () {
+    Map<String, Object?> entry(String id, List<String> keys) {
+      final item = _item('tweet-$id', _tweet(id));
+      (item['content'] as Map)['feedbackInfo'] = {'feedbackKeys': keys};
+      return item;
+    }
+
+    final page = XTimelineParser.parse({
+      'data': {
+        'home': {
+          'home_timeline_urt': {
+            'instructions': [
+              {
+                'type': 'TimelineAddEntries',
+                'entries': [
+                  entry('1', ['menu']),
+                  entry('2', ['fewer']),
+                  _item('tweet-3', _tweet('3')),
+                ],
+              },
+            ],
+            'responseObjects': {
+              'feedbackActions': [
+                {
+                  'key': 'menu',
+                  'value': {
+                    'feedbackType': 'Dismiss',
+                    'childKeys': ['fewer', 'dontlike'],
+                  },
+                },
+                {
+                  'key': 'fewer',
+                  'value': {
+                    'feedbackType': 'SeeFewer',
+                    'feedbackUrl': '/2/timeline/feedback.json?x=1',
+                  },
+                },
+                {
+                  'key': 'dontlike',
+                  'value': {
+                    'feedbackType': 'DontLike',
+                    'confirmation': 'Thanks.',
+                    'hasUndoAction': true,
+                    'feedbackUrl':
+                        '/2/timeline/feedback.json?feedback_type=DontLike'
+                        '&action_metadata=ab%2Bc%3D%3D',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+
+    final feedback = page.posts[0].notInterested;
+    expect(feedback?.type, 'DontLike');
+    expect(feedback?.url, contains('action_metadata=ab%2Bc%3D%3D'));
+    expect(feedback?.confirmation, 'Thanks.');
+    expect(feedback?.canUndo, isTrue);
+    expect(page.posts[1].notInterested, isNull);
+    expect(page.posts[2].notInterested, isNull);
+  });
+
   group('broadcast', () {
     Map<String, Object?> value(String key, Object v) => {
       'key': key,

@@ -7460,6 +7460,11 @@
   "xFeedStartTab": "Start with",
   "xFeedHideReposts": "Hide reposts",
   "xFeedHideReplies": "Hide replies",
+  "xFeedCropPortrait": "Crop tall media",
+  "xFeedCropPortraitSubtitle": "Show tall images and videos wider at 4:5, trimmed at the top and bottom",
+  "xFeedNotInterested": "Not interested in this post",
+  "xFeedNotInterestedDone": "Thanks. You'll see fewer posts like this.",
+  "xFeedUndo": "Undo",
   "xFeedTextSize": "Post text size",
   "xFeedTextSizePercent": "{percent}%",
   "@xFeedTextSizePercent": {

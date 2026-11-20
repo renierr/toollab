@@ -10,6 +10,7 @@ import '../x_feed_state.dart';
 import '../x_media_actions.dart';
 import '../x_navigation.dart';
 import '../x_translation_actions.dart';
+import 'x_post_actions.dart';
 
 /// Every action on a post in one list: the share menu on touch, and the
 /// long-press menu a TV remote reaches the post's controls through.
@@ -95,6 +96,12 @@ class XPostMenu extends StatelessWidget {
             ),
             onTap: () => unawaited(state.toggleBookmark(post)),
           ),
+          if (post.notInterested != null && !state.isNotInterested(post))
+            ListTile(
+              leading: const Icon(Icons.sentiment_dissatisfied_outlined),
+              title: Text(l10n.xFeedNotInterested),
+              onTap: () => run((c) => XPostActions.notInterested(c, post)),
+            ),
           if (post.canTranslate)
             ListTile(
               leading: const Icon(Icons.translate),

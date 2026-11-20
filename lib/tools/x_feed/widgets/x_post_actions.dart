@@ -16,7 +16,12 @@ class XPostActions extends StatelessWidget {
 
   const XPostActions({super.key, required this.post, required this.onReply});
 
-  Future<void> _run(
+  static Future<void> notInterested(BuildContext context, XPost post) => _run(
+    context,
+    () => context.read<XFeedState>().setNotInterested(post, true),
+  );
+
+  static Future<void> _run(
     BuildContext context,
     Future<bool> Function() action,
   ) async {
@@ -85,6 +90,13 @@ class XPostActions extends StatelessWidget {
                 () => context.read<XFeedState>().toggleBookmark(post),
               ),
             ),
+            if (post.notInterested != null)
+              _ActionButton(
+                icon: Icons.sentiment_dissatisfied_outlined,
+                tooltip: l10n.xFeedNotInterested,
+                color: muted,
+                onPressed: () => notInterested(context, post),
+              ),
             _ActionButton(
               icon: Icons.share_outlined,
               tooltip: l10n.commonShare,

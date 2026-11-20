@@ -65,6 +65,25 @@ class XTranslation {
   });
 }
 
+/// One of X's timeline feedback actions, such as "Not interested in this
+/// post", as the For you timeline offers it per post.
+class XFeedback {
+  /// X's `feedbackUrl`, relative to `/i/api`, carrying the action metadata.
+  final String url;
+  final String type;
+
+  /// X's own confirmation text, in the client language.
+  final String? confirmation;
+  final bool canUndo;
+
+  const XFeedback({
+    required this.url,
+    required this.type,
+    this.confirmation,
+    this.canUndo = false,
+  });
+}
+
 class XPost {
   final String id;
   final XUser author;
@@ -93,6 +112,9 @@ class XPost {
   /// The Grok translation X sometimes sends along, in the client language.
   final XTranslation? inlineTranslation;
 
+  /// Only For you posts carry it.
+  final XFeedback? notInterested;
+
   const XPost({
     required this.id,
     required this.author,
@@ -114,6 +136,7 @@ class XPost {
     this.lang,
     this.translatable = false,
     this.inlineTranslation,
+    this.notInterested,
   });
 
   String get url => 'https://x.com/${author.screenName}/status/$id';

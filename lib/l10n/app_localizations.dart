@@ -27220,6 +27220,36 @@ abstract class AppLocalizations {
   /// **'Hide replies'**
   String get xFeedHideReplies;
 
+  /// No description provided for @xFeedCropPortrait.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop tall media'**
+  String get xFeedCropPortrait;
+
+  /// No description provided for @xFeedCropPortraitSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show tall images and videos wider at 4:5, trimmed at the top and bottom'**
+  String get xFeedCropPortraitSubtitle;
+
+  /// No description provided for @xFeedNotInterested.
+  ///
+  /// In en, this message translates to:
+  /// **'Not interested in this post'**
+  String get xFeedNotInterested;
+
+  /// No description provided for @xFeedNotInterestedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks. You\'ll see fewer posts like this.'**
+  String get xFeedNotInterestedDone;
+
+  /// No description provided for @xFeedUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get xFeedUndo;
+
   /// No description provided for @xFeedTextSize.
   ///
   /// In en, this message translates to:

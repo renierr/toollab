@@ -313,6 +313,10 @@ class XApi {
       Uri.https('x.com', path, query),
       _headers(config, 'GET', path),
     );
+    return _restResult(res);
+  }
+
+  static Map<String, dynamic> _restResult(http.Response res) {
     switch (res.statusCode) {
       case 200:
         return _decode(res.body);
@@ -480,6 +484,30 @@ class XApi {
         : {'source_tweet_id': postId, 'dark_request': false},
     post: true,
   );
+
+  /// Sends a timeline feedback action, or takes it back with [undo], the way
+  /// x.com does: a form POST to the action's `feedbackUrl`.
+  Future<void> sendFeedback(XFeedback feedback, {required bool undo}) async {
+    final config = await _ensureConfig();
+    final target = Uri.parse(feedback.url);
+    final path = target.path.startsWith('/i/api')
+        ? target.path
+        : '/i/api${target.path}';
+    final headers = _headers(config, 'POST', path)
+      ..['Content-Type'] = 'application/x-www-form-urlencoded';
+    // The raw query keeps the base64 action metadata exactly as X sent it.
+    final uri = Uri.https('x.com', path).replace(query: target.query);
+    final res = await _send(
+      'POST',
+      uri,
+      headers,
+      body: Uri(
+        queryParameters: {'feedback_type': feedback.type, 'undo': '$undo'},
+      ).query,
+    );
+    // X answers an empty object; only a failure needs reading.
+    if (res.statusCode != 200) _restResult(res);
+  }
 
   Future<void> setBookmarked(String postId, bool bookmarked) => _graphql(
     bookmarked ? 'CreateBookmark' : 'DeleteBookmark',
