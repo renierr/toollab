@@ -16767,4 +16767,429 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get todoEmptyFilter => 'No task matches this filter';
+
+  @override
+  String get toolNameWeather => 'Weather';
+
+  @override
+  String get toolDescWeather =>
+      'DWD forecast, live measurements, warnings and rain radar';
+
+  @override
+  String get weatherMyLocation => 'My location';
+
+  @override
+  String get weatherAddPlace => 'Add place';
+
+  @override
+  String get weatherSearchHint => 'Search city or place';
+
+  @override
+  String get weatherSearchPlaces => 'Places';
+
+  @override
+  String get weatherSearchStations => 'Weather stations';
+
+  @override
+  String get weatherSearchNoResults => 'No places found';
+
+  @override
+  String get weatherSearchFailed => 'Search failed. Check your connection.';
+
+  @override
+  String get weatherSearchPrompt => 'Press Enter to search';
+
+  @override
+  String get weatherUseMyLocation => 'Use my location';
+
+  @override
+  String get weatherSearchAttribution =>
+      'Place search © OpenStreetMap contributors';
+
+  @override
+  String get weatherEmptyTitle => 'Weather for your places';
+
+  @override
+  String get weatherEmptyMessage =>
+      'Add a place to see the DWD forecast, live measurements and warnings.';
+
+  @override
+  String get weatherPlaces => 'Places';
+
+  @override
+  String get weatherDefaultPlace => 'Default place';
+
+  @override
+  String get weatherSetDefault => 'Set as default';
+
+  @override
+  String get weatherRename => 'Rename';
+
+  @override
+  String get weatherRenameTitle => 'Rename place';
+
+  @override
+  String get weatherStations => 'Stations';
+
+  @override
+  String get weatherDelete => 'Remove';
+
+  @override
+  String weatherRemovedSnack(String name) {
+    return 'Removed \"$name\"';
+  }
+
+  @override
+  String get weatherUndo => 'Undo';
+
+  @override
+  String get weatherRefresh => 'Refresh';
+
+  @override
+  String get weatherSettings => 'Settings';
+
+  @override
+  String weatherFeelsLike(String temp) {
+    return 'Feels like $temp';
+  }
+
+  @override
+  String weatherMeasuredAt(String time, String station) {
+    return 'Measured $time · $station';
+  }
+
+  @override
+  String get weatherForecastValue => 'Forecast for this hour';
+
+  @override
+  String weatherUpdated(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String get weatherOffline => 'Offline – showing saved data';
+
+  @override
+  String get weatherLoadFailed => 'Weather data could not be loaded.';
+
+  @override
+  String get weatherRetry => 'Retry';
+
+  @override
+  String get weatherHourly => 'Next 48 hours';
+
+  @override
+  String get weatherDaily => '10-day forecast';
+
+  @override
+  String get weatherDetails => 'Details';
+
+  @override
+  String get weatherTrend => '10-day trend';
+
+  @override
+  String get weatherNow => 'Now';
+
+  @override
+  String get weatherToday => 'Today';
+
+  @override
+  String get weatherTomorrow => 'Tomorrow';
+
+  @override
+  String get weatherTemperature => 'Temperature';
+
+  @override
+  String get weatherWind => 'Wind';
+
+  @override
+  String weatherGusts(String value) {
+    return 'Gusts $value';
+  }
+
+  @override
+  String get weatherHumidity => 'Humidity';
+
+  @override
+  String get weatherDewPoint => 'Dew point';
+
+  @override
+  String get weatherPressure => 'Pressure';
+
+  @override
+  String get weatherVisibility => 'Visibility';
+
+  @override
+  String get weatherCloudCover => 'Cloud cover';
+
+  @override
+  String get weatherPrecipitation => 'Precipitation';
+
+  @override
+  String weatherPrecipitation24h(String value) {
+    return '$value in the last 24 h';
+  }
+
+  @override
+  String get weatherPrecipitationProbability => 'Chance of rain';
+
+  @override
+  String get weatherSunshine => 'Sunshine';
+
+  @override
+  String weatherSunshineHours(String hours) {
+    return '$hours h';
+  }
+
+  @override
+  String get weatherSun => 'Sun';
+
+  @override
+  String get weatherSunrise => 'Sunrise';
+
+  @override
+  String get weatherSunset => 'Sunset';
+
+  @override
+  String weatherDaylight(String duration) {
+    return '$duration of daylight';
+  }
+
+  @override
+  String get weatherMoon => 'Moon';
+
+  @override
+  String get weatherMoonPhase0 => 'New moon';
+
+  @override
+  String get weatherMoonPhase1 => 'Waxing crescent';
+
+  @override
+  String get weatherMoonPhase2 => 'First quarter';
+
+  @override
+  String get weatherMoonPhase3 => 'Waxing gibbous';
+
+  @override
+  String get weatherMoonPhase4 => 'Full moon';
+
+  @override
+  String get weatherMoonPhase5 => 'Waning gibbous';
+
+  @override
+  String get weatherMoonPhase6 => 'Last quarter';
+
+  @override
+  String get weatherMoonPhase7 => 'Waning crescent';
+
+  @override
+  String get weatherCondClear => 'Clear';
+
+  @override
+  String get weatherCondMostlyClear => 'Mostly clear';
+
+  @override
+  String get weatherCondPartlyCloudy => 'Partly cloudy';
+
+  @override
+  String get weatherCondCloudy => 'Mostly cloudy';
+
+  @override
+  String get weatherCondOvercast => 'Overcast';
+
+  @override
+  String get weatherCondFog => 'Fog';
+
+  @override
+  String get weatherCondDrizzle => 'Drizzle';
+
+  @override
+  String get weatherCondFreezingDrizzle => 'Freezing drizzle';
+
+  @override
+  String get weatherCondLightRain => 'Light rain';
+
+  @override
+  String get weatherCondRain => 'Rain';
+
+  @override
+  String get weatherCondHeavyRain => 'Heavy rain';
+
+  @override
+  String get weatherCondFreezingRain => 'Freezing rain';
+
+  @override
+  String get weatherCondSleet => 'Sleet';
+
+  @override
+  String get weatherCondLightSnow => 'Light snow';
+
+  @override
+  String get weatherCondSnow => 'Snow';
+
+  @override
+  String get weatherCondHeavySnow => 'Heavy snow';
+
+  @override
+  String get weatherCondHail => 'Hail';
+
+  @override
+  String get weatherCondRainShower => 'Rain showers';
+
+  @override
+  String get weatherCondSleetShower => 'Sleet showers';
+
+  @override
+  String get weatherCondSnowShower => 'Snow showers';
+
+  @override
+  String get weatherCondThunderstorm => 'Thunderstorm';
+
+  @override
+  String get weatherDir0 => 'N';
+
+  @override
+  String get weatherDir1 => 'NNE';
+
+  @override
+  String get weatherDir2 => 'NE';
+
+  @override
+  String get weatherDir3 => 'ENE';
+
+  @override
+  String get weatherDir4 => 'E';
+
+  @override
+  String get weatherDir5 => 'ESE';
+
+  @override
+  String get weatherDir6 => 'SE';
+
+  @override
+  String get weatherDir7 => 'SSE';
+
+  @override
+  String get weatherDir8 => 'S';
+
+  @override
+  String get weatherDir9 => 'SSW';
+
+  @override
+  String get weatherDir10 => 'SW';
+
+  @override
+  String get weatherDir11 => 'WSW';
+
+  @override
+  String get weatherDir12 => 'W';
+
+  @override
+  String get weatherDir13 => 'WNW';
+
+  @override
+  String get weatherDir14 => 'NW';
+
+  @override
+  String get weatherDir15 => 'NNW';
+
+  @override
+  String get weatherWarningLevel1 => 'Weather warning';
+
+  @override
+  String get weatherWarningLevel2 => 'Severe weather';
+
+  @override
+  String get weatherWarningLevel3 => 'Storm warning';
+
+  @override
+  String get weatherWarningLevel4 => 'Extreme weather';
+
+  @override
+  String weatherWarningFrom(String time) {
+    return 'from $time';
+  }
+
+  @override
+  String weatherWarningUntil(String time) {
+    return 'until $time';
+  }
+
+  @override
+  String get weatherWarningInstruction => 'What to do';
+
+  @override
+  String get weatherWarningSource => 'Source: Deutscher Wetterdienst';
+
+  @override
+  String weatherWarningsMore(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get weatherStationForecast => 'Forecast station';
+
+  @override
+  String get weatherStationObservation => 'Measuring station';
+
+  @override
+  String get weatherStationAuto => 'Automatic (nearest)';
+
+  @override
+  String weatherStationDistance(String distance, String elevation) {
+    return '$distance km · $elevation m';
+  }
+
+  @override
+  String weatherSourceForecast(String station) {
+    return 'Forecast: $station';
+  }
+
+  @override
+  String weatherSourceObservation(String station) {
+    return 'Measurements: $station';
+  }
+
+  @override
+  String get weatherSourceAttribution => 'Data: Deutscher Wetterdienst (DWD)';
+
+  @override
+  String get weatherUnits => 'Units';
+
+  @override
+  String get weatherAutoRefresh => 'Refresh while open';
+
+  @override
+  String get weatherRefreshOff => 'Off';
+
+  @override
+  String weatherRefreshMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get weatherNotifyLevel => 'Warning notifications';
+
+  @override
+  String get weatherNotifyLevelHint =>
+      'Notify from this level on, for the default place';
+
+  @override
+  String get weatherAnimatedIcons => 'Animated weather icons';
+
+  @override
+  String get weatherLocationDenied => 'Location permission denied';
+
+  @override
+  String get weatherLocationOff => 'Location services are turned off';
+
+  @override
+  String get weatherLocationFailed => 'Location could not be determined';
+
+  @override
+  String get weatherLocationUnsupported =>
+      'Location is not available on this device';
+
+  @override
+  String get weatherDayDetails => 'Hourly';
 }

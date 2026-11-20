@@ -257,10 +257,11 @@ class WeatherState extends ChangeNotifier {
     _notify();
   }
 
+  /// [newIndex] is the final position, as `onReorderItem` reports it.
   Future<void> reorder(int oldIndex, int newIndex) async {
     final list = [..._locations];
     final moved = list.removeAt(oldIndex);
-    list.insert(newIndex > oldIndex ? newIndex - 1 : newIndex, moved);
+    list.insert(newIndex, moved);
     _locations = [
       for (var i = 0; i < list.length; i++) list[i].copyWith(sortOrder: i),
     ];

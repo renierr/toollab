@@ -219,7 +219,7 @@ void main() {
       final a = await state.addPlace(place);
       await state.addPlace(other);
       await state.rename(a.id!, '  Zuhause ');
-      await state.reorder(0, 2);
+      await state.reorder(0, 1);
       final stored = await WeatherDbHelper.instance.getLocations();
       expect(stored.map((l) => l.name), ['Berlin', 'Zuhause']);
     });

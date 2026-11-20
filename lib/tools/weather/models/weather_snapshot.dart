@@ -1,5 +1,6 @@
 import '../api/station_catalog.dart';
 import '../api/weather_http.dart';
+import 'astronomy.dart';
 import 'hourly_forecast.dart';
 import 'mosmix_forecast.dart';
 import 'station_overview.dart';
@@ -82,6 +83,18 @@ class WeatherSnapshot {
           obs?.condition ?? hour?.condition ?? WeatherCondition.partlyCloudy,
     );
   }
+
+  /// DWD day summary when present, otherwise computed for the location.
+  SunTimes sunTimes(DateTime day) {
+    final local = day.toLocal();
+    final dwd = overview?.dayOf(local);
+    if (dwd?.sunrise != null && dwd?.sunset != null) {
+      return SunTimes(dwd!.sunrise, dwd.sunset);
+    }
+    return SunTimes.of(local, location.latitude, location.longitude);
+  }
+
+  bool isDayAt(DateTime time) => sunTimes(time).isDayAt(time);
 
   List<WeatherWarning> warnings(DateTime now) => [
     for (final w in overview?.warnings ?? const <WeatherWarning>[])
