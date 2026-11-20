@@ -13,17 +13,25 @@ import 'weather_day_sheet.dart';
 import 'weather_details_grid.dart';
 import 'weather_hero.dart';
 import 'weather_hourly_strip.dart';
+import 'weather_radar_preview_card.dart';
 import 'weather_section_card.dart';
 import 'weather_source_footer.dart';
 import 'weather_trend_card.dart';
 import 'weather_warning_banner.dart';
 
 class WeatherForecastView extends StatelessWidget {
-  const WeatherForecastView({super.key, required this.locationId});
+  const WeatherForecastView({
+    super.key,
+    required this.locationId,
+    this.showRadarPreview = true,
+  });
 
   static const double _maxContentWidth = 1200;
 
   final int locationId;
+
+  /// Off when the page already shows the radar beside the forecast.
+  final bool showRadarPreview;
 
   @override
   Widget build(BuildContext context) {
@@ -117,6 +125,7 @@ class WeatherForecastView extends StatelessWidget {
                 WeatherWarningBanner(warnings: warnings),
               ],
               if (hourly != null) ...[gap, hourly],
+              if (showRadarPreview) ...[gap, const WeatherRadarPreviewCard()],
               gap,
               if (twoColumns)
                 Row(

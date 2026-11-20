@@ -13,6 +13,7 @@ import 'widgets/weather_empty_state.dart';
 import 'widgets/weather_forecast_view.dart';
 import 'widgets/weather_location_list.dart';
 import 'widgets/weather_location_pager.dart';
+import 'widgets/weather_radar_view.dart';
 import 'widgets/weather_settings_sheet.dart';
 
 class WeatherPage extends StatefulWidget {
@@ -24,6 +25,10 @@ class WeatherPage extends StatefulWidget {
 
 class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
   static const double _sidebarWidth = 300;
+  static const double _radarPanelWidth = 460;
+
+  /// Sidebar, a readable forecast column and the radar panel side by side.
+  static const double _radarInlineWidth = 1280;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -61,6 +66,7 @@ class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
     return LayoutBuilder(
       builder: (context, constraints) {
         final split = constraints.canSplit && hasPlaces;
+        final radarInline = split && constraints.maxWidth >= _radarInlineWidth;
         final Widget body;
         if (!state.isLoaded) {
           body = const Center(child: CircularProgressIndicator());
@@ -78,8 +84,16 @@ class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
                 child: WeatherForecastView(
                   key: ValueKey(selectedId),
                   locationId: selectedId!,
+                  showRadarPreview: !radarInline,
                 ),
               ),
+              if (radarInline) ...[
+                const VerticalDivider(width: 1),
+                const SizedBox(
+                  width: _radarPanelWidth,
+                  child: WeatherRadarView(),
+                ),
+              ],
             ],
           );
         } else {

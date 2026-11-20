@@ -17192,4 +17192,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weatherDayDetails => 'Hourly';
+
+  @override
+  String get weatherRadarTitle => 'Rain radar';
+
+  @override
+  String get weatherRadarOpen => 'Open rain radar';
+
+  @override
+  String get weatherRadarForecast => 'Forecast';
+
+  @override
+  String get weatherRadarObserved => 'Radar';
+
+  @override
+  String get weatherRadarNowLabel => 'Now';
+
+  @override
+  String weatherRadarInMinutes(int minutes) {
+    return 'in $minutes min';
+  }
+
+  @override
+  String weatherRadarMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String weatherRadarRainIn(int minutes) {
+    return 'Rain in about $minutes min';
+  }
+
+  @override
+  String get weatherRadarRainNow => 'Raining now';
+
+  @override
+  String weatherRadarRainStops(int minutes) {
+    return 'Rain eases in about $minutes min';
+  }
+
+  @override
+  String get weatherRadarNoRain => 'No rain expected in the next 2 hours';
+
+  @override
+  String get weatherRadarLayers => 'Map layers';
+
+  @override
+  String get weatherRadarBaseLight => 'Light';
+
+  @override
+  String get weatherRadarBaseDark => 'Dark';
+
+  @override
+  String get weatherRadarBaseSatellite => 'Satellite';
+
+  @override
+  String get weatherRadarLightning => 'Lightning';
+
+  @override
+  String get weatherRadarWarnings => 'Warnings';
+
+  @override
+  String get weatherRadarLegend => 'Legend';
+
+  @override
+  String get weatherRadarPlay => 'Play';
+
+  @override
+  String get weatherRadarPause => 'Pause';
+
+  @override
+  String get weatherRadarStepBack => '5 minutes back';
+
+  @override
+  String get weatherRadarStepForward => '5 minutes forward';
+
+  @override
+  String get weatherRadarSpeed => 'Playback speed';
+
+  @override
+  String weatherRadarLoading(int loaded, int total) {
+    return 'Loading radar $loaded/$total';
+  }
+
+  @override
+  String get weatherRadarUnavailable => 'Rain radar could not be loaded';
+
+  @override
+  String get weatherRadarCenter => 'Center on place';
+
+  @override
+  String get weatherRadarZoomIn => 'Zoom in';
+
+  @override
+  String get weatherRadarZoomOut => 'Zoom out';
+
+  @override
+  String get weatherRadarAttribution => 'Radar © Deutscher Wetterdienst';
 }

@@ -30279,6 +30279,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hourly'**
   String get weatherDayDetails;
+
+  /// No description provided for @weatherRadarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain radar'**
+  String get weatherRadarTitle;
+
+  /// No description provided for @weatherRadarOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open rain radar'**
+  String get weatherRadarOpen;
+
+  /// No description provided for @weatherRadarForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Forecast'**
+  String get weatherRadarForecast;
+
+  /// No description provided for @weatherRadarObserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Radar'**
+  String get weatherRadarObserved;
+
+  /// No description provided for @weatherRadarNowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get weatherRadarNowLabel;
+
+  /// No description provided for @weatherRadarInMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'in {minutes} min'**
+  String weatherRadarInMinutes(int minutes);
+
+  /// No description provided for @weatherRadarMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String weatherRadarMinutesAgo(int minutes);
+
+  /// No description provided for @weatherRadarRainIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain in about {minutes} min'**
+  String weatherRadarRainIn(int minutes);
+
+  /// No description provided for @weatherRadarRainNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Raining now'**
+  String get weatherRadarRainNow;
+
+  /// No description provided for @weatherRadarRainStops.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain eases in about {minutes} min'**
+  String weatherRadarRainStops(int minutes);
+
+  /// No description provided for @weatherRadarNoRain.
+  ///
+  /// In en, this message translates to:
+  /// **'No rain expected in the next 2 hours'**
+  String get weatherRadarNoRain;
+
+  /// No description provided for @weatherRadarLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Map layers'**
+  String get weatherRadarLayers;
+
+  /// No description provided for @weatherRadarBaseLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get weatherRadarBaseLight;
+
+  /// No description provided for @weatherRadarBaseDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get weatherRadarBaseDark;
+
+  /// No description provided for @weatherRadarBaseSatellite.
+  ///
+  /// In en, this message translates to:
+  /// **'Satellite'**
+  String get weatherRadarBaseSatellite;
+
+  /// No description provided for @weatherRadarLightning.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightning'**
+  String get weatherRadarLightning;
+
+  /// No description provided for @weatherRadarWarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Warnings'**
+  String get weatherRadarWarnings;
+
+  /// No description provided for @weatherRadarLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Legend'**
+  String get weatherRadarLegend;
+
+  /// No description provided for @weatherRadarPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get weatherRadarPlay;
+
+  /// No description provided for @weatherRadarPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get weatherRadarPause;
+
+  /// No description provided for @weatherRadarStepBack.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes back'**
+  String get weatherRadarStepBack;
+
+  /// No description provided for @weatherRadarStepForward.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes forward'**
+  String get weatherRadarStepForward;
+
+  /// No description provided for @weatherRadarSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get weatherRadarSpeed;
+
+  /// No description provided for @weatherRadarLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading radar {loaded}/{total}'**
+  String weatherRadarLoading(int loaded, int total);
+
+  /// No description provided for @weatherRadarUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain radar could not be loaded'**
+  String get weatherRadarUnavailable;
+
+  /// No description provided for @weatherRadarCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center on place'**
+  String get weatherRadarCenter;
+
+  /// No description provided for @weatherRadarZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get weatherRadarZoomIn;
+
+  /// No description provided for @weatherRadarZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get weatherRadarZoomOut;
+
+  /// No description provided for @weatherRadarAttribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Radar © Deutscher Wetterdienst'**
+  String get weatherRadarAttribution;
 }
 
 class _AppLocalizationsDelegate

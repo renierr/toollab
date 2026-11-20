@@ -4,6 +4,7 @@ import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'weather_page.dart';
+import 'weather_radar_state.dart';
 import 'weather_state.dart';
 
 class WeatherTool {
@@ -20,9 +21,15 @@ class WeatherTool {
     nameL10n: (l10n) => l10n.toolNameWeather,
     descriptionL10n: (l10n) => l10n.toolDescWeather,
     createPage: (_) => const WeatherPage(),
-    onClose: (context) => context.read<WeatherState>().release(),
+    onClose: (context) {
+      context.read<WeatherState>().release();
+      context.read<WeatherRadarState>().release();
+    },
     stateProviders: () => [
       ChangeNotifierProvider<WeatherState>(create: (_) => WeatherState()),
+      ChangeNotifierProvider<WeatherRadarState>(
+        create: (_) => WeatherRadarState(),
+      ),
     ],
   );
 }

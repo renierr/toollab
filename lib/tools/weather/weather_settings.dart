@@ -25,6 +25,7 @@ class WeatherSettings {
     this.radarBaseMap = RadarBaseMap.light,
     this.radarSpeed = 1.0,
     this.radarLightning = false,
+    this.radarWarnings = false,
   });
 
   static const List<int> refreshChoices = [0, 15, 30, 60, 120];
@@ -46,6 +47,7 @@ class WeatherSettings {
   final RadarBaseMap radarBaseMap;
   final double radarSpeed;
   final bool radarLightning;
+  final bool radarWarnings;
 
   static const _kTemp = 'unit_temperature';
   static const _kWind = 'unit_wind';
@@ -58,6 +60,7 @@ class WeatherSettings {
   static const _kBaseMap = 'radar_base_map';
   static const _kSpeed = 'radar_speed';
   static const _kLightning = 'radar_lightning';
+  static const _kWarnings = 'radar_warnings';
 
   static Future<WeatherSettings> load() async {
     final s = await DatabaseService.instance.getAllSettings(
@@ -85,6 +88,7 @@ class WeatherSettings {
       radarBaseMap: pick(RadarBaseMap.values, _kBaseMap, RadarBaseMap.light),
       radarSpeed: double.tryParse(s[_kSpeed] ?? '') ?? 1.0,
       radarLightning: s[_kLightning] == 'true',
+      radarWarnings: s[_kWarnings] == 'true',
     );
   }
 
@@ -106,6 +110,7 @@ class WeatherSettings {
       db.setSetting(id, _kBaseMap, radarBaseMap.name),
       db.setSetting(id, _kSpeed, '$radarSpeed'),
       db.setSetting(id, _kLightning, '$radarLightning'),
+      db.setSetting(id, _kWarnings, '$radarWarnings'),
     ]);
   }
 
@@ -121,6 +126,7 @@ class WeatherSettings {
     RadarBaseMap? radarBaseMap,
     double? radarSpeed,
     bool? radarLightning,
+    bool? radarWarnings,
   }) => WeatherSettings(
     temperatureUnit: temperatureUnit ?? this.temperatureUnit,
     windUnit: windUnit ?? this.windUnit,
@@ -135,5 +141,6 @@ class WeatherSettings {
     radarBaseMap: radarBaseMap ?? this.radarBaseMap,
     radarSpeed: radarSpeed ?? this.radarSpeed,
     radarLightning: radarLightning ?? this.radarLightning,
+    radarWarnings: radarWarnings ?? this.radarWarnings,
   );
 }

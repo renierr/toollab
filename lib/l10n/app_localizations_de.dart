@@ -17323,4 +17323,102 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get weatherDayDetails => 'Stündlich';
+
+  @override
+  String get weatherRadarTitle => 'Regenradar';
+
+  @override
+  String get weatherRadarOpen => 'Regenradar öffnen';
+
+  @override
+  String get weatherRadarForecast => 'Vorhersage';
+
+  @override
+  String get weatherRadarObserved => 'Radar';
+
+  @override
+  String get weatherRadarNowLabel => 'Jetzt';
+
+  @override
+  String weatherRadarInMinutes(int minutes) {
+    return 'in $minutes Min.';
+  }
+
+  @override
+  String weatherRadarMinutesAgo(int minutes) {
+    return 'vor $minutes Min.';
+  }
+
+  @override
+  String weatherRadarRainIn(int minutes) {
+    return 'Regen in etwa $minutes Min.';
+  }
+
+  @override
+  String get weatherRadarRainNow => 'Es regnet gerade';
+
+  @override
+  String weatherRadarRainStops(int minutes) {
+    return 'Regen lässt in etwa $minutes Min. nach';
+  }
+
+  @override
+  String get weatherRadarNoRain => 'Kein Regen in den nächsten 2 Stunden';
+
+  @override
+  String get weatherRadarLayers => 'Kartenebenen';
+
+  @override
+  String get weatherRadarBaseLight => 'Hell';
+
+  @override
+  String get weatherRadarBaseDark => 'Dunkel';
+
+  @override
+  String get weatherRadarBaseSatellite => 'Satellit';
+
+  @override
+  String get weatherRadarLightning => 'Blitze';
+
+  @override
+  String get weatherRadarWarnings => 'Warnungen';
+
+  @override
+  String get weatherRadarLegend => 'Legende';
+
+  @override
+  String get weatherRadarPlay => 'Abspielen';
+
+  @override
+  String get weatherRadarPause => 'Pause';
+
+  @override
+  String get weatherRadarStepBack => '5 Minuten zurück';
+
+  @override
+  String get weatherRadarStepForward => '5 Minuten vor';
+
+  @override
+  String get weatherRadarSpeed => 'Abspielgeschwindigkeit';
+
+  @override
+  String weatherRadarLoading(int loaded, int total) {
+    return 'Lade Radar $loaded/$total';
+  }
+
+  @override
+  String get weatherRadarUnavailable =>
+      'Regenradar konnte nicht geladen werden';
+
+  @override
+  String get weatherRadarCenter => 'Auf Ort zentrieren';
+
+  @override
+  String get weatherRadarZoomIn => 'Vergrößern';
+
+  @override
+  String get weatherRadarZoomOut => 'Verkleinern';
+
+  @override
+  String get weatherRadarAttribution => 'Radar © Deutscher Wetterdienst';
 }

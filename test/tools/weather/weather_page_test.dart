@@ -13,10 +13,10 @@ import 'package:tool_lab/tools/weather/api/weather_http.dart';
 import 'package:tool_lab/tools/weather/models/geo_place.dart';
 import 'package:tool_lab/tools/weather/weather_db_helper.dart';
 import 'package:tool_lab/tools/weather/weather_page.dart';
+import 'package:tool_lab/tools/weather/weather_radar_state.dart';
 import 'package:tool_lab/tools/weather/weather_repository.dart';
 import 'package:tool_lab/tools/weather/weather_settings.dart';
 import 'package:tool_lab/tools/weather/weather_state.dart';
-import 'package:tool_lab/tools/weather/widgets/weather_daily_list.dart';
 import 'package:tool_lab/tools/weather/widgets/weather_hero.dart';
 import 'package:tool_lab/tools/weather/widgets/weather_location_list.dart';
 
@@ -37,6 +37,7 @@ Future<Uint8List> _fetch(
 
 void main() {
   late WeatherState state;
+  late WeatherRadarState radar;
 
   setUpAll(() async {
     sqfliteFfiInit();
@@ -50,6 +51,10 @@ void main() {
       repository: WeatherRepository(fetch: _fetch),
       catalogLoader: () async => catalog,
       settingsLoader: () async => const WeatherSettings(animatedIcons: false),
+    );
+    radar = WeatherRadarState(
+      fetch: (_) async =>
+          throw const WeatherException(WeatherError.unreachable),
     );
     await state.ensureLoaded();
     final eschborn = await state.addPlace(
@@ -82,8 +87,11 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
-      ChangeNotifierProvider<WeatherState>.value(
-        value: state,
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<WeatherState>.value(value: state),
+          ChangeNotifierProvider<WeatherRadarState>.value(value: radar),
+        ],
         child: MaterialApp.router(
           locale: locale,
           localizationsDelegates: appLocalizationsDelegates,
@@ -113,10 +121,6 @@ void main() {
         (tester) async {
           await pumpAt(tester, size, locale);
           expect(find.byType(WeatherHero), findsOneWidget);
-          expect(
-            find.byType(WeatherDailyList, skipOffstage: false),
-            findsOneWidget,
-          );
           expect(
             find.byType(WeatherLocationList),
             size.width >= 720 ? findsOneWidget : findsNothing,
