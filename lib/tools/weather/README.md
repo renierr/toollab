@@ -229,7 +229,8 @@ The background interval itself is stored by `BackgroundTaskService`
 `WeatherBackground.task` (`weather-refresh`) runs through
 `BackgroundTaskService` on WorkManager with `requiresNetwork` and the
 user's constraints (Wi-Fi only, battery not low; changing either reschedules).
-A run skips during the night pause, refreshes the default place or all places
+A scheduled run skips during the night pause ("Run now" does not,
+via `BackgroundTaskService.isManualRun`), refreshes the default place or all places
 (only stale requests hit the network), then calls `WeatherPublisher.publish`.
 Android decides the exact time and defers runs in Doze.
 
@@ -245,7 +246,8 @@ is a local plugin registered on every engine; it sends package-local broadcasts
 and checks/opens notification settings.
 
 Flow: `WeatherPublisher.publish()` (after a refresh in the app, debounced 3 s,
-or at the end of a background run) reads every place from the cache, writes
+or at the end of a background run) takes the snapshots the caller already
+holds and reads only the other places from the cache, writes
 `files/weather/widget.json`, broadcasts `REFRESH_WIDGETS`, then broadcasts
 `NOTIFY` for each new warning. `WeatherReceiver` (in `:weather`) refreshes the
 widgets or posts the notification.
@@ -269,6 +271,8 @@ units; written atomically via a `.tmp` rename):
     "id": 3, "name": "Eschborn", "temp": "12°", "condition": "Leicht bewölkt",
     "icon": "partly_cloudy_d", "theme": "day|night|gray|storm",
     "range": "14° / 6°", "updated": "Aktualisiert 14:05",
+    "details": ["Gefühlt 10°", "Wind 12 km/h", "Regenrisiko 40 %",
+                "Luftfeuchte 82 %", "↑ 07:45  ↓ 16:30"],
     "hours": [{"time": "15:00", "icon": "rain_d", "temp": "11°"}],
     "days": [{"label": "Heute", "icon": "cloudy_d", "high": "14°", "low": "6°"}],
     "warning": {"text": "Sturmböen", "color": 4294945280}
@@ -280,8 +284,10 @@ units; written atomically via a `.tmp` rename):
 
 `WeatherWidgetProvider` is one resizable widget. From its size options it shows
 the header only (small), plus 5 hours (from 220×150 dp), plus up to 5 days
-(from 220×290 dp); the warning chip appears from 150 dp height. Background
-gradient by `theme`. Each widget can be bound to a place in
+(from 220×290 dp); from 300 dp width the `details` lines sit beside the
+icon, and the warning chip appears from 150 dp height. The chip's level colour
+tints a rounded image behind the text, since RemoteViews can only set a flat
+background colour. Background gradient by `theme`. Each widget can be bound to a place in
 `WeatherWidgetConfigActivity` (SharedPreferences `weather_widget`); unbound
 widgets follow the default place. A tap opens `/weather?place=<id>`.
 
@@ -337,5 +343,4 @@ because `ToolBackButton` needs a `GoRouterState`.
 
 ## Planned
 
-Optional backfill of older hours from the DWD climate archive (CDC), and a
-final polish pass on devices.
+A final polish pass on devices.

@@ -66,21 +66,92 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:importantForAccessibility="no" />
+
+        <LinearLayout
+            android:id="@+id/weather_widget_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:gravity="end"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/weather_widget_detail0"
+                style="@style/WeatherWidgetSmall"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="0dp"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/weather_widget_detail1"
+                style="@style/WeatherWidgetSmall"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/weather_widget_detail2"
+                style="@style/WeatherWidgetSmall"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/weather_widget_detail3"
+                style="@style/WeatherWidgetSmall"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/weather_widget_detail4"
+                style="@style/WeatherWidgetSmall"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="1" />
+        </LinearLayout>
     </LinearLayout>
 
-    <TextView
+    <!-- RemoteViews can only tint a background flat, so the level colour goes
+         on a rounded image behind the text. -->
+    <FrameLayout
         android:id="@+id/weather_widget_warning"
-        style="@style/WeatherWidgetSmall"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:background="@drawable/weather_widget_chip"
-        android:drawablePadding="6dp"
-        android:ellipsize="end"
-        android:gravity="center_vertical|start"
-        android:maxLines="1"
-        android:paddingHorizontal="10dp"
-        android:paddingVertical="4dp"
-        android:visibility="gone" />
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/weather_widget_warning_bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="fitXY"
+            android:src="@drawable/weather_widget_chip_fill" />
+
+        <TextView
+            android:id="@+id/weather_widget_warning_text"
+            style="@style/WeatherWidgetSmall"
+            android:layout_width="match_parent"
+            android:drawablePadding="6dp"
+            android:ellipsize="end"
+            android:gravity="center_vertical|start"
+            android:maxLines="1"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:textColor="@android:color/white" />
+    </FrameLayout>
 
     <LinearLayout
         android:id="@+id/weather_widget_hours"

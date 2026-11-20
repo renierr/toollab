@@ -4,6 +4,7 @@ import 'package:tool_lab/services/background_task_service.dart';
 import 'api/station_catalog.dart';
 import 'config.dart';
 import 'models/weather_location.dart';
+import 'models/weather_snapshot.dart';
 import 'weather_db_helper.dart';
 import 'weather_publisher.dart';
 import 'weather_repository.dart';
@@ -37,7 +38,8 @@ class WeatherBackground {
     DateTime Function()? clock,
   }) async {
     final settings = await (settingsLoader ?? WeatherSettings.load)();
-    if (settings.isQuietAt((clock ?? DateTime.now)().toLocal())) {
+    if (!BackgroundTaskService.isManualRun &&
+        settings.isQuietAt((clock ?? DateTime.now)().toLocal())) {
       return const BackgroundTaskResult.skipped('quiet hours');
     }
     await WeatherDbHelper.instance.pruneHistory(
@@ -51,16 +53,22 @@ class WeatherBackground {
     final repo = repository ?? WeatherRepository();
     var updated = 0;
     var failed = 0;
+    final loaded = <int, WeatherSnapshot>{};
     for (final location in targets) {
       try {
         final snapshot = await repo.load(location, catalog);
+        loaded[location.id!] = snapshot;
         snapshot.hasData && !snapshot.isStale ? updated++ : failed++;
       } catch (e) {
         debugLog('[WeatherBackground] ${location.name} failed: $e');
         failed++;
       }
     }
-    await WeatherPublisher.publish(repository: repo, catalog: catalog);
+    await WeatherPublisher.publish(
+      repository: repo,
+      catalog: catalog,
+      known: loaded,
+    );
     final detail = '$updated/${targets.length} places';
     return updated == 0 && failed > 0
         ? BackgroundTaskResult.failed(detail)

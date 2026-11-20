@@ -384,7 +384,7 @@ That is the whole registration: `BackgroundTaskService.init()` in `main.dart` co
 
 **Give the user the switch.** Drop a `BackgroundTaskTile` (`lib/widgets/background_task_tile.dart`) into the tool's settings page, guarded by `BackgroundTaskService.isSupported` (Android only). It renders the interval picker, a "Run now" action and the last run's outcome; the intervals themselves come from `BackgroundTaskService.intervalChoices`, so every tool offers the same steps.
 
-**Save battery and data.** Pass `constraints` to let the platform wait for Wi-Fi (`unmeteredNetwork`), a battery that is not low, or charging. It is a callback read on every scheduling, so these can be user settings; call `BackgroundTaskService.reschedule(task)` after the user changes one.
+**Save battery and data.** Pass `constraints` to let the platform wait for Wi-Fi (`unmeteredNetwork`), a battery that is not low, or charging. It is a callback read on every scheduling, so these can be user settings; call `BackgroundTaskService.reschedule(task)` after the user changes one. Conditions a task checks itself (a night pause, say) should not block a "Run now": skip them when `BackgroundTaskService.isManualRun` is true.
 
 **What a scheduled run may and may not do.** It executes in a headless Flutter engine — plugins are registered, so platform channels work, but:
 

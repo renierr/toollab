@@ -27,7 +27,7 @@ class WeatherState extends ChangeNotifier {
     this._geocoding = const GeocodingClient(),
     Future<WeatherSettings> Function()? settingsLoader,
     Future<DeviceFix> Function({required bool mayPrompt})? deviceLocation,
-    Future<void> Function()? publish,
+    Future<void> Function({Map<int, WeatherSnapshot> known})? publish,
     this._historyStore = const WeatherHistoryStore(),
   }) : _publish = publish ?? WeatherPublisher.publish,
        _db = db ?? WeatherDbHelper.instance,
@@ -48,7 +48,7 @@ class WeatherState extends ChangeNotifier {
   final GeocodingClient _geocoding;
   final Future<WeatherSettings> Function() _settingsLoader;
   final Future<DeviceFix> Function({required bool mayPrompt}) _deviceLocation;
-  final Future<void> Function() _publish;
+  final Future<void> Function({Map<int, WeatherSnapshot> known}) _publish;
   final WeatherHistoryStore _historyStore;
   Timer? _publishTimer;
 
@@ -399,7 +399,10 @@ class WeatherState extends ChangeNotifier {
   void _schedulePublish() {
     if (!Platform.isAndroid) return;
     _publishTimer?.cancel();
-    _publishTimer = Timer(_publishDelay, () => unawaited(_publish()));
+    _publishTimer = Timer(
+      _publishDelay,
+      () => unawaited(_publish(known: Map.of(_snapshots))),
+    );
   }
 
   void _notify() {

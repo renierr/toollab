@@ -20,6 +20,7 @@ data class WeatherWidgetPlace(
     val theme: String,
     val range: String,
     val updated: String,
+    val details: List<String>,
     val hours: List<WeatherWidgetHour>,
     val days: List<WeatherWidgetDay>,
     val warning: WeatherWidgetWarning?,
@@ -54,6 +55,7 @@ object WeatherFiles {
         val hours = json.optJSONArray("hours")
         val days = json.optJSONArray("days")
         val warning = json.optJSONObject("warning")
+        val details = json.optJSONArray("details")
         return WeatherWidgetPlace(
             id = json.getInt("id"),
             name = json.optString("name"),
@@ -63,6 +65,7 @@ object WeatherFiles {
             theme = json.optString("theme", "day"),
             range = json.optString("range"),
             updated = json.optString("updated"),
+            details = (0 until (details?.length() ?: 0)).map { details!!.optString(it) }.filter { it.isNotEmpty() },
             hours = (0 until (hours?.length() ?: 0)).mapNotNull { i ->
                 hours!!.optJSONObject(i)?.let {
                     WeatherWidgetHour(it.optString("time"), it.optString("icon"), it.optString("temp"))

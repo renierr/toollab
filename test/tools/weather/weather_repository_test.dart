@@ -413,10 +413,13 @@ void main() {
       expect(quiet.outcome, BackgroundTaskOutcome.skipped);
       expect(net.requests, isEmpty);
 
+      final manual = await BackgroundTaskService.asManualRun(() => runAt(2));
+      expect(manual.outcome, BackgroundTaskOutcome.done, reason: 'Run now');
+      expect(net.requests, isNotEmpty);
+
       final result = await runAt(12);
       expect(result.outcome, BackgroundTaskOutcome.done);
       expect(result.detail, '1/1 places');
-      expect(net.requests, isNotEmpty);
 
       net.offline = true;
       final offline = await runAt(12);
@@ -459,6 +462,10 @@ void main() {
       expect(first['temp'], matches(RegExp(r'^-?\d+°$')));
       expect(first['icon'], matches(RegExp(r'^[a-z_]+_[dn]$')));
       expect(first['hours'], hasLength(5));
+      final details = (first['details']! as List).cast<String>();
+      expect(details.first, startsWith('Gefühlt'));
+      expect(details, contains(startsWith('Wind ')));
+      expect(details.last, matches(RegExp(r'^↑ \d\d:\d\d  ↓ \d\d:\d\d$')));
       expect((first['days']! as List).first, containsPair('label', 'Heute'));
       final warning = first['warning']! as Map<String, Object?>;
       expect(warning['text'], isNotEmpty);

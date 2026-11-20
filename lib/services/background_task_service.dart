@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -146,7 +147,17 @@ class BackgroundTaskService {
   /// Runs a task now, in the calling isolate, through the same lock and status
   /// bookkeeping a scheduled run uses. This is what a "Run now" button calls.
   static Future<BackgroundTaskResult> runNow(BackgroundTask task) =>
-      _run(task, 'manual');
+      asManualRun(() => _run(task, 'manual'));
+
+  /// Runs [body] the way "Run now" does; for tests of a task's own run.
+  static R asManualRun<R>(R Function() body) =>
+      runZoned(body, zoneValues: {_manualKey: true});
+
+  static final Object _manualKey = Object();
+
+  /// True inside [BackgroundTask.run] when the user started it, so a task can
+  /// skip conditions meant only for scheduled runs, such as a night pause.
+  static bool get isManualRun => Zone.current[_manualKey] == true;
 
   /// The scheduled entry point. A false return asks WorkManager to retry with
   /// backoff ahead of the next interval.

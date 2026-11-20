@@ -23,6 +23,13 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             intArrayOf(R.id.weather_widget_h3_time, R.id.weather_widget_h3_icon, R.id.weather_widget_h3_temp),
             intArrayOf(R.id.weather_widget_h4_time, R.id.weather_widget_h4_icon, R.id.weather_widget_h4_temp),
         )
+        private val detailIds = intArrayOf(
+            R.id.weather_widget_detail0,
+            R.id.weather_widget_detail1,
+            R.id.weather_widget_detail2,
+            R.id.weather_widget_detail3,
+            R.id.weather_widget_detail4,
+        )
         private val dayIds = arrayOf(
             intArrayOf(R.id.weather_widget_d0, R.id.weather_widget_d0_label, R.id.weather_widget_d0_icon, R.id.weather_widget_d0_low, R.id.weather_widget_d0_high),
             intArrayOf(R.id.weather_widget_d1, R.id.weather_widget_d1_label, R.id.weather_widget_d1_icon, R.id.weather_widget_d1_low, R.id.weather_widget_d1_high),
@@ -67,6 +74,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             val showHours = place != null && width >= 220 && height >= 150 && place.hours.isNotEmpty()
             val showDays = place != null && width >= 220 && height >= 290 && place.days.isNotEmpty()
             val compact = width < 180
+            val showDetails = place != null && width >= 300 && place.details.isNotEmpty()
 
             views.setOnClickPendingIntent(
                 R.id.weather_widget_root,
@@ -76,6 +84,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             views.setViewVisibility(R.id.weather_widget_header, if (place == null) View.GONE else View.VISIBLE)
             views.setViewVisibility(R.id.weather_widget_hours, if (showHours) View.VISIBLE else View.GONE)
             views.setViewVisibility(R.id.weather_widget_days, if (showDays) View.VISIBLE else View.GONE)
+            views.setViewVisibility(R.id.weather_widget_details, if (showDetails) View.VISIBLE else View.GONE)
             if (place == null) {
                 views.setViewVisibility(R.id.weather_widget_warning, View.GONE)
                 views.setTextViewText(R.id.weather_widget_updated, "")
@@ -96,11 +105,20 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             val warning = place.warning
             if (warning != null && height >= 150) {
                 views.setViewVisibility(R.id.weather_widget_warning, View.VISIBLE)
-                views.setTextViewText(R.id.weather_widget_warning, warning.text)
-                views.setTextViewCompoundDrawablesRelative(R.id.weather_widget_warning, R.drawable.weather_widget_dot, 0, 0, 0)
-                views.setInt(R.id.weather_widget_warning, "setBackgroundColor", (warning.color and 0x00FFFFFF) or 0x66000000)
+                views.setTextViewText(R.id.weather_widget_warning_text, warning.text)
+                views.setTextViewCompoundDrawablesRelative(R.id.weather_widget_warning_text, R.drawable.weather_widget_dot, 0, 0, 0)
+                views.setInt(R.id.weather_widget_warning_bg, "setColorFilter", warning.color or 0xFF000000.toInt())
+                views.setInt(R.id.weather_widget_warning_bg, "setImageAlpha", 0x66)
             } else {
                 views.setViewVisibility(R.id.weather_widget_warning, View.GONE)
+            }
+
+            if (showDetails) {
+                detailIds.forEachIndexed { i, id ->
+                    val text = place.details.getOrNull(i)
+                    views.setViewVisibility(id, if (text == null) View.GONE else View.VISIBLE)
+                    views.setTextViewText(id, text ?: "")
+                }
             }
 
             if (showHours) {

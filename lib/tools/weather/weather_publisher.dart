@@ -37,21 +37,31 @@ class WeatherPublisher {
   static const int _days = 5;
   static const int _bodyLength = 400;
 
-  /// Reads every place from the cache, so it costs no network requests.
+  /// Places missing from [known] are read from the cache, so it costs no
+  /// network requests; [known] spares parsing the forecasts again.
   static Future<void> publish({
     WeatherRepository? repository,
     StationCatalog? catalog,
+    Map<int, WeatherSnapshot> known = const {},
   }) async {
     if (!Platform.isAndroid) return;
     try {
       final now = DateTime.now();
       final settings = await WeatherSettings.load();
       final locations = await WeatherDbHelper.instance.getLocations();
+      final missing = [
+        for (final l in locations)
+          if (!(known[l.id]?.hasData ?? false)) l,
+      ];
       final repo = repository ?? WeatherRepository();
-      final stations = catalog ?? await StationCatalog.load();
+      final stations = missing.isEmpty
+          ? null
+          : catalog ?? await StationCatalog.load();
       final snapshots = <int, WeatherSnapshot>{
         for (final l in locations)
-          l.id!: await repo.load(l, stations, cacheOnly: true),
+          if (known[l.id] case final s? when s.hasData) l.id!: s,
+        for (final l in missing)
+          l.id!: await repo.load(l, stations!, cacheOnly: true),
       };
       final l10n = await headlessLocalizations();
       await _writeWidget(
@@ -185,6 +195,7 @@ class WeatherPublisher {
       'updated': l10n.weatherUpdated(
         DateFormat.Hm(locale).format(snapshot.fetchedAt.toLocal()),
       ),
+      'details': _details(current, todayForecast, snapshot, units, l10n, now),
       'hours': [
         for (final h in hours)
           {
@@ -212,6 +223,33 @@ class WeatherPublisher {
           'color': WeatherColors.warning(warning.level).toARGB32(),
         },
     };
+  }
+
+  /// Lines beside the temperature on a wide widget, most useful first.
+  static List<String> _details(
+    CurrentConditions current,
+    DailyForecast? today,
+    WeatherSnapshot snapshot,
+    WeatherUnits units,
+    AppLocalizations l10n,
+    DateTime now,
+  ) {
+    final hm = DateFormat.Hm(l10n.localeName);
+    final sun = snapshot.sunTimes(now);
+    return [
+      if (current.feelsLike != null)
+        l10n.weatherFeelsLike(units.temperatureText(current.feelsLike)),
+      if (current.windSpeed != null)
+        '${l10n.weatherWind} ${units.windText(current.windSpeed)}',
+      if (today?.precipitationProbability != null)
+        '${l10n.weatherPrecipitationProbability} '
+            '${WeatherUnits.percentText(today!.precipitationProbability)}',
+      if (current.humidity != null)
+        '${l10n.weatherHumidity} ${WeatherUnits.percentText(current.humidity)}',
+      if (sun.sunrise != null && sun.sunset != null)
+        '↑ ${hm.format(sun.sunrise!.toLocal())}  '
+            '↓ ${hm.format(sun.sunset!.toLocal())}',
+    ];
   }
 
   /// Matches the `weather_icon_<key>` drawables rendered from the app's icons.
