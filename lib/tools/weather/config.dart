@@ -1,0 +1,26 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/theme/theme.dart';
+
+import 'weather_page.dart';
+import 'weather_state.dart';
+
+class WeatherTool {
+  WeatherTool._();
+
+  static ToolModel get config => ToolModel(
+    id: 'weather',
+    name: 'Weather',
+    description: 'DWD forecast, live measurements, warnings and rain radar',
+    icon: Icons.wb_cloudy_outlined,
+    route: '/weather',
+    accentColor: AppTheme.accentBlue,
+    sectionId: 'utilities',
+    createPage: (_) => const WeatherPage(),
+    onClose: (context) => context.read<WeatherState>().release(),
+    stateProviders: () => [
+      ChangeNotifierProvider<WeatherState>(create: (_) => WeatherState()),
+    ],
+  );
+}
