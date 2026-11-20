@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/focus_outline.dart';
@@ -24,13 +26,17 @@ class XMediaGrid extends StatelessWidget {
     this.focusNodes,
   });
 
+  /// Narrower single tiles get blurred side fill instead of becoming a strip.
+  static const double _minSingleWidth = 280;
+
   @override
   Widget build(BuildContext context) {
     if (media.isEmpty) return const SizedBox.shrink();
     final shown = media.take(4).toList();
-    Widget tile(int i) => _MediaTile(
+    Widget tile(int i, {bool contain = false}) => _MediaTile(
       media: shown[i],
       onTap: () => onOpen(i),
+      contain: contain,
       focusNode: focusNodes != null && i < focusNodes!.length
           ? focusNodes![i]
           : null,
@@ -38,19 +44,31 @@ class XMediaGrid extends StatelessWidget {
 
     final Widget grid;
     if (shown.length == 1) {
-      final ratio = shown.first.aspectRatio.clamp(0.6, 2.4);
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final height = (constraints.maxWidth / ratio).clamp(0.0, maxHeight);
-            return SizedBox(
-              width: constraints.maxWidth,
-              height: height,
-              child: tile(0),
-            );
-          },
-        ),
+      final ratio = shown.first.aspectRatio;
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          // Very wide panoramas still get a usable height and are letterboxed.
+          final height = (maxWidth / ratio.clamp(0.0, 2.4)).clamp(
+            0.0,
+            maxHeight,
+          );
+          final width = (height * ratio).clamp(
+            _minSingleWidth.clamp(0.0, maxWidth),
+            maxWidth,
+          );
+          return Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                width: width,
+                height: height,
+                child: tile(0, contain: true),
+              ),
+            ),
+          );
+        },
       );
     } else if (shown.length == 2) {
       grid = Row(
@@ -113,7 +131,15 @@ class _MediaTile extends StatelessWidget {
   final VoidCallback onTap;
   final FocusNode? focusNode;
 
-  const _MediaTile({required this.media, required this.onTap, this.focusNode});
+  /// Shows the whole preview over a blurred copy instead of cropping it.
+  final bool contain;
+
+  const _MediaTile({
+    required this.media,
+    required this.onTap,
+    required this.contain,
+    this.focusNode,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -128,12 +154,13 @@ class _MediaTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            if (contain) _BlurredBackdrop(url: media.previewUrl),
             Semantics(
               label: media.altText,
               image: true,
               child: Image.network(
                 media.previewUrl,
-                fit: BoxFit.cover,
+                fit: contain ? BoxFit.contain : BoxFit.cover,
                 errorBuilder: (_, _, _) => Icon(
                   Icons.broken_image_outlined,
                   color: scheme.onSurfaceVariant,
@@ -184,6 +211,32 @@ class _MediaTile extends StatelessWidget {
     final d = Duration(milliseconds: ms);
     final seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
     return '${d.inMinutes}:$seconds';
+  }
+}
+
+class _BlurredBackdrop extends StatelessWidget {
+  final String url;
+
+  const _BlurredBackdrop({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: ImageFiltered(
+        imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: ColorFiltered(
+          colorFilter: ColorFilter.mode(
+            Colors.black.withValues(alpha: 0.35),
+            BlendMode.darken,
+          ),
+          child: Image.network(
+            url,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+          ),
+        ),
+      ),
+    );
   }
 }
 
