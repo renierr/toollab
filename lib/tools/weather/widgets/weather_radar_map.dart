@@ -26,11 +26,16 @@ class WeatherRadarMap extends StatefulWidget {
     required this.radar,
     required this.pins,
     this.interactive = true,
+    this.focusAnchor = .5,
   });
 
   final WeatherRadarState radar;
   final List<RadarPin> pins;
   final bool interactive;
+
+  /// Vertical share of the map the place sits at; less than half keeps it
+  /// clear of controls along the bottom.
+  final double focusAnchor;
 
   @override
   State<WeatherRadarMap> createState() => _WeatherRadarMapState();
@@ -71,7 +76,9 @@ class _WeatherRadarMapState extends State<WeatherRadarMap> {
       builder: (context, constraints) {
         final size = constraints.biggest;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) widget.radar.resize(size);
+          if (mounted) {
+            widget.radar.resize(size, focusAnchor: widget.focusAnchor);
+          }
         });
         final map = CustomPaint(
           size: size,

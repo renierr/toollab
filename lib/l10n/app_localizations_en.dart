@@ -17277,6 +17277,130 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weatherCacheCleared => 'Saved weather data cleared';
 
   @override
+  String get weatherHistory => 'History';
+
+  @override
+  String get weatherHistoryOpen => 'Open history';
+
+  @override
+  String get weatherHistoryDay => 'Day';
+
+  @override
+  String get weatherHistoryWeek => 'Week';
+
+  @override
+  String get weatherHistoryMonth => 'Month';
+
+  @override
+  String get weatherHistoryYear => 'Year';
+
+  @override
+  String get weatherHistoryPrevious => 'Previous period';
+
+  @override
+  String get weatherHistoryNext => 'Next period';
+
+  @override
+  String get weatherHistoryPickDate => 'Choose a date';
+
+  @override
+  String get weatherHistoryEmpty => 'No weather recorded for this period.';
+
+  @override
+  String get weatherHistoryStartsNow =>
+      'History is recorded from now on with every update; background updates fill the gaps.';
+
+  @override
+  String get weatherHistoryLast7 => 'Last 7 days';
+
+  @override
+  String get weatherHistoryLowest => 'Lowest';
+
+  @override
+  String get weatherHistoryHighest => 'Highest';
+
+  @override
+  String get weatherHistoryAverage => 'Average';
+
+  @override
+  String get weatherHistoryRainDays => 'Rain days (≥ 1 mm)';
+
+  @override
+  String get weatherHistoryMaxGust => 'Strongest gust';
+
+  @override
+  String get weatherHistoryWarmestDay => 'Warmest day';
+
+  @override
+  String get weatherHistoryColdestDay => 'Coldest day';
+
+  @override
+  String get weatherHistoryWettestDay => 'Wettest day';
+
+  @override
+  String weatherHistoryCoverage(int recorded, int measured) {
+    return '$recorded % of hours recorded · $measured % measured';
+  }
+
+  @override
+  String weatherHistoryCompare(String year) {
+    return 'Compared with $year';
+  }
+
+  @override
+  String weatherHistoryWarmer(String value) {
+    return '$value warmer on average';
+  }
+
+  @override
+  String weatherHistoryColder(String value) {
+    return '$value colder on average';
+  }
+
+  @override
+  String get weatherHistorySameTemperature => 'Same average temperature';
+
+  @override
+  String weatherHistoryMoreRain(String value) {
+    return '$value more precipitation';
+  }
+
+  @override
+  String weatherHistoryLessRain(String value) {
+    return '$value less precipitation';
+  }
+
+  @override
+  String get weatherHistoryTemperatureChart =>
+      'Temperature: low, average, high';
+
+  @override
+  String get weatherHistoryKeep => 'Keep history';
+
+  @override
+  String weatherHistoryKeepMonths(int months) {
+    return '$months months';
+  }
+
+  @override
+  String get weatherHistoryKeepForever => 'Forever';
+
+  @override
+  String weatherHistorySize(int count, String size) {
+    return '$count hours stored, about $size';
+  }
+
+  @override
+  String get weatherHistoryClear => 'Delete history';
+
+  @override
+  String get weatherHistoryClearHint =>
+      'Deletes the recorded weather of all places';
+
+  @override
+  String get weatherHistoryCleared => 'History deleted';
+
+  @override
   String get weatherLocationDenied => 'Location permission denied';
 
   @override

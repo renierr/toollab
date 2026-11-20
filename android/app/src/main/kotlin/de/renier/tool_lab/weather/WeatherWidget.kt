@@ -48,10 +48,6 @@ class WeatherWidgetProvider : AppWidgetProvider() {
                 .forEach { update(context, manager, it) }
         }
 
-        private fun iconRes(context: Context, key: String): Int {
-            val id = context.resources.getIdentifier("weather_icon_$key", "drawable", context.packageName)
-            return if (id != 0) id else R.drawable.weather_icon_partly_cloudy_d
-        }
 
         private fun background(theme: String): Int = when (theme) {
             "night" -> R.drawable.weather_widget_bg_night
@@ -92,7 +88,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.weather_widget_temp, place.temp)
             views.setTextViewText(R.id.weather_widget_condition, place.condition)
             views.setTextViewText(R.id.weather_widget_range, place.range)
-            views.setImageViewResource(R.id.weather_widget_icon, iconRes(context, place.icon))
+            views.setImageViewResource(R.id.weather_widget_icon, WeatherIcons.forKey(place.icon))
             views.setContentDescription(R.id.weather_widget_icon, place.condition)
             views.setViewVisibility(R.id.weather_widget_condition, if (compact) View.GONE else View.VISIBLE)
             views.setTextViewText(R.id.weather_widget_updated, if (compact) "" else place.updated)
@@ -112,7 +108,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
                     val hour = place.hours.getOrNull(i)
                     views.setTextViewText(ids[0], hour?.time ?: "")
                     views.setTextViewText(ids[2], hour?.temp ?: "")
-                    if (hour != null) views.setImageViewResource(ids[1], iconRes(context, hour.icon))
+                    if (hour != null) views.setImageViewResource(ids[1], WeatherIcons.forKey(hour.icon))
                     views.setViewVisibility(ids[1], if (hour == null) View.INVISIBLE else View.VISIBLE)
                 }
             }
@@ -127,7 +123,7 @@ class WeatherWidgetProvider : AppWidgetProvider() {
                     }
                     views.setViewVisibility(ids[0], View.VISIBLE)
                     views.setTextViewText(ids[1], day.label)
-                    views.setImageViewResource(ids[2], iconRes(context, day.icon))
+                    views.setImageViewResource(ids[2], WeatherIcons.forKey(day.icon))
                     views.setTextViewText(ids[3], day.low)
                     views.setTextViewText(ids[4], day.high)
                 }

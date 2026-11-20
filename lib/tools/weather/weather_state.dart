@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -7,11 +8,13 @@ import 'package:tool_lab/services/background_task_service.dart';
 import 'api/geocoding_client.dart';
 import 'api/station_catalog.dart';
 import 'models/geo_place.dart';
+import 'models/weather_history_entry.dart';
 import 'models/weather_location.dart';
 import 'models/weather_snapshot.dart';
 import 'weather_background.dart';
 import 'weather_db_helper.dart';
 import 'weather_device_location.dart';
+import 'weather_history_store.dart';
 import 'weather_publisher.dart';
 import 'weather_repository.dart';
 import 'weather_settings.dart';
@@ -25,6 +28,7 @@ class WeatherState extends ChangeNotifier {
     Future<WeatherSettings> Function()? settingsLoader,
     Future<DeviceFix> Function({required bool mayPrompt})? deviceLocation,
     Future<void> Function()? publish,
+    this._historyStore = const WeatherHistoryStore(),
   }) : _publish = publish ?? WeatherPublisher.publish,
        _db = db ?? WeatherDbHelper.instance,
        _repository = repository ?? WeatherRepository(db: db),
@@ -45,6 +49,7 @@ class WeatherState extends ChangeNotifier {
   final Future<WeatherSettings> Function() _settingsLoader;
   final Future<DeviceFix> Function({required bool mayPrompt}) _deviceLocation;
   final Future<void> Function() _publish;
+  final WeatherHistoryStore _historyStore;
   Timer? _publishTimer;
 
   Future<void>? _loading;
@@ -94,6 +99,7 @@ class WeatherState extends ChangeNotifier {
       _settings = results[1] as WeatherSettings;
       _locations = results[2] as List<WeatherLocation>;
       _notify();
+      unawaited(_pruneHistory());
       final initial = selected;
       if (initial != null) unawaited(_refreshInOrder(initial.id!));
     } catch (e) {
@@ -267,7 +273,9 @@ class WeatherState extends ChangeNotifier {
   }
 
   Future<void> restoreLocation(WeatherLocation location) async {
-    final saved = await _db.saveLocation(location.copyWithoutId());
+    final saved = location.id == null
+        ? await _db.saveLocation(location)
+        : await _db.restoreLocation(location);
     final index = location.sortOrder.clamp(0, _locations.length);
     _locations = [..._locations]..insert(index, saved);
     _locations = [
@@ -323,6 +331,25 @@ class WeatherState extends ChangeNotifier {
   Future<void> setDefault(int? id) =>
       updateSettings(_settings.copyWith(defaultLocationId: () => id));
 
+  Future<void> _pruneHistory() async {
+    try {
+      await _db.pruneHistory(_settings.historyCutoff(DateTime.now()));
+    } catch (e) {
+      errorLog('[WeatherState] history prune failed: $e');
+    }
+  }
+
+  /// Recorded hours of a place in `[from, to)`, oldest first.
+  Future<List<WeatherHistoryEntry>> history(
+    int locationId,
+    DateTime from,
+    DateTime to,
+  ) => _historyStore.hours(locationId, from, to);
+
+  Future<int> historyCount() => _historyStore.count();
+
+  Future<void> clearHistory() => _historyStore.clear();
+
   Future<void> clearCache() async {
     await _db.clearCache();
     await refreshAll(force: true);
@@ -334,6 +361,9 @@ class WeatherState extends ChangeNotifier {
     _notify();
     await settings.save();
     _schedulePublish();
+    if (previous.historyMonths != settings.historyMonths) {
+      unawaited(_pruneHistory());
+    }
     if (previous.wifiOnly != settings.wifiOnly ||
         previous.batteryNotLow != settings.batteryNotLow) {
       await BackgroundTaskService.reschedule(WeatherBackground.task);
@@ -367,6 +397,7 @@ class WeatherState extends ChangeNotifier {
 
   /// Widget data and warning notifications follow the saved weather.
   void _schedulePublish() {
+    if (!Platform.isAndroid) return;
     _publishTimer?.cancel();
     _publishTimer = Timer(_publishDelay, () => unawaited(_publish()));
   }

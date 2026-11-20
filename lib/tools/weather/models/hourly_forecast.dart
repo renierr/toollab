@@ -18,6 +18,7 @@ class HourlyForecast {
     this.sunshineMinutes,
     this.visibility,
     this.weatherCode,
+    this.fixedCondition,
   });
 
   final DateTime time;
@@ -34,7 +35,11 @@ class HourlyForecast {
   final double? visibility;
   final int? weatherCode;
 
+  /// Set when the condition is known already, e.g. for a recorded history hour.
+  final WeatherCondition? fixedCondition;
+
   WeatherCondition get condition =>
+      fixedCondition ??
       WeatherCondition.fromWw(weatherCode, cloudCover: cloudCover);
 
   double? get humidity => relativeHumidity(temperature, dewPoint);

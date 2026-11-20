@@ -12,6 +12,7 @@ import 'api/weather_http.dart';
 import 'models/area_warning.dart';
 import 'models/mosmix_forecast.dart';
 import 'models/station_overview.dart';
+import 'models/weather_history_entry.dart';
 import 'models/weather_location.dart';
 import 'models/weather_observation.dart';
 import 'models/weather_snapshot.dart';
@@ -75,7 +76,7 @@ class WeatherRepository {
       observations?.error,
       overview?.error,
     ].nonNulls;
-    return WeatherSnapshot(
+    final snapshot = WeatherSnapshot(
       location: location,
       fetchedAt: cacheOnly ? (forecast?.time ?? _clock()) : _clock(),
       forecastStation: forecast?.station,
@@ -89,6 +90,22 @@ class WeatherRepository {
           ? (forecast?.error ?? WeatherError.notFound)
           : errors.firstOrNull,
     );
+    if (!cacheOnly && location.id != null) {
+      await _recordHistory(location.id!, snapshot);
+    }
+    return snapshot;
+  }
+
+  /// Every network load extends the place's history; a failure only costs
+  /// those hours.
+  Future<void> _recordHistory(int locationId, WeatherSnapshot snapshot) async {
+    try {
+      await _db.recordHistory(
+        WeatherHistoryEntry.fromSnapshot(locationId, snapshot, _clock()),
+      );
+    } catch (e) {
+      errorLog('[WeatherRepository] history for $locationId failed: $e');
+    }
   }
 
   List<StationMatch> _stations(

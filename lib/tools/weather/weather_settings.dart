@@ -36,9 +36,13 @@ class WeatherSettings {
     this.quietTo = 6,
     this.wifiOnly = false,
     this.batteryNotLow = true,
+    this.historyMonths = 12,
   });
 
   static const List<int> refreshChoices = [0, 15, 30, 60, 120];
+
+  /// 0 keeps the history forever.
+  static const List<int> historyChoices = [3, 6, 12, 24, 0];
 
   final TemperatureUnit temperatureUnit;
   final WindUnit windUnit;
@@ -71,6 +75,14 @@ class WeatherSettings {
   final bool wifiOnly;
   final bool batteryNotLow;
 
+  /// Months of history kept; 0 = forever.
+  final int historyMonths;
+
+  /// Hours before this are dropped; null keeps everything.
+  DateTime? historyCutoff(DateTime now) => historyMonths <= 0
+      ? null
+      : DateTime(now.year, now.month - historyMonths, now.day);
+
   bool isQuietAt(DateTime local) {
     if (!quietHours || quietFrom == quietTo) return false;
     final h = local.hour;
@@ -98,6 +110,7 @@ class WeatherSettings {
   static const _kQuietTo = 'quiet_to';
   static const _kWifi = 'background_wifi_only';
   static const _kBattery = 'background_battery_not_low';
+  static const _kHistory = 'history_months';
 
   static Future<WeatherSettings> load() async {
     final s = await DatabaseService.instance.getAllSettings(
@@ -137,6 +150,7 @@ class WeatherSettings {
       quietTo: int.tryParse(s[_kQuietTo] ?? '') ?? 6,
       wifiOnly: s[_kWifi] == 'true',
       batteryNotLow: s[_kBattery] != 'false',
+      historyMonths: int.tryParse(s[_kHistory] ?? '') ?? 12,
     );
   }
 
@@ -166,6 +180,7 @@ class WeatherSettings {
       db.setSetting(id, _kQuietTo, '$quietTo'),
       db.setSetting(id, _kWifi, '$wifiOnly'),
       db.setSetting(id, _kBattery, '$batteryNotLow'),
+      db.setSetting(id, _kHistory, '$historyMonths'),
     ]);
   }
 
@@ -189,6 +204,7 @@ class WeatherSettings {
     int? quietTo,
     bool? wifiOnly,
     bool? batteryNotLow,
+    int? historyMonths,
   }) => WeatherSettings(
     temperatureUnit: temperatureUnit ?? this.temperatureUnit,
     windUnit: windUnit ?? this.windUnit,
@@ -211,5 +227,6 @@ class WeatherSettings {
     quietTo: quietTo ?? this.quietTo,
     wifiOnly: wifiOnly ?? this.wifiOnly,
     batteryNotLow: batteryNotLow ?? this.batteryNotLow,
+    historyMonths: historyMonths ?? this.historyMonths,
   );
 }

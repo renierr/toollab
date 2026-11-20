@@ -1,3 +1,7 @@
+// A hang should fail fast instead of after the 10-minute default.
+@Timeout(Duration(minutes: 1))
+library;
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -94,6 +98,18 @@ void main() {
       final p = vp.toScreenLatLon(50.15, 8.56);
       expect(p.dx, closeTo(200, .01));
       expect(p.dy, closeTo(150, .01));
+    });
+
+    test('an anchor keeps the place in the upper third', () {
+      final upper = RadarViewport.around(
+        50.15,
+        8.56,
+        const Size(400, 900),
+        anchorY: 1 / 3,
+      );
+      final p = upper.toScreenLatLon(50.15, 8.56);
+      expect(p.dx, closeTo(200, .01));
+      expect(p.dy, closeTo(300, .01));
     });
 
     test('zoom keeps the point under the cursor', () {

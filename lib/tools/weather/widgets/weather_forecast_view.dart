@@ -12,6 +12,7 @@ import 'weather_daily_list.dart';
 import 'weather_day_sheet.dart';
 import 'weather_details_grid.dart';
 import 'weather_hero.dart';
+import 'weather_history_card.dart';
 import 'weather_hourly_strip.dart';
 import 'weather_radar_preview_card.dart';
 import 'weather_section_card.dart';
@@ -109,6 +110,11 @@ class WeatherForecastView extends StatelessWidget {
     final trend = snapshot.forecast == null
         ? null
         : WeatherTrendCard(hours: snapshot.forecast!.hours, units: units);
+    final history = WeatherHistoryCard(
+      locationId: locationId,
+      updatedAt: snapshot.fetchedAt,
+      units: units,
+    );
     final footer = WeatherSourceFooter(snapshot: snapshot);
 
     return RefreshIndicator(
@@ -147,6 +153,8 @@ class WeatherForecastView extends StatelessWidget {
                 details,
               ],
               if (trend != null) ...[gap, trend],
+              gap,
+              history,
               gap,
               footer,
             ];

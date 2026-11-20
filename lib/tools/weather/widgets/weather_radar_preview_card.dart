@@ -46,6 +46,7 @@ class WeatherRadarPreviewCard extends StatelessWidget {
                     radar: radar,
                     pins: pins,
                     interactive: false,
+                    focusAnchor: .42,
                   ),
                 ),
                 const Positioned(

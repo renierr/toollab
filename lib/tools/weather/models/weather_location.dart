@@ -80,15 +80,4 @@ class WeatherLocation {
         observationStationId: observation,
         sortOrder: sortOrder,
       );
-
-  WeatherLocation copyWithoutId() => WeatherLocation(
-    name: name,
-    latitude: latitude,
-    longitude: longitude,
-    elevation: elevation,
-    isDeviceLocation: isDeviceLocation,
-    forecastStationId: forecastStationId,
-    observationStationId: observationStationId,
-    sortOrder: sortOrder,
-  );
 }

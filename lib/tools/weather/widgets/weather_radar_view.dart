@@ -48,7 +48,11 @@ class WeatherRadarView extends StatelessWidget {
         child: Stack(
           children: [
             Positioned.fill(
-              child: WeatherRadarMap(radar: radar, pins: pins),
+              child: WeatherRadarMap(
+                radar: radar,
+                pins: pins,
+                focusAnchor: _focusAnchor,
+              ),
             ),
             Positioned(
               top: 12,
@@ -117,9 +121,15 @@ class WeatherRadarView extends StatelessWidget {
     );
   }
 
+  /// The time slider card covers the lower part of the map.
+  static const double _focusAnchor = 1 / 3;
+
+  /// Zoom buttons zoom around the place's height, so it stays put.
   static Offset _center(WeatherRadarState radar) {
     final size = radar.viewport.value?.size;
-    return size == null ? Offset.zero : Offset(size.width / 2, size.height / 2);
+    return size == null
+        ? Offset.zero
+        : Offset(size.width / 2, size.height * _focusAnchor);
   }
 }
 

@@ -179,6 +179,12 @@ class WeatherRadarState extends ChangeNotifier {
   bool _showWarnings = false;
   ({double lat, double lon})? _focus;
 
+  /// Vertical share of the view the place is kept at.
+  double _focusAnchor = .5;
+
+  /// Until the user pans or zooms, size changes keep the place in view.
+  bool _following = true;
+
   RadarTimeline? get timeline => _timeline;
   int get index => _index;
   bool get isPlaying => _playing;
@@ -314,6 +320,7 @@ class WeatherRadarState extends ChangeNotifier {
     final previous = _focus;
     if (previous != null && previous.lat == lat && previous.lon == lon) return;
     _focus = (lat: lat, lon: lon);
+    _following = true;
     final vp = viewport.value;
     if (vp != null) {
       viewport.value = RadarViewport.around(
@@ -321,6 +328,7 @@ class WeatherRadarState extends ChangeNotifier {
         lon,
         vp.size,
         resolution: vp.resolution,
+        anchorY: _focusAnchor,
       );
       _scheduleBlock(immediate: true);
     }
@@ -332,26 +340,45 @@ class WeatherRadarState extends ChangeNotifier {
     final f = _focus;
     final vp = viewport.value;
     if (f == null || vp == null) return;
+    _following = true;
     viewport.value = RadarViewport.around(
       f.lat,
       f.lon,
       vp.size,
       resolution: math.min(vp.resolution, 1200),
+      anchorY: _focusAnchor,
     );
     _scheduleBlock();
   }
 
   // Viewport ------------------------------------------------------------------
 
-  void resize(Size size) {
+  /// [focusAnchor]: see [RadarViewport.around].
+  void resize(Size size, {double focusAnchor = .5}) {
     if (size.isEmpty) return;
     final vp = viewport.value;
+    final anchorChanged = focusAnchor != _focusAnchor;
+    _focusAnchor = focusAnchor;
+    final f = _focus;
     if (vp == null) {
-      final f = _focus ?? (lat: 51.0, lon: 10.4);
-      viewport.value = RadarViewport.around(f.lat, f.lon, size);
+      final at = f ?? (lat: 51.0, lon: 10.4);
+      viewport.value = RadarViewport.around(
+        at.lat,
+        at.lon,
+        size,
+        anchorY: focusAnchor,
+      );
       _scheduleBlock(immediate: true);
-    } else if (vp.size != size) {
-      viewport.value = vp.copyWith(size: size).clamped();
+    } else if (vp.size != size || anchorChanged) {
+      viewport.value = _following && f != null
+          ? RadarViewport.around(
+              f.lat,
+              f.lon,
+              size,
+              resolution: vp.resolution,
+              anchorY: focusAnchor,
+            )
+          : vp.copyWith(size: size).clamped();
       _scheduleBlock();
     }
   }
@@ -359,6 +386,7 @@ class WeatherRadarState extends ChangeNotifier {
   void panBy(Offset delta) {
     final vp = viewport.value;
     if (vp == null) return;
+    _following = false;
     viewport.value = vp.panBy(delta);
     _scheduleBlock();
   }
@@ -366,6 +394,7 @@ class WeatherRadarState extends ChangeNotifier {
   void zoomAt(double factor, Offset focal) {
     final vp = viewport.value;
     if (vp == null) return;
+    _following = false;
     viewport.value = vp.zoomAt(factor, focal);
     _scheduleBlock();
   }

@@ -8,10 +8,24 @@ import 'weather_section_card.dart';
 import 'weather_trend_chart.dart';
 
 class WeatherTrendCard extends StatefulWidget {
-  const WeatherTrendCard({super.key, required this.hours, required this.units});
+  const WeatherTrendCard({
+    super.key,
+    required this.hours,
+    required this.units,
+    this.title,
+    this.icon = Icons.show_chart,
+    this.singleDay = false,
+  });
 
   final List<HourlyForecast> hours;
   final WeatherUnits units;
+
+  /// Defaults to the 10-day trend title.
+  final String? title;
+  final IconData icon;
+
+  /// Hour labels on the axis instead of weekdays.
+  final bool singleDay;
 
   @override
   State<WeatherTrendCard> createState() => _WeatherTrendCardState();
@@ -25,8 +39,8 @@ class _WeatherTrendCardState extends State<WeatherTrendCard> {
     final l10n = AppLocalizations.of(context);
     final format = WeatherTimeFormat(context);
     return WeatherSectionCard(
-      title: l10n.weatherTrend,
-      icon: Icons.show_chart,
+      title: widget.title ?? l10n.weatherTrend,
+      icon: widget.icon,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -65,7 +79,7 @@ class _WeatherTrendCardState extends State<WeatherTrendCard> {
             hours: widget.hours,
             metric: _metric,
             units: widget.units,
-            dayLabel: format.weekdayShort,
+            dayLabel: widget.singleDay ? format.hour : format.weekdayShort,
           ),
         ],
       ),

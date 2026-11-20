@@ -30436,6 +30436,216 @@ abstract class AppLocalizations {
   /// **'Saved weather data cleared'**
   String get weatherCacheCleared;
 
+  /// No description provided for @weatherHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get weatherHistory;
+
+  /// No description provided for @weatherHistoryOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open history'**
+  String get weatherHistoryOpen;
+
+  /// No description provided for @weatherHistoryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get weatherHistoryDay;
+
+  /// No description provided for @weatherHistoryWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get weatherHistoryWeek;
+
+  /// No description provided for @weatherHistoryMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get weatherHistoryMonth;
+
+  /// No description provided for @weatherHistoryYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get weatherHistoryYear;
+
+  /// No description provided for @weatherHistoryPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous period'**
+  String get weatherHistoryPrevious;
+
+  /// No description provided for @weatherHistoryNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next period'**
+  String get weatherHistoryNext;
+
+  /// No description provided for @weatherHistoryPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a date'**
+  String get weatherHistoryPickDate;
+
+  /// No description provided for @weatherHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No weather recorded for this period.'**
+  String get weatherHistoryEmpty;
+
+  /// No description provided for @weatherHistoryStartsNow.
+  ///
+  /// In en, this message translates to:
+  /// **'History is recorded from now on with every update; background updates fill the gaps.'**
+  String get weatherHistoryStartsNow;
+
+  /// No description provided for @weatherHistoryLast7.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get weatherHistoryLast7;
+
+  /// No description provided for @weatherHistoryLowest.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest'**
+  String get weatherHistoryLowest;
+
+  /// No description provided for @weatherHistoryHighest.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest'**
+  String get weatherHistoryHighest;
+
+  /// No description provided for @weatherHistoryAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get weatherHistoryAverage;
+
+  /// No description provided for @weatherHistoryRainDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain days (≥ 1 mm)'**
+  String get weatherHistoryRainDays;
+
+  /// No description provided for @weatherHistoryMaxGust.
+  ///
+  /// In en, this message translates to:
+  /// **'Strongest gust'**
+  String get weatherHistoryMaxGust;
+
+  /// No description provided for @weatherHistoryWarmestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Warmest day'**
+  String get weatherHistoryWarmestDay;
+
+  /// No description provided for @weatherHistoryColdestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Coldest day'**
+  String get weatherHistoryColdestDay;
+
+  /// No description provided for @weatherHistoryWettestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Wettest day'**
+  String get weatherHistoryWettestDay;
+
+  /// No description provided for @weatherHistoryCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'{recorded} % of hours recorded · {measured} % measured'**
+  String weatherHistoryCoverage(int recorded, int measured);
+
+  /// No description provided for @weatherHistoryCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compared with {year}'**
+  String weatherHistoryCompare(String year);
+
+  /// No description provided for @weatherHistoryWarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} warmer on average'**
+  String weatherHistoryWarmer(String value);
+
+  /// No description provided for @weatherHistoryColder.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} colder on average'**
+  String weatherHistoryColder(String value);
+
+  /// No description provided for @weatherHistorySameTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Same average temperature'**
+  String get weatherHistorySameTemperature;
+
+  /// No description provided for @weatherHistoryMoreRain.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} more precipitation'**
+  String weatherHistoryMoreRain(String value);
+
+  /// No description provided for @weatherHistoryLessRain.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} less precipitation'**
+  String weatherHistoryLessRain(String value);
+
+  /// No description provided for @weatherHistoryTemperatureChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature: low, average, high'**
+  String get weatherHistoryTemperatureChart;
+
+  /// No description provided for @weatherHistoryKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep history'**
+  String get weatherHistoryKeep;
+
+  /// No description provided for @weatherHistoryKeepMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} months'**
+  String weatherHistoryKeepMonths(int months);
+
+  /// No description provided for @weatherHistoryKeepForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
+  String get weatherHistoryKeepForever;
+
+  /// No description provided for @weatherHistorySize.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hours stored, about {size}'**
+  String weatherHistorySize(int count, String size);
+
+  /// No description provided for @weatherHistoryClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete history'**
+  String get weatherHistoryClear;
+
+  /// No description provided for @weatherHistoryClearHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes the recorded weather of all places'**
+  String get weatherHistoryClearHint;
+
+  /// No description provided for @weatherHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'History deleted'**
+  String get weatherHistoryCleared;
+
   /// No description provided for @weatherLocationDenied.
   ///
   /// In en, this message translates to:

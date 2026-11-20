@@ -40,6 +40,9 @@ class WeatherBackground {
     if (settings.isQuietAt((clock ?? DateTime.now)().toLocal())) {
       return const BackgroundTaskResult.skipped('quiet hours');
     }
+    await WeatherDbHelper.instance.pruneHistory(
+      settings.historyCutoff((clock ?? DateTime.now)()),
+    );
     final locations = await WeatherDbHelper.instance.getLocations();
     final targets = targetsFor(locations, settings);
     if (targets.isEmpty) return const BackgroundTaskResult.skipped('no places');

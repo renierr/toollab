@@ -1,3 +1,7 @@
+// A hang should fail fast instead of after the 10-minute default.
+@Timeout(Duration(minutes: 1))
+library;
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';

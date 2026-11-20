@@ -13,14 +13,17 @@ class RadarViewport {
     required this.size,
   });
 
+  /// [anchorY] is where the place sits vertically, as a share of the height
+  /// from the top; views with controls at the bottom pass less than half.
   factory RadarViewport.around(
     double lat,
     double lon,
     Size size, {
     double resolution = 1200,
+    double anchorY = .5,
   }) => RadarViewport(
     centerX: Mercator.x(lon),
-    centerY: Mercator.y(lat),
+    centerY: Mercator.y(lat) + (anchorY - .5) * size.height * resolution,
     resolution: resolution,
     size: size,
   ).clamped();

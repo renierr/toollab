@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/widgets/background_task_tile.dart';
@@ -87,6 +88,16 @@ class WeatherSettingsPage extends StatelessWidget {
             SettingsSectionLabel(title: l10n.weatherSettingsRadar),
             _RadarSettings(settings: s, onChanged: update),
             SettingsSectionLabel(title: l10n.weatherSettingsData),
+            WeatherChoiceChips<int>(
+              label: l10n.weatherHistoryKeep,
+              values: WeatherSettings.historyChoices,
+              selected: s.historyMonths,
+              text: (m) => m == 0
+                  ? l10n.weatherHistoryKeepForever
+                  : l10n.weatherHistoryKeepMonths(m),
+              onChanged: (m) => update(s.copyWith(historyMonths: m)),
+            ),
+            const _HistoryStorageTile(),
             ListTile(
               leading: const Icon(Icons.delete_sweep_outlined),
               title: Text(l10n.weatherClearCache),
@@ -384,6 +395,61 @@ class _NotificationPermissionTileState
         onPressed: ToolLabBridge.openNotificationSettings,
         child: Text(l10n.weatherNotificationsAllow),
       ),
+    );
+  }
+}
+
+/// How much history is stored, with a way to delete it.
+class _HistoryStorageTile extends StatefulWidget {
+  const _HistoryStorageTile();
+
+  @override
+  State<_HistoryStorageTile> createState() => _HistoryStorageTileState();
+}
+
+class _HistoryStorageTileState extends State<_HistoryStorageTile> {
+  /// Rough size of one history row including its key, in bytes.
+  static const int _bytesPerHour = 80;
+
+  late Future<int> _count = context.read<WeatherState>().historyCount();
+
+  Future<void> _clear() async {
+    final l10n = AppLocalizations.of(context);
+    final state = context.read<WeatherState>();
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await ConfirmActionDialog.show(
+      context: context,
+      title: l10n.weatherHistoryClear,
+      message: l10n.weatherHistoryClearHint,
+      cancelLabel: l10n.commonCancel,
+      confirmLabel: l10n.commonDelete,
+    );
+    if (ok != true) return;
+    await state.clearHistory();
+    if (!mounted) return;
+    setState(() => _count = state.historyCount());
+    messenger.showSnackBar(SnackBar(content: Text(l10n.weatherHistoryCleared)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return FutureBuilder<int>(
+      future: _count,
+      builder: (context, snapshot) {
+        final count = snapshot.data ?? 0;
+        return ListTile(
+          leading: const Icon(Icons.history),
+          title: Text(l10n.weatherHistoryClear),
+          subtitle: Text(
+            l10n.weatherHistorySize(
+              count,
+              FormatHelper.fileSize(count * _bytesPerHour),
+            ),
+          ),
+          onTap: count == 0 ? null : _clear,
+        );
+      },
     );
   }
 }

@@ -33,8 +33,16 @@ source, a mapping, a schema, a default or a native contract (see `AGENTS.md`,
   nowcast in 5-minute steps, a timeline slider with play/pause and speed,
   rain outlook for the place ("rain in about 20 min"), map layers (light,
   dark, satellite base; lightning; warning areas), legend, subtle city
-  labels, pan and zoom. Full screen on narrow layouts; on desktop at least
+  labels, pan and zoom. The place sits in the upper third of the full view
+  (42 % in the preview) so the time slider card does not hide it; it stays
+  there on resize until the user pans or zooms. Full screen on narrow layouts; on desktop at least
   1280 px wide a hideable side panel or a preview card.
+- **History:** every network load records hourly values per place
+  (measured first, forecast only for gaps). A history page shows a day, week,
+  month or year with charts, key figures (extremes with time, mean,
+  precipitation and rain days, sunshine, strongest gust, warmest/coldest/
+  wettest day), coverage and a comparison with the same period a year
+  earlier. The overview shows the last 7 days.
 - **Offline first:** the last saved weather shows instantly and the network
   refresh follows; every download is cached in the tool database.
 - **Settings page:** default place, units (°C/°F, km/h, m/s, kn, Bft, mph,
@@ -57,13 +65,17 @@ weather_page.dart            Thin coordinator. One LayoutBuilder decides: split
                              >= 1280 px]) or narrow (drawer + pager). Reads the
                              ?place=<id> query a widget or notification opens with.
 weather_radar_page.dart      Full-screen radar for narrow layouts.
+weather_history_page.dart    History: period picker, navigation, charts,
+                             key figures, previous-year comparison.
+weather_history_store.dart   Read access to recorded hours; widget tests swap
+                             in memory because DB I/O never completes in fake time.
 weather_state.dart           ChangeNotifier: places, snapshots, selection,
                              search, settings, debounced publish to Android.
 weather_radar_state.dart     ChangeNotifier: radar timeline, blocks, frame
                              loading, playback, rain sampling.
 weather_repository.dart      Loads a WeatherSnapshot with the cache; no provider
                              dependency, so the background run uses it as well.
-weather_db_helper.dart       Tool DB: tables `locations` and `cache`.
+weather_db_helper.dart       Tool DB: tables `locations`, `cache`, `history`.
 weather_settings.dart        Typed settings, persisted per key.
 weather_background.dart      BackgroundTask 'weather-refresh'.
 weather_publisher.dart       Widget JSON + warning notifications via the bridge.
@@ -134,6 +146,29 @@ Modes: `normal` (fresh cache wins), `force` (network first), `cacheOnly`
 the snapshot stale; a 404 does not, so a vanished station hands over to the
 next candidate.
 
+## History
+
+Table `history` (schema version 2), one row per place and UTC hour,
+`PRIMARY KEY (location_id, hour)`, `WITHOUT ROWID`, about 80 bytes per row
+(~0.7 MB per place and year): `hour` (epoch seconds), `source` (0 measured,
+1 forecast), `temperature`, `dew_point`, `pressure`, `wind_speed`,
+`wind_gust`, `wind_direction`, `precipitation`, `cloud_cover`, `sunshine`
+(minutes), `condition` (`WeatherCondition.name`).
+
+- **Recording:** `WeatherRepository.load` (not cache-only) writes
+  `WeatherHistoryEntry.fromSnapshot`: station readings at full hours as
+  measured (`INSERT OR REPLACE`), past forecast hours as forecast
+  (`INSERT OR IGNORE`, so they never overwrite a measurement). No UPSERT
+  syntax: the system SQLite on older Android lacks it.
+- **Pruning:** `pruneHistory(settings.historyCutoff(now))` on tool start and in
+  every background run; it also drops hours of deleted places. Deleting a
+  place keeps its rows until then, and undo restores the place under its old
+  id, so its history comes back.
+- **Aggregation:** `models/weather_history_summary.dart`. `HistoryRange` is a
+  local calendar period (weeks start Monday); `HistorySummary` buckets by day
+  (week, month) or month (year). Rain day = at least 1 mm. The comparison
+  shows only when both periods are at least 50 % recorded.
+
 ## Rain radar design
 
 - **Blocks:** the radar loads square 1280 px images snapped to a grid at 600,
@@ -183,6 +218,7 @@ Stored with `DatabaseService.setSetting(WeatherTool.config.id, key, value)`:
 | `quiet_hours`, `quiet_from`, `quiet_to` | true, 23, 6 | Night pause (local hours, wraps midnight) |
 | `background_wifi_only` | false | WorkManager unmetered network |
 | `background_battery_not_low` | true | WorkManager battery-not-low |
+| `history_months` | 12 | Months of history kept; 0 = forever |
 | `announced_warnings` | – | JSON list kept by `WeatherWarningAlerts` |
 
 The background interval itself is stored by `BackgroundTaskService`
@@ -251,7 +287,9 @@ widgets follow the default place. A tap opens `/weather?place=<id>`.
 
 Condition icons are PNGs in `res/drawable-nodpi/weather_icon_<key>.png`,
 rendered once from the app's `WeatherIconPainter` so widget and app look
-alike. Regenerate them (and the launcher icon) with the scratch renderer in
+alike. `WeatherIcons.kt` maps each key to its `R.drawable` directly: a lookup
+by name (`getIdentifier`) lets release resource shrinking drop the icons, and
+the widget then shows the fallback for every condition. Add new keys there. Regenerate them (and the launcher icon) with the scratch renderer in
 `.agents/temp/weather/icons_test.dart`, then run
 `dart run tool/sync_launcher_icons.dart weather`.
 
@@ -268,7 +306,8 @@ system settings.
 fetch reading `test/fixtures/weather/` (MOSMIX KMZ, BEOB CSV, WarnWetter JSON,
 gzipped nowcast, Nominatim, radar capabilities and a radar PNG). Prove it with
 `unshare -rn bash -c 'ip link set lo up; flutter test test/tools/weather'`.
-Databases use `inMemoryDatabasePath`. Widget tests use `MaterialApp.router`
+Databases use `inMemoryDatabasePath`. Every test file has a one-minute
+timeout so a hang fails fast. Widget tests use `MaterialApp.router`
 because `ToolBackButton` needs a `GoRouterState`.
 
 - `weather_parsers_test.dart` — every parser against its fixture.
@@ -278,7 +317,8 @@ because `ToolBackButton` needs a `GoRouterState`.
 - `weather_radar_test.dart` — timeline, palette, outlook, viewport, frame
   loading, preview mode, lasting store.
 - `weather_page_test.dart` — layouts on phone/tablet/desktop in de/en without
-  overflow; settings page.
+  overflow; settings page; history page in every period.
+- `weather_history_test.dart` — ranges, aggregation, record and prune rules.
 - `weather_trend_chart_test.dart` — tooltip behaviour.
 - `weather_android_launcher_test.dart` — manifest, process, icons, widget
   drawables for every condition.
@@ -297,5 +337,5 @@ because `ToolBackButton` needs a `GoRouterState`.
 
 ## Planned
 
-History (hourly values per place, day/week/month/year views, purge after 12
-months by default) and a final polish pass.
+Optional backfill of older hours from the DWD climate archive (CDC), and a
+final polish pass on devices.

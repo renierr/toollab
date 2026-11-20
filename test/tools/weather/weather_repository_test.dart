@@ -1,3 +1,7 @@
+// A hang should fail fast instead of after the 10-minute default.
+@Timeout(Duration(minutes: 1))
+library;
+
 import 'dart:io';
 import 'dart:ui';
 import 'dart:typed_data';
@@ -92,6 +96,27 @@ void main() {
       expect(snapshot.overview!.warnings, isNotEmpty);
       expect(snapshot.error, isNull);
       expect(snapshot.isStale, isFalse);
+    });
+
+    test('a network load records the measured hours', () async {
+      final net = _FakeNetwork();
+      final repo = WeatherRepository(fetch: net.fetch, clock: () => now);
+      final saved = await WeatherDbHelper.instance.saveLocation(eschborn);
+      final snapshot = await repo.load(saved, catalog, force: true);
+      final latest = snapshot.observations!.latest!.time;
+      final rows = await WeatherDbHelper.instance.getHistory(
+        saved.id!,
+        latest.subtract(const Duration(hours: 30)),
+        latest.add(const Duration(hours: 1)),
+      );
+      expect(rows.where((r) => r.isMeasured), isNotEmpty);
+      expect(rows.last.hour, latest);
+      expect(rows.last.temperature, snapshot.observations!.latest!.temperature);
+
+      // A cache-only load writes nothing.
+      await WeatherDbHelper.instance.clearHistory();
+      await repo.load(saved, catalog, cacheOnly: true);
+      expect(await WeatherDbHelper.instance.historyCount(), 0);
     });
 
     test('adds nowcast warnings only for places inside the area', () async {

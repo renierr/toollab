@@ -1,3 +1,7 @@
+// A hang should fail fast instead of after the 10-minute default.
+@Timeout(Duration(minutes: 1))
+library;
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -66,6 +70,10 @@ void main() {
   });
 
   test('every condition has a widget icon for day and night', () {
+    // Referenced directly, or release resource shrinking drops the icon.
+    final icons = File(
+      'android/app/src/main/kotlin/de/renier/tool_lab/weather/WeatherIcons.kt',
+    ).readAsStringSync();
     for (final condition in WeatherCondition.values) {
       for (final isDay in [true, false]) {
         final key = WeatherPublisher.iconKey(condition, isDay);
@@ -74,6 +82,11 @@ void main() {
             'android/app/src/main/res/drawable-nodpi/weather_icon_$key.png',
           ).existsSync(),
           isTrue,
+          reason: key,
+        );
+        expect(
+          icons,
+          contains('"$key" to R.drawable.weather_icon_$key'),
           reason: key,
         );
       }
