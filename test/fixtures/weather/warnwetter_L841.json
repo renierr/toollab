@@ -1,0 +1,118 @@
+{
+ "L841": {
+  "days": [
+   {
+    "stationId": null,
+    "dayDate": "2026-11-20",
+    "temperatureMin": 72,
+    "temperatureMax": 104,
+    "precipitation": 223,
+    "windSpeed": 204,
+    "windGust": 482,
+    "windDirection": 2200,
+    "sunshine": 60,
+    "sunrise": 1795157189000,
+    "sunset": 1795188917000,
+    "moonrise": 1795180563000,
+    "moonset": 1795137721000,
+    "moonriseOnThisDay": 1795180563000,
+    "moonsetOnThisDay": 1795137721000,
+    "sunriseOnThisDay": 1795157189000,
+    "sunsetOnThisDay": 1795188917000,
+    "moonPhase": 2,
+    "icon": 8,
+    "icon1": null,
+    "icon2": null
+   },
+   {
+    "stationId": null,
+    "dayDate": "2026-11-21",
+    "temperatureMin": 26,
+    "temperatureMax": 68,
+    "precipitation": 0,
+    "windSpeed": 130,
+    "windGust": 278,
+    "windDirection": 2320,
+    "sunshine": 1960,
+    "sunrise": 1795243682000,
+    "sunset": 1795275254000,
+    "moonrise": 1795267885000,
+    "moonset": 1795228783000,
+    "moonriseOnThisDay": 1795267885000,
+    "moonsetOnThisDay": 1795228783000,
+    "sunriseOnThisDay": 1795243682000,
+    "sunsetOnThisDay": 1795275254000,
+    "moonPhase": 3,
+    "icon": 2,
+    "icon1": null,
+    "icon2": null
+   },
+   {
+    "stationId": null,
+    "dayDate": "2026-11-22",
+    "temperatureMin": 5,
+    "temperatureMax": 41,
+    "precipitation": 0,
+    "windSpeed": 130,
+    "windGust": 315,
+    "windDirection": 370,
+    "sunshine": 1660,
+    "sunrise": 1795330174000,
+    "sunset": 1795361593000,
+    "moonrise": 1795355404000,
+    "moonset": 1795320110000,
+    "moonriseOnThisDay": 1795355404000,
+    "moonsetOnThisDay": 1795320110000,
+    "sunriseOnThisDay": 1795330174000,
+    "sunsetOnThisDay": 1795361593000,
+    "moonPhase": 3,
+    "icon": 3,
+    "icon1": null,
+    "icon2": null
+   }
+  ],
+  "warnings": [
+   {
+    "warnId": "2.49.0.0.276.0.DWD.PVW.1795174620000.15025306-d24a-4b85-b7d5-3a1579fdd001.MUL",
+    "type": 5,
+    "level": 2,
+    "start": 1795215600000,
+    "end": 1795248000000,
+    "urls": [],
+    "info": {
+     "contact": "Deutscher Wetterdienst",
+     "web": "https://dwd.de/warnungen",
+     "sendername": "Deutscher Wetterdienst"
+    },
+    "bn": false,
+    "descriptionText": "Es tritt leichter Frost zwischen 0 °C und -3 °C auf.",
+    "headline": "Amtliche WARNUNG vor FROST",
+    "instruction": "Hinweis auf: mögliche Frostschäden. \nHandlungsempfehlungen: \nggf. Frostschutzmaßnahmen ergreifen",
+    "instructionHtml": "<b>Hinweis auf:</b><ul><li>mögliche Frostschäden</li></ul><br/><b>Handlungsempfehlungen:</b><ul><li>ggf. Frostschutzmaßnahmen ergreifen</li></ul>",
+    "event": "FROST",
+    "description": "Es tritt leichter Frost zwischen 0 °C und -3 °C auf."
+   },
+   {
+    "warnId": "2.49.0.0.276.0.DWD.PVW.1795174620000.f4fe5ad8-8f3e-432e-b325-3ff465b889eb.MUL",
+    "type": 6,
+    "level": 2,
+    "start": 1795222800000,
+    "end": 1795248000000,
+    "urls": [],
+    "info": {
+     "contact": "Deutscher Wetterdienst",
+     "web": "https://dwd.de/warnungen",
+     "sendername": "Deutscher Wetterdienst"
+    },
+    "bn": false,
+    "descriptionText": "Es besteht Glättegefahr.",
+    "headline": "Amtliche WARNUNG vor GLÄTTE",
+    "instruction": "Hinweis auf: Rutschgefahr. \nHandlungsempfehlungen: \nVerhalten im Straßenverkehr anpassen",
+    "instructionHtml": "<b>Hinweis auf:</b><ul><li>Rutschgefahr</li></ul><br/><b>Handlungsempfehlungen:</b><ul><li>Verhalten im Straßenverkehr anpassen</li></ul>",
+    "event": "GLÄTTE",
+    "description": "Es besteht Glättegefahr."
+   }
+  ],
+  "forecast1": null
+ }
+}
