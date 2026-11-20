@@ -10,6 +10,8 @@ import 'package:tool_lab/tools/weather/api/weather_http.dart';
 import 'package:tool_lab/tools/weather/models/geo_place.dart';
 import 'package:tool_lab/tools/weather/models/weather_location.dart';
 import 'package:tool_lab/tools/weather/models/weather_warning.dart';
+import 'package:tool_lab/services/background_task_service.dart';
+import 'package:tool_lab/tools/weather/weather_background.dart';
 import 'package:tool_lab/tools/weather/weather_db_helper.dart';
 import 'package:tool_lab/tools/weather/weather_repository.dart';
 import 'package:tool_lab/tools/weather/weather_settings.dart';
@@ -327,6 +329,72 @@ void main() {
         instruction: '',
       );
       expect(await alerts.takeNew([again], 2, later), hasLength(1));
+    });
+  });
+
+  group('WeatherBackground', () {
+    const a = WeatherLocation(id: 1, name: 'A', latitude: 50, longitude: 8);
+    const b = WeatherLocation(id: 2, name: 'B', latitude: 52, longitude: 13);
+
+    test('refreshes the default place or all places', () {
+      const settings = WeatherSettings(defaultLocationId: 2);
+      expect(WeatherBackground.targetsFor([a, b], settings), [b]);
+      expect(WeatherBackground.targetsFor([a, b], const WeatherSettings()), [
+        a,
+      ]);
+      expect(
+        WeatherBackground.targetsFor(
+          [a, b],
+          settings.copyWith(backgroundScope: WeatherBackgroundScope.allPlaces),
+        ),
+        [a, b],
+      );
+      expect(WeatherBackground.targetsFor([], settings), isEmpty);
+    });
+
+    test('quiet hours wrap around midnight', () {
+      const s = WeatherSettings(quietFrom: 23, quietTo: 6);
+      expect(s.isQuietAt(DateTime(2026, 1, 1, 23, 30)), isTrue);
+      expect(s.isQuietAt(DateTime(2026, 1, 1, 3)), isTrue);
+      expect(s.isQuietAt(DateTime(2026, 1, 1, 6)), isFalse);
+      expect(s.isQuietAt(DateTime(2026, 1, 1, 12)), isFalse);
+      expect(
+        s.copyWith(quietHours: false).isQuietAt(DateTime(2026, 1, 1, 3)),
+        isFalse,
+      );
+      const day = WeatherSettings(quietFrom: 9, quietTo: 17);
+      expect(day.isQuietAt(DateTime(2026, 1, 1, 12)), isTrue);
+      expect(day.isQuietAt(DateTime(2026, 1, 1, 20)), isFalse);
+    });
+
+    test('a run refreshes the saved places and skips quiet hours', () async {
+      WeatherDbHelper.instance.reset();
+      final saved = await WeatherDbHelper.instance.saveLocation(eschborn);
+      final net = _FakeNetwork();
+      Future<BackgroundTaskResult> runAt(int hour) => WeatherBackground.run(
+        repository: WeatherRepository(fetch: net.fetch, clock: () => now),
+        catalogLoader: () async => catalog,
+        settingsLoader: () async =>
+            WeatherSettings(defaultLocationId: saved.id),
+        clock: () => DateTime(2026, 11, 20, hour),
+      );
+
+      final quiet = await runAt(2);
+      expect(quiet.outcome, BackgroundTaskOutcome.skipped);
+      expect(net.requests, isEmpty);
+
+      final result = await runAt(12);
+      expect(result.outcome, BackgroundTaskOutcome.done);
+      expect(result.detail, '1/1 places');
+      expect(net.requests, isNotEmpty);
+
+      net.offline = true;
+      final offline = await runAt(12);
+      expect(
+        offline.outcome,
+        BackgroundTaskOutcome.done,
+        reason: 'cache fresh',
+      );
     });
   });
 }

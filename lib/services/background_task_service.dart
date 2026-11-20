@@ -123,6 +123,10 @@ class BackgroundTaskService {
     await _apply(task, interval);
   }
 
+  /// Re-applies the stored interval, e.g. after a task's constraints changed.
+  static Future<void> reschedule(BackgroundTask task) async =>
+      _apply(task, await interval(task));
+
   static Future<BackgroundTaskStatus?> lastStatus(BackgroundTask task) async {
     final stored = await DatabaseService.instance.getSetting(
       _scope,
@@ -163,6 +167,8 @@ class BackgroundTaskService {
       await Workmanager().cancelByUniqueName(task.id);
       return;
     }
+    final conditions =
+        await task.constraints?.call() ?? const BackgroundTaskConstraints();
     await Workmanager().registerPeriodicTask(
       task.id,
       task.id,
@@ -172,9 +178,13 @@ class BackgroundTaskService {
       // [init] does - cannot keep pushing a due run out of reach.
       existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
       constraints: Constraints(
-        networkType: task.requiresNetwork
-            ? NetworkType.connected
-            : NetworkType.notRequired,
+        networkType: !task.requiresNetwork
+            ? NetworkType.notRequired
+            : (conditions.unmeteredNetwork
+                  ? NetworkType.unmetered
+                  : NetworkType.connected),
+        requiresBatteryNotLow: conditions.batteryNotLow,
+        requiresCharging: conditions.charging,
       ),
       backoffPolicy: BackoffPolicy.exponential,
       backoffPolicyDelay: const Duration(minutes: 5),

@@ -12,6 +12,9 @@ enum PrecipitationUnit { mm, inch }
 
 enum RadarBaseMap { light, dark, satellite }
 
+/// Which places a background run refreshes.
+enum WeatherBackgroundScope { defaultPlace, allPlaces }
+
 class WeatherSettings {
   const WeatherSettings({
     this.temperatureUnit = TemperatureUnit.celsius,
@@ -27,6 +30,12 @@ class WeatherSettings {
     this.radarLightning = false,
     this.radarWarnings = false,
     this.radarPanel = false,
+    this.backgroundScope = WeatherBackgroundScope.defaultPlace,
+    this.quietHours = true,
+    this.quietFrom = 23,
+    this.quietTo = 6,
+    this.wifiOnly = false,
+    this.batteryNotLow = true,
   });
 
   static const List<int> refreshChoices = [0, 15, 30, 60, 120];
@@ -53,6 +62,23 @@ class WeatherSettings {
   /// Desktop only: radar as a side panel instead of a preview card.
   final bool radarPanel;
 
+  final WeatherBackgroundScope backgroundScope;
+
+  /// Background runs are skipped from [quietFrom] to [quietTo] (local hours).
+  final bool quietHours;
+  final int quietFrom;
+  final int quietTo;
+  final bool wifiOnly;
+  final bool batteryNotLow;
+
+  bool isQuietAt(DateTime local) {
+    if (!quietHours || quietFrom == quietTo) return false;
+    final h = local.hour;
+    return quietFrom < quietTo
+        ? h >= quietFrom && h < quietTo
+        : h >= quietFrom || h < quietTo;
+  }
+
   static const _kTemp = 'unit_temperature';
   static const _kWind = 'unit_wind';
   static const _kPressure = 'unit_pressure';
@@ -66,6 +92,12 @@ class WeatherSettings {
   static const _kLightning = 'radar_lightning';
   static const _kWarnings = 'radar_warnings';
   static const _kPanel = 'radar_panel';
+  static const _kBgScope = 'background_scope';
+  static const _kQuiet = 'quiet_hours';
+  static const _kQuietFrom = 'quiet_from';
+  static const _kQuietTo = 'quiet_to';
+  static const _kWifi = 'background_wifi_only';
+  static const _kBattery = 'background_battery_not_low';
 
   static Future<WeatherSettings> load() async {
     final s = await DatabaseService.instance.getAllSettings(
@@ -95,6 +127,16 @@ class WeatherSettings {
       radarLightning: s[_kLightning] == 'true',
       radarWarnings: s[_kWarnings] == 'true',
       radarPanel: s[_kPanel] == 'true',
+      backgroundScope: pick(
+        WeatherBackgroundScope.values,
+        _kBgScope,
+        WeatherBackgroundScope.defaultPlace,
+      ),
+      quietHours: s[_kQuiet] != 'false',
+      quietFrom: int.tryParse(s[_kQuietFrom] ?? '') ?? 23,
+      quietTo: int.tryParse(s[_kQuietTo] ?? '') ?? 6,
+      wifiOnly: s[_kWifi] == 'true',
+      batteryNotLow: s[_kBattery] != 'false',
     );
   }
 
@@ -118,6 +160,12 @@ class WeatherSettings {
       db.setSetting(id, _kLightning, '$radarLightning'),
       db.setSetting(id, _kWarnings, '$radarWarnings'),
       db.setSetting(id, _kPanel, '$radarPanel'),
+      db.setSetting(id, _kBgScope, backgroundScope.name),
+      db.setSetting(id, _kQuiet, '$quietHours'),
+      db.setSetting(id, _kQuietFrom, '$quietFrom'),
+      db.setSetting(id, _kQuietTo, '$quietTo'),
+      db.setSetting(id, _kWifi, '$wifiOnly'),
+      db.setSetting(id, _kBattery, '$batteryNotLow'),
     ]);
   }
 
@@ -135,6 +183,12 @@ class WeatherSettings {
     bool? radarLightning,
     bool? radarWarnings,
     bool? radarPanel,
+    WeatherBackgroundScope? backgroundScope,
+    bool? quietHours,
+    int? quietFrom,
+    int? quietTo,
+    bool? wifiOnly,
+    bool? batteryNotLow,
   }) => WeatherSettings(
     temperatureUnit: temperatureUnit ?? this.temperatureUnit,
     windUnit: windUnit ?? this.windUnit,
@@ -151,5 +205,11 @@ class WeatherSettings {
     radarLightning: radarLightning ?? this.radarLightning,
     radarWarnings: radarWarnings ?? this.radarWarnings,
     radarPanel: radarPanel ?? this.radarPanel,
+    backgroundScope: backgroundScope ?? this.backgroundScope,
+    quietHours: quietHours ?? this.quietHours,
+    quietFrom: quietFrom ?? this.quietFrom,
+    quietTo: quietTo ?? this.quietTo,
+    wifiOnly: wifiOnly ?? this.wifiOnly,
+    batteryNotLow: batteryNotLow ?? this.batteryNotLow,
   );
 }

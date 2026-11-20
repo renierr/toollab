@@ -17181,6 +17181,95 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weatherAnimatedIcons => 'Animated weather icons';
 
   @override
+  String get weatherSettingsPlaces => 'Places';
+
+  @override
+  String get weatherDefaultPlaceHint =>
+      'Opens first and is used for background updates and warnings';
+
+  @override
+  String get weatherDefaultPlaceFirst => 'First place in the list';
+
+  @override
+  String get weatherSettingsDisplay => 'Display';
+
+  @override
+  String get weatherSettingsWarnings => 'Warnings';
+
+  @override
+  String get weatherSettingsBackground => 'Background updates';
+
+  @override
+  String get weatherSettingsBackgroundHint =>
+      'Keeps the weather current while the app is closed. Android decides the exact time and bundles runs with other apps to save battery.';
+
+  @override
+  String get weatherBackgroundTask => 'Refresh weather';
+
+  @override
+  String get weatherBackgroundTaskHint => 'Loads only data that is out of date';
+
+  @override
+  String get weatherBackgroundScope => 'Places to refresh';
+
+  @override
+  String get weatherBackgroundScopeDefault => 'Default place';
+
+  @override
+  String get weatherBackgroundScopeAll => 'All places';
+
+  @override
+  String get weatherQuietHours => 'Pause at night';
+
+  @override
+  String get weatherQuietHoursHint => 'No background updates in this time';
+
+  @override
+  String get weatherQuietFrom => 'From';
+
+  @override
+  String get weatherQuietTo => 'Until';
+
+  @override
+  String get weatherWifiOnly => 'Only on Wi-Fi';
+
+  @override
+  String get weatherWifiOnlyHint => 'Saves mobile data';
+
+  @override
+  String get weatherBatteryNotLow => 'Pause when the battery is low';
+
+  @override
+  String get weatherBatteryNotLowHint =>
+      'Waits until the battery has recovered';
+
+  @override
+  String get weatherSettingsRadar => 'Rain radar';
+
+  @override
+  String get weatherRadarBaseMap => 'Map';
+
+  @override
+  String get weatherRadarPanelSetting => 'Radar beside the forecast';
+
+  @override
+  String get weatherRadarPanelSettingHint =>
+      'On wide screens instead of the preview card';
+
+  @override
+  String get weatherSettingsData => 'Data';
+
+  @override
+  String get weatherClearCache => 'Clear saved weather data';
+
+  @override
+  String get weatherClearCacheHint =>
+      'Forecasts, measurements and radar maps load again; places stay';
+
+  @override
+  String get weatherCacheCleared => 'Saved weather data cleared';
+
+  @override
   String get weatherLocationDenied => 'Location permission denied';
 
   @override

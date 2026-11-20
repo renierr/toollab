@@ -8,6 +8,7 @@ class BackgroundTask {
     required this.run,
     required this.defaultInterval,
     this.requiresNetwork = false,
+    this.constraints,
   });
 
   /// Unique across the app: it is both the platform's unique work name and the
@@ -26,6 +27,25 @@ class BackgroundTask {
   /// Whether the platform should hold a run back until there is a connection.
   /// Leave false for work with something useful to do offline.
   final bool requiresNetwork;
+
+  /// Read each time the task is scheduled, so a tool can turn the platform
+  /// conditions into user settings; call `BackgroundTaskService.reschedule`
+  /// after they change.
+  final Future<BackgroundTaskConstraints> Function()? constraints;
+}
+
+/// Conditions the platform waits for before a run, to save battery and data.
+class BackgroundTaskConstraints {
+  const BackgroundTaskConstraints({
+    this.unmeteredNetwork = false,
+    this.batteryNotLow = false,
+    this.charging = false,
+  });
+
+  /// Only on Wi-Fi or another unmetered network; needs `requiresNetwork`.
+  final bool unmeteredNetwork;
+  final bool batteryNotLow;
+  final bool charging;
 }
 
 enum BackgroundTaskOutcome { done, skipped, failed }

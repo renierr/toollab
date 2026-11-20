@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/services/background_task_service.dart';
 
 import 'api/geocoding_client.dart';
 import 'api/station_catalog.dart';
 import 'models/geo_place.dart';
 import 'models/weather_location.dart';
 import 'models/weather_snapshot.dart';
+import 'weather_background.dart';
 import 'weather_db_helper.dart';
 import 'weather_device_location.dart';
 import 'weather_repository.dart';
@@ -310,10 +312,20 @@ class WeatherState extends ChangeNotifier {
   Future<void> setDefault(int? id) =>
       updateSettings(_settings.copyWith(defaultLocationId: () => id));
 
+  Future<void> clearCache() async {
+    await _db.clearCache();
+    await refreshAll(force: true);
+  }
+
   Future<void> updateSettings(WeatherSettings settings) async {
+    final previous = _settings;
     _settings = settings;
     _notify();
     await settings.save();
+    if (previous.wifiOnly != settings.wifiOnly ||
+        previous.batteryNotLow != settings.batteryNotLow) {
+      await BackgroundTaskService.reschedule(WeatherBackground.task);
+    }
   }
 
   List<StationMatch> stationChoices(

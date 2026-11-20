@@ -14,7 +14,7 @@ import 'widgets/weather_forecast_view.dart';
 import 'widgets/weather_location_list.dart';
 import 'widgets/weather_location_pager.dart';
 import 'widgets/weather_radar_view.dart';
-import 'widgets/weather_settings_sheet.dart';
+import 'widgets/weather_settings_page.dart';
 
 class WeatherPage extends StatefulWidget {
   const WeatherPage({super.key});
@@ -146,7 +146,7 @@ class _WeatherPageState extends State<WeatherPage> with DisposeCleanup {
             IconButton(
               tooltip: l10n.weatherSettings,
               icon: const Icon(Icons.tune),
-              onPressed: () => WeatherSettingsSheet.show(context),
+              onPressed: () => WeatherSettingsPage.open(context),
             ),
           ],
           child: body,

@@ -4,6 +4,7 @@ import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'radar_frame_store.dart';
+import 'weather_background.dart';
 import 'weather_page.dart';
 import 'weather_radar_state.dart';
 import 'weather_state.dart';
@@ -32,5 +33,6 @@ class WeatherTool {
         create: (_) => WeatherRadarState(lasting: RadarLastingStore()),
       ),
     ],
+    backgroundTasks: () => [WeatherBackground.task],
   );
 }

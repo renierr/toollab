@@ -19,6 +19,7 @@ import 'package:tool_lab/tools/weather/weather_settings.dart';
 import 'package:tool_lab/tools/weather/weather_state.dart';
 import 'package:tool_lab/tools/weather/widgets/weather_hero.dart';
 import 'package:tool_lab/tools/weather/widgets/weather_location_list.dart';
+import 'package:tool_lab/tools/weather/widgets/weather_settings_page.dart';
 
 const _fixtures = 'test/fixtures/weather';
 
@@ -134,5 +135,20 @@ void main() {
         },
       );
     }
+  }
+
+  for (final locale in const [Locale('de'), Locale('en')]) {
+    testWidgets('settings page opens and fits a small phone '
+        '(${locale.languageCode})', (tester) async {
+      await pumpAt(tester, const Size(320, 640), locale);
+      await tester.tap(find.byIcon(Icons.tune));
+      await tester.pumpAndSettle();
+      expect(find.byType(WeatherSettingsPage), findsOneWidget);
+      final scrollable = find.byType(Scrollable).last;
+      await tester.drag(scrollable, const Offset(0, -3000));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
   }
 }

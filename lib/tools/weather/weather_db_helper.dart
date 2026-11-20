@@ -126,6 +126,12 @@ class WeatherDbHelper {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// Drops every saved download, including radar maps; places stay.
+  Future<void> clearCache() async {
+    final db = await _getDb();
+    await db.delete(_cache);
+  }
+
   Future<void> pruneCache(DateTime olderThan, {String prefix = ''}) async {
     final db = await _getDb();
     await db.delete(

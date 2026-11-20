@@ -30256,6 +30256,174 @@ abstract class AppLocalizations {
   /// **'Animated weather icons'**
   String get weatherAnimatedIcons;
 
+  /// No description provided for @weatherSettingsPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Places'**
+  String get weatherSettingsPlaces;
+
+  /// No description provided for @weatherDefaultPlaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens first and is used for background updates and warnings'**
+  String get weatherDefaultPlaceHint;
+
+  /// No description provided for @weatherDefaultPlaceFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'First place in the list'**
+  String get weatherDefaultPlaceFirst;
+
+  /// No description provided for @weatherSettingsDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Display'**
+  String get weatherSettingsDisplay;
+
+  /// No description provided for @weatherSettingsWarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Warnings'**
+  String get weatherSettingsWarnings;
+
+  /// No description provided for @weatherSettingsBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background updates'**
+  String get weatherSettingsBackground;
+
+  /// No description provided for @weatherSettingsBackgroundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the weather current while the app is closed. Android decides the exact time and bundles runs with other apps to save battery.'**
+  String get weatherSettingsBackgroundHint;
+
+  /// No description provided for @weatherBackgroundTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh weather'**
+  String get weatherBackgroundTask;
+
+  /// No description provided for @weatherBackgroundTaskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Loads only data that is out of date'**
+  String get weatherBackgroundTaskHint;
+
+  /// No description provided for @weatherBackgroundScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Places to refresh'**
+  String get weatherBackgroundScope;
+
+  /// No description provided for @weatherBackgroundScopeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default place'**
+  String get weatherBackgroundScopeDefault;
+
+  /// No description provided for @weatherBackgroundScopeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All places'**
+  String get weatherBackgroundScopeAll;
+
+  /// No description provided for @weatherQuietHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause at night'**
+  String get weatherQuietHours;
+
+  /// No description provided for @weatherQuietHoursHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No background updates in this time'**
+  String get weatherQuietHoursHint;
+
+  /// No description provided for @weatherQuietFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get weatherQuietFrom;
+
+  /// No description provided for @weatherQuietTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Until'**
+  String get weatherQuietTo;
+
+  /// No description provided for @weatherWifiOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only on Wi-Fi'**
+  String get weatherWifiOnly;
+
+  /// No description provided for @weatherWifiOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves mobile data'**
+  String get weatherWifiOnlyHint;
+
+  /// No description provided for @weatherBatteryNotLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause when the battery is low'**
+  String get weatherBatteryNotLow;
+
+  /// No description provided for @weatherBatteryNotLowHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Waits until the battery has recovered'**
+  String get weatherBatteryNotLowHint;
+
+  /// No description provided for @weatherSettingsRadar.
+  ///
+  /// In en, this message translates to:
+  /// **'Rain radar'**
+  String get weatherSettingsRadar;
+
+  /// No description provided for @weatherRadarBaseMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get weatherRadarBaseMap;
+
+  /// No description provided for @weatherRadarPanelSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Radar beside the forecast'**
+  String get weatherRadarPanelSetting;
+
+  /// No description provided for @weatherRadarPanelSettingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On wide screens instead of the preview card'**
+  String get weatherRadarPanelSettingHint;
+
+  /// No description provided for @weatherSettingsData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get weatherSettingsData;
+
+  /// No description provided for @weatherClearCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear saved weather data'**
+  String get weatherClearCache;
+
+  /// No description provided for @weatherClearCacheHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Forecasts, measurements and radar maps load again; places stay'**
+  String get weatherClearCacheHint;
+
+  /// No description provided for @weatherCacheCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved weather data cleared'**
+  String get weatherCacheCleared;
+
   /// No description provided for @weatherLocationDenied.
   ///
   /// In en, this message translates to:
