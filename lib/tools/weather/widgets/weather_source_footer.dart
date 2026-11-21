@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../api/station_catalog.dart';
 import '../models/weather_snapshot.dart';
 import '../weather_l10n.dart';
 
@@ -19,8 +20,10 @@ class WeatherSourceFooter extends StatelessWidget {
     final style = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
-    String station(String name, double km) =>
-        '$name (${km.toStringAsFixed(km < 10 ? 1 : 0)} km)';
+    String station(StationMatch match) => match.station.isLocal
+        ? l10n.weatherSourceLocal(match.station.name)
+        : '${match.station.name} '
+              '(${match.distanceKm.toStringAsFixed(match.distanceKm < 10 ? 1 : 0)} km)';
     return Column(
       children: [
         if (snapshot.isStale)
@@ -47,14 +50,9 @@ class WeatherSourceFooter extends StatelessWidget {
         Text(
           [
             l10n.weatherUpdated(format.time(snapshot.fetchedAt)),
-            if (forecast != null)
-              l10n.weatherSourceForecast(
-                station(forecast.station.name, forecast.distanceKm),
-              ),
+            if (forecast != null) l10n.weatherSourceForecast(station(forecast)),
             if (observation != null)
-              l10n.weatherSourceObservation(
-                station(observation.station.name, observation.distanceKm),
-              ),
+              l10n.weatherSourceObservation(station(observation)),
           ].join(' · '),
           style: style,
           textAlign: TextAlign.center,

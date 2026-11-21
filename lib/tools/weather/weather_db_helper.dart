@@ -27,7 +27,7 @@ class WeatherDbHelper {
     );
     try {
       await db.migrate(
-        currentVersion: 2,
+        currentVersion: 3,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -71,6 +71,11 @@ class WeatherDbHelper {
                 PRIMARY KEY (location_id, hour)
               ) WITHOUT ROWID
             ''');
+          }
+          if (oldVersion < 3) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(_locations)} ADD COLUMN station_url TEXT',
+            );
           }
         },
       );

@@ -19,6 +19,7 @@ class WeatherObservation {
     this.snowDepth,
     this.sunshineMinutes,
     this.presentWeather,
+    this.fixedCondition,
   });
 
   final DateTime time;
@@ -37,7 +38,11 @@ class WeatherObservation {
   final double? sunshineMinutes;
   final int? presentWeather;
 
+  /// Set when the source names the condition, e.g. a local station.
+  final WeatherCondition? fixedCondition;
+
   WeatherCondition? get condition =>
+      fixedCondition ??
       WeatherCondition.fromDwdCode(presentWeather) ??
       (cloudCover == null ? null : WeatherCondition.fromCloudCover(cloudCover));
 

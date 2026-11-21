@@ -119,6 +119,8 @@ class _LocationTile extends StatelessWidget {
                   ? Icon(
                       location.isDeviceLocation
                           ? Icons.my_location
+                          : location.isLocalStation
+                          ? Icons.sensors
                           : Icons.place_outlined,
                     )
                   : WeatherIconView(
@@ -131,6 +133,10 @@ class _LocationTile extends StatelessWidget {
               children: [
                 if (location.isDeviceLocation) ...[
                   const Icon(Icons.near_me, size: 14),
+                  const SizedBox(width: 4),
+                ],
+                if (location.isLocalStation) ...[
+                  const Icon(Icons.sensors, size: 14),
                   const SizedBox(width: 4),
                 ],
                 Flexible(

@@ -9,6 +9,7 @@ class WeatherLocation {
     this.forecastStationId,
     this.observationStationId,
     this.sortOrder = 0,
+    this.stationUrl,
   });
 
   factory WeatherLocation.fromMap(Map<String, Object?> map) => WeatherLocation(
@@ -21,6 +22,7 @@ class WeatherLocation {
     forecastStationId: map['forecast_station'] as String?,
     observationStationId: map['observation_station'] as String?,
     sortOrder: map['sort_order'] as int? ?? 0,
+    stationUrl: map['station_url'] as String?,
   );
 
   final int? id;
@@ -37,6 +39,11 @@ class WeatherLocation {
   final String? observationStationId;
   final int sortOrder;
 
+  /// Manifest URL of a local station server; null for a DWD place.
+  final String? stationUrl;
+
+  bool get isLocalStation => stationUrl != null;
+
   Map<String, Object?> toMap() => {
     'id': ?id,
     'name': name,
@@ -47,6 +54,7 @@ class WeatherLocation {
     'forecast_station': forecastStationId,
     'observation_station': observationStationId,
     'sort_order': sortOrder,
+    'station_url': stationUrl,
   };
 
   WeatherLocation copyWith({
@@ -66,6 +74,7 @@ class WeatherLocation {
     forecastStationId: forecastStationId,
     observationStationId: observationStationId,
     sortOrder: sortOrder ?? this.sortOrder,
+    stationUrl: stationUrl,
   );
 
   WeatherLocation withStations({String? forecast, String? observation}) =>
@@ -79,5 +88,6 @@ class WeatherLocation {
         forecastStationId: forecast,
         observationStationId: observation,
         sortOrder: sortOrder,
+        stationUrl: stationUrl,
       );
 }

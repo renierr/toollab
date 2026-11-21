@@ -16954,6 +16954,82 @@ class AppLocalizationsDe extends AppLocalizations {
   String get weatherUseMyLocation => 'Meinen Standort verwenden';
 
   @override
+  String get weatherLocalStation => 'Lokale Wetterstation';
+
+  @override
+  String get weatherLocalStationSubtitle =>
+      'Eigenen Stations-Server über seine Adresse abfragen';
+
+  @override
+  String get weatherLocalStationAddress => 'Server-Adresse';
+
+  @override
+  String get weatherLocalStationHelper =>
+      'Die App liest weather-station.json unter dieser Adresse';
+
+  @override
+  String get weatherLocalStationCheck => 'Prüfen';
+
+  @override
+  String get weatherLocalStationAdd => 'Hinzufügen';
+
+  @override
+  String get weatherLocalStationInvalidAddress =>
+      'Eine http- oder https-Adresse eingeben';
+
+  @override
+  String get weatherLocalStationUnreachable =>
+      'Der Server ist nicht erreichbar';
+
+  @override
+  String get weatherLocalStationNotFound =>
+      'Keine weather-station.json unter dieser Adresse';
+
+  @override
+  String get weatherLocalStationInvalid =>
+      'Die Antwort ist keine gültige Stationsbeschreibung';
+
+  @override
+  String weatherLocalStationVersion(int version) {
+    return 'Die Station nutzt Schnittstellenversion $version, die diese App noch nicht unterstützt';
+  }
+
+  @override
+  String get weatherLocalStationOffers => 'Liefert';
+
+  @override
+  String get weatherLocalStationMeasurements => 'Messwerte';
+
+  @override
+  String get weatherLocalStationForecast => 'Vorhersage';
+
+  @override
+  String get weatherLocalStationWarnings => 'Warnungen';
+
+  @override
+  String get weatherLocalStationDays => 'Sonnenauf- und -untergang';
+
+  @override
+  String weatherLocalStationFields(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Werte',
+      one: '1 Wert',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get weatherLocalStationFallback =>
+      'Was die Station nicht liefert, ergänzt der DWD für ihren Standort.';
+
+  @override
+  String weatherSourceLocal(String station) {
+    return '$station (lokal)';
+  }
+
+  @override
   String get weatherSearchAttribution =>
       'Ortssuche © OpenStreetMap-Mitwirkende';
 

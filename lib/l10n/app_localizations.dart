@@ -29602,6 +29602,120 @@ abstract class AppLocalizations {
   /// **'Use my location'**
   String get weatherUseMyLocation;
 
+  /// No description provided for @weatherLocalStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Local weather station'**
+  String get weatherLocalStation;
+
+  /// No description provided for @weatherLocalStationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Query your own station server by its address'**
+  String get weatherLocalStationSubtitle;
+
+  /// No description provided for @weatherLocalStationAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Server address'**
+  String get weatherLocalStationAddress;
+
+  /// No description provided for @weatherLocalStationHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'The app reads weather-station.json at this address'**
+  String get weatherLocalStationHelper;
+
+  /// No description provided for @weatherLocalStationCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get weatherLocalStationCheck;
+
+  /// No description provided for @weatherLocalStationAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get weatherLocalStationAdd;
+
+  /// No description provided for @weatherLocalStationInvalidAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an http or https address'**
+  String get weatherLocalStationInvalidAddress;
+
+  /// No description provided for @weatherLocalStationUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'The server cannot be reached'**
+  String get weatherLocalStationUnreachable;
+
+  /// No description provided for @weatherLocalStationNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No weather-station.json at this address'**
+  String get weatherLocalStationNotFound;
+
+  /// No description provided for @weatherLocalStationInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer is not a valid station description'**
+  String get weatherLocalStationInvalid;
+
+  /// No description provided for @weatherLocalStationVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'The station uses interface version {version}, which this app does not support yet'**
+  String weatherLocalStationVersion(int version);
+
+  /// No description provided for @weatherLocalStationOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivers'**
+  String get weatherLocalStationOffers;
+
+  /// No description provided for @weatherLocalStationMeasurements.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurements'**
+  String get weatherLocalStationMeasurements;
+
+  /// No description provided for @weatherLocalStationForecast.
+  ///
+  /// In en, this message translates to:
+  /// **'Forecast'**
+  String get weatherLocalStationForecast;
+
+  /// No description provided for @weatherLocalStationWarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Warnings'**
+  String get weatherLocalStationWarnings;
+
+  /// No description provided for @weatherLocalStationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise and sunset'**
+  String get weatherLocalStationDays;
+
+  /// No description provided for @weatherLocalStationFields.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 value} other{{count} values}}'**
+  String weatherLocalStationFields(int count);
+
+  /// No description provided for @weatherLocalStationFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Whatever the station does not deliver comes from the DWD for its location.'**
+  String get weatherLocalStationFallback;
+
+  /// No description provided for @weatherSourceLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'{station} (local)'**
+  String weatherSourceLocal(String station);
+
   /// No description provided for @weatherSearchAttribution.
   ///
   /// In en, this message translates to:

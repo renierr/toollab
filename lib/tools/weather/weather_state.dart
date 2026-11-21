@@ -8,6 +8,7 @@ import 'package:tool_lab/services/background_task_service.dart';
 import 'api/geocoding_client.dart';
 import 'api/station_catalog.dart';
 import 'models/geo_place.dart';
+import 'models/local_station_manifest.dart';
 import 'models/weather_history_entry.dart';
 import 'models/weather_location.dart';
 import 'models/weather_snapshot.dart';
@@ -217,6 +218,28 @@ class WeatherState extends ChangeNotifier {
       longitude: place.longitude,
     ),
   );
+
+  /// Throws a WeatherException or LocalStationVersionException.
+  Future<LocalStationManifest> inspectLocalStation(Uri manifestUrl) =>
+      _repository.inspectLocalStation(manifestUrl);
+
+  Future<WeatherLocation> addLocalStation(LocalStationManifest manifest) {
+    final url = manifest.url.toString();
+    final existing = _locations.where((l) => l.stationUrl == url).firstOrNull;
+    if (existing != null) {
+      select(existing.id!);
+      return Future.value(existing);
+    }
+    return _add(
+      WeatherLocation(
+        name: manifest.name,
+        latitude: manifest.latitude,
+        longitude: manifest.longitude,
+        elevation: manifest.elevation,
+        stationUrl: url,
+      ),
+    );
+  }
 
   /// Asks for the location permission; returns null when no fix is available.
   Future<WeatherLocation?> addDeviceLocation() async {

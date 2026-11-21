@@ -8,6 +8,7 @@ import '../models/geo_place.dart';
 import '../models/weather_station.dart';
 import '../weather_device_location.dart';
 import '../weather_state.dart';
+import 'weather_local_station_dialog.dart';
 import 'weather_location_actions.dart';
 import 'weather_coordinates_link.dart';
 
@@ -84,6 +85,13 @@ class _WeatherPlaceSearchState extends State<WeatherPlaceSearch>
     await WeatherLocationActions.addDeviceLocation(parent);
   }
 
+  Future<void> _addLocalStation() async {
+    final navigator = Navigator.of(context);
+    final parent = navigator.context;
+    navigator.pop();
+    await WeatherLocalStationDialog.show(parent);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -135,6 +143,12 @@ class _WeatherPlaceSearchState extends State<WeatherPlaceSearch>
                       title: Text(l10n.weatherUseMyLocation),
                       onTap: _useDevice,
                     ),
+                  ListTile(
+                    leading: const Icon(Icons.sensors),
+                    title: Text(l10n.weatherLocalStation),
+                    subtitle: Text(l10n.weatherLocalStationSubtitle),
+                    onTap: _addLocalStation,
+                  ),
                   if (_failed)
                     ListTile(
                       leading: Icon(

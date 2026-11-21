@@ -144,13 +144,14 @@ class WeatherLocationMenu extends StatelessWidget {
             title: Text(l10n.weatherRename),
           ),
         ),
-        PopupMenuItem(
-          value: 'stations',
-          child: ListTile(
-            leading: const Icon(Icons.cell_tower),
-            title: Text(l10n.weatherStations),
+        if (!location.isLocalStation)
+          PopupMenuItem(
+            value: 'stations',
+            child: ListTile(
+              leading: const Icon(Icons.cell_tower),
+              title: Text(l10n.weatherStations),
+            ),
           ),
-        ),
         PopupMenuItem(
           value: 'delete',
           child: ListTile(

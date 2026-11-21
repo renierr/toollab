@@ -8,6 +8,7 @@ class WeatherStation {
     required this.longitude,
     required this.elevation,
     required this.hasObservations,
+    this.isLocal = false,
   });
 
   factory WeatherStation.fromJsonRow(List<dynamic> row) => WeatherStation(
@@ -25,6 +26,9 @@ class WeatherStation {
   final double longitude;
   final int elevation;
   final bool hasObservations;
+
+  /// A station server the user added by address, not a DWD station.
+  final bool isLocal;
 
   double distanceKm(double lat, double lon) =>
       haversineKm(latitude, longitude, lat, lon);

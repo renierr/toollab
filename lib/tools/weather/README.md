@@ -21,6 +21,8 @@ source, a mapping, a schema, a default or a native contract (see `AGENTS.md`,
   opens first and drives the widget fallback, background
   refresh and notifications. Per place the forecast and measurement stations
   can be pinned; otherwise the nearest suitable ones are chosen.
+- **Local weather stations:** a place can be a station server the user adds
+  by address (see [Local stations](#local-stations)).
 - **Overview:** hero with the current temperature (measured when the station
   reading is at most 150 min old, else the forecast hour), condition, feels
   like, today's high/low. Warning banner, next 48 hours strip, rain radar
@@ -114,6 +116,7 @@ errors as `WeatherException(WeatherError.unreachable|notFound|httpStatus|invalid
 | Short-term warnings | `s3.eu-central-1.amazonaws.com/app-prod-static.warnwetter.de/v16/warnings_nowcast.json` | Gzip-compressed JSON **without** a Content-Encoding header. `warnings[].regions[].polygon` is a flat lat,lon list. Ids change with every model run. `api/nowcast_client.dart`, `models/area_warning.dart` (ray casting) |
 | Rain radar | WMS `maps.dwd.de/geoserver/dwd/wms`, layer `dwd:Niederschlagsradar`, EPSG:3857 | `time` dimension in 5-min steps; capabilities from `.../dwd/Niederschlagsradar/wms`. Rendered on demand, 1–30 s per image. Overlays as PNG8 (transparent, exact legend colours), satellite base `dwd:bluemarble` as JPEG, borders `dwd:Laender` style `Laender_grau` + `dwd:Gewaesser`, `dwd:Blitzdichte`, `dwd:Warnungen_Landkreise`. `api/dwd_radar.dart` |
 | Place search | `nominatim.openstreetmap.org/search` | Only on submit, at most one request per second, User-Agent `ToolLab-Weather/1.0`, countries de,at,ch,nl,be,lu,fr,dk,pl,cz. `api/geocoding_client.dart` |
+| Local station | user-entered address, `<base>/weather-station.json` | Own interface, see `local_station/LOCAL_STATION_API.md`. `api/local_station_client.dart`, `models/local_station_manifest.dart` |
 | Station catalog | `assets/weather/stations.json` | 3,632 stations `[id, name, lat, lon, elevation, hasObservations]`, built from the MOSMIX catalog (coordinates converted from degrees.minutes) by a one-off script. `api/station_catalog.dart` |
 
 ### Station choice
@@ -143,6 +146,8 @@ payloads. Keys and maximum age before a normal load refetches:
 | `obs:<id>` | 10 min |
 | `overview:<id,id,...>` | 15 min |
 | `nowcast` | 5 min |
+| `local:manifest:<url>` | 60 min |
+| `local:<section url>` | the section's `refreshSeconds` (defaults 5 min / 1 h / 5 min / 6 h) |
 | `radar:base:<layer>:<block>` | kept (static), pruned after 30 days |
 
 Modes: `normal` (fresh cache wins), `force` (network first), `cacheOnly`
@@ -150,9 +155,34 @@ Modes: `normal` (fresh cache wins), `force` (network first), `cacheOnly`
 the snapshot stale; a 404 does not, so a vanished station hands over to the
 next candidate.
 
+## Local stations
+
+A local station is a place with `locations.station_url` set (schema version 3)
+to the manifest URL of a server implementing
+[`local_station/LOCAL_STATION_API.md`](local_station/LOCAL_STATION_API.md).
+`local_station/example_server.dart` is a standalone reference server with fake
+data (`dart lib/tools/weather/local_station/example_server.dart`).
+
+- **Adding:** *Add place → Local weather station* opens
+  `WeatherLocalStationDialog`. `LocalStationClient.manifestUrl` reads a bare
+  host as `http://` and appends `weather-station.json` unless the address ends
+  in `.json`. *Check* fetches and caches the manifest
+  (`WeatherRepository.inspectLocalStation`) and lists the offered sections;
+  *Add* saves the place at the manifest's coordinates. The same URL twice only
+  selects the existing place. The station menu entry is hidden for such places.
+- **Loading:** `WeatherRepository.load` reads the manifest, then each offered
+  section. Only declared fields are read. A section the station does not offer,
+  or that yields nothing (error, no rows), is loaded from the DWD for the
+  coordinates exactly as for a normal place; warnings and days replace the DWD
+  ones independently. Nowcast warnings are always added. A failing station marks
+  the snapshot stale (offline hint).
+- **Display:** station matches from the server carry `WeatherStation.isLocal`
+  with distance 0; the footer names them "(local)". Measured full-hour rows go
+  into the history like DWD readings.
+
 ## History
 
-Table `history` (schema version 2), one row per place and UTC hour,
+Table `history` (added in schema version 2), one row per place and UTC hour,
 `PRIMARY KEY (location_id, hour)`, `WITHOUT ROWID`, about 80 bytes per row
 (~0.7 MB per place and year): `hour` (epoch seconds), `source` (0 measured,
 1 forecast), `temperature`, `dew_point`, `pressure`, `wind_speed`,
@@ -349,6 +379,8 @@ because `ToolBackButton` needs a `GoRouterState`.
   overflow; settings page; history page in every period.
 - `weather_history_test.dart` — ranges, aggregation, record and prune rules.
 - `weather_trend_chart_test.dart` — tooltip behaviour.
+- `weather_local_station_test.dart` — address rules, manifest and section
+  parsing, loading with DWD fallback, adding through the state.
 - `weather_android_launcher_test.dart` — manifest, process, icons, widget
   drawables for every condition.
 
