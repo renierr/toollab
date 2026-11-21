@@ -37,7 +37,7 @@ class HealthChartTooltip extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title, style: theme.textTheme.labelSmall),
+                Flexible(child: Text(title, style: theme.textTheme.labelSmall)),
                 if (tag != null) ...[
                   const SizedBox(width: 5),
                   HealthChartDot(color: tag.color),
@@ -54,7 +54,12 @@ class HealthChartTooltip extends StatelessWidget {
                   children: [
                     HealthChartDot(color: reading.color),
                     const SizedBox(width: 4),
-                    Text(reading.text, style: theme.textTheme.labelSmall),
+                    Flexible(
+                      child: Text(
+                        reading.text,
+                        style: theme.textTheme.labelSmall,
+                      ),
+                    ),
                   ],
                 ),
               ),

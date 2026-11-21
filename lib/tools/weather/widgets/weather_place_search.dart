@@ -9,6 +9,7 @@ import '../models/weather_station.dart';
 import '../weather_device_location.dart';
 import '../weather_state.dart';
 import 'weather_location_actions.dart';
+import 'weather_coordinates_link.dart';
 
 class WeatherPlaceSearch extends StatefulWidget {
   const WeatherPlaceSearch({super.key});
@@ -150,11 +151,21 @@ class _WeatherPlaceSearchState extends State<WeatherPlaceSearch>
                       ListTile(
                         leading: const Icon(Icons.place_outlined),
                         title: Text(p.name),
-                        subtitle: Text(
-                          p.label,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              p.label,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            WeatherCoordinatesLink(
+                              latitude: p.latitude,
+                              longitude: p.longitude,
+                            ),
+                          ],
                         ),
+                        isThreeLine: true,
                         onTap: () => _pick(p),
                       ),
                   ],
@@ -164,7 +175,17 @@ class _WeatherPlaceSearchState extends State<WeatherPlaceSearch>
                       ListTile(
                         leading: const Icon(Icons.cell_tower),
                         title: Text(s.name),
-                        subtitle: Text('${s.id} · ${s.elevation} m'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${s.id} · ${s.elevation} m'),
+                            WeatherCoordinatesLink(
+                              latitude: s.latitude,
+                              longitude: s.longitude,
+                            ),
+                          ],
+                        ),
+                        isThreeLine: true,
                         onTap: () => _pick(
                           GeoPlace(
                             name: s.name,

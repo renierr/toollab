@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -73,18 +75,39 @@ class WeatherSettingsPage extends StatelessWidget {
               title: l10n.weatherSettingsWarnings,
               description: l10n.weatherNotifyLevelHint,
             ),
-            WeatherChoiceChips<int>(
+            _WarningLevelChips(
               label: l10n.weatherNotifyLevel,
-              values: const [0, 1, 2, 3, 4],
-              selected: s.warningNotifyLevel,
-              text: (level) => level == 0
-                  ? l10n.weatherRefreshOff
-                  : WeatherL10n.warningLevel(l10n, level),
+              level: s.warningNotifyLevel,
               onChanged: (level) =>
                   update(s.copyWith(warningNotifyLevel: level)),
             ),
             if (BackgroundTaskService.isSupported && s.warningNotifyLevel > 0)
               const _NotificationPermissionTile(),
+            _WarningLevelChips(
+              label: l10n.weatherShowLevel,
+              level: s.warningShowLevel,
+              onChanged: (level) => update(s.copyWith(warningShowLevel: level)),
+            ),
+            if (Platform.isAndroid) ...[
+              SettingsSectionLabel(
+                title: l10n.weatherSettingsWidget,
+                description: l10n.weatherWidgetDetailsHint,
+              ),
+              WeatherFilterChips<WeatherWidgetDetail>(
+                label: l10n.weatherWidgetDetails,
+                values: WeatherWidgetDetail.values,
+                selected: s.widgetDetails,
+                text: (d) => switch (d) {
+                  WeatherWidgetDetail.feelsLike => l10n.weatherFeelsLikeLabel,
+                  WeatherWidgetDetail.wind => l10n.weatherWind,
+                  WeatherWidgetDetail.rainChance =>
+                    l10n.weatherPrecipitationProbability,
+                  WeatherWidgetDetail.humidity => l10n.weatherHumidity,
+                  WeatherWidgetDetail.sun => l10n.weatherSun,
+                },
+                onChanged: (d) => update(s.copyWith(widgetDetails: d)),
+              ),
+            ],
             SettingsSectionLabel(title: l10n.weatherSettingsRadar),
             _RadarSettings(settings: s, onChanged: update),
             SettingsSectionLabel(title: l10n.weatherSettingsData),
@@ -450,6 +473,33 @@ class _HistoryStorageTileState extends State<_HistoryStorageTile> {
           onTap: count == 0 ? null : _clear,
         );
       },
+    );
+  }
+}
+
+/// Levels are thresholds, so the chosen one and every higher one light up.
+class _WarningLevelChips extends StatelessWidget {
+  const _WarningLevelChips({
+    required this.label,
+    required this.level,
+    required this.onChanged,
+  });
+
+  final String label;
+  final int level;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return WeatherChoiceChips<int>(
+      label: label,
+      values: const [0, 1, 2, 3, 4],
+      selected: level,
+      isSelected: (v) => level == 0 ? v == 0 : v >= level,
+      text: (v) =>
+          v == 0 ? l10n.weatherRefreshOff : WeatherL10n.warningLevel(l10n, v),
+      onChanged: onChanged,
     );
   }
 }

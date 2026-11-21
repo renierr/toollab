@@ -128,7 +128,14 @@ class _WeatherTrendChartState extends State<WeatherTrendChart>
                       left: x < width / 2 ? x + 12 : null,
                       right: x >= width / 2 ? width - x + 12 : null,
                       child: IgnorePointer(
-                        child: _HourReadout(hour: hour, units: widget.units),
+                        child: ConstrainedBox(
+                          // The side of the cursor it sits on, so long
+                          // lines wrap instead of running off the chart.
+                          constraints: BoxConstraints(
+                            maxWidth: (x < width / 2 ? width - x : x) - 16,
+                          ),
+                          child: _HourReadout(hour: hour, units: widget.units),
+                        ),
                       ),
                     ),
                 ],

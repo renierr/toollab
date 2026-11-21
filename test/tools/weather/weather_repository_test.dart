@@ -280,6 +280,9 @@ void main() {
       final berlin = await state.addPlace(other);
       await state.setDefault(berlin.id);
       expect(state.defaultLocation!.name, 'Berlin');
+      expect(state.locations.first.name, 'Berlin', reason: 'shown first');
+      final stored = await WeatherDbHelper.instance.getLocations();
+      expect(stored.map((l) => l.name), ['Berlin', 'Eschborn']);
       await state.removeLocation(berlin.id!);
       expect(state.settings.defaultLocationId, isNull);
       expect(state.defaultLocation!.name, 'Eschborn');
@@ -482,6 +485,33 @@ void main() {
       );
       final f = (fahrenheit['places']! as List).single as Map<String, Object?>;
       expect(f['temp'], isNot(first['temp']));
+
+      final trimmed = WeatherPublisher.widgetJson(
+        locations: [eschborn],
+        snapshots: snapshots,
+        settings: const WeatherSettings(
+          widgetDetails: {WeatherWidgetDetail.wind},
+          warningShowLevel: 0,
+        ),
+        l10n: l10n,
+        now: now,
+      );
+      final t = (trimmed['places']! as List).single as Map<String, Object?>;
+      expect((t['details']! as List).single, startsWith('Wind '));
+      expect(t.containsKey('warning'), isFalse);
+    });
+
+    test('warning display counts from the chosen level up', () {
+      const s = WeatherSettings(warningShowLevel: 2);
+      expect([0, 1, 2, 3, 4].map(s.showsWarning), [
+        false,
+        false,
+        true,
+        true,
+        true,
+      ]);
+      expect(const WeatherSettings().showsWarning(0), isTrue);
+      expect(const WeatherSettings(warningShowLevel: 0).showsWarning(4), false);
     });
 
     test('icons and backgrounds follow condition and daylight', () {

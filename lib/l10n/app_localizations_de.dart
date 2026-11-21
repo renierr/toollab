@@ -17319,11 +17319,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get weatherNotifyLevel => 'Warnbenachrichtigungen';
+  String get weatherNotifyLevel => 'Benachrichtigen ab';
 
   @override
   String get weatherNotifyLevelHint =>
-      'Ab dieser Stufe benachrichtigen, für den Standard-Ort. Bei geschlossener App braucht das die Aktualisierung im Hintergrund.';
+      'Jede Auswahl gilt ab dieser Stufe aufwärts. Benachrichtigungen gelten für den Standard-Ort; bei geschlossener App braucht das die Aktualisierung im Hintergrund.';
 
   @override
   String get weatherNotificationsBlocked =>
@@ -17350,6 +17350,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get weatherSettingsWarnings => 'Warnungen';
+
+  @override
+  String get weatherShowLevel => 'In Übersicht und Widget anzeigen ab';
+
+  @override
+  String get weatherSettingsWidget => 'Startbildschirm-Widget';
+
+  @override
+  String get weatherWidgetDetails => 'Zusatzinfos';
+
+  @override
+  String get weatherWidgetDetailsHint =>
+      'Zeilen, die ein breites Widget neben der Temperatur zeigt, wenn Platz ist.';
+
+  @override
+  String get weatherFeelsLikeLabel => 'Gefühlt';
+
+  @override
+  String get weatherMoveUp => 'Nach oben';
+
+  @override
+  String get weatherMoveDown => 'Nach unten';
+
+  @override
+  String get weatherOpenMap => 'Auf Karte zeigen';
 
   @override
   String get weatherSettingsBackground => 'Aktualisierung im Hintergrund';

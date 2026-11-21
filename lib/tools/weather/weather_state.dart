@@ -328,8 +328,12 @@ class WeatherState extends ChangeNotifier {
     await refresh(id);
   }
 
-  Future<void> setDefault(int? id) =>
-      updateSettings(_settings.copyWith(defaultLocationId: () => id));
+  /// The default place also moves to the top, so it is shown first.
+  Future<void> setDefault(int? id) async {
+    final index = _locations.indexWhere((l) => l.id == id);
+    if (index > 0) await reorder(index, 0);
+    await updateSettings(_settings.copyWith(defaultLocationId: () => id));
+  }
 
   Future<void> _pruneHistory() async {
     try {

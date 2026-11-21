@@ -17188,11 +17188,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get weatherNotifyLevel => 'Warning notifications';
+  String get weatherNotifyLevel => 'Notify from';
 
   @override
   String get weatherNotifyLevelHint =>
-      'Notify from this level on, for the default place. While the app is closed, this needs background updates.';
+      'Each choice counts from that level up. Notifications are for the default place; while the app is closed they need background updates.';
 
   @override
   String get weatherNotificationsBlocked =>
@@ -17219,6 +17219,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weatherSettingsWarnings => 'Warnings';
+
+  @override
+  String get weatherShowLevel => 'Show in the overview and widget from';
+
+  @override
+  String get weatherSettingsWidget => 'Home screen widget';
+
+  @override
+  String get weatherWidgetDetails => 'Extra details';
+
+  @override
+  String get weatherWidgetDetailsHint =>
+      'Lines a wide widget shows beside the temperature when there is room.';
+
+  @override
+  String get weatherFeelsLikeLabel => 'Feels like';
+
+  @override
+  String get weatherMoveUp => 'Move up';
+
+  @override
+  String get weatherMoveDown => 'Move down';
+
+  @override
+  String get weatherOpenMap => 'Show on map';
 
   @override
   String get weatherSettingsBackground => 'Background updates';

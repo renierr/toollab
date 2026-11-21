@@ -7,11 +7,14 @@ import '../weather_colors.dart';
 import '../weather_l10n.dart';
 import '../weather_units.dart';
 import 'weather_icon_view.dart';
+import 'weather_coordinates_link.dart';
 
 class WeatherHero extends StatelessWidget {
   const WeatherHero({
     super.key,
     required this.name,
+    required this.latitude,
+    required this.longitude,
     required this.current,
     required this.today,
     required this.isDay,
@@ -21,6 +24,8 @@ class WeatherHero extends StatelessWidget {
   });
 
   final String name;
+  final double latitude;
+  final double longitude;
   final CurrentConditions current;
   final DailyForecast? today;
   final bool isDay;
@@ -97,6 +102,14 @@ class WeatherHero extends StatelessWidget {
                                   ),
                                 ),
                               ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 22),
+                              child: WeatherCoordinatesLink(
+                                latitude: latitude,
+                                longitude: longitude,
+                                color: Colors.white70,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             FittedBox(

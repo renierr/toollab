@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -12,6 +14,9 @@ enum PrecipitationUnit { mm, inch }
 
 enum RadarBaseMap { light, dark, satellite }
 
+/// Extra lines a wide home screen widget shows beside the temperature.
+enum WeatherWidgetDetail { feelsLike, wind, rainChance, humidity, sun }
+
 /// Which places a background run refreshes.
 enum WeatherBackgroundScope { defaultPlace, allPlaces }
 
@@ -24,6 +29,8 @@ class WeatherSettings {
     this.defaultLocationId,
     this.autoRefreshMinutes = 30,
     this.warningNotifyLevel = 2,
+    this.warningShowLevel = 1,
+    this.widgetDetails = const {...WeatherWidgetDetail.values},
     this.animatedIcons = true,
     this.radarBaseMap = RadarBaseMap.light,
     this.radarSpeed = 1.0,
@@ -57,6 +64,14 @@ class WeatherSettings {
 
   /// Lowest DWD level that raises a notification; 0 = off.
   final int warningNotifyLevel;
+
+  /// Lowest DWD level shown in the overview and the widget; 0 = off.
+  final int warningShowLevel;
+  final Set<WeatherWidgetDetail> widgetDetails;
+
+  /// DWD level 0 items (e.g. heat notices) count as the lowest level.
+  bool showsWarning(int level) =>
+      warningShowLevel > 0 && math.max(level, 1) >= warningShowLevel;
   final bool animatedIcons;
   final RadarBaseMap radarBaseMap;
   final double radarSpeed;
@@ -98,6 +113,8 @@ class WeatherSettings {
   static const _kDefault = 'default_location';
   static const _kRefresh = 'auto_refresh_minutes';
   static const _kNotify = 'warning_notify_level';
+  static const _kShow = 'warning_show_level';
+  static const _kWidgetDetails = 'widget_details';
   static const _kAnimated = 'animated_icons';
   static const _kBaseMap = 'radar_base_map';
   static const _kSpeed = 'radar_speed';
@@ -134,6 +151,14 @@ class WeatherSettings {
       defaultLocationId: int.tryParse(s[_kDefault] ?? ''),
       autoRefreshMinutes: int.tryParse(s[_kRefresh] ?? '') ?? 30,
       warningNotifyLevel: int.tryParse(s[_kNotify] ?? '') ?? 2,
+      warningShowLevel: int.tryParse(s[_kShow] ?? '') ?? 1,
+      widgetDetails: switch (s[_kWidgetDetails]) {
+        null => {...WeatherWidgetDetail.values},
+        final names => {
+          for (final n in names.split(','))
+            ?WeatherWidgetDetail.values.asNameMap()[n],
+        },
+      },
       animatedIcons: s[_kAnimated] != 'false',
       radarBaseMap: pick(RadarBaseMap.values, _kBaseMap, RadarBaseMap.light),
       radarSpeed: double.tryParse(s[_kSpeed] ?? '') ?? 1.0,
@@ -168,6 +193,15 @@ class WeatherSettings {
         db.setSetting(id, _kDefault, '$defaultLocationId'),
       db.setSetting(id, _kRefresh, '$autoRefreshMinutes'),
       db.setSetting(id, _kNotify, '$warningNotifyLevel'),
+      db.setSetting(id, _kShow, '$warningShowLevel'),
+      db.setSetting(
+        id,
+        _kWidgetDetails,
+        WeatherWidgetDetail.values
+            .where(widgetDetails.contains)
+            .map((d) => d.name)
+            .join(','),
+      ),
       db.setSetting(id, _kAnimated, '$animatedIcons'),
       db.setSetting(id, _kBaseMap, radarBaseMap.name),
       db.setSetting(id, _kSpeed, '$radarSpeed'),
@@ -192,6 +226,8 @@ class WeatherSettings {
     int? Function()? defaultLocationId,
     int? autoRefreshMinutes,
     int? warningNotifyLevel,
+    int? warningShowLevel,
+    Set<WeatherWidgetDetail>? widgetDetails,
     bool? animatedIcons,
     RadarBaseMap? radarBaseMap,
     double? radarSpeed,
@@ -215,6 +251,8 @@ class WeatherSettings {
         : defaultLocationId(),
     autoRefreshMinutes: autoRefreshMinutes ?? this.autoRefreshMinutes,
     warningNotifyLevel: warningNotifyLevel ?? this.warningNotifyLevel,
+    warningShowLevel: warningShowLevel ?? this.warningShowLevel,
+    widgetDetails: widgetDetails ?? this.widgetDetails,
     animatedIcons: animatedIcons ?? this.animatedIcons,
     radarBaseMap: radarBaseMap ?? this.radarBaseMap,
     radarSpeed: radarSpeed ?? this.radarSpeed,

@@ -30271,13 +30271,13 @@ abstract class AppLocalizations {
   /// No description provided for @weatherNotifyLevel.
   ///
   /// In en, this message translates to:
-  /// **'Warning notifications'**
+  /// **'Notify from'**
   String get weatherNotifyLevel;
 
   /// No description provided for @weatherNotifyLevelHint.
   ///
   /// In en, this message translates to:
-  /// **'Notify from this level on, for the default place. While the app is closed, this needs background updates.'**
+  /// **'Each choice counts from that level up. Notifications are for the default place; while the app is closed they need background updates.'**
   String get weatherNotifyLevelHint;
 
   /// No description provided for @weatherNotificationsBlocked.
@@ -30327,6 +30327,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Warnings'**
   String get weatherSettingsWarnings;
+
+  /// No description provided for @weatherShowLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in the overview and widget from'**
+  String get weatherShowLevel;
+
+  /// No description provided for @weatherSettingsWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen widget'**
+  String get weatherSettingsWidget;
+
+  /// No description provided for @weatherWidgetDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra details'**
+  String get weatherWidgetDetails;
+
+  /// No description provided for @weatherWidgetDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines a wide widget shows beside the temperature when there is room.'**
+  String get weatherWidgetDetailsHint;
+
+  /// No description provided for @weatherFeelsLikeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Feels like'**
+  String get weatherFeelsLikeLabel;
+
+  /// No description provided for @weatherMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get weatherMoveUp;
+
+  /// No description provided for @weatherMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get weatherMoveDown;
+
+  /// No description provided for @weatherOpenMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on map'**
+  String get weatherOpenMap;
 
   /// No description provided for @weatherSettingsBackground.
   ///

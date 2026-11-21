@@ -155,7 +155,7 @@ class WeatherPublisher {
       'places': [
         for (final l in locations)
           if (snapshots[l.id] case final s? when s.hasData)
-            _place(l, s, units, l10n, locale, now),
+            _place(l, s, units, settings, l10n, locale, now),
       ],
     };
   }
@@ -164,6 +164,7 @@ class WeatherPublisher {
     WeatherLocation location,
     WeatherSnapshot snapshot,
     WeatherUnits units,
+    WeatherSettings settings,
     AppLocalizations l10n,
     String locale,
     DateTime now,
@@ -180,7 +181,10 @@ class WeatherPublisher {
       for (final h in snapshot.forecast?.hours ?? const <HourlyForecast>[])
         if (h.time.isAfter(now)) h,
     ].take(_hours);
-    final warning = snapshot.warnings(now).firstOrNull;
+    final warning = snapshot
+        .warnings(now)
+        .where((w) => settings.showsWarning(w.level))
+        .firstOrNull;
     return {
       'id': location.id,
       'name': WeatherL10n.locationName(l10n, location),
@@ -195,7 +199,15 @@ class WeatherPublisher {
       'updated': l10n.weatherUpdated(
         DateFormat.Hm(locale).format(snapshot.fetchedAt.toLocal()),
       ),
-      'details': _details(current, todayForecast, snapshot, units, l10n, now),
+      'details': _details(
+        current,
+        todayForecast,
+        snapshot,
+        units,
+        settings.widgetDetails,
+        l10n,
+        now,
+      ),
       'hours': [
         for (final h in hours)
           {
@@ -231,22 +243,28 @@ class WeatherPublisher {
     DailyForecast? today,
     WeatherSnapshot snapshot,
     WeatherUnits units,
+    Set<WeatherWidgetDetail> shown,
     AppLocalizations l10n,
     DateTime now,
   ) {
     final hm = DateFormat.Hm(l10n.localeName);
     final sun = snapshot.sunTimes(now);
     return [
-      if (current.feelsLike != null)
+      if (shown.contains(WeatherWidgetDetail.feelsLike) &&
+          current.feelsLike != null)
         l10n.weatherFeelsLike(units.temperatureText(current.feelsLike)),
-      if (current.windSpeed != null)
+      if (shown.contains(WeatherWidgetDetail.wind) && current.windSpeed != null)
         '${l10n.weatherWind} ${units.windText(current.windSpeed)}',
-      if (today?.precipitationProbability != null)
+      if (shown.contains(WeatherWidgetDetail.rainChance) &&
+          today?.precipitationProbability != null)
         '${l10n.weatherPrecipitationProbability} '
             '${WeatherUnits.percentText(today!.precipitationProbability)}',
-      if (current.humidity != null)
+      if (shown.contains(WeatherWidgetDetail.humidity) &&
+          current.humidity != null)
         '${l10n.weatherHumidity} ${WeatherUnits.percentText(current.humidity)}',
-      if (sun.sunrise != null && sun.sunset != null)
+      if (shown.contains(WeatherWidgetDetail.sun) &&
+          sun.sunrise != null &&
+          sun.sunset != null)
         '↑ ${hm.format(sun.sunrise!.toLocal())}  '
             '↓ ${hm.format(sun.sunset!.toLocal())}',
     ];

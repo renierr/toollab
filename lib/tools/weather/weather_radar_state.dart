@@ -122,9 +122,12 @@ class WeatherRadarState extends ChangeNotifier {
   /// Decoded frames kept around the current one; the rest stay compressed.
   static const int _decodeBehind = 2;
   static const int _decodeAhead = 5;
-  static const Duration _frameInterval = Duration(milliseconds: 550);
+  static const Duration _frameInterval = Duration(milliseconds: 250);
   static const Duration _viewportSettle = Duration(milliseconds: 300);
-  static const int _endHoldTicks = 3;
+  static const int _endHoldTicks = 6;
+
+  /// Ticks playback waits for the next frame to decode before skipping on.
+  static const int _decodeWaitTicks = 4;
 
   final Future<Uint8List> Function(Uri uri) _fetch;
   final RadarFrameStore _store;
@@ -155,6 +158,7 @@ class WeatherRadarState extends ChangeNotifier {
   int _fullUsers = 0;
   final Set<int> _inFlight = {};
   int _endHold = 0;
+  int _decodeWait = 0;
   Timer? _playTimer;
   Timer? _settleTimer;
   Timer? _refreshTimer;
@@ -820,8 +824,11 @@ class WeatherRadarState extends ChangeNotifier {
     _previousFrame = null;
   }
 
+  /// While playing, the window wraps to the first frames so the loop
+  /// restarts without a gap.
   bool _inWindow(int i) =>
-      i >= _index - _decodeBehind && i <= _index + _decodeAhead;
+      (i >= _index - _decodeBehind && i <= _index + _decodeAhead) ||
+      (_playing && i < _index + _decodeAhead - frameCount + 1);
 
   /// Keeps decoded only the frames around [_index], decoding missing ones
   /// from the compressed store.
@@ -832,7 +839,8 @@ class WeatherRadarState extends ChangeNotifier {
       if (!_inWindow(i)) _decoded.remove(i)!.dispose();
     }
     final gen = _generation;
-    for (var i = _index - _decodeBehind; i <= _index + _decodeAhead; i++) {
+    for (var k = _index - _decodeBehind; k <= _index + _decodeAhead; k++) {
+      final i = _playing && k >= frameCount ? k - frameCount : k;
       if (i < 0 || i >= frameCount || !_available.contains(i)) continue;
       if (_decoded.containsKey(i) || !_decoding.add(i)) continue;
       unawaited(() async {
@@ -958,6 +966,12 @@ class WeatherRadarState extends ChangeNotifier {
       _endHold = 0;
       next = _available.isEmpty ? 0 : _available.reduce(math.min);
     }
+    // Showing a neighbour while the next frame decodes reads as a stutter.
+    if (!_decoded.containsKey(next) && _decodeWait++ < _decodeWaitTicks) {
+      _syncWindow();
+      return;
+    }
+    _decodeWait = 0;
     seek(next);
   }
 

@@ -58,7 +58,10 @@ class WeatherForecastView extends StatelessWidget {
         .where((d) => WeatherDailyList.isSameDay(d.date, now))
         .firstOrNull;
     final upcoming = snapshot.forecast?.upcoming(now) ?? const [];
-    final warnings = snapshot.warnings(now);
+    final warnings = [
+      for (final w in snapshot.warnings(now))
+        if (state.settings.showsWarning(w.level)) w,
+    ];
 
     void openDay(DailyForecast day) => WeatherDaySheet.show(
       context,
@@ -69,6 +72,8 @@ class WeatherForecastView extends StatelessWidget {
 
     final hero = WeatherHero(
       name: WeatherL10n.locationName(l10n, location),
+      latitude: location.latitude,
+      longitude: location.longitude,
       current: current,
       today: today,
       isDay: snapshot.isDayAt(now),

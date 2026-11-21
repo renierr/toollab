@@ -9,6 +9,7 @@ class WeatherChoiceChips<T> extends StatelessWidget {
     required this.selected,
     required this.text,
     required this.onChanged,
+    this.isSelected,
   });
 
   final String? label;
@@ -16,6 +17,9 @@ class WeatherChoiceChips<T> extends StatelessWidget {
   final T selected;
   final String Function(T value) text;
   final ValueChanged<T> onChanged;
+
+  /// Overrides `value == selected`, e.g. to light up a whole range.
+  final bool Function(T value)? isSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +40,57 @@ class WeatherChoiceChips<T> extends StatelessWidget {
               for (final v in values)
                 ChoiceChip(
                   label: Text(text(v)),
-                  selected: v == selected,
+                  selected: isSelected?.call(v) ?? v == selected,
                   onSelected: (_) => onChanged(v),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A labelled row of filter chips for a set-valued setting.
+class WeatherFilterChips<T> extends StatelessWidget {
+  const WeatherFilterChips({
+    super.key,
+    this.label,
+    required this.values,
+    required this.selected,
+    required this.text,
+    required this.onChanged,
+  });
+
+  final String? label;
+  final List<T> values;
+  final Set<T> selected;
+  final String Function(T value) text;
+  final ValueChanged<Set<T>> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (label != null) ...[
+            Text(label!, style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 6),
+          ],
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final v in values)
+                FilterChip(
+                  label: Text(text(v)),
+                  selected: selected.contains(v),
+                  onSelected: (on) => onChanged(
+                    on ? {...selected, v} : ({...selected}..remove(v)),
+                  ),
                 ),
             ],
           ),

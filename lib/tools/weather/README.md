@@ -14,8 +14,11 @@ source, a mapping, a schema, a default or a native contract (see `AGENTS.md`,
 ## Features
 
 - **Places:** free search via Nominatim (on submit only), the device location
-  (GPS, refreshed on use), rename, reorder by drag, undo on delete. A
-  **default place** opens first and drives the widget fallback, background
+  (GPS, refreshed on use), rename, reorder by drag (icon at once, long press
+  anywhere on the row) or Move up/down in the menu, undo on delete. Search
+  results and the hero show the coordinates, linked to OpenStreetMap, to tell
+  same-named places apart. A **default place** moves to the top of the list,
+  opens first and drives the widget fallback, background
   refresh and notifications. Per place the forecast and measurement stations
   can be pinned; otherwise the nearest suitable ones are chosen.
 - **Overview:** hero with the current temperature (measured when the station
@@ -49,7 +52,8 @@ source, a mapping, a schema, a default or a native contract (see `AGENTS.md`,
 - **Settings page:** default place, units (°C/°F, km/h, m/s, kn, Bft, mph,
   hPa/mmHg/inHg, mm/in), animated icons, refresh interval while open,
   background refresh (interval, places, night pause, Wi-Fi only, pause on low
-  battery), notification level, radar defaults, clear saved data.
+  battery), warning levels for notifications and for display, widget extra
+  details, radar defaults, clear saved data.
 - **Android:** home screen widget (current / plus hours / plus days, place
   picker), warning notifications, own process, own launcher icon and pinned
   shortcut.
@@ -185,6 +189,10 @@ Table `history` (schema version 2), one row per place and UTC hour,
 - **Caching:** session store (24 MB memory LRU + session temp files via
   `TempFileScope`); the base map in the tool DB. The timeline survives
   closing the tool, so reopening within 5 min costs no request.
+- **Playback:** 250 ms per frame at 1× (0.5×, 2× selectable). A tick waits
+  up to four intervals for the next frame to decode instead of drawing a
+  neighbour, and while playing the decode window wraps to the first frames so
+  the loop restarts without a gap.
 - **Freshness:** while a view is shown the timeline is checked every minute
   and refetched when 5 min old, also on app resume; lightning and warnings
   reload with it. A timeline older than 15 min is dropped and the views show
@@ -210,6 +218,11 @@ equal or higher level still overlaps it (nowcast ids change every run). A
 higher level is news again. Entries expire at the warning's end. Level 0 turns
 notifications off. Only the default place notifies.
 
+Display has its own threshold (`warning_show_level`): the overview banner and
+the widget chip show a warning from that level up (level 0 items count as 1);
+0 hides them. Both settings are thresholds, so the chips light up the chosen
+level and every higher one.
+
 ## Settings
 
 Stored with `DatabaseService.setSetting(WeatherTool.config.id, key, value)`:
@@ -220,6 +233,8 @@ Stored with `DatabaseService.setSetting(WeatherTool.config.id, key, value)`:
 | `default_location` | first place | Default place id |
 | `auto_refresh_minutes` | 30 | Refresh while open; 0 = off |
 | `warning_notify_level` | 2 | Lowest level that notifies; 0 = off |
+| `warning_show_level` | 1 | Lowest level shown in overview and widget; 0 = off |
+| `widget_details` | all | Comma list of `WeatherWidgetDetail` names shown on a wide widget |
 | `animated_icons` | true | |
 | `radar_base_map`, `radar_speed`, `radar_lightning`, `radar_warnings`, `radar_panel` | light, 1.0, false, false, false | Radar defaults |
 | `background_scope` | defaultPlace | `defaultPlace` or `allPlaces` |
@@ -293,7 +308,7 @@ units; written atomically via a `.tmp` rename):
 `WeatherWidgetProvider` is one resizable widget. From its size options it shows
 the header only (small), plus 5 hours (from 220×150 dp), plus up to 5 days
 (from 220×290 dp); from 300 dp width the `details` lines sit beside the
-icon, and the warning chip appears from 150 dp height. The chip's level colour
+icon (which ones is the `widget_details` setting), and the warning chip appears from 150 dp height. The chip's level colour
 tints a rounded image behind the text, since RemoteViews can only set a flat
 background colour. Background gradient by `theme`. Each widget can be bound to a place in
 `WeatherWidgetConfigActivity` (SharedPreferences `weather_widget`); unbound

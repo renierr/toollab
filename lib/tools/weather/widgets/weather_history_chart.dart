@@ -123,10 +123,15 @@ class _WeatherHistoryChartState extends State<WeatherHistoryChart>
                       left: x < width / 2 ? x + 14 : null,
                       right: x >= width / 2 ? width - x + 14 : null,
                       child: IgnorePointer(
-                        child: _BucketReadout(
-                          bucket: bucket,
-                          monthly: summary.range.period == HistoryPeriod.year,
-                          units: widget.units,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: (x < width / 2 ? width - x : x) - 18,
+                          ),
+                          child: _BucketReadout(
+                            bucket: bucket,
+                            monthly: summary.range.period == HistoryPeriod.year,
+                            units: widget.units,
+                          ),
                         ),
                       ),
                     ),

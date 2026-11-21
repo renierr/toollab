@@ -81,10 +81,14 @@ class WeatherLocationMenu extends StatelessWidget {
     super.key,
     required this.location,
     required this.isDefault,
+    required this.index,
+    required this.count,
   });
 
   final WeatherLocation location;
   final bool isDefault;
+  final int index;
+  final int count;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +100,10 @@ class WeatherLocationMenu extends StatelessWidget {
         switch (action) {
           case 'default':
             state.setDefault(location.id);
+          case 'up':
+            state.reorder(index, index - 1);
+          case 'down':
+            state.reorder(index, index + 1);
           case 'rename':
             WeatherLocationActions.rename(context, location);
           case 'stations':
@@ -111,6 +119,22 @@ class WeatherLocationMenu extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.star_outline_rounded),
               title: Text(l10n.weatherSetDefault),
+            ),
+          ),
+        if (index > 0)
+          PopupMenuItem(
+            value: 'up',
+            child: ListTile(
+              leading: const Icon(Icons.arrow_upward),
+              title: Text(l10n.weatherMoveUp),
+            ),
+          ),
+        if (index < count - 1)
+          PopupMenuItem(
+            value: 'down',
+            child: ListTile(
+              leading: const Icon(Icons.arrow_downward),
+              title: Text(l10n.weatherMoveDown),
             ),
           ),
         PopupMenuItem(
