@@ -16,8 +16,8 @@ import '../news_time.dart';
 import 'news_card.dart';
 import 'news_read_tracker.dart';
 
-// Wider than the default reading cap: cards hold a thumbnail beside the text.
-const double _listMaxWidth = 1200.0;
+// Wider than the default reading cap; shared by the list and the reader.
+const double newsContentMaxWidth = 1200.0;
 
 class NewsList extends StatelessWidget {
   final ScrollController? controller;
@@ -59,7 +59,7 @@ class NewsList extends StatelessWidget {
       onRefresh: onRefresh,
       child: articles.isEmpty
           ? ReadableScrollPadding(
-              maxWidth: _listMaxWidth,
+              maxWidth: newsContentMaxWidth,
               padding: const EdgeInsets.all(24),
               builder: (context, padding) => ListView(
                 controller: controller,
@@ -411,7 +411,7 @@ class _TimelineListState extends State<_TimelineList> with DisposeCleanup {
               focusNode: _listFocus,
               onKeyEvent: _onKey,
               child: ReadableScrollPadding(
-                maxWidth: _listMaxWidth,
+                maxWidth: newsContentMaxWidth,
                 padding: const EdgeInsets.only(top: 4, bottom: 28),
                 builder: (context, padding) => ListView.builder(
                   controller: _controller,

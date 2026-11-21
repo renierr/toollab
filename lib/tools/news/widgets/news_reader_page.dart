@@ -24,6 +24,7 @@ import '../news_article_service.dart';
 import '../news_source.dart';
 import '../news_state.dart';
 import '../news_time.dart';
+import 'news_list.dart';
 import 'news_video_actions.dart';
 
 class NewsReaderPage extends StatefulWidget {
@@ -222,7 +223,7 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
 
               return ReadableScrollPadding(
                 // Larger text keeps the same words per line.
-                maxWidth: 760 * readerScale,
+                maxWidth: newsContentMaxWidth * readerScale,
                 padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
                 builder: (context, padding) => ListView(
                   controller: _scroll,
