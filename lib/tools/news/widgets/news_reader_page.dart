@@ -221,7 +221,8 @@ class _NewsReaderPageState extends State<NewsReaderPage> with DisposeCleanup {
               final failed = snapshot.hasError && !loading;
 
               return ReadableScrollPadding(
-                maxWidth: 760,
+                // Larger text keeps the same words per line.
+                maxWidth: 760 * readerScale,
                 padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
                 builder: (context, padding) => ListView(
                   controller: _scroll,
