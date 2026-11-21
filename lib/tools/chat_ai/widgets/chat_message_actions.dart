@@ -12,10 +12,14 @@ class ChatMessageActions extends StatelessWidget {
   final String text;
   final Color color;
 
+  /// Shown for long replies, to jump back to their first line.
+  final VoidCallback? onScrollToStart;
+
   const ChatMessageActions({
     super.key,
     required this.text,
     required this.color,
+    this.onScrollToStart,
   });
 
   @override
@@ -30,6 +34,16 @@ class ChatMessageActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (onScrollToStart != null)
+          IconButton(
+            onPressed: onScrollToStart,
+            icon: const Icon(Icons.vertical_align_top_rounded, size: 16),
+            color: muted,
+            tooltip: l10n.chatAiScrollToStart,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: constraints,
+          ),
         IconButton(
           onPressed: () async {
             final messenger = ScaffoldMessenger.of(context);

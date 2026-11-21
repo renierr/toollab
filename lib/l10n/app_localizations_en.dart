@@ -4400,6 +4400,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get chatAiScrollToStart => 'Jump to start';
+
+  @override
   String get chatAiMessageCopied => 'Message copied';
 
   @override

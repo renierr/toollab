@@ -2589,6 +2589,7 @@
       "count": {"type": "int"}
     }
   },
+  "chatAiScrollToStart": "Jump to start",
   "chatAiMessageCopied": "Message copied",
   "chatAiFileDownloadFailed": "Could not load the file from DeepSeek.",
   "chatAiFileUploading": "Uploading and reading file…",

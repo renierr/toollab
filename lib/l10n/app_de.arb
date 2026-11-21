@@ -1648,6 +1648,7 @@
   "chatAiSessionStarted": "Begonnen: {time}",
   "chatAiSessionLastActive": "zuletzt aktiv: {time}",
   "chatAiSessionMessages": "{count, plural, =1{1 Nachricht} other{{count} Nachrichten}}",
+  "chatAiScrollToStart": "Zum Anfang springen",
   "chatAiMessageCopied": "Nachricht kopiert",
   "chatAiFileDownloadFailed": "Die Datei konnte nicht von DeepSeek geladen werden.",
   "chatAiFileUploading": "Datei wird hochgeladen und gelesen…",

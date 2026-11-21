@@ -21,6 +21,8 @@ class ChatMessageBubble extends StatelessWidget {
   /// Lets the reply span the full row.
   final bool expand;
 
+  static const int _longReplyChars = 800;
+
   const ChatMessageBubble({
     super.key,
     required this.message,
@@ -114,6 +116,14 @@ class ChatMessageBubble extends StatelessWidget {
                   bottom: -10.0,
                   child: ChatMessageActions(
                     text: message.content,
+                    onScrollToStart:
+                        !isUser && message.content.length > _longReplyChars
+                        ? () => Scrollable.ensureVisible(
+                            context,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOut,
+                          )
+                        : null,
                     color: isUser
                         ? theme.colorScheme.onPrimaryContainer
                         : theme.colorScheme.onSurface,

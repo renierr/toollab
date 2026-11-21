@@ -4433,6 +4433,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get chatAiScrollToStart => 'Zum Anfang springen';
+
+  @override
   String get chatAiMessageCopied => 'Nachricht kopiert';
 
   @override

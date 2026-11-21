@@ -7757,6 +7757,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 message} other{{count} messages}}'**
   String chatAiSessionMessages(int count);
 
+  /// No description provided for @chatAiScrollToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to start'**
+  String get chatAiScrollToStart;
+
   /// No description provided for @chatAiMessageCopied.
   ///
   /// In en, this message translates to:

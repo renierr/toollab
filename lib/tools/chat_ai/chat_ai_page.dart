@@ -10,7 +10,6 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
-import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/text_scale_multiplier.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -45,6 +44,10 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _inputFocus = FocusNode();
+
+  // Wider than the default reading cap: bubbles take only part of the row.
+  static const double _chatMaxWidth = 1200.0;
 
   @override
   void initState() {
@@ -58,6 +61,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
       state.onLeaveTool();
       _textController.dispose();
       _scrollController.dispose();
+      _inputFocus.dispose();
     });
 
     if (widget.sharedFile != null) {
@@ -228,6 +232,8 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
         state.deepSeekFiles.isNotEmpty) {
       state.sendMessage(text);
       _textController.clear();
+      // Keep the keyboard down while the reply is read.
+      if (Platform.isAndroid) _inputFocus.unfocus();
     }
   }
 
@@ -323,7 +329,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                       scale: textScale,
                       child: ReadableScrollPadding(
                         // Larger text keeps the same words per line.
-                        maxWidth: Breakpoints.readableContent * textScale,
+                        maxWidth: _chatMaxWidth * textScale,
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         builder: (context, padding) => ListView.builder(
                           controller: _scrollController,
@@ -372,8 +378,10 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                     ),
             ),
             ReadableWidth(
+              maxWidth: _chatMaxWidth,
               child: ChatInputBar(
                 controller: _textController,
+                focusNode: _inputFocus,
                 onSend: () => _handleSend(state),
                 isGenerating: state.isGenerating,
                 enabled: !state.isInitializing,

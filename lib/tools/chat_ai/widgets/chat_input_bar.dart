@@ -5,6 +5,7 @@ import '../config.dart';
 
 class ChatInputBar extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final VoidCallback onSend;
   final bool isGenerating;
   final bool enabled;
@@ -30,6 +31,7 @@ class ChatInputBar extends StatelessWidget {
   const ChatInputBar({
     super.key,
     required this.controller,
+    this.focusNode,
     required this.onSend,
     required this.isGenerating,
     required this.enabled,
@@ -241,6 +243,7 @@ class ChatInputBar extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: TextField(
                       controller: controller,
+                      focusNode: focusNode,
                       decoration: InputDecoration(
                         hintText: l10n.chatAiInputPlaceholder,
                         border: InputBorder.none,
@@ -258,7 +261,9 @@ class ChatInputBar extends StatelessWidget {
                           onSend();
                         }
                       },
-                      enabled: enabled && !isGenerating,
+                      // Stays enabled while generating: toggling it refocuses
+                      // the field and pops the keyboard back up on Android.
+                      enabled: enabled,
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
