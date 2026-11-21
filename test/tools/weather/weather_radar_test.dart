@@ -268,7 +268,7 @@ void main() {
   );
 
   test(
-    'a reopened map shows the frame saved last time while loading',
+    'a reopened map never shows a radar frame from an earlier run',
     () async {
       final frame = File('$_fixtures/radar_frame.png').readAsBytesSync();
       final lasting = _MemoryLasting();
@@ -295,20 +295,51 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 20));
       }
       first.dispose();
-      expect(lasting.keys.where((k) => k.startsWith('last:')), isNotEmpty);
+      expect(lasting.keys.where((k) => !k.startsWith('base:')), isEmpty);
       expect(lasting.keys.where((k) => k.startsWith('base:')), hasLength(2));
 
       final never = Completer<Uint8List>();
       final second = open((_) => never.future);
-      for (var i = 0; i < 100 && second.frameAt(0) == null; i++) {
+      for (var i = 0; i < 100 && second.base == null; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 20));
       }
       expect(second.timeline, isNull);
-      expect(second.frameAt(0), isNotNull);
       expect(second.base, isNotNull);
+      expect(second.frameAt(0), isNull);
       second.dispose();
     },
   );
+
+  test('only the newest view drives the viewport and starts at the place', () {
+    final radar = WeatherRadarState(
+      store: _MemoryStore(),
+      fetch: (_) => Completer<Uint8List>().future,
+    )..focusOn(50.15, 8.56);
+    double placeY() =>
+        radar.viewport.value!.toScreenLatLon(50.15, 8.56).dy /
+        radar.viewport.value!.size.height;
+    final preview = Object();
+    final full = Object();
+    radar
+      ..addView(preview)
+      ..resize(const Size(400, 240), focusAnchor: .42, view: preview);
+    expect(placeY(), closeTo(.42, .001));
+
+    radar
+      ..addView(full)
+      ..resize(const Size(400, 800), focusAnchor: 1 / 3, view: full)
+      ..resize(const Size(400, 240), focusAnchor: .42, view: preview);
+    expect(radar.viewport.value!.size, const Size(400, 800));
+    expect(placeY(), closeTo(1 / 3, .001));
+
+    radar
+      ..panBy(const Offset(0, 120))
+      ..zoomAt(2, const Offset(200, 200))
+      ..removeView(full);
+    expect(radar.viewport.value!.size, const Size(400, 240));
+    expect(placeY(), closeTo(.42, .001));
+    radar.dispose();
+  });
 
   test('preview and full-screen views share one block', () {
     final small = RadarViewport.around(50.15, 8.56, const Size(380, 240));

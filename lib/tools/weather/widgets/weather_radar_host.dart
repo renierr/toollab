@@ -36,7 +36,11 @@ class _WeatherRadarHostState extends State<WeatherRadarHost>
     super.initState();
     final full = widget.full;
     final radar = context.read<WeatherRadarState>()..attach(full: full);
-    onDispose(() => radar.detach(full: full));
+    final lifecycle = AppLifecycleListener(onResume: radar.refresh);
+    onDispose(() {
+      lifecycle.dispose();
+      radar.detach(full: full);
+    });
   }
 
   @override

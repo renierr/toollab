@@ -44,6 +44,19 @@ class WeatherRadarMap extends StatefulWidget {
 class _WeatherRadarMapState extends State<WeatherRadarMap> {
   Offset? _lastFocal;
   double _lastScale = 1;
+  late final WeatherRadarState _radar = widget.radar;
+
+  @override
+  void initState() {
+    super.initState();
+    _radar.addView(this);
+  }
+
+  @override
+  void dispose() {
+    _radar.removeView(this);
+    super.dispose();
+  }
 
   void _onScaleStart(ScaleStartDetails d) {
     _lastFocal = d.localFocalPoint;
@@ -77,7 +90,11 @@ class _WeatherRadarMapState extends State<WeatherRadarMap> {
         final size = constraints.biggest;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            widget.radar.resize(size, focusAnchor: widget.focusAnchor);
+            widget.radar.resize(
+              size,
+              focusAnchor: widget.focusAnchor,
+              view: this,
+            );
           }
         });
         final map = CustomPaint(

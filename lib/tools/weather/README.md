@@ -35,7 +35,8 @@ source, a mapping, a schema, a default or a native contract (see `AGENTS.md`,
   dark, satellite base; lightning; warning areas), legend, subtle city
   labels, pan and zoom. The place sits in the upper third of the full view
   (42 % in the preview) so the time slider card does not hide it; it stays
-  there on resize until the user pans or zooms. Full screen on narrow layouts; on desktop at least
+  there on resize until the user pans or zooms, and every newly shown view
+  starts there again. Full screen on narrow layouts; on desktop at least
   1280 px wide a hideable side panel or a preview card.
 - **History:** every network load records hourly values per place
   (measured first, forecast only for gaps). A history page shows a day, week,
@@ -139,7 +140,6 @@ payloads. Keys and maximum age before a normal load refetches:
 | `overview:<id,id,...>` | 15 min |
 | `nowcast` | 5 min |
 | `radar:base:<layer>:<block>` | kept (static), pruned after 30 days |
-| `radar:last:<block>` | the last current radar frame, shown up to 3 h old while loading |
 
 Modes: `normal` (fresh cache wins), `force` (network first), `cacheOnly`
 (any age, no network). A failed network load falls back to the cache and marks
@@ -183,9 +183,17 @@ Table `history` (schema version 2), one row per place and UTC hour,
   current frame; the full view loads all frames. Frames from index −2 to +5
   stay decoded.
 - **Caching:** session store (24 MB memory LRU + session temp files via
-  `TempFileScope`); base map and last current frame in the tool DB. The
-  timeline survives closing the tool, so reopening within 5 min costs no
-  request.
+  `TempFileScope`); the base map in the tool DB. The timeline survives
+  closing the tool, so reopening within 5 min costs no request.
+- **Freshness:** while a view is shown the timeline is checked every minute
+  and refetched when 5 min old, also on app resume; lightning and warnings
+  reload with it. A timeline older than 15 min is dropped and the views show
+  loading, and a frame that failed shows nothing rather than an older one.
+  Radar frames are never kept across app starts.
+- **Viewports:** each map registers with `addView`; only the newest one
+  resizes the shared viewport, so the preview under a full-screen route
+  cannot move it. A newly shown view, or the one revealed again, recentres on
+  the place at the default zoom.
 - **Rain at the place:** each frame is sampled at the focus pixel and mapped
   through `RadarPalette.classes` (15 legend colours → mm/h). `RainOutlook`
   turns the series into raining now / stops in / starts in / dry.

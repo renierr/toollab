@@ -21,12 +21,21 @@ class RadarViewport {
     Size size, {
     double resolution = 1200,
     double anchorY = .5,
-  }) => RadarViewport(
-    centerX: Mercator.x(lon),
-    centerY: Mercator.y(lat) + (anchorY - .5) * size.height * resolution,
-    resolution: resolution,
-    size: size,
-  ).clamped();
+  }) {
+    // Clamp the zoom first so the anchor offset uses the final resolution.
+    final res = RadarViewport(
+      centerX: 0,
+      centerY: 0,
+      resolution: resolution,
+      size: size,
+    ).clamped().resolution;
+    return RadarViewport(
+      centerX: Mercator.x(lon),
+      centerY: Mercator.y(lat) + (anchorY - .5) * size.height * res,
+      resolution: res,
+      size: size,
+    ).clamped();
+  }
 
   /// Closer than this the 1 km radar cells only turn into big blobs.
   static const double minResolution = 220;

@@ -75,7 +75,6 @@ class _PreviewStatus extends StatelessWidget {
     final radar = context.watch<WeatherRadarState>();
     final timeline = radar.timeline;
     final time = radar.currentTime;
-    if (radar.failed) return const SizedBox.shrink();
     final outlook = timeline == null
         ? null
         : RainOutlook.from(radar.rainSeries, timeline.times, timeline.nowIndex);
@@ -91,7 +90,9 @@ class _PreviewStatus extends StatelessWidget {
       null =>
         rainNow! > 0 ? l10n.weatherRadarRainNow : l10n.weatherRadarNoRainNow,
     };
-    final text = status == null || time == null
+    final text = radar.failed || radar.currentMissing
+        ? l10n.weatherRadarUnavailable
+        : status == null || time == null
         ? l10n.weatherRadarLoadingShort
         : '${format.time(time)} · $status';
     return Align(

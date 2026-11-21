@@ -130,8 +130,13 @@ class WeatherRadarState extends ChangeNotifier {
   final RadarFrameStore _store;
   final RadarLastingStore? _lasting;
 
-  /// An older saved current frame is too misleading to show while loading.
-  static const Duration _lastFrameMaxAge = Duration(hours: 3);
+  /// DWD publishes a frame every five minutes.
+  static const Duration _timelineRefresh = Duration(minutes: 5);
+  static const Duration _refreshCheck = Duration(minutes: 1);
+
+  /// A timeline not refreshed for this long is dropped rather than shown.
+  static const Duration _timelineMaxAge = Duration(minutes: 15);
+  static const double _defaultResolution = 1200;
 
   /// Changes every pan/zoom frame; painters listen to it directly instead of
   /// rebuilding widgets through [notifyListeners].
@@ -152,7 +157,14 @@ class WeatherRadarState extends ChangeNotifier {
   int _endHold = 0;
   Timer? _playTimer;
   Timer? _settleTimer;
+  Timer? _refreshTimer;
   bool _disposed = false;
+
+  /// Maps showing this radar, newest last; only the newest drives the
+  /// viewport, so a preview below a full-screen route cannot resize it.
+  final LinkedHashMap<Object, ({Size size, double anchor})?> _views =
+      LinkedHashMap();
+  bool _recenterOnResize = false;
 
   RadarBlock? _block;
 
@@ -200,6 +212,9 @@ class WeatherRadarState extends ChangeNotifier {
   int get frameCount => _timeline?.times.length ?? 0;
   int get loadedCount => _available.length;
 
+  /// The current frame could not be loaded or does not exist.
+  bool get currentMissing => _missing.contains(_index);
+
   bool get wantsAllFrames => _fullUsers > 0;
 
   bool get isLoading => wantsAllFrames
@@ -217,6 +232,7 @@ class WeatherRadarState extends ChangeNotifier {
   /// The frame to draw for [index]: its own image once decoded, else the
   /// nearest decoded neighbour, else the last frame of the previous block.
   RadarImage? frameAt(int index) {
+    if (_missing.contains(index)) return null;
     final exact = _decoded[index];
     if (exact != null) return exact;
     for (var d = 1; d <= 3; d++) {
@@ -241,16 +257,45 @@ class WeatherRadarState extends ChangeNotifier {
     _users++;
     if (full) _fullUsers++;
     if (_users == 1) {
-      unawaited(_ensureTimeline());
+      _refreshTimer = Timer.periodic(_refreshCheck, (_) => refresh());
     } else if (full && _fullUsers == 1 && _block != null) {
       unawaited(_loadFrames(_generation));
     }
+    refresh();
   }
+
+  /// Fetches a newer timeline when the current one is due; views call it on
+  /// app resume as well.
+  void refresh() => unawaited(_ensureTimeline());
 
   void detach({bool full = true}) {
     _users = math.max(0, _users - 1);
     if (full) _fullUsers = math.max(0, _fullUsers - 1);
     if (_fullUsers == 0) _stopPlayback();
+    if (_users == 0) {
+      _refreshTimer?.cancel();
+      _refreshTimer = null;
+    }
+  }
+
+  /// A map registers while mounted; the newest one owns the viewport and
+  /// starts at the place.
+  void addView(Object view) {
+    _views
+      ..remove(view)
+      ..[view] = null;
+    _following = true;
+    _recenterOnResize = true;
+  }
+
+  void removeView(Object view) {
+    final wasActive = _views.isNotEmpty && _views.keys.last == view;
+    _views.remove(view);
+    if (!wasActive || _views.isEmpty) return;
+    _following = true;
+    _recenterOnResize = true;
+    final previous = _views.values.last;
+    if (previous != null) _resize(previous.size, previous.anchor);
   }
 
   /// Drops decoded images and memory when the tool closes; the compressed
@@ -258,6 +303,8 @@ class WeatherRadarState extends ChangeNotifier {
   void release() {
     _stopPlayback();
     _settleTimer?.cancel();
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
     _generation++;
     _blockGeneration++;
     _disposeImages();
@@ -353,14 +400,34 @@ class WeatherRadarState extends ChangeNotifier {
 
   // Viewport ------------------------------------------------------------------
 
-  /// [focusAnchor]: see [RadarViewport.around].
-  void resize(Size size, {double focusAnchor = .5}) {
+  /// [focusAnchor]: see [RadarViewport.around]. A [view] registered with
+  /// [addView] only takes effect while it is the newest one.
+  void resize(Size size, {double focusAnchor = .5, Object? view}) {
     if (size.isEmpty) return;
+    if (view != null && _views.containsKey(view)) {
+      _views[view] = (size: size, anchor: focusAnchor);
+      if (_views.keys.last != view) return;
+    }
+    _resize(size, focusAnchor);
+  }
+
+  void _resize(Size size, double focusAnchor) {
     final vp = viewport.value;
     final anchorChanged = focusAnchor != _focusAnchor;
+    final recenter = _recenterOnResize;
+    _recenterOnResize = false;
     _focusAnchor = focusAnchor;
     final f = _focus;
-    if (vp == null) {
+    if (recenter && vp != null && f != null) {
+      viewport.value = RadarViewport.around(
+        f.lat,
+        f.lon,
+        size,
+        resolution: _defaultResolution,
+        anchorY: focusAnchor,
+      );
+      _scheduleBlock();
+    } else if (vp == null) {
       final at = f ?? (lat: 51.0, lon: 10.4);
       viewport.value = RadarViewport.around(
         at.lat,
@@ -416,6 +483,16 @@ class WeatherRadarState extends ChangeNotifier {
     _block = block;
     _blockGeneration++;
     _generation++;
+    _keepShownFrame();
+    unawaited(_loadBase(_blockGeneration));
+    unawaited(_loadExtras(_blockGeneration));
+    if (_timeline != null) unawaited(_loadFrames(_generation));
+    _notify();
+  }
+
+  /// Keeps the frame on screen as a bridge until its replacement decodes and
+  /// drops every other frame.
+  void _keepShownFrame() {
     final current = _decoded.remove(_index) ?? frameAt(_index);
     if (current != null && current != _previousFrame) {
       _previousFrame?.dispose();
@@ -430,10 +507,29 @@ class WeatherRadarState extends ChangeNotifier {
     _missing.clear();
     _inFlight.clear();
     _rain.clear();
-    unawaited(_loadBase(_blockGeneration));
-    unawaited(_loadExtras(_blockGeneration));
-    if (_previousFrame == null) unawaited(_showLastFrame(block));
-    if (_timeline != null) unawaited(_loadFrames(_generation));
+  }
+
+  /// Too old to show: back to the loading state until a fresh timeline comes.
+  void _dropTimeline() {
+    _stopPlayback();
+    _generation++;
+    _previousFrame?.dispose();
+    _previousFrame = null;
+    for (final img in _decoded.values) {
+      img.dispose();
+    }
+    _decoded.clear();
+    _decoding.clear();
+    _available.clear();
+    _missing.clear();
+    _inFlight.clear();
+    _rain.clear();
+    _lightning?.dispose();
+    _warnings?.dispose();
+    _lightning = _warnings = null;
+    _timeline = null;
+    _timelineFetchedAt = null;
+    _index = 0;
     _notify();
   }
 
@@ -441,10 +537,9 @@ class WeatherRadarState extends ChangeNotifier {
 
   Future<void> _ensureTimeline() async {
     final fetchedAt = _timelineFetchedAt;
-    final fresh =
-        fetchedAt != null &&
-        DateTime.now().difference(fetchedAt) < const Duration(minutes: 5);
-    if (fresh || _loadingTimeline) return;
+    final age = fetchedAt == null ? null : DateTime.now().difference(fetchedAt);
+    if ((age != null && age < _timelineRefresh) || _loadingTimeline) return;
+    if (age != null && age > _timelineMaxAge) _dropTimeline();
     _loadingTimeline = true;
     try {
       final bytes = await _fetch(DwdRadarClient.capabilitiesUrl());
@@ -455,25 +550,27 @@ class WeatherRadarState extends ChangeNotifier {
       final old = _timeline;
       _timelineFetchedAt = DateTime.now();
       _failed = false;
+      if (_block != null) unawaited(_loadExtras(_blockGeneration));
       if (old != null &&
           old.latestObserved == timeline.latestObserved &&
           listEquals(old.times, timeline.times)) {
+        // Frames that failed, e.g. offline or a nowcast step not computed
+        // yet, get another try.
+        if (_missing.isNotEmpty && _block != null) {
+          _missing.clear();
+          _generation++;
+          _inFlight.clear();
+          unawaited(_loadFrames(_generation));
+        }
         return;
       }
       final previousTime = currentTime;
       final wasNow = old == null || _index == old.nowIndex;
+      _keepShownFrame();
       _timeline = timeline;
       _index = wasNow || previousTime == null
           ? timeline.nowIndex
           : _closestIndex(previousTime);
-      for (final img in _decoded.values) {
-        img.dispose();
-      }
-      _decoded.clear();
-      _decoding.clear();
-      _available.clear();
-      _missing.clear();
-      _rain.clear();
       _generation++;
       if (_block != null) unawaited(_loadFrames(_generation));
     } catch (e) {
@@ -703,9 +800,6 @@ class WeatherRadarState extends ChangeNotifier {
           continue;
         }
         _available.add(i);
-        if (i == timeline.nowIndex) {
-          unawaited(_lasting?.write(_lastFrameKey(block), bytes!));
-        }
         _rain[i] = await _sampleRain(img);
         if (_inWindow(i) && !_decoded.containsKey(i)) {
           _decoded[i] = img;
@@ -718,28 +812,6 @@ class WeatherRadarState extends ChangeNotifier {
     }
 
     await Future.wait(List.generate(_concurrency, (_) => worker()));
-  }
-
-  String _lastFrameKey(RadarBlock block) => 'last:${block.key}';
-
-  /// Bridges the wait for the first download with the frame saved last time.
-  Future<void> _showLastFrame(RadarBlock block) async {
-    final saved = await _lasting?.read(_lastFrameKey(block));
-    if (saved == null ||
-        DateTime.now().difference(saved.savedAt) > _lastFrameMaxAge) {
-      return;
-    }
-    final img = await _decode(saved.bytes, block.bbox);
-    if (img == null) return;
-    if (_disposed ||
-        block != _block ||
-        _previousFrame != null ||
-        _decoded.containsKey(_index)) {
-      img.dispose();
-      return;
-    }
-    _previousFrame = img;
-    _notify();
   }
 
   void _dropPrevious() {
