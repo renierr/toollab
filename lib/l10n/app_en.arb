@@ -4873,6 +4873,7 @@
   "renphoErrorConnect": "Could not connect to the scale. Step on it to wake it, then try again.",
   "renphoErrorSetup": "The scale stopped responding during setup. Step on it to wake it, then scan again.",
   "renphoErrorSave": "Could not save the measurement.",
+  "renphoErrorSessionLost": "The connection to the scale ended before the measurement finished.",
   "renphoPhaseComplete": "Done",
   "renphoStatusComplete": "Measurement complete and saved.",
   "renphoStepWeight": "Weight",

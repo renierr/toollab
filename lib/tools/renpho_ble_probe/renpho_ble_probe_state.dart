@@ -44,6 +44,19 @@ enum RenphoFailure {
   connectFailed,
   setupFailed,
   saveFailed,
+  sessionLost,
+}
+
+/// Why a scale session ended; shown with [RenphoFailure.sessionLost] since
+/// there is no device log to read.
+enum RenphoSessionEnd {
+  user,
+  completed,
+  connectFailed,
+  setupTimeout,
+  idle,
+  linkLost,
+  pageClosed,
 }
 
 /// Where a measurement stands, as the scale reports it. The two halves feel
@@ -120,6 +133,7 @@ class RenphoBleProbeState extends ChangeNotifier {
   bool _autoConnect = true;
   bool _connectAborted = false;
   StreamSubscription<BleDevice>? _scanSubscription;
+  StreamSubscription<BleConnectionChange>? _connectionSubscription;
   Timer? _discoveryTimer;
 
   // Resolved GATT handles
@@ -635,19 +649,23 @@ class RenphoBleProbeState extends ChangeNotifier {
       // The link is up. A failure past this point is about the device, not the
       // connection, so it is reported instead of retried.
       _deviceId = id;
+      await _connectionSubscription?.cancel();
+      _connectionSubscription = UniversalBle.connectionChangeStream(
+        id,
+      ).listen(_onConnectionChange);
       await stopScan();
       try {
         await _rememberDevice(id, name);
         await _prepare(id);
       } catch (e) {
         _fail(RenphoFailure.connectFailed, '$e');
-        await disconnect();
+        await disconnect(reason: RenphoSessionEnd.connectFailed);
       }
       return;
     }
     await stopScan();
     _fail(RenphoFailure.connectFailed);
-    await disconnect();
+    await disconnect(reason: RenphoSessionEnd.connectFailed);
   }
 
   Future<void> _rememberDevice(String id, String name) async {
@@ -758,8 +776,28 @@ class RenphoBleProbeState extends ChangeNotifier {
     }
   }
 
-  Future<void> disconnect() async {
+  /// The link can drop on its own; without this the screen kept showing a
+  /// session that no longer existed.
+  void _onConnectionChange(BleConnectionChange change) {
+    if (change.isConnected || _deviceId == null) return;
+    unawaited(
+      disconnect(
+        reason: RenphoSessionEnd.linkLost,
+        detail:
+            '${change.errorCode?.name ?? change.error}'
+            '${change.nativeErrorCode == null ? '' : ' #${change.nativeErrorCode}'}',
+      ),
+    );
+  }
+
+  Future<void> disconnect({
+    RenphoSessionEnd reason = RenphoSessionEnd.user,
+    String? detail,
+  }) async {
+    if (_deviceId != null) _reportSessionEnd(reason, detail);
     _connectAborted = true;
+    await _connectionSubscription?.cancel();
+    _connectionSubscription = null;
     _stageTimer?.cancel();
     _stageTimer = null;
     _watchdog?.cancel();
@@ -795,6 +833,27 @@ class RenphoBleProbeState extends ChangeNotifier {
       } catch (_) {}
     }
     notifyListeners();
+  }
+
+  void _reportSessionEnd(RenphoSessionEnd reason, String? detail) {
+    final summary = [
+      reason.name,
+      _phase.name,
+      _step.name,
+      if (detail != null && detail.isNotEmpty) detail,
+    ].join(', ');
+    errorLog('[RenphoScale] Session ended: $summary');
+    if (_phase == RenphoScanPhase.saving ||
+        _phase == RenphoScanPhase.complete) {
+      return;
+    }
+    final started = _step != RenphoMeasureStep.waiting;
+    final lost = switch (reason) {
+      RenphoSessionEnd.linkLost => true,
+      RenphoSessionEnd.idle || RenphoSessionEnd.pageClosed => started,
+      _ => false,
+    };
+    if (lost) _fail(RenphoFailure.sessionLost, summary);
   }
 
   // Frames ------------------------------------------------------------------
@@ -1006,7 +1065,7 @@ class RenphoBleProbeState extends ChangeNotifier {
     _idleTimer?.cancel();
     _idleTimer = Timer(const Duration(minutes: 5), () {
       if (_phase == RenphoScanPhase.saving) return;
-      unawaited(disconnect());
+      unawaited(disconnect(reason: RenphoSessionEnd.idle));
     });
   }
 
@@ -1026,7 +1085,7 @@ class RenphoBleProbeState extends ChangeNotifier {
         return;
       }
       _fail(RenphoFailure.setupFailed);
-      unawaited(disconnect());
+      unawaited(disconnect(reason: RenphoSessionEnd.setupTimeout));
     });
   }
 
@@ -1124,7 +1183,7 @@ class RenphoBleProbeState extends ChangeNotifier {
         RenphoScaleCommands.handshake(sequence: 0x04, lastWeightKg: weightKg),
       );
       await Future<void>.delayed(const Duration(milliseconds: 400));
-      await disconnect();
+      await disconnect(reason: RenphoSessionEnd.completed);
     }
     _phase = RenphoScanPhase.complete;
     notifyListeners();

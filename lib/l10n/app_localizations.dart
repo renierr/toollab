@@ -16541,6 +16541,12 @@ abstract class AppLocalizations {
   /// **'Could not save the measurement.'**
   String get renphoErrorSave;
 
+  /// No description provided for @renphoErrorSessionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection to the scale ended before the measurement finished.'**
+  String get renphoErrorSessionLost;
+
   /// No description provided for @renphoPhaseComplete.
   ///
   /// In en, this message translates to:

@@ -3722,6 +3722,7 @@
   "renphoErrorConnect": "Verbindung zur Waage nicht möglich. Kurz drauftreten, um sie zu wecken, dann erneut versuchen.",
   "renphoErrorSetup": "Die Waage hat während der Einrichtung nicht mehr geantwortet. Kurz drauftreten, um sie zu wecken, dann erneut suchen.",
   "renphoErrorSave": "Die Messung konnte nicht gespeichert werden.",
+  "renphoErrorSessionLost": "Die Verbindung zur Waage wurde beendet, bevor die Messung fertig war.",
   "renphoPhaseComplete": "Fertig",
   "renphoStatusComplete": "Messung abgeschlossen und gespeichert.",
   "renphoStepWeight": "Gewicht",

@@ -16,6 +16,7 @@ String renphoErrorMessage(
     RenphoFailure.connectFailed => l10n.renphoErrorConnect,
     RenphoFailure.setupFailed => l10n.renphoErrorSetup,
     RenphoFailure.saveFailed => l10n.renphoErrorSave,
+    RenphoFailure.sessionLost => l10n.renphoErrorSessionLost,
   };
   final trimmed = detail?.trim();
   if (trimmed == null || trimmed.isEmpty || trimmed == 'null') return message;

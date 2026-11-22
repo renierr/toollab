@@ -9380,6 +9380,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get renphoErrorSave => 'Die Messung konnte nicht gespeichert werden.';
 
   @override
+  String get renphoErrorSessionLost =>
+      'Die Verbindung zur Waage wurde beendet, bevor die Messung fertig war.';
+
+  @override
   String get renphoPhaseComplete => 'Fertig';
 
   @override

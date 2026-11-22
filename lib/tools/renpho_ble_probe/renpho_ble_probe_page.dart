@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
@@ -39,7 +41,9 @@ class _RenphoBleProbePageState extends State<RenphoBleProbePage>
   void initState() {
     super.initState();
     final state = context.read<RenphoBleProbeState>();
-    onDispose(state.disconnect);
+    onDispose(
+      () => unawaited(state.disconnect(reason: RenphoSessionEnd.pageClosed)),
+    );
     state.addListener(_onStateChanged);
     onDispose(() => state.removeListener(_onStateChanged));
     WidgetsBinding.instance.addPostFrameCallback((_) async {

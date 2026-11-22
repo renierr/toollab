@@ -9318,6 +9318,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renphoErrorSave => 'Could not save the measurement.';
 
   @override
+  String get renphoErrorSessionLost =>
+      'The connection to the scale ended before the measurement finished.';
+
+  @override
   String get renphoPhaseComplete => 'Done';
 
   @override

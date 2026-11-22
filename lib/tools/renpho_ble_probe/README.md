@@ -195,6 +195,14 @@ The screen is kept awake for the whole session — from pressing search, not fro
 the link coming up — and the lock is released when the measurement finishes, the
 scan stops without connecting, or the tool is left.
 
+Every session end carries a reason (`user`, `completed`, `connectFailed`,
+`setupTimeout`, `idle`, `linkLost`, `pageClosed`). A link the scale or the
+platform drops is caught from the connection-change stream instead of leaving a
+dead session on screen. When a session ends before its measurement is done — the
+link dropped, or the idle timer or leaving the tool cut off a measurement that
+had started — the scan card shows "connection ended" with the reason, phase and
+step, since a phone without adb has no other log to read.
+
 ### Session flow
 
 1. Connect, request a large MTU, subscribe `2A10`, `2A12` and `0003`.
