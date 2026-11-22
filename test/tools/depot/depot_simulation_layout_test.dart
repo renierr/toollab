@@ -101,4 +101,38 @@ void main() {
       });
     }
   }
+
+  testWidgets('inputs collapse and expand again', (tester) async {
+    final state = DepotSimulationState(
+      runner: (_) async => result,
+      indexLoader: (_) async => const [],
+    );
+    addTearDown(state.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: state,
+        child: MaterialApp(
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: ListView(
+              children: [
+                DepotSimInputsCard(
+                  inputs: inputs,
+                  depot: depot,
+                  format: DepotFormat('en', 'EUR'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.text('Assumptions'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    }
+    expect(find.byType(TextField), findsWidgets);
+  });
 }

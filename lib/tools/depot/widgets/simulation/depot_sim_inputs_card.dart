@@ -76,6 +76,9 @@ class DepotSimInputsCard extends StatelessWidget {
               );
 
               return Column(
+                // The tile keeps its expanded flag under its own key; the
+                // fields' scroll offsets must not read it back.
+                key: const PageStorageKey('depot-sim-fields'),
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _Group(
