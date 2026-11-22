@@ -61,6 +61,9 @@ class VideoPlayerPage extends StatefulWidget {
   /// Offers previous / next over these; [source] should be one of them.
   final List<VideoPlaylistItem> playlist;
 
+  /// Every playback state change, with the source it belongs to.
+  final VideoProgressCallback? onProgress;
+
   const VideoPlayerPage({
     super.key,
     required this.source,
@@ -73,6 +76,7 @@ class VideoPlayerPage extends StatefulWidget {
     this.resumeStore,
     this.browseFolder = false,
     this.playlist = const [],
+    this.onProgress,
   });
 
   /// Loads the settings first: the backend needs them before it starts.
@@ -87,6 +91,7 @@ class VideoPlayerPage extends StatefulWidget {
     VideoResumeStore? resumeStore,
     bool browseFolder = false,
     List<VideoPlaylistItem> playlist = const [],
+    VideoProgressCallback? onProgress,
   }) async {
     final settings = await SettingsService.videoPlayerSettings();
     if (!context.mounted) return;
@@ -103,6 +108,7 @@ class VideoPlayerPage extends StatefulWidget {
           resumeStore: resumeStore,
           browseFolder: browseFolder,
           playlist: playlist,
+          onProgress: onProgress,
         ),
       ),
     );
@@ -369,6 +375,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     unawaited(_session?.sync(state));
     _stall.watch(state);
     _saveProgress();
+    widget.onProgress?.call(_source, state);
     _thumbnailer?.watch(
       source: _source,
       state: state,

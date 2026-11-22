@@ -10,6 +10,8 @@ import 'package:tool_lab/widgets/web_login/web_login.dart';
 
 import '../x_feed_state.dart';
 import '../x_login_actions.dart';
+import '../x_video_history.dart';
+import 'x_history_clear_dialog.dart';
 import 'x_pair_send_page.dart';
 
 class XSettingsPage extends StatelessWidget {
@@ -46,6 +48,7 @@ class XSettingsPage extends StatelessWidget {
     XFeedTab.following => l10n.xFeedFollowing,
     XFeedTab.bookmarks => l10n.xFeedBookmarks,
     XFeedTab.search => l10n.commonSearch,
+    XFeedTab.history => l10n.xFeedHistory,
   };
 
   @override
@@ -117,9 +120,7 @@ class XSettingsPage extends StatelessWidget {
                   if (tab != null) state.setStartTab(tab);
                 },
                 items: [
-                  for (final tab in XFeedTab.values.where(
-                    (t) => t != XFeedTab.search,
-                  ))
+                  for (final tab in XFeedTab.values.where((t) => t.hasTimeline))
                     DropdownMenuItem(
                       value: tab,
                       child: Text(_tabLabel(l10n, tab)),
@@ -190,6 +191,34 @@ class XSettingsPage extends StatelessWidget {
               subtitle: Text(l10n.xFeedCropPortraitSubtitle),
               value: state.cropPortrait,
               onChanged: state.setCropPortrait,
+            ),
+            SettingsSectionLabel(title: l10n.xFeedHistorySection),
+            ListenableBuilder(
+              listenable: state.history,
+              builder: (context, _) => ListTile(
+                leading: const Icon(Icons.timer_outlined),
+                title: Text(l10n.xFeedHistoryThreshold),
+                subtitle: Text(l10n.xFeedHistoryThresholdSubtitle),
+                trailing: DropdownButton<int>(
+                  value: state.history.thresholdSeconds,
+                  onChanged: (seconds) {
+                    if (seconds != null) state.history.setThreshold(seconds);
+                  },
+                  items: [
+                    for (final seconds in XVideoHistory.thresholdOptions)
+                      DropdownMenuItem(
+                        value: seconds,
+                        child: Text(l10n.xFeedHistorySeconds(seconds)),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_sweep_outlined),
+              title: Text(l10n.xFeedHistoryClear),
+              subtitle: Text(l10n.xFeedHistoryClearSubtitle),
+              onTap: () => XHistoryClearDialog.show(context),
             ),
             if (loggedIn) ...[
               SettingsSectionLabel(

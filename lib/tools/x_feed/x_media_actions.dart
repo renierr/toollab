@@ -19,6 +19,7 @@ import 'api/x_api.dart';
 import 'models/x_broadcast.dart';
 import 'models/x_media.dart';
 import 'models/x_post.dart';
+import 'models/x_watched_video.dart';
 import 'widgets/x_photo_viewer_page.dart';
 import 'x_feed_state.dart';
 
@@ -52,9 +53,11 @@ class XMediaActions {
     }
     final l10n = AppLocalizations.of(context);
     final quoted = post.quoted;
+    XPost ownerOf(int i) =>
+        i < post.media.length || quoted == null ? post : quoted;
     VideoPlaylistItem playlistItem(int i) {
       final clip = media[i];
-      final owner = i < post.media.length || quoted == null ? post : quoted;
+      final owner = ownerOf(i);
       return VideoPlaylistItem(
         source: Uri.parse(clip.videoUrl!),
         title: '@${owner.author.screenName}',
@@ -68,14 +71,94 @@ class XMediaActions {
         if (media[i].videoUrl != null) playlistItem(i),
     ];
     final current = playlistItem(index);
-    await VideoPlayerPage.open(
-      context,
-      source: current.source,
-      title: current.title,
-      loop: current.loop,
-      actions: current.actions!,
-      playlist: playlist,
-    );
+    final watch = context.read<XFeedState>().history.watch({
+      for (var i = 0; i < media.length; i++)
+        if (media[i].videoUrl case final url?)
+          Uri.parse(url): XWatchedVideo.fromPost(
+            ownerOf(i),
+            media[i],
+            i < post.media.length ? i : i - post.media.length,
+          ),
+    });
+    try {
+      await VideoPlayerPage.open(
+        context,
+        source: current.source,
+        title: current.title,
+        loop: current.loop,
+        actions: current.actions!,
+        playlist: playlist,
+        onProgress: watch.onProgress,
+      );
+    } finally {
+      watch.close();
+    }
+  }
+
+  /// Plays a history entry again, unless X no longer serves the file.
+  static Future<void> openWatched(
+    BuildContext context,
+    XWatchedVideo entry,
+  ) async {
+    final source = Uri.parse(entry.videoUrl);
+    if (!VideoBackend.isSupported) {
+      await openUrl(context, source);
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final history = context.read<XFeedState>().history;
+    if (!await _available(source)) {
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.xFeedHistoryUnavailable),
+          action: SnackBarAction(
+            label: l10n.xFeedHistoryRemove,
+            onPressed: () => unawaited(history.remove(entry)),
+          ),
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+    final watch = history.watch({source: entry});
+    try {
+      await VideoPlayerPage.open(
+        context,
+        source: source,
+        title: '@${entry.authorScreenName}',
+        loop: entry.isGif,
+        actions: [
+          VideoPlayerAction(
+            icon: Icons.open_in_new,
+            label: l10n.xFeedHistoryOpenOnX,
+            onPressed: (c) => openUrl(c, Uri.parse(entry.postUrl)),
+          ),
+          VideoPlayerAction(
+            icon: Icons.link,
+            label: l10n.xFeedCopyMediaLink,
+            onPressed: (c) => copyText(c, entry.videoUrl, l10n.xFeedLinkCopied),
+          ),
+        ],
+        onProgress: watch.onProgress,
+      );
+    } finally {
+      watch.close();
+    }
+  }
+
+  /// A network error counts as available: the player reports it better.
+  static Future<bool> _available(Uri source) async {
+    try {
+      final client = await AppHttpClient.client;
+      final res = await client
+          .head(source)
+          .timeout(const Duration(seconds: 10));
+      return res.statusCode < 400 || res.statusCode >= 500;
+    } catch (e) {
+      debugLog('[XMediaActions] Availability check failed: $e');
+      return true;
+    }
   }
 
   static List<VideoPlayerAction> _videoActions(

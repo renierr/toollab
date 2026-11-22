@@ -18,8 +18,17 @@ import 'models/x_post.dart';
 import 'x_read_db.dart';
 import 'x_timeline_controller.dart';
 import 'x_translator.dart';
+import 'x_video_history.dart';
 
-enum XFeedTab { forYou, following, bookmarks, search }
+enum XFeedTab {
+  forYou,
+  following,
+  bookmarks,
+  search,
+  history;
+
+  bool get hasTimeline => this != search && this != history;
+}
 
 enum XSessionStatus { unknown, loggedOut, loggedIn }
 
@@ -70,6 +79,8 @@ class XFeedState extends ChangeNotifier {
     _notify,
     _onApiError,
   );
+
+  final XVideoHistory history = XVideoHistory();
 
   /// Downloads for sharing and saving.
   final TempFileScope tempScope = TempFileManager.createScope();
@@ -188,7 +199,7 @@ class XFeedState extends ChangeNotifier {
   }
 
   XTimelineController controllerFor(XFeedTab tab) => switch (tab) {
-    XFeedTab.forYou || XFeedTab.search => forYou,
+    XFeedTab.forYou || XFeedTab.search || XFeedTab.history => forYou,
     XFeedTab.following => following,
     XFeedTab.bookmarks => bookmarks,
   };
@@ -208,14 +219,16 @@ class XFeedState extends ChangeNotifier {
       _textScale = textScale;
     }
     await translator.load();
+    await history.loadSettings();
     final startTab = await db.getSetting(id, _startTabKey);
     _startTab = XFeedTab.values.firstWhere(
       (t) => t.name == startTab,
       orElse: () => XFeedTab.forYou,
     );
-    _tab = _startTab == XFeedTab.search ? XFeedTab.forYou : _startTab;
+    _tab = _startTab.hasTimeline ? _startTab : XFeedTab.forYou;
     _restoreSeen(await db.getSetting(id, _seenKey));
     unawaited(_pruneRead());
+    unawaited(history.prune());
 
     final session = await XSessionStore.read();
     if (session == null) {
@@ -313,6 +326,7 @@ class XFeedState extends ChangeNotifier {
     _read.clear();
     _readMarks.ping();
     translator.clear();
+    history.release();
     PaintingBinding.instance.imageCache.clear();
     await tempScope.cleanTracked();
     if (_seenPending.isEmpty || _api == null || _sessionExpired) return;
@@ -421,6 +435,7 @@ class XFeedState extends ChangeNotifier {
     translator.clear();
     _clearSeen();
     _read.clear();
+    history.release();
     unawaited(
       XReadDb.instance.clear().catchError((Object e) {
         errorLog('[XFeedState] Clearing read ids failed: $e');
@@ -626,6 +641,7 @@ class XFeedState extends ChangeNotifier {
     following.dispose();
     bookmarks.dispose();
     _readMarks.dispose();
+    history.dispose();
     unawaited(tempScope.cleanTracked());
     super.dispose();
   }

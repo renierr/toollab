@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+import 'video_backend.dart';
+
 class VideoPlayerAction {
   final IconData icon;
   final String label;
@@ -33,3 +35,6 @@ VideoQuality? lowerVideoQuality(List<VideoQuality> qualities, Uri source) {
   if (index < 0) return null;
   return qualities.skip(index + 1).where((q) => !q.adaptive).firstOrNull;
 }
+
+typedef VideoProgressCallback =
+    void Function(Uri source, VideoPlaybackState state);

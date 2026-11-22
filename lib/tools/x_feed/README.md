@@ -242,3 +242,26 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
 - Linux: needs `libwebkit2gtk-4.1` + `libsoup-3.0` (build) and `libmpv` (runtime).
 - Android runs the tool in its own process (`:x_feed`); `MainActivity` gives every
   non-main process its own WebView data directory, which Android requires.
+
+## Watch history
+
+The History tab (key `5`) lists videos and GIFs played in the app, grouped by last view:
+today, last 7 days, last 30 days, last 12 months, older. Each group shows its video and play
+count, total watched time and the account watched most.
+
+The player reports every state change through `VideoPlayerPage.onProgress`; `XVideoWatch`
+sums the time that actually played (steps over 2 s are seeks and are ignored, so seeking and
+loops do not count). A video counts as watched once that time reaches the setting
+(Settings → Watch history, default 5 s) or half of a shorter video
+(`XVideoHistory.thresholdFor`). The entry is written then and topped up when the player
+closes, so a play costs at most two writes.
+
+`XVideoHistoryDb` stores one row per post video in `watched_videos` (author, text cut to 200
+characters, video and preview URL, duration, watched time, play count, first and last view).
+Rows are kept for at most 400 days and 1000 entries, pruned at startup; sign-out clears them.
+Entries are loaded only while the tab is open and dropped when the tool closes.
+
+Tapping an entry plays the stored mp4 again after a `HEAD` check, so a video X removed shows
+a message instead of a player error. The close button removes an entry (with undo);
+Settings → Clear old history removes entries older than 7 days, 30 days, 3 months, 1 year,
+or all of them.

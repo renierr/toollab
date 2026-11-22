@@ -6,10 +6,12 @@ import 'config.dart';
 
 /// Post ids already reported to X as seen, kept for [retention], and posts
 /// boosted, kept for good. Both are looked up per loaded page, so memory
-/// holds only the ids of loaded posts.
+/// holds only the ids of loaded posts. Also owns the schema of
+/// [watchedVideosTable], which [XVideoHistoryDb] reads and writes.
 class XReadDb {
   static const String _table = 'read_posts';
   static const String _boostedTable = 'boosted_posts';
+  static const String watchedVideosTable = 'watched_videos';
   static const Duration retention = Duration(days: 30);
 
   /// Stays under SQLite's bound-variable limit.
@@ -20,7 +22,9 @@ class XReadDb {
 
   Future<ToolDatabase>? _db;
 
-  Future<ToolDatabase> _getDb() => _db ??= _open();
+  Future<ToolDatabase> get database => _db ??= _open();
+
+  Future<ToolDatabase> _getDb() => database;
 
   Future<ToolDatabase> _open() async {
     final db = await DatabaseService.instance.getToolDatabase(
@@ -28,7 +32,7 @@ class XReadDb {
     );
     try {
       await db.migrate(
-        currentVersion: 2,
+        currentVersion: 3,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -49,6 +53,31 @@ class XReadDb {
                 boosted_at INTEGER NOT NULL
               ) WITHOUT ROWID
             ''');
+          }
+          if (oldVersion < 3) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(watchedVideosTable)} (
+                post_id TEXT NOT NULL,
+                media_index INTEGER NOT NULL,
+                author_screen_name TEXT NOT NULL,
+                author_name TEXT NOT NULL,
+                avatar_url TEXT,
+                text TEXT NOT NULL,
+                video_url TEXT NOT NULL,
+                preview_url TEXT NOT NULL,
+                is_gif INTEGER NOT NULL,
+                duration_ms INTEGER NOT NULL,
+                watched_ms INTEGER NOT NULL,
+                play_count INTEGER NOT NULL,
+                first_watched_at INTEGER NOT NULL,
+                last_watched_at INTEGER NOT NULL,
+                PRIMARY KEY (post_id, media_index)
+              ) WITHOUT ROWID
+            ''');
+            await txn.execute(
+              'CREATE INDEX ${txn.nameTable('${watchedVideosTable}_last')} '
+              'ON ${txn.nameTable(watchedVideosTable)} (last_watched_at)',
+            );
           }
         },
       );
@@ -117,5 +146,6 @@ class XReadDb {
     final db = await _getDb();
     await db.delete(_table);
     await db.delete(_boostedTable);
+    await db.delete(watchedVideosTable);
   }
 }

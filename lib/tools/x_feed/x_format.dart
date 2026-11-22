@@ -28,6 +28,14 @@ class XFormat {
     return DateFormat.yMMMd(locale).add_Hm().format(time.toLocal());
   }
 
+  /// `m:ss`, or `h:mm:ss` from an hour on.
+  static String clock(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60);
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return h > 0 ? '$h:${m.toString().padLeft(2, '0')}:$s' : '$m:$s';
+  }
+
   static String count(int value, String locale) =>
       value <= 0 ? '' : NumberFormat.compact(locale: locale).format(value);
 }

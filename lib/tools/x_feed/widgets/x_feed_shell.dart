@@ -8,6 +8,7 @@ import 'package:tool_lab/widgets/responsive_layout.dart';
 import '../x_feed_state.dart';
 import '../x_keys.dart';
 import '../x_login_actions.dart';
+import 'x_history_view.dart';
 import 'x_search_view.dart';
 import 'x_timeline_view.dart';
 
@@ -29,6 +30,7 @@ class _XFeedShellState extends State<XFeedShell> with DisposeCleanup {
     0x32: XFeedTab.following,
     0x33: XFeedTab.bookmarks,
     0x34: XFeedTab.search,
+    0x35: XFeedTab.history,
   };
 
   final Set<XFeedTab> _visited = {};
@@ -54,7 +56,7 @@ class _XFeedShellState extends State<XFeedShell> with DisposeCleanup {
     });
   }
 
-  /// 1–4 switch tabs, / goes to the search field.
+  /// 1–5 switch tabs, / goes to the search field.
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent || !XKeys.plain || XKeys.typing) {
       return KeyEventResult.ignored;
@@ -122,6 +124,7 @@ class _XFeedShellState extends State<XFeedShell> with DisposeCleanup {
         l10n.xFeedBookmarks,
       ),
       (XFeedTab.search, Icons.search, Icons.search, l10n.commonSearch),
+      (XFeedTab.history, Icons.history, Icons.history, l10n.xFeedHistory),
     ];
     final index = destinations.indexWhere((d) => d.$1 == tab);
 
@@ -238,17 +241,19 @@ class _TabContent extends StatelessWidget {
       excluding: !active,
       child: Focus(
         focusNode: focusNode,
-        child: tab == XFeedTab.search
-            ? const XSearchView()
-            : XTimelineView(
-                controller: state.controllerFor(tab),
-                applyFilters: home,
-                onSeen: home ? state.markPostsSeen : null,
-                onToolbar: onToolbar,
-                emptyMessage: tab == XFeedTab.bookmarks
-                    ? AppLocalizations.of(context).xFeedBookmarksEmpty
-                    : null,
-              ),
+        child: switch (tab) {
+          XFeedTab.search => const XSearchView(),
+          XFeedTab.history => const XHistoryView(),
+          _ => XTimelineView(
+            controller: state.controllerFor(tab),
+            applyFilters: home,
+            onSeen: home ? state.markPostsSeen : null,
+            onToolbar: onToolbar,
+            emptyMessage: tab == XFeedTab.bookmarks
+                ? AppLocalizations.of(context).xFeedBookmarksEmpty
+                : null,
+          ),
+        },
       ),
     );
   }

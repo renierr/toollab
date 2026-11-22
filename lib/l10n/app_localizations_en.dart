@@ -15503,6 +15503,146 @@ class AppLocalizationsEn extends AppLocalizations {
   String get xFeedApiRefreshed => 'API data refreshed';
 
   @override
+  String get xFeedHistory => 'History';
+
+  @override
+  String get xFeedHistoryEmpty => 'No watched videos yet';
+
+  @override
+  String get xFeedHistoryToday => 'Today';
+
+  @override
+  String get xFeedHistoryWeek => 'Last 7 days';
+
+  @override
+  String get xFeedHistoryMonth => 'Last 30 days';
+
+  @override
+  String get xFeedHistoryYear => 'Last 12 months';
+
+  @override
+  String get xFeedHistoryOlder => 'Older';
+
+  @override
+  String xFeedHistoryVideos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count videos',
+      one: '1 video',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String xFeedHistoryPlays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plays',
+      one: '1 play',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String xFeedHistoryWatchedTotal(String time) {
+    return '$time watched';
+  }
+
+  @override
+  String xFeedHistoryWatched(String time) {
+    return 'watched $time';
+  }
+
+  @override
+  String xFeedHistoryTopAuthor(String name) {
+    return 'mostly @$name';
+  }
+
+  @override
+  String get xFeedHistoryRemove => 'Remove from history';
+
+  @override
+  String get xFeedHistoryRemoved => 'Removed from history';
+
+  @override
+  String get xFeedHistoryUnavailable => 'This video is no longer available';
+
+  @override
+  String get xFeedHistoryOpenOnX => 'Open post on X';
+
+  @override
+  String get xFeedHistorySection => 'Watch history';
+
+  @override
+  String get xFeedHistoryThreshold => 'Counts as watched after';
+
+  @override
+  String get xFeedHistoryThresholdSubtitle =>
+      'Shorter videos count once half of them played';
+
+  @override
+  String xFeedHistorySeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get xFeedHistoryClear => 'Clear old history';
+
+  @override
+  String get xFeedHistoryClearSubtitle =>
+      'Remove videos last watched before a chosen time';
+
+  @override
+  String get xFeedHistoryClearAll => 'Everything';
+
+  @override
+  String xFeedHistoryOlderThanDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return 'Older than $_temp0';
+  }
+
+  @override
+  String xFeedHistoryOlderThanMonths(int months) {
+    String _temp0 = intl.Intl.pluralLogic(
+      months,
+      locale: localeName,
+      other: '$months months',
+      one: '1 month',
+    );
+    return 'Older than $_temp0';
+  }
+
+  @override
+  String xFeedHistoryOlderThanYears(int years) {
+    String _temp0 = intl.Intl.pluralLogic(
+      years,
+      locale: localeName,
+      other: '$years years',
+      one: '1 year',
+    );
+    return 'Older than $_temp0';
+  }
+
+  @override
+  String xFeedHistoryCleared(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Removed $count videos',
+      one: 'Removed 1 video',
+      zero: 'Nothing to remove',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get textAiTitle => 'AI text tools';
 
   @override

@@ -43,7 +43,7 @@ class _XFeedPageState extends State<XFeedPage> with DisposeCleanup {
 
   Future<void> _refresh() async {
     final state = context.read<XFeedState>();
-    if (state.tab == XFeedTab.search) return;
+    if (!state.tab.hasTimeline) return;
     await state.controllerFor(state.tab).refresh();
   }
 
@@ -57,7 +57,7 @@ class _XFeedPageState extends State<XFeedPage> with DisposeCleanup {
     return ToolLayout(
       title: XFeedTool.config.localizedName(l10n),
       actions: [
-        if (loggedIn && state.tab != XFeedTab.search)
+        if (loggedIn && state.tab.hasTimeline)
           IconButton(
             focusNode: _refreshFocus,
             onPressed: _refresh,

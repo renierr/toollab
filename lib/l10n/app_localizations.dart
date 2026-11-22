@@ -27310,6 +27310,168 @@ abstract class AppLocalizations {
   /// **'API data refreshed'**
   String get xFeedApiRefreshed;
 
+  /// No description provided for @xFeedHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get xFeedHistory;
+
+  /// No description provided for @xFeedHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No watched videos yet'**
+  String get xFeedHistoryEmpty;
+
+  /// No description provided for @xFeedHistoryToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get xFeedHistoryToday;
+
+  /// No description provided for @xFeedHistoryWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get xFeedHistoryWeek;
+
+  /// No description provided for @xFeedHistoryMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get xFeedHistoryMonth;
+
+  /// No description provided for @xFeedHistoryYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 12 months'**
+  String get xFeedHistoryYear;
+
+  /// No description provided for @xFeedHistoryOlder.
+  ///
+  /// In en, this message translates to:
+  /// **'Older'**
+  String get xFeedHistoryOlder;
+
+  /// No description provided for @xFeedHistoryVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 video} other{{count} videos}}'**
+  String xFeedHistoryVideos(int count);
+
+  /// No description provided for @xFeedHistoryPlays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 play} other{{count} plays}}'**
+  String xFeedHistoryPlays(int count);
+
+  /// No description provided for @xFeedHistoryWatchedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} watched'**
+  String xFeedHistoryWatchedTotal(String time);
+
+  /// No description provided for @xFeedHistoryWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'watched {time}'**
+  String xFeedHistoryWatched(String time);
+
+  /// No description provided for @xFeedHistoryTopAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'mostly @{name}'**
+  String xFeedHistoryTopAuthor(String name);
+
+  /// No description provided for @xFeedHistoryRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from history'**
+  String get xFeedHistoryRemove;
+
+  /// No description provided for @xFeedHistoryRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from history'**
+  String get xFeedHistoryRemoved;
+
+  /// No description provided for @xFeedHistoryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This video is no longer available'**
+  String get xFeedHistoryUnavailable;
+
+  /// No description provided for @xFeedHistoryOpenOnX.
+  ///
+  /// In en, this message translates to:
+  /// **'Open post on X'**
+  String get xFeedHistoryOpenOnX;
+
+  /// No description provided for @xFeedHistorySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch history'**
+  String get xFeedHistorySection;
+
+  /// No description provided for @xFeedHistoryThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Counts as watched after'**
+  String get xFeedHistoryThreshold;
+
+  /// No description provided for @xFeedHistoryThresholdSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shorter videos count once half of them played'**
+  String get xFeedHistoryThresholdSubtitle;
+
+  /// No description provided for @xFeedHistorySeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String xFeedHistorySeconds(int seconds);
+
+  /// No description provided for @xFeedHistoryClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear old history'**
+  String get xFeedHistoryClear;
+
+  /// No description provided for @xFeedHistoryClearSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove videos last watched before a chosen time'**
+  String get xFeedHistoryClearSubtitle;
+
+  /// No description provided for @xFeedHistoryClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything'**
+  String get xFeedHistoryClearAll;
+
+  /// No description provided for @xFeedHistoryOlderThanDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than {days, plural, =1{1 day} other{{days} days}}'**
+  String xFeedHistoryOlderThanDays(int days);
+
+  /// No description provided for @xFeedHistoryOlderThanMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than {months, plural, =1{1 month} other{{months} months}}'**
+  String xFeedHistoryOlderThanMonths(int months);
+
+  /// No description provided for @xFeedHistoryOlderThanYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Older than {years, plural, =1{1 year} other{{years} years}}'**
+  String xFeedHistoryOlderThanYears(int years);
+
+  /// No description provided for @xFeedHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing to remove} =1{Removed 1 video} other{Removed {count} videos}}'**
+  String xFeedHistoryCleared(int count);
+
   /// No description provided for @textAiTitle.
   ///
   /// In en, this message translates to:
