@@ -33,6 +33,8 @@ class DepotFormat {
   String money(double value, {bool signed = false}) =>
       '${signed && value > 0 ? '+' : ''}${_money.format(value)}';
 
+  String get currencySymbol => _money.currencySymbol;
+
   String compactMoney(double value) => _compactMoney.format(value);
 
   /// Short money for an axis tick: no cents, a suffix from a thousand up.

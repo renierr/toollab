@@ -20,6 +20,7 @@ Only imported statements and the local wishlist are edited here.
 | Overview | KPIs, value chart, allocation (splitting stocks into dividend and growth, and ETFs/funds into distributing and accumulating), biggest movers, holdings for the selected period and portfolio | `POST /performance` |
 | Allocation | Position-weight donut and list, X-Ray through ETF holdings, ETF overlap, fund running costs, plus region, sector and industry split | Parqet values, onvista, Yahoo Finance and Nasdaq metadata |
 | Dividends | Calendar, missing and upcoming payments, per year and per position | Parqet bookings plus Yahoo Finance for ex-dates and amounts |
+| Retirement | Monte Carlo early-retirement simulation: success rate, earliest retirement age, value fan by age, fixed vs. guardrail withdrawals, when dividends alone cover spending. See [Retirement simulation](#retirement-simulation) | Depot figures, Yahoo Finance index history (MSCI World / S&P 500 price index, monthly since 1985) |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
 | Wishlist | Stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database, optional backend sync and Yahoo Finance |
 | Import | Parse DKB / ING / Postbank PDF statements, export as Parqet CSV or send to Parqet | `POST /portfolios/{id}/activities` |
@@ -601,3 +602,30 @@ available. The ZIP holds:
   `date`, `quote_at`, `synced_at`, …) are ISO 8601 in UTC. Logo images are left out.
 
 Amounts are in the portfolio currency, as Parqet booked them.
+
+## Retirement simulation
+
+`simulation/depot_sim_engine.dart` runs 5,000 lives in yearly steps in an isolate, with a fixed seed so
+the same inputs give the same result. Inputs live in `tool_settings` (`simulation_inputs`); empty
+money fields fall back to the depot: open value, net invested capital (cost basis), detected savings
+plans, trailing 12-month gross dividends over value, and the value-weighted partial exemption.
+
+- **Returns.** A year is twelve consecutive monthly returns drawn at random (overlapping block
+  bootstrap) from the MSCI World (`^990100-USD-STRD`) or S&P 500 (`^GSPC`) price index, or from the
+  depot's own time-weighted returns; or log-normal with an entered return and volatility. The
+  index history is cached in `tool_settings` (`simulation_index_<source>`) and refetched after 30 days.
+  Index and depot returns are price returns, so the dividend yield is added as a cash flow; the
+  US-dollar index ignores currency moves. The return adjustment is added to every year.
+- **Year.** Value grows by the drawn return; dividends of the start-of-year value are taxed
+  (rate on the non-exempt part above the saver's allowance). While working, savings (rising with
+  inflation) and net dividends are reinvested. Retired, the gap of spending minus pension (from the
+  pension age) is paid from dividends first, the rest by selling; a sale is taxed on its gain share
+  from the tracked cost basis, using what is left of the allowance. A run that cannot pay the gap is
+  out of money at that age. Values are shown divided by the inflation index, in today's money.
+- **Guardrails.** The first retired year's withdrawal over value is the start rate. A rate above
+  1.2× it cuts the withdrawal by 10 %, one below 0.8× raises it by 10 %, never above the plan.
+- **Earliest age** sweeps retirement ages over the first 1,000 runs (same draws for every age) and
+  reports the first that reaches the target success rate with fixed withdrawals.
+- **Dividends.** A never-retiring pass reports the age from which net dividends pay the spending gap
+  in half and in nine of ten runs.
+

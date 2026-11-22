@@ -8198,5 +8198,165 @@
   "weatherRadarZoomIn": "Zoom in",
   "weatherRadarZoomOut": "Zoom out",
   "weatherRadarAttribution": "Radar © Deutscher Wetterdienst",
-  "weatherRadarClose": "Hide rain radar"
+  "weatherRadarClose": "Hide rain radar",
+  "depotTabSimulation": "Retirement",
+  "depotSimNavInputs": "Assumptions",
+  "depotSimNavResult": "Result",
+  "depotSimNavChart": "Course",
+  "depotSimNavStrategies": "Strategies",
+  "depotSimNavDividends": "Dividends",
+  "depotSimInputsTitle": "Assumptions",
+  "depotSimInputsHint": "Empty fields use the depot's figures. Amounts in today's money.",
+  "depotSimGroupPerson": "You",
+  "depotSimGroupMoney": "Money",
+  "depotSimGroupMarket": "Market",
+  "depotSimGroupTax": "Tax and goal",
+  "depotSimAge": "Age today",
+  "depotSimRetireAge": "Retire at",
+  "depotSimPensionAge": "State pension at",
+  "depotSimEndAge": "Plan until age",
+  "depotSimUnitYears": "yrs",
+  "depotSimUnitPerMonth": "{currency}/mo",
+  "@depotSimUnitPerMonth": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "depotSimExpenses": "Spending",
+  "depotSimPension": "Pension (net)",
+  "depotSimSavings": "Savings",
+  "depotSimStartValue": "Depot value",
+  "depotSimInflation": "Inflation",
+  "depotSimDividendYield": "Dividend yield",
+  "depotSimReturnAdjustment": "Return adjustment",
+  "depotSimManualReturn": "Return p.a.",
+  "depotSimManualVolatility": "Volatility p.a.",
+  "depotSimTaxRate": "Tax rate",
+  "depotSimPartialExemption": "Partial exemption",
+  "depotSimTargetSuccess": "Target success",
+  "depotSimSource": "Returns from",
+  "depotSimSourceWorld": "MSCI World",
+  "depotSimSourceSp500": "S&P 500",
+  "depotSimSourceDepot": "My depot",
+  "depotSimSourceManual": "Manual",
+  "depotSimSourceIndexHint": "Random years from the index's monthly history since 1985 (price index in US dollars); the dividend yield is added on top.",
+  "depotSimSourceDepotHint": "Random years from your own time-weighted monthly returns. Needs a long history to say much.",
+  "depotSimSourceManualHint": "Yearly returns drawn from a log-normal distribution with the entered return and volatility.",
+  "depotSimSuccess": "Money lasts (retiring at {age})",
+  "@depotSimSuccess": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "depotSimEarliestAge": "Earliest retirement at {target}",
+  "@depotSimEarliestAge": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "depotSimAtRetirement": "Depot at retirement (median)",
+  "depotSimLastsUntil": "Lasts at least until (worst 10 %)",
+  "depotSimAgeValue": "age {age}",
+  "@depotSimAgeValue": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "depotSimAgeBeyond": "beyond {age}",
+  "@depotSimAgeBeyond": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "depotSimResultHint": "{runs} simulated lives{history}. Values in today's money, after tax. A model, not a forecast.",
+  "@depotSimResultHint": {
+    "placeholders": {
+      "runs": {
+        "type": "int"
+      },
+      "history": {
+        "type": "String"
+      }
+    }
+  },
+  "depotSimHistoryYears": ", drawn from {years} years of history",
+  "@depotSimHistoryYears": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "depotSimShortHistory": "Your depot history covers only {years} years, too short to stand for decades. Prefer an index.",
+  "@depotSimShortHistory": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "depotSimIndexFailed": "The index history could not be loaded. Check the connection or choose your depot or manual returns.",
+  "depotSimNoHistory": "Not enough monthly returns for a simulation yet.",
+  "depotSimChartTitle": "Depot value by age",
+  "depotSimChartHint": "Dashed lines: retirement and state pension.",
+  "depotSimChartTooltip": "Age {age}: {low} · {median} · {high}",
+  "@depotSimChartTooltip": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      },
+      "low": {
+        "type": "String"
+      },
+      "median": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "depotSimLegendOuter": "10–90 %",
+  "depotSimLegendInner": "25–75 %",
+  "depotSimLegendMedian": "Median",
+  "depotSimLegendExpected": "Constant {rate} p.a.",
+  "@depotSimLegendExpected": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "depotSimStrategiesTitle": "Withdrawal strategies",
+  "depotSimStrategyFixed": "Fixed",
+  "depotSimStrategyGuardrails": "Guardrails",
+  "depotSimRowSuccess": "Money lasts",
+  "depotSimRowLastsUntil": "Worst 10 % until",
+  "depotSimRowMedianEnd": "Median at {age}",
+  "@depotSimRowMedianEnd": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "depotSimRowWorstSpending": "Spending in bad times",
+  "depotSimStrategyFixedHint": "Fixed: the planned spending every year, rising with inflation, whatever the market does.",
+  "depotSimStrategyGuardrailsHint": "Guardrails: withdrawals drop by 10 % when they climb 20 % above the starting rate and recover when the depot does. Money lasts more often, at the cost of leaner years.",
+  "depotSimDividendsTitle": "Living off dividends",
+  "depotSimDividendsNow": "Net dividends today per month",
+  "depotSimDividendsCoverage": "Share of the spending gap",
+  "depotSimDividendsAgeMedian": "Cover the gap from (median)",
+  "depotSimDividendsAgeLate": "Cover the gap from (9 in 10 runs)",
+  "depotSimDividendsHint": "Keeps saving and reinvesting until net dividends pay spending minus pension, without selling a share. Uses the dividend yield above."
 }

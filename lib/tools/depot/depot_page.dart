@@ -17,6 +17,7 @@ import 'depot_dividend_state.dart';
 import 'depot_holding_trend_state.dart';
 import 'depot_logo_state.dart';
 import 'depot_portfolio_state.dart';
+import 'depot_simulation_state.dart';
 import 'depot_state.dart';
 import 'depot_work_lease.dart';
 import 'depot_wishlist_state.dart';
@@ -29,6 +30,7 @@ import 'widgets/depot_import_view.dart';
 import 'widgets/depot_overview_view.dart';
 import 'widgets/depot_report_button.dart';
 import 'widgets/depot_settings_page.dart';
+import 'widgets/simulation/depot_simulation_view.dart';
 import 'widgets/depot_sync_button.dart';
 import 'widgets/depot_tabs.dart';
 import 'widgets/depot_wishlist_add_dialog.dart';
@@ -67,6 +69,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     final allocation = context.read<DepotAllocationState>();
     final benchmark = context.read<DepotBenchmarkState>();
     final portfolioState = context.read<DepotPortfolioState>();
+    final simulation = context.read<DepotSimulationState>();
     logos.ensureLoaded();
     // Cached dividend data only; the holding details read it.
     dividends.ensureLoaded();
@@ -78,6 +81,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
       allocation.reduceCache();
       benchmark.reduceCache();
       portfolioState.reduceCache();
+      simulation.reduceCache();
     });
 
     final appState = context.read<AppState>();
@@ -138,6 +142,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
         DepotTab.overview => DepotTool.config.localizedName(l10n),
         DepotTab.allocation => l10n.depotTabAllocation,
         DepotTab.dividends => l10n.depotTabDividends,
+        DepotTab.simulation => l10n.depotTabSimulation,
         DepotTab.activities => l10n.depotTabActivities,
         DepotTab.wishlist => l10n.depotTabWishlist,
         DepotTab.pdfImport => l10n.depotTabImport,
@@ -176,6 +181,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
                 DepotTab.overview => const DepotOverviewView(),
                 DepotTab.allocation => const DepotAllocationTabView(),
                 DepotTab.dividends => const DepotDividendsView(),
+                DepotTab.simulation => const DepotSimulationView(),
                 DepotTab.activities => const DepotActivitiesView(),
                 DepotTab.wishlist => DepotWishlistView(
                   captureKey: _wishlistCaptureKey,

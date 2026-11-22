@@ -12,6 +12,7 @@ import 'depot_holding_trend_state.dart';
 import 'depot_logo_state.dart';
 import 'depot_page.dart';
 import 'depot_portfolio_state.dart';
+import 'depot_simulation_state.dart';
 import 'depot_state.dart';
 import 'depot_wishlist_state.dart';
 import 'depot_wishlist_sync_delegate.dart';
@@ -47,6 +48,9 @@ class DepotTool {
       ),
       ChangeNotifierProvider<DepotDividendState>(
         create: (_) => DepotDividendState(),
+      ),
+      ChangeNotifierProvider<DepotSimulationState>(
+        create: (_) => DepotSimulationState(),
       ),
       ChangeNotifierProvider<DepotLogoState>(create: (_) => DepotLogoState()),
       ChangeNotifierProvider<DepotHoldingTrendState>(

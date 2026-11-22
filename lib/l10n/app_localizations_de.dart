@@ -17779,4 +17779,250 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get weatherRadarClose => 'Regenradar ausblenden';
+
+  @override
+  String get depotTabSimulation => 'Rente';
+
+  @override
+  String get depotSimNavInputs => 'Annahmen';
+
+  @override
+  String get depotSimNavResult => 'Ergebnis';
+
+  @override
+  String get depotSimNavChart => 'Verlauf';
+
+  @override
+  String get depotSimNavStrategies => 'Strategien';
+
+  @override
+  String get depotSimNavDividends => 'Dividenden';
+
+  @override
+  String get depotSimInputsTitle => 'Annahmen';
+
+  @override
+  String get depotSimInputsHint =>
+      'Leere Felder nehmen die Werte aus dem Depot. Beträge in heutiger Kaufkraft.';
+
+  @override
+  String get depotSimGroupPerson => 'Person';
+
+  @override
+  String get depotSimGroupMoney => 'Geld';
+
+  @override
+  String get depotSimGroupMarket => 'Markt';
+
+  @override
+  String get depotSimGroupTax => 'Steuer und Ziel';
+
+  @override
+  String get depotSimAge => 'Alter heute';
+
+  @override
+  String get depotSimRetireAge => 'Rente ab';
+
+  @override
+  String get depotSimPensionAge => 'Gesetzl. Rente ab';
+
+  @override
+  String get depotSimEndAge => 'Planen bis Alter';
+
+  @override
+  String get depotSimUnitYears => 'J.';
+
+  @override
+  String depotSimUnitPerMonth(String currency) {
+    return '$currency/Mon.';
+  }
+
+  @override
+  String get depotSimExpenses => 'Ausgaben';
+
+  @override
+  String get depotSimPension => 'Rente (netto)';
+
+  @override
+  String get depotSimSavings => 'Sparrate';
+
+  @override
+  String get depotSimStartValue => 'Depotwert';
+
+  @override
+  String get depotSimInflation => 'Inflation';
+
+  @override
+  String get depotSimDividendYield => 'Dividendenrendite';
+
+  @override
+  String get depotSimReturnAdjustment => 'Rendite-Korrektur';
+
+  @override
+  String get depotSimManualReturn => 'Rendite p.a.';
+
+  @override
+  String get depotSimManualVolatility => 'Schwankung p.a.';
+
+  @override
+  String get depotSimTaxRate => 'Steuersatz';
+
+  @override
+  String get depotSimPartialExemption => 'Teilfreistellung';
+
+  @override
+  String get depotSimTargetSuccess => 'Ziel-Erfolgsquote';
+
+  @override
+  String get depotSimSource => 'Renditen aus';
+
+  @override
+  String get depotSimSourceWorld => 'MSCI World';
+
+  @override
+  String get depotSimSourceSp500 => 'S&P 500';
+
+  @override
+  String get depotSimSourceDepot => 'Mein Depot';
+
+  @override
+  String get depotSimSourceManual => 'Manuell';
+
+  @override
+  String get depotSimSourceIndexHint =>
+      'Zufällige Jahre aus der Monatshistorie des Index seit 1985 (Kursindex in US-Dollar); die Dividendenrendite kommt obendrauf.';
+
+  @override
+  String get depotSimSourceDepotHint =>
+      'Zufällige Jahre aus deinen eigenen zeitgewichteten Monatsrenditen. Aussagekräftig erst mit langer Historie.';
+
+  @override
+  String get depotSimSourceManualHint =>
+      'Jahresrenditen aus einer Log-Normalverteilung mit eingegebener Rendite und Schwankung.';
+
+  @override
+  String depotSimSuccess(int age) {
+    return 'Geld reicht (Rente mit $age)';
+  }
+
+  @override
+  String depotSimEarliestAge(String target) {
+    return 'Frühester Rentenbeginn bei $target';
+  }
+
+  @override
+  String get depotSimAtRetirement => 'Depot bei Rentenbeginn (Median)';
+
+  @override
+  String get depotSimLastsUntil => 'Reicht mindestens bis (schlechteste 10 %)';
+
+  @override
+  String depotSimAgeValue(int age) {
+    return 'Alter $age';
+  }
+
+  @override
+  String depotSimAgeBeyond(int age) {
+    return 'über $age';
+  }
+
+  @override
+  String depotSimResultHint(int runs, String history) {
+    return '$runs simulierte Lebensläufe$history. Werte in heutiger Kaufkraft, nach Steuern. Ein Modell, keine Prognose.';
+  }
+
+  @override
+  String depotSimHistoryYears(int years) {
+    return ', gezogen aus $years Jahren Historie';
+  }
+
+  @override
+  String depotSimShortHistory(int years) {
+    return 'Deine Depot-Historie umfasst nur $years Jahre, zu kurz für Jahrzehnte. Besser einen Index wählen.';
+  }
+
+  @override
+  String get depotSimIndexFailed =>
+      'Die Index-Historie konnte nicht geladen werden. Verbindung prüfen oder Depot bzw. manuelle Renditen wählen.';
+
+  @override
+  String get depotSimNoHistory =>
+      'Noch zu wenige Monatsrenditen für eine Simulation.';
+
+  @override
+  String get depotSimChartTitle => 'Depotwert nach Alter';
+
+  @override
+  String get depotSimChartHint =>
+      'Gestrichelt: Rentenbeginn und gesetzliche Rente.';
+
+  @override
+  String depotSimChartTooltip(int age, String low, String median, String high) {
+    return 'Alter $age: $low · $median · $high';
+  }
+
+  @override
+  String get depotSimLegendOuter => '10–90 %';
+
+  @override
+  String get depotSimLegendInner => '25–75 %';
+
+  @override
+  String get depotSimLegendMedian => 'Median';
+
+  @override
+  String depotSimLegendExpected(String rate) {
+    return 'Konstant $rate p.a.';
+  }
+
+  @override
+  String get depotSimStrategiesTitle => 'Entnahmestrategien';
+
+  @override
+  String get depotSimStrategyFixed => 'Fest';
+
+  @override
+  String get depotSimStrategyGuardrails => 'Leitplanken';
+
+  @override
+  String get depotSimRowSuccess => 'Geld reicht';
+
+  @override
+  String get depotSimRowLastsUntil => 'Schlechteste 10 % bis';
+
+  @override
+  String depotSimRowMedianEnd(int age) {
+    return 'Median mit $age';
+  }
+
+  @override
+  String get depotSimRowWorstSpending => 'Ausgaben in schlechten Zeiten';
+
+  @override
+  String get depotSimStrategyFixedHint =>
+      'Fest: jedes Jahr die geplanten Ausgaben, mit der Inflation steigend, egal wie der Markt läuft.';
+
+  @override
+  String get depotSimStrategyGuardrailsHint =>
+      'Leitplanken: Entnahmen sinken um 10 %, wenn sie 20 % über der Startquote liegen, und steigen wieder, wenn das Depot sich erholt. Das Geld reicht öfter, dafür gibt es magere Jahre.';
+
+  @override
+  String get depotSimDividendsTitle => 'Von Dividenden leben';
+
+  @override
+  String get depotSimDividendsNow => 'Netto-Dividenden heute pro Monat';
+
+  @override
+  String get depotSimDividendsCoverage => 'Anteil an der Ausgabenlücke';
+
+  @override
+  String get depotSimDividendsAgeMedian => 'Decken die Lücke ab (Median)';
+
+  @override
+  String get depotSimDividendsAgeLate =>
+      'Decken die Lücke ab (9 von 10 Läufen)';
+
+  @override
+  String get depotSimDividendsHint =>
+      'Weiter sparen und reinvestieren, bis die Netto-Dividenden Ausgaben minus Rente zahlen, ohne Anteile zu verkaufen. Nutzt die Dividendenrendite oben.';
 }

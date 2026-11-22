@@ -115,6 +115,11 @@ class _DepotTabsState extends State<DepotTabs> with DisposeCleanup {
                 l10n.depotTabDividends,
               ),
               segment(
+                DepotTab.simulation,
+                Icons.insights_outlined,
+                l10n.depotTabSimulation,
+              ),
+              segment(
                 DepotTab.activities,
                 Icons.receipt_long_outlined,
                 l10n.depotTabActivities,

@@ -31071,6 +31071,432 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide rain radar'**
   String get weatherRadarClose;
+
+  /// No description provided for @depotTabSimulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Retirement'**
+  String get depotTabSimulation;
+
+  /// No description provided for @depotSimNavInputs.
+  ///
+  /// In en, this message translates to:
+  /// **'Assumptions'**
+  String get depotSimNavInputs;
+
+  /// No description provided for @depotSimNavResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get depotSimNavResult;
+
+  /// No description provided for @depotSimNavChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Course'**
+  String get depotSimNavChart;
+
+  /// No description provided for @depotSimNavStrategies.
+  ///
+  /// In en, this message translates to:
+  /// **'Strategies'**
+  String get depotSimNavStrategies;
+
+  /// No description provided for @depotSimNavDividends.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends'**
+  String get depotSimNavDividends;
+
+  /// No description provided for @depotSimInputsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assumptions'**
+  String get depotSimInputsTitle;
+
+  /// No description provided for @depotSimInputsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty fields use the depot\'s figures. Amounts in today\'s money.'**
+  String get depotSimInputsHint;
+
+  /// No description provided for @depotSimGroupPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get depotSimGroupPerson;
+
+  /// No description provided for @depotSimGroupMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Money'**
+  String get depotSimGroupMoney;
+
+  /// No description provided for @depotSimGroupMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Market'**
+  String get depotSimGroupMarket;
+
+  /// No description provided for @depotSimGroupTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax and goal'**
+  String get depotSimGroupTax;
+
+  /// No description provided for @depotSimAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age today'**
+  String get depotSimAge;
+
+  /// No description provided for @depotSimRetireAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Retire at'**
+  String get depotSimRetireAge;
+
+  /// No description provided for @depotSimPensionAge.
+  ///
+  /// In en, this message translates to:
+  /// **'State pension at'**
+  String get depotSimPensionAge;
+
+  /// No description provided for @depotSimEndAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan until age'**
+  String get depotSimEndAge;
+
+  /// No description provided for @depotSimUnitYears.
+  ///
+  /// In en, this message translates to:
+  /// **'yrs'**
+  String get depotSimUnitYears;
+
+  /// No description provided for @depotSimUnitPerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{currency}/mo'**
+  String depotSimUnitPerMonth(String currency);
+
+  /// No description provided for @depotSimExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending'**
+  String get depotSimExpenses;
+
+  /// No description provided for @depotSimPension.
+  ///
+  /// In en, this message translates to:
+  /// **'Pension (net)'**
+  String get depotSimPension;
+
+  /// No description provided for @depotSimSavings.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get depotSimSavings;
+
+  /// No description provided for @depotSimStartValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Depot value'**
+  String get depotSimStartValue;
+
+  /// No description provided for @depotSimInflation.
+  ///
+  /// In en, this message translates to:
+  /// **'Inflation'**
+  String get depotSimInflation;
+
+  /// No description provided for @depotSimDividendYield.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend yield'**
+  String get depotSimDividendYield;
+
+  /// No description provided for @depotSimReturnAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Return adjustment'**
+  String get depotSimReturnAdjustment;
+
+  /// No description provided for @depotSimManualReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return p.a.'**
+  String get depotSimManualReturn;
+
+  /// No description provided for @depotSimManualVolatility.
+  ///
+  /// In en, this message translates to:
+  /// **'Volatility p.a.'**
+  String get depotSimManualVolatility;
+
+  /// No description provided for @depotSimTaxRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax rate'**
+  String get depotSimTaxRate;
+
+  /// No description provided for @depotSimPartialExemption.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial exemption'**
+  String get depotSimPartialExemption;
+
+  /// No description provided for @depotSimTargetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Target success'**
+  String get depotSimTargetSuccess;
+
+  /// No description provided for @depotSimSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Returns from'**
+  String get depotSimSource;
+
+  /// No description provided for @depotSimSourceWorld.
+  ///
+  /// In en, this message translates to:
+  /// **'MSCI World'**
+  String get depotSimSourceWorld;
+
+  /// No description provided for @depotSimSourceSp500.
+  ///
+  /// In en, this message translates to:
+  /// **'S&P 500'**
+  String get depotSimSourceSp500;
+
+  /// No description provided for @depotSimSourceDepot.
+  ///
+  /// In en, this message translates to:
+  /// **'My depot'**
+  String get depotSimSourceDepot;
+
+  /// No description provided for @depotSimSourceManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get depotSimSourceManual;
+
+  /// No description provided for @depotSimSourceIndexHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Random years from the index\'s monthly history since 1985 (price index in US dollars); the dividend yield is added on top.'**
+  String get depotSimSourceIndexHint;
+
+  /// No description provided for @depotSimSourceDepotHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Random years from your own time-weighted monthly returns. Needs a long history to say much.'**
+  String get depotSimSourceDepotHint;
+
+  /// No description provided for @depotSimSourceManualHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly returns drawn from a log-normal distribution with the entered return and volatility.'**
+  String get depotSimSourceManualHint;
+
+  /// No description provided for @depotSimSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Money lasts (retiring at {age})'**
+  String depotSimSuccess(int age);
+
+  /// No description provided for @depotSimEarliestAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Earliest retirement at {target}'**
+  String depotSimEarliestAge(String target);
+
+  /// No description provided for @depotSimAtRetirement.
+  ///
+  /// In en, this message translates to:
+  /// **'Depot at retirement (median)'**
+  String get depotSimAtRetirement;
+
+  /// No description provided for @depotSimLastsUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Lasts at least until (worst 10 %)'**
+  String get depotSimLastsUntil;
+
+  /// No description provided for @depotSimAgeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'age {age}'**
+  String depotSimAgeValue(int age);
+
+  /// No description provided for @depotSimAgeBeyond.
+  ///
+  /// In en, this message translates to:
+  /// **'beyond {age}'**
+  String depotSimAgeBeyond(int age);
+
+  /// No description provided for @depotSimResultHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{runs} simulated lives{history}. Values in today\'s money, after tax. A model, not a forecast.'**
+  String depotSimResultHint(int runs, String history);
+
+  /// No description provided for @depotSimHistoryYears.
+  ///
+  /// In en, this message translates to:
+  /// **', drawn from {years} years of history'**
+  String depotSimHistoryYears(int years);
+
+  /// No description provided for @depotSimShortHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Your depot history covers only {years} years, too short to stand for decades. Prefer an index.'**
+  String depotSimShortHistory(int years);
+
+  /// No description provided for @depotSimIndexFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The index history could not be loaded. Check the connection or choose your depot or manual returns.'**
+  String get depotSimIndexFailed;
+
+  /// No description provided for @depotSimNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough monthly returns for a simulation yet.'**
+  String get depotSimNoHistory;
+
+  /// No description provided for @depotSimChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Depot value by age'**
+  String get depotSimChartTitle;
+
+  /// No description provided for @depotSimChartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashed lines: retirement and state pension.'**
+  String get depotSimChartHint;
+
+  /// No description provided for @depotSimChartTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Age {age}: {low} · {median} · {high}'**
+  String depotSimChartTooltip(int age, String low, String median, String high);
+
+  /// No description provided for @depotSimLegendOuter.
+  ///
+  /// In en, this message translates to:
+  /// **'10–90 %'**
+  String get depotSimLegendOuter;
+
+  /// No description provided for @depotSimLegendInner.
+  ///
+  /// In en, this message translates to:
+  /// **'25–75 %'**
+  String get depotSimLegendInner;
+
+  /// No description provided for @depotSimLegendMedian.
+  ///
+  /// In en, this message translates to:
+  /// **'Median'**
+  String get depotSimLegendMedian;
+
+  /// No description provided for @depotSimLegendExpected.
+  ///
+  /// In en, this message translates to:
+  /// **'Constant {rate} p.a.'**
+  String depotSimLegendExpected(String rate);
+
+  /// No description provided for @depotSimStrategiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawal strategies'**
+  String get depotSimStrategiesTitle;
+
+  /// No description provided for @depotSimStrategyFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get depotSimStrategyFixed;
+
+  /// No description provided for @depotSimStrategyGuardrails.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardrails'**
+  String get depotSimStrategyGuardrails;
+
+  /// No description provided for @depotSimRowSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Money lasts'**
+  String get depotSimRowSuccess;
+
+  /// No description provided for @depotSimRowLastsUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Worst 10 % until'**
+  String get depotSimRowLastsUntil;
+
+  /// No description provided for @depotSimRowMedianEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Median at {age}'**
+  String depotSimRowMedianEnd(int age);
+
+  /// No description provided for @depotSimRowWorstSpending.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending in bad times'**
+  String get depotSimRowWorstSpending;
+
+  /// No description provided for @depotSimStrategyFixedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed: the planned spending every year, rising with inflation, whatever the market does.'**
+  String get depotSimStrategyFixedHint;
+
+  /// No description provided for @depotSimStrategyGuardrailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardrails: withdrawals drop by 10 % when they climb 20 % above the starting rate and recover when the depot does. Money lasts more often, at the cost of leaner years.'**
+  String get depotSimStrategyGuardrailsHint;
+
+  /// No description provided for @depotSimDividendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Living off dividends'**
+  String get depotSimDividendsTitle;
+
+  /// No description provided for @depotSimDividendsNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Net dividends today per month'**
+  String get depotSimDividendsNow;
+
+  /// No description provided for @depotSimDividendsCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Share of the spending gap'**
+  String get depotSimDividendsCoverage;
+
+  /// No description provided for @depotSimDividendsAgeMedian.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover the gap from (median)'**
+  String get depotSimDividendsAgeMedian;
+
+  /// No description provided for @depotSimDividendsAgeLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover the gap from (9 in 10 runs)'**
+  String get depotSimDividendsAgeLate;
+
+  /// No description provided for @depotSimDividendsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps saving and reinvesting until net dividends pay spending minus pension, without selling a share. Uses the dividend yield above.'**
+  String get depotSimDividendsHint;
 }
 
 class _AppLocalizationsDelegate

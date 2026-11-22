@@ -104,6 +104,8 @@ class DepotStore {
   static const _taxAllowanceKey = 'tax_allowance';
   static const _baseRateKey = 'base_rate_';
   static const _detailsUrlKey = 'details_url_';
+  static const _simulationInputsKey = 'simulation_inputs';
+  static const _simulationIndexKey = 'simulation_index_';
   // Legacy keys of the profile cache, read once by the version 11 migration.
   static const _assetProfilesKey = 'asset_profiles';
   static const _assetProfileAttemptsKey = 'asset_profile_attempts';
@@ -581,6 +583,20 @@ class DepotStore {
 
   Future<void> setTaxAllowance(double value) => DatabaseService.instance
       .setSetting(_toolId, _taxAllowanceKey, value.toString());
+
+  Future<String?> simulationInputs() =>
+      DatabaseService.instance.getSetting(_toolId, _simulationInputsKey);
+
+  Future<void> setSimulationInputs(String json) =>
+      DatabaseService.instance.setSetting(_toolId, _simulationInputsKey, json);
+
+  /// Cached monthly index history for the simulation, as JSON.
+  Future<String?> simulationIndex(String name) =>
+      DatabaseService.instance.getSetting(_toolId, '$_simulationIndexKey$name');
+
+  Future<void> setSimulationIndex(String name, String json) => DatabaseService
+      .instance
+      .setSetting(_toolId, '$_simulationIndexKey$name', json);
 
   /// Entered base rate of [year], a fraction; null when none was entered.
   Future<double?> baseRate(int year) async => double.tryParse(

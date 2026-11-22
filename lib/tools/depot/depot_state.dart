@@ -8,6 +8,7 @@ enum DepotTab {
   overview,
   allocation,
   dividends,
+  simulation,
   activities,
   wishlist,
   pdfImport,

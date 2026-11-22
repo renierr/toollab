@@ -42,7 +42,7 @@ void main() {
               find.byType(SegmentedButton<DepotTab>),
             )
             .segments;
-        expect(segments, hasLength(6));
+        expect(segments, hasLength(7));
         for (final segment in segments) {
           if (BoxConstraints(maxWidth: width - 32).isCompact) {
             expect(segment.label, isA<Icon>());
@@ -54,10 +54,10 @@ void main() {
           expect(label.maxLines, 1);
           expect(label.overflow, TextOverflow.ellipsis);
         }
-        expect(find.byType(Icon), findsNWidgets(6));
+        expect(find.byType(Icon), findsNWidgets(7));
         if (BoxConstraints(maxWidth: width - 32).isCompact) {
           final icons = find.byType(Icon);
-          for (var i = 0; i < 6; i++) {
+          for (var i = 0; i < 7; i++) {
             final icon = icons.at(i);
             final button = find
                 .ancestor(of: icon, matching: find.byType(TextButton))

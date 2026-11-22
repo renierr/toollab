@@ -17,6 +17,7 @@ import 'package:tool_lab/tools/depot/depot_import_state.dart';
 import 'package:tool_lab/tools/depot/depot_logo_state.dart';
 import 'package:tool_lab/tools/depot/depot_page.dart';
 import 'package:tool_lab/tools/depot/depot_portfolio_state.dart';
+import 'package:tool_lab/tools/depot/depot_simulation_state.dart';
 import 'package:tool_lab/tools/depot/depot_state.dart';
 import 'package:tool_lab/tools/depot/depot_store.dart';
 import 'package:tool_lab/tools/depot/depot_wishlist_state.dart';
@@ -132,6 +133,9 @@ void main() {
           ChangeNotifierProvider<DepotPortfolioState>.value(value: portfolio),
           ChangeNotifierProvider<DepotImportState>.value(value: imports),
           ChangeNotifierProvider<DepotState>.value(value: tabs),
+          ChangeNotifierProvider<DepotSimulationState>(
+            create: (_) => DepotSimulationState(),
+          ),
         ],
         child: MaterialApp.router(
           routerConfig: router,
