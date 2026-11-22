@@ -207,6 +207,10 @@ class _XPostCardState extends State<XPostCard> with DisposeCleanup {
       unawaited(_engage(() => state.toggleBookmark(widget.post)));
       return KeyEventResult.handled;
     }
+    if (key == LogicalKeyboardKey.keyP) {
+      unawaited(_engage(() => state.boost(widget.post)));
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.keyT && widget.post.canTranslate) {
       unawaited(XTranslationActions.toggle(context, widget.post));
       return KeyEventResult.handled;

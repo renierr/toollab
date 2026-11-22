@@ -15588,6 +15588,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Hochformatige Bilder und Videos breiter im Format 4:5 zeigen, oben und unten beschnitten';
 
   @override
+  String get xFeedBoost => 'Boosten: als geteilt melden';
+
+  @override
+  String get xFeedBoosted => 'Geboostet';
+
+  @override
   String get xFeedNotInterested => 'Kein Interesse an diesem Beitrag';
 
   @override

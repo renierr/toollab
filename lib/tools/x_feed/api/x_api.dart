@@ -509,6 +509,51 @@ class XApi {
     if (res.statusCode != 200) _restResult(res);
   }
 
+  /// The web app's client id, sent with every logged event.
+  static const String _clientAppId = '3033300';
+
+  /// Logs the client event x.com sends when a post's link is copied from its
+  /// share menu, one of the share signals the For you ranking learns from.
+  Future<void> sendShareSignal(XPost post) async {
+    const path = '/i/api/1.1/jot/client_event.json';
+    final config = await _ensureConfig();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final event = {
+      '_category_': 'client_event',
+      'format_version': 2,
+      'triggered_on': now,
+      'event_namespace': {
+        'client': 'm5',
+        'page': 'home',
+        'section': 'home',
+        'component': 'tweet',
+        'element': 'share',
+        'action': 'copy_link',
+      },
+      'items': [
+        {'item_type': 0, 'id': post.id, 'author_id': post.author.id},
+      ],
+      'client_event_sequence_number': 0,
+      'client_event_sequence_start_timestamp': now,
+      'client_app_id': _clientAppId,
+    };
+    final headers = _headers(config, 'POST', path)
+      ..['Content-Type'] = 'application/x-www-form-urlencoded';
+    final res = await _send(
+      'POST',
+      Uri.https('x.com', path),
+      headers,
+      body: Uri(
+        queryParameters: {
+          'debug': 'true',
+          'log': jsonEncode([event]),
+        },
+      ).query,
+    );
+    // The logging endpoint may answer 404 even when it took the event.
+    if (res.statusCode >= 400 && res.statusCode != 404) _restResult(res);
+  }
+
   Future<void> setBookmarked(String postId, bool bookmarked) => _graphql(
     bookmarked ? 'CreateBookmark' : 'DeleteBookmark',
     {'tweet_id': postId},

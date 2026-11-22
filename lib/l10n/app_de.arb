@@ -5918,6 +5918,8 @@
   "xFeedHideReplies": "Antworten ausblenden",
   "xFeedCropPortrait": "Hochkant-Medien zuschneiden",
   "xFeedCropPortraitSubtitle": "Hochformatige Bilder und Videos breiter im Format 4:5 zeigen, oben und unten beschnitten",
+  "xFeedBoost": "Boosten: als geteilt melden",
+  "xFeedBoosted": "Geboostet",
   "xFeedNotInterested": "Kein Interesse an diesem Beitrag",
   "xFeedNotInterestedDone": "Danke. Du siehst künftig weniger Beiträge wie diesen.",
   "xFeedUndo": "Rückgängig",

@@ -15466,6 +15466,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show tall images and videos wider at 4:5, trimmed at the top and bottom';
 
   @override
+  String get xFeedBoost => 'Boost: report as shared';
+
+  @override
+  String get xFeedBoosted => 'Boosted';
+
+  @override
   String get xFeedNotInterested => 'Not interested in this post';
 
   @override

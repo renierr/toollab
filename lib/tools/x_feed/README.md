@@ -93,6 +93,26 @@ unchanged, with `feedback_type=DontLike&undo=false` in the body (`undo=true` tak
 back). The card collapses to X's confirmation text, with Undo when `hasUndoAction` is
 set. The collapsed state lasts for the session.
 
+## Boost
+
+X has no API action for "shared", but its For you model (`xai-org/x-algorithm`) predicts
+share and share via copy link as positive actions, learned from the client events the web
+app logs. `XApi.sendShareSignal` sends the one x.com logs when a post's link is copied
+from its share menu: a form POST to `/i/api/1.1/jot/client_event.json` with
+`debug=true&log=[event]`, the event carrying `_category_: client_event`,
+`format_version: 2`, `event_namespace {client: m5, page: home, section: home, component:
+tweet, element: share, action: copy_link}`, the post as `items [{item_type: 0, id,
+author_id}]` and `client_app_id 3033300`. Element, action, item type and app id are taken
+from x.com's current bundles; page, section and component are the home feed's and not
+verified against a logged-in capture. The endpoint answers 404 even for taken events, so
+only auth errors and failures above that count as failed, and whether X weighs the event
+cannot be checked.
+
+X returns no shared state, so `XReadDb` keeps boosted ids in `boosted_posts` (no
+retention; sign-out clears it) and each fetched page looks up its own, like read marks.
+A boosted post shows a filled amber rocket; there is no undo. Action bar button, menu
+entry and the P key.
+
 ## Live broadcasts
 
 A post with a live video carries a card named `…:broadcast` whose binding values hold
@@ -201,6 +221,7 @@ Share and save stream the file into the tool's `TempFileScope` first, then use
   | List | R | Reload, like pull-to-refresh |
   | Post | L / B | Like / bookmark |
   | Post | D | Not interested / undo (For you only) |
+  | Post | P | Boost (report as shared) |
   | Post | U | Author's profile |
   | Post | T | Translate / show original |
   | Feed | 1 – 4 | For you, Following, Bookmarks, Search; focus returns to where it was |

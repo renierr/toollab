@@ -27244,6 +27244,18 @@ abstract class AppLocalizations {
   /// **'Show tall images and videos wider at 4:5, trimmed at the top and bottom'**
   String get xFeedCropPortraitSubtitle;
 
+  /// No description provided for @xFeedBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Boost: report as shared'**
+  String get xFeedBoost;
+
+  /// No description provided for @xFeedBoosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Boosted'**
+  String get xFeedBoosted;
+
   /// No description provided for @xFeedNotInterested.
   ///
   /// In en, this message translates to:

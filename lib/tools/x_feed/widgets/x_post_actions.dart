@@ -21,6 +21,9 @@ class XPostActions extends StatelessWidget {
     () => context.read<XFeedState>().setNotInterested(post, true),
   );
 
+  static Future<void> boost(BuildContext context, XPost post) =>
+      _run(context, () => context.read<XFeedState>().boost(post));
+
   static Future<void> _run(
     BuildContext context,
     Future<bool> Function() action,
@@ -39,6 +42,7 @@ class XPostActions extends StatelessWidget {
     final engagement = context.select<XFeedState, XEngagement>(
       (s) => s.engagementOf(post),
     );
+    final boosted = context.select<XFeedState, bool>((s) => s.isBoosted(post));
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
 
     return LayoutBuilder(
@@ -90,6 +94,14 @@ class XPostActions extends StatelessWidget {
                 () => context.read<XFeedState>().toggleBookmark(post),
               ),
             ),
+            _ActionButton(
+              icon: boosted
+                  ? Icons.rocket_launch
+                  : Icons.rocket_launch_outlined,
+              tooltip: boosted ? l10n.xFeedBoosted : l10n.xFeedBoost,
+              color: boosted ? AppTheme.accentAmber : muted,
+              onPressed: boosted ? null : () => boost(context, post),
+            ),
             if (post.notInterested != null)
               _ActionButton(
                 icon: Icons.sentiment_dissatisfied_outlined,
@@ -115,13 +127,13 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final String tooltip;
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const _ActionButton({
     required this.icon,
     required this.tooltip,
     required this.color,
-    required this.onPressed,
+    this.onPressed,
     this.label = '',
   });
 
@@ -132,6 +144,7 @@ class _ActionButton extends StatelessWidget {
       child: TextButton.icon(
         style: TextButton.styleFrom(
           foregroundColor: color,
+          disabledForegroundColor: color,
           minimumSize: const Size(48, 40),
           padding: const EdgeInsets.symmetric(horizontal: 8),
         ),

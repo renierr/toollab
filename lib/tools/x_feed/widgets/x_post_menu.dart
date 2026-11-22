@@ -96,6 +96,12 @@ class XPostMenu extends StatelessWidget {
             ),
             onTap: () => unawaited(state.toggleBookmark(post)),
           ),
+          if (!state.isBoosted(post))
+            ListTile(
+              leading: const Icon(Icons.rocket_launch_outlined),
+              title: Text(l10n.xFeedBoost),
+              onTap: () => run((c) => XPostActions.boost(c, post)),
+            ),
           if (post.notInterested != null && !state.isNotInterested(post))
             ListTile(
               leading: const Icon(Icons.sentiment_dissatisfied_outlined),

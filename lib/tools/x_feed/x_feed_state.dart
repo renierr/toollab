@@ -62,6 +62,9 @@ class XFeedState extends ChangeNotifier {
   /// Posts marked "Not interested" this session; their cards collapse.
   final Set<String> _notInterested = {};
 
+  /// Boosted ids among the loaded posts; the full history stays in [XReadDb].
+  final Set<String> _boosted = {};
+
   late final XTranslator translator = XTranslator(
     () => _api,
     _notify,
@@ -144,6 +147,23 @@ class XFeedState extends ChangeNotifier {
   }
 
   Future<void> _loadRead(List<XPost> posts) async {
+    await Future.wait([_loadSeenRead(posts), _loadBoosted(posts)]);
+  }
+
+  Future<void> _loadBoosted(List<XPost> posts) async {
+    try {
+      final found = await XReadDb.instance.boostedAmong(
+        posts.map((p) => p.id).where((id) => !_boosted.contains(id)),
+      );
+      if (found.isEmpty) return;
+      _boosted.addAll(found);
+      _notify();
+    } catch (e) {
+      errorLog('[XFeedState] Boost lookup failed: $e');
+    }
+  }
+
+  Future<void> _loadSeenRead(List<XPost> posts) async {
     final ids = {
       for (final p in posts)
         for (final id in p.seenIds)
@@ -289,6 +309,7 @@ class XFeedState extends ChangeNotifier {
     }
     _engagement.clear();
     _notInterested.clear();
+    _boosted.clear();
     _read.clear();
     _readMarks.ping();
     translator.clear();
@@ -376,6 +397,7 @@ class XFeedState extends ChangeNotifier {
     _screenName = null;
     _engagement.clear();
     _notInterested.clear();
+    _boosted.clear();
     translator.clear();
     _clearSeen();
     for (final t in [forYou, following, bookmarks]) {
@@ -395,6 +417,7 @@ class XFeedState extends ChangeNotifier {
     _screenName = null;
     _engagement.clear();
     _notInterested.clear();
+    _boosted.clear();
     translator.clear();
     _clearSeen();
     _read.clear();
@@ -539,6 +562,30 @@ class XFeedState extends ChangeNotifier {
       _notify();
       return false;
     }
+  }
+
+  bool isBoosted(XPost post) => _boosted.contains(post.id);
+
+  /// Reports the post as shared by link, a signal X's ranking learns from.
+  /// X gives no state back, so the mark is kept locally; there is no undo.
+  Future<bool> boost(XPost post) async {
+    if (!_boosted.add(post.id)) return true;
+    _notify();
+    try {
+      await _requireApi().sendShareSignal(post);
+    } on XApiException catch (e) {
+      errorLog('[XFeedState] Boost of ${post.id} failed: $e');
+      _boosted.remove(post.id);
+      _onApiError(e);
+      _notify();
+      return false;
+    }
+    try {
+      await XReadDb.instance.markBoosted(post.id);
+    } catch (e) {
+      errorLog('[XFeedState] Storing boost of ${post.id} failed: $e');
+    }
+    return true;
   }
 
   /// Applies [next] at once and rolls it back if X refuses.

@@ -4,10 +4,12 @@ import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
 
-/// Post ids already reported to X as seen, kept for [retention] and looked
-/// up per loaded page, so memory holds only the ids of loaded posts.
+/// Post ids already reported to X as seen, kept for [retention], and posts
+/// boosted, kept for good. Both are looked up per loaded page, so memory
+/// holds only the ids of loaded posts.
 class XReadDb {
   static const String _table = 'read_posts';
+  static const String _boostedTable = 'boosted_posts';
   static const Duration retention = Duration(days: 30);
 
   /// Stays under SQLite's bound-variable limit.
@@ -26,7 +28,7 @@ class XReadDb {
     );
     try {
       await db.migrate(
-        currentVersion: 1,
+        currentVersion: 2,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -40,6 +42,14 @@ class XReadDb {
               'ON ${txn.nameTable(_table)} (read_at)',
             );
           }
+          if (oldVersion < 2) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_boostedTable)} (
+                post_id TEXT PRIMARY KEY,
+                boosted_at INTEGER NOT NULL
+              ) WITHOUT ROWID
+            ''');
+          }
         },
       );
     } catch (e) {
@@ -49,7 +59,13 @@ class XReadDb {
   }
 
   /// The subset of [ids] that was read.
-  Future<Set<String>> readAmong(Iterable<String> ids) async {
+  Future<Set<String>> readAmong(Iterable<String> ids) => _among(_table, ids);
+
+  /// The subset of [ids] that was boosted.
+  Future<Set<String>> boostedAmong(Iterable<String> ids) =>
+      _among(_boostedTable, ids);
+
+  Future<Set<String>> _among(String table, Iterable<String> ids) async {
     final all = ids.toSet().toList();
     if (all.isEmpty) return {};
     final db = await _getDb();
@@ -57,7 +73,7 @@ class XReadDb {
     for (var i = 0; i < all.length; i += _chunk) {
       final part = all.sublist(i, (i + _chunk).clamp(0, all.length));
       final rows = await db.query(
-        _table,
+        table,
         columns: ['post_id'],
         where: 'post_id IN (${List.filled(part.length, '?').join(',')})',
         whereArgs: part,
@@ -82,6 +98,14 @@ class XReadDb {
     await batch.commit(noResult: true);
   }
 
+  Future<void> markBoosted(String id) async {
+    final db = await _getDb();
+    await db.insert(_boostedTable, {
+      'post_id': id,
+      'boosted_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   /// Deletes ids read before [retention] and returns how many.
   Future<int> prune() async {
     final db = await _getDb();
@@ -92,5 +116,6 @@ class XReadDb {
   Future<void> clear() async {
     final db = await _getDb();
     await db.delete(_table);
+    await db.delete(_boostedTable);
   }
 }
