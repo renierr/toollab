@@ -381,7 +381,8 @@ the selected portfolio and period, and the holdings exactly as the filter and so
 them.
 
 1. Header: portfolio, period, active filter and sort, creation and sync time.
-2. KPI box: the same figures as the overview tiles, net invested and cost basis as two fields.
+2. KPI box: the overview tiles' main figures without their detail lines, net invested and
+   cost basis as two fields.
 3. Value chart (value filled, invested capital dashed) next to the allocation by kind.
    On **Today** the chart has a single point, so the biggest movers take its place.
 4. Biggest movers: up to five gains and five losses of the period by return percentage,

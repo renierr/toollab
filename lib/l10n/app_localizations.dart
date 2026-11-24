@@ -20723,6 +20723,12 @@ abstract class AppLocalizations {
   /// **'Net invested'**
   String get depotKpiNetInvested;
 
+  /// No description provided for @depotKpiOnNetInvested.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent} on net invested'**
+  String depotKpiOnNetInvested(String percent);
+
   /// No description provided for @depotKpiCostBasis.
   ///
   /// In en, this message translates to:
@@ -20776,6 +20782,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fees & taxes'**
   String get depotKpiCosts;
+
+  /// No description provided for @depotKpiTtwrorDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'TTWROR {percent}'**
+  String depotKpiTtwrorDetail(String percent);
+
+  /// No description provided for @depotKpiValueInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Market value of all open positions at the end of the selected period.'**
+  String get depotKpiValueInfo;
+
+  /// No description provided for @depotKpiTotalGainInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Price gains of the open positions, realized gains from sales and dividends in the selected period, after fees and taxes. The line below relates it to the net invested money.'**
+  String get depotKpiTotalGainInfo;
+
+  /// No description provided for @depotKpiUnrealizedInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Price gain of the positions you still hold in the selected period, as percent and in money below. It only becomes realized when you sell.'**
+  String get depotKpiUnrealizedInfo;
+
+  /// No description provided for @depotKpiReturnInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'IRR (internal rate of return, p.a.): your personal yearly return. It counts when and how much money you paid in or took out, like the interest rate of a savings account would.\n\nTTWROR (true time-weighted rate of return): the return of the selected period with all deposits and withdrawals taken out. It only measures how well the holdings did and compares with funds and indices.'**
+  String get depotKpiReturnInfo;
+
+  /// No description provided for @depotKpiRealizedInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Gains and losses from sales in the selected period, after fees and taxes.'**
+  String get depotKpiRealizedInfo;
+
+  /// No description provided for @depotKpiDividendsInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends and interest paid out in the selected period, after taxes.'**
+  String get depotKpiDividendsInfo;
+
+  /// No description provided for @depotKpiCostsInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Order fees and taxes paid in the selected period.'**
+  String get depotKpiCostsInfo;
 
   /// No description provided for @depotChartTitle.
   ///

@@ -27,7 +27,8 @@ class DepotKpiGrid extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final neutral = Theme.of(context).colorScheme.primary;
     Color gain(double v) => DepotFormat.gainColor(v) ?? neutral;
-    final xirr = summary.xirr;
+    // Parqet reports exactly 0 for periods too short for an IRR.
+    final xirr = summary.xirr == 0 ? null : summary.xirr;
     final ttwror = summary.ttwror;
 
     return MetricGrid(
@@ -38,6 +39,7 @@ class DepotKpiGrid extends StatelessWidget {
           icon: Icons.account_balance_wallet_outlined,
           color: AppTheme.accentGreen,
           compact: true,
+          info: l10n.depotKpiValueInfo,
           trend: valueTrend,
         ),
         if (netInvested case final netInvested?)
@@ -56,6 +58,14 @@ class DepotKpiGrid extends StatelessWidget {
           icon: Icons.trending_up,
           color: gain(summary.totalGain),
           compact: true,
+          detail: switch (netInvested) {
+            final netInvested? when netInvested > 0 =>
+              l10n.depotKpiOnNetInvested(
+                format.percent(summary.totalGain / netInvested * 100),
+              ),
+            _ => null,
+          },
+          info: l10n.depotKpiTotalGainInfo,
         ),
         MetricTile(
           label: l10n.depotKpiUnrealized,
@@ -63,22 +73,20 @@ class DepotKpiGrid extends StatelessWidget {
           icon: Icons.show_chart,
           color: gain(summary.unrealizedReturn),
           compact: true,
+          detail: format.money(summary.unrealizedGain, signed: true),
+          info: l10n.depotKpiUnrealizedInfo,
         ),
-        if (xirr != null)
+        if (xirr ?? ttwror case final rate?)
           MetricTile(
-            label: l10n.depotKpiXirr,
-            value: format.percent(xirr),
+            label: xirr != null ? l10n.depotKpiXirr : l10n.depotKpiTtwror,
+            value: format.percent(rate),
             icon: Icons.percent,
-            color: gain(xirr),
+            color: gain(rate),
             compact: true,
-          ),
-        if (ttwror != null)
-          MetricTile(
-            label: l10n.depotKpiTtwror,
-            value: format.percent(ttwror),
-            icon: Icons.timeline,
-            color: gain(ttwror),
-            compact: true,
+            detail: xirr != null && ttwror != null
+                ? l10n.depotKpiTtwrorDetail(format.percent(ttwror))
+                : null,
+            info: l10n.depotKpiReturnInfo,
           ),
         MetricTile(
           label: l10n.depotKpiRealized,
@@ -86,6 +94,7 @@ class DepotKpiGrid extends StatelessWidget {
           icon: Icons.sell_outlined,
           color: gain(summary.realizedGain),
           compact: true,
+          info: l10n.depotKpiRealizedInfo,
         ),
         MetricTile(
           label: l10n.depotKpiDividends,
@@ -93,6 +102,7 @@ class DepotKpiGrid extends StatelessWidget {
           icon: Icons.payments_outlined,
           color: AppTheme.accentTeal,
           compact: true,
+          info: l10n.depotKpiDividendsInfo,
         ),
         MetricTile(
           label: l10n.depotKpiCosts,
@@ -100,6 +110,7 @@ class DepotKpiGrid extends StatelessWidget {
           icon: Icons.receipt_long_outlined,
           color: AppTheme.accentAmber,
           compact: true,
+          info: l10n.depotKpiCostsInfo,
         ),
       ],
     );

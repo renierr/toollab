@@ -11714,6 +11714,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotKpiNetInvested => 'Netto investiert';
 
   @override
+  String depotKpiOnNetInvested(String percent) {
+    return '$percent auf netto investiert';
+  }
+
+  @override
   String depotKpiCostBasis(String amount) {
     return 'Einstandswert $amount';
   }
@@ -11742,6 +11747,39 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotKpiCosts => 'Gebühren & Steuern';
+
+  @override
+  String depotKpiTtwrorDetail(String percent) {
+    return 'TTWROR $percent';
+  }
+
+  @override
+  String get depotKpiValueInfo =>
+      'Marktwert aller offenen Positionen am Ende des gewählten Zeitraums.';
+
+  @override
+  String get depotKpiTotalGainInfo =>
+      'Kursgewinne der offenen Positionen, realisierte Gewinne aus Verkäufen und Dividenden im gewählten Zeitraum, nach Gebühren und Steuern. Die Zeile darunter setzt ihn ins Verhältnis zum netto investierten Geld.';
+
+  @override
+  String get depotKpiUnrealizedInfo =>
+      'Kursgewinn der noch gehaltenen Positionen im gewählten Zeitraum, in Prozent und darunter in Euro. Realisiert wird er erst beim Verkauf.';
+
+  @override
+  String get depotKpiReturnInfo =>
+      'IZF (interner Zinsfuß, p.a.): deine persönliche Jahresrendite. Er berücksichtigt, wann und wie viel Geld du eingezahlt oder entnommen hast, wie der Zins eines Sparkontos.\n\nTTWROR (True Time-Weighted Rate of Return): die Rendite des gewählten Zeitraums, bei der alle Ein- und Auszahlungen herausgerechnet sind. Sie misst nur, wie gut die Positionen gelaufen sind, und ist mit Fonds und Indizes vergleichbar.';
+
+  @override
+  String get depotKpiRealizedInfo =>
+      'Gewinne und Verluste aus Verkäufen im gewählten Zeitraum, nach Gebühren und Steuern.';
+
+  @override
+  String get depotKpiDividendsInfo =>
+      'Ausgeschüttete Dividenden und Zinsen im gewählten Zeitraum, nach Steuern.';
+
+  @override
+  String get depotKpiCostsInfo =>
+      'Ordergebühren und gezahlte Steuern im gewählten Zeitraum.';
 
   @override
   String get depotChartTitle => 'Depotwert';

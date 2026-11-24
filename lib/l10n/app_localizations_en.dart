@@ -11630,6 +11630,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotKpiNetInvested => 'Net invested';
 
   @override
+  String depotKpiOnNetInvested(String percent) {
+    return '$percent on net invested';
+  }
+
+  @override
   String depotKpiCostBasis(String amount) {
     return 'Cost basis $amount';
   }
@@ -11658,6 +11663,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotKpiCosts => 'Fees & taxes';
+
+  @override
+  String depotKpiTtwrorDetail(String percent) {
+    return 'TTWROR $percent';
+  }
+
+  @override
+  String get depotKpiValueInfo =>
+      'Market value of all open positions at the end of the selected period.';
+
+  @override
+  String get depotKpiTotalGainInfo =>
+      'Price gains of the open positions, realized gains from sales and dividends in the selected period, after fees and taxes. The line below relates it to the net invested money.';
+
+  @override
+  String get depotKpiUnrealizedInfo =>
+      'Price gain of the positions you still hold in the selected period, as percent and in money below. It only becomes realized when you sell.';
+
+  @override
+  String get depotKpiReturnInfo =>
+      'IRR (internal rate of return, p.a.): your personal yearly return. It counts when and how much money you paid in or took out, like the interest rate of a savings account would.\n\nTTWROR (true time-weighted rate of return): the return of the selected period with all deposits and withdrawals taken out. It only measures how well the holdings did and compares with funds and indices.';
+
+  @override
+  String get depotKpiRealizedInfo =>
+      'Gains and losses from sales in the selected period, after fees and taxes.';
+
+  @override
+  String get depotKpiDividendsInfo =>
+      'Dividends and interest paid out in the selected period, after taxes.';
+
+  @override
+  String get depotKpiCostsInfo =>
+      'Order fees and taxes paid in the selected period.';
 
   @override
   String get depotChartTitle => 'Portfolio value';
