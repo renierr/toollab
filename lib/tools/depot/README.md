@@ -179,7 +179,10 @@ capital only drops by the cost of what was sold, but without a cash account the 
 proceeds leave the depot, so a realized gain would otherwise read as a market loss on the
 sale day. The value chart, range gain, benchmark, PDF report, growth card and return index
 all use this net capital, so the value chart's invested line is lower than in Parqet by the
-realized gains so far, and value minus invested includes them.
+realized gains so far, and value minus invested includes them. The chart legend and the
+growth card therefore say "net invested". The Net invested tile (and the PDF KPI box) shows
+the latest net capital as its value and, below it, Parqet's figure: the cost basis of the open
+positions, which still holds reinvested sale gains. An info icon explains both.
 
 The optional benchmark compares the portfolio with EUR-listed accumulating ETF
 proxies for MSCI World (EUNL.DE), the S&P 500 (SXR8.DE), MSCI Europe (EUNK.DE) or the
@@ -378,7 +381,7 @@ the selected portfolio and period, and the holdings exactly as the filter and so
 them.
 
 1. Header: portfolio, period, active filter and sort, creation and sync time.
-2. KPI box: the same figures as the overview tiles.
+2. KPI box: the same figures as the overview tiles, net invested and cost basis as two fields.
 3. Value chart (value filled, invested capital dashed) next to the allocation by kind.
    On **Today** the chart has a single point, so the biggest movers take its place.
 4. Biggest movers: up to five gains and five losses of the period by return percentage,

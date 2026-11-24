@@ -10,12 +10,16 @@ class DepotKpiGrid extends StatelessWidget {
   final DepotSummary summary;
   final DepotFormat format;
   final List<double?> valueTrend;
+  final double? netInvested;
+  final double costBasis;
 
   const DepotKpiGrid({
     super.key,
     required this.summary,
     required this.format,
     required this.valueTrend,
+    required this.netInvested,
+    required this.costBasis,
   });
 
   @override
@@ -36,6 +40,16 @@ class DepotKpiGrid extends StatelessWidget {
           compact: true,
           trend: valueTrend,
         ),
+        if (netInvested case final netInvested?)
+          MetricTile(
+            label: l10n.depotKpiNetInvested,
+            value: format.money(netInvested),
+            icon: Icons.savings_outlined,
+            color: AppTheme.accentBlue,
+            compact: true,
+            detail: l10n.depotKpiCostBasis(format.money(costBasis)),
+            info: l10n.depotKpiInvestedInfo,
+          ),
         MetricTile(
           label: l10n.depotKpiTotalGain,
           value: format.money(summary.totalGain, signed: true),

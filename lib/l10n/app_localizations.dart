@@ -20717,6 +20717,24 @@ abstract class AppLocalizations {
   /// **'Value'**
   String get depotKpiValue;
 
+  /// No description provided for @depotKpiNetInvested.
+  ///
+  /// In en, this message translates to:
+  /// **'Net invested'**
+  String get depotKpiNetInvested;
+
+  /// No description provided for @depotKpiCostBasis.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost basis {amount}'**
+  String depotKpiCostBasis(String amount);
+
+  /// No description provided for @depotKpiInvestedInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Net invested: everything bought minus all sale proceeds, so the money of your own still in the depot. Realized gains are already taken out.\n\nCost basis: purchase cost of the positions held now, as Parqet shows it. It still contains gains from sales that were reinvested.'**
+  String get depotKpiInvestedInfo;
+
   /// No description provided for @depotKpiTotalGain.
   ///
   /// In en, this message translates to:
@@ -20774,7 +20792,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotChartInvested.
   ///
   /// In en, this message translates to:
-  /// **'Invested'**
+  /// **'Net invested'**
   String get depotChartInvested;
 
   /// No description provided for @depotChartChange.
@@ -22261,7 +22279,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotFlowTotalSummary.
   ///
   /// In en, this message translates to:
-  /// **'In total: {capital} invested · {market} market gain · {dividends} dividends'**
+  /// **'In total: {capital} net invested ·{market} market gain · {dividends} dividends'**
   String depotFlowTotalSummary(String capital, String market, String dividends);
 
   /// No description provided for @depotNavMovers.

@@ -11711,6 +11711,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotKpiValue => 'Wert';
 
   @override
+  String get depotKpiNetInvested => 'Netto investiert';
+
+  @override
+  String depotKpiCostBasis(String amount) {
+    return 'Einstandswert $amount';
+  }
+
+  @override
+  String get depotKpiInvestedInfo =>
+      'Netto investiert: alle Käufe minus alle Verkaufserlöse, also das eigene Geld, das noch im Depot steckt. Realisierte Gewinne sind schon herausgerechnet.\n\nEinstandswert: Kaufpreis der aktuell gehaltenen Positionen, wie Parqet ihn zeigt. Er enthält noch Verkaufsgewinne, die wieder angelegt wurden.';
+
+  @override
   String get depotKpiTotalGain => 'Gesamtgewinn';
 
   @override
@@ -11738,7 +11750,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotChartValue => 'Wert';
 
   @override
-  String get depotChartInvested => 'Investiert';
+  String get depotChartInvested => 'Netto investiert';
 
   @override
   String get depotChartChange => 'Veränderung';
@@ -12653,7 +12665,7 @@ class AppLocalizationsDe extends AppLocalizations {
     String market,
     String dividends,
   ) {
-    return 'Gesamt: $capital investiert · $market Marktgewinn · $dividends Dividenden';
+    return 'Gesamt: $capital netto investiert ·$market Marktgewinn · $dividends Dividenden';
   }
 
   @override

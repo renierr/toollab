@@ -91,6 +91,8 @@ class DepotOverviewView extends StatelessWidget {
                         summary: summary,
                         format: format,
                         valueTrend: [for (final p in state.chart) p.value],
+                        netInvested: state.netInvested,
+                        costBasis: state.openPurchaseValue,
                       ),
                       const SizedBox(height: 12),
                     ],

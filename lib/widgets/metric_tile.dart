@@ -9,6 +9,12 @@ class MetricTile extends StatelessWidget {
   final Color color;
   final bool compact;
 
+  /// A secondary figure shown below the label.
+  final String? detail;
+
+  /// Explains the metric behind an info icon; tap shows it on touch screens.
+  final String? info;
+
   /// Recent readings of this metric, drawn as a trend line behind the value.
   final List<double?>? trend;
 
@@ -23,6 +29,8 @@ class MetricTile extends StatelessWidget {
     required this.color,
     this.unit,
     this.compact = false,
+    this.detail,
+    this.info,
     this.trend,
     this.onTap,
   });
@@ -54,6 +62,17 @@ class MetricTile extends StatelessWidget {
                     children: [
                       Icon(icon, color: color, size: compact ? 18 : 24),
                       const Spacer(),
+                      if (info != null)
+                        Tooltip(
+                          message: info,
+                          triggerMode: TooltipTriggerMode.tap,
+                          showDuration: const Duration(seconds: 10),
+                          child: Icon(
+                            Icons.info_outline,
+                            size: compact ? 16 : 20,
+                            color: theme.hintColor,
+                          ),
+                        ),
                       if (onTap != null)
                         Icon(
                           Icons.chevron_right,
@@ -70,8 +89,6 @@ class MetricTile extends StatelessWidget {
                       Flexible(
                         child: Text(
                           value,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style:
                               (compact
                                       ? theme.textTheme.titleMedium
@@ -92,12 +109,19 @@ class MetricTile extends StatelessWidget {
                   ),
                   Text(
                     label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.hintColor,
                     ),
                   ),
+                  if (detail != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      detail!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -122,13 +146,26 @@ class MetricGrid extends StatelessWidget {
           : constraints.maxWidth < 500
           ? 2
           : wideColumns;
-      final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
-      return Wrap(
+      // Rows instead of a Wrap so a tile whose value wraps stretches its row.
+      return Column(
         spacing: 12,
-        runSpacing: 12,
-        children: children
-            .map((child) => SizedBox(width: width, child: child))
-            .toList(),
+        children: [
+          for (var start = 0; start < children.length; start += columns)
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: 12,
+                children: [
+                  for (var i = start; i < start + columns; i++)
+                    Expanded(
+                      child: i < children.length
+                          ? children[i]
+                          : const SizedBox.shrink(),
+                    ),
+                ],
+              ),
+            ),
+        ],
       );
     },
   );

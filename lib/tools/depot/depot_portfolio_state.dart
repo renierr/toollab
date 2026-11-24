@@ -791,6 +791,14 @@ class DepotPortfolioState extends ChangeNotifier {
       .where((h) => !h.isSold)
       .fold<double>(0, (sum, h) => sum + h.currentValue);
 
+  /// Money paid in minus sale proceeds, see `depotNetCapital`.
+  double? get netInvested => _chart.lastOrNull?.capital;
+
+  /// Cost basis of the open positions, the invested figure Parqet shows.
+  double get openPurchaseValue => _holdings
+      .where((h) => !h.isSold)
+      .fold<double>(0, (sum, h) => sum + h.purchaseValue);
+
   /// Current value per detailed holding kind, open positions only.
   Map<DepotHoldingKind, double> get allocation => allocationWith(null);
 

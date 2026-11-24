@@ -11627,6 +11627,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotKpiValue => 'Value';
 
   @override
+  String get depotKpiNetInvested => 'Net invested';
+
+  @override
+  String depotKpiCostBasis(String amount) {
+    return 'Cost basis $amount';
+  }
+
+  @override
+  String get depotKpiInvestedInfo =>
+      'Net invested: everything bought minus all sale proceeds, so the money of your own still in the depot. Realized gains are already taken out.\n\nCost basis: purchase cost of the positions held now, as Parqet shows it. It still contains gains from sales that were reinvested.';
+
+  @override
   String get depotKpiTotalGain => 'Total gain';
 
   @override
@@ -11654,7 +11666,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotChartValue => 'Value';
 
   @override
-  String get depotChartInvested => 'Invested';
+  String get depotChartInvested => 'Net invested';
 
   @override
   String get depotChartChange => 'Change';
@@ -12564,7 +12576,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String market,
     String dividends,
   ) {
-    return 'In total: $capital invested · $market market gain · $dividends dividends';
+    return 'In total: $capital net invested ·$market market gain · $dividends dividends';
   }
 
   @override

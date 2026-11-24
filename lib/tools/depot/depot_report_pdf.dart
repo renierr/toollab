@@ -117,6 +117,8 @@ class _Report {
     required this.holdings,
     required this.performance,
     required this.openValue,
+    required this.netInvested,
+    required this.costBasis,
     required this.filter,
     required this.syncedAt,
     required this.logos,
@@ -156,6 +158,8 @@ class _Report {
       holdings: holdings,
       performance: {for (final h in holdings) h: state.performanceOf(h)},
       openValue: state.openValue,
+      netInvested: state.netInvested,
+      costBasis: state.openPurchaseValue,
       filter: state.holdingFilter,
       syncedAt: state.lastSyncAt,
       logos: logos,
@@ -175,6 +179,8 @@ class _Report {
   final List<DepotHolding> holdings;
   final Map<DepotHolding, DepotHoldingPerformance?> performance;
   final double openValue;
+  final double? netInvested;
+  final double costBasis;
   final DepotHoldingFilter filter;
   final DateTime? syncedAt;
   final Map<String, pw.ImageProvider> logos;
@@ -287,6 +293,10 @@ pw.Widget _kpis(DepotSummary s, _Report r) {
   final f = r.format;
   final fields = <(String, String, PdfColor)>[
     (l10n.depotKpiValue, f.money(s.valueEnd), _ink),
+    if (r.netInvested case final netInvested?) ...[
+      (l10n.depotKpiNetInvested, f.money(netInvested), _ink),
+      (l10n.depotDetailPurchaseValue, f.money(r.costBasis), _ink),
+    ],
     (
       l10n.depotKpiTotalGain,
       f.money(s.totalGain, signed: true),
@@ -309,7 +319,7 @@ pw.Widget _kpis(DepotSummary s, _Report r) {
     (l10n.depotKpiDividends, f.money(s.dividends), _ink),
     (l10n.depotKpiCosts, f.money(s.fees + s.taxes), _ink),
   ];
-  return DepotPdfStyle.kpiBox(fields);
+  return DepotPdfStyle.kpiBox(fields, perRow: 5);
 }
 
 pw.Widget _chartSection(_Report r, double width) {
