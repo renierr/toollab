@@ -21,6 +21,10 @@ class LegacyMaterialBridge extends StatelessWidget {
     brightness: brightness,
     focusColor: AppTheme.focusColor,
     appBarTheme: const legacy.AppBarTheme(centerTitle: true, elevation: 0),
+    tooltipTheme: const legacy.TooltipThemeData(
+      constraints: AppTheme.tooltipConstraints,
+      margin: AppTheme.tooltipMargin,
+    ),
     cardTheme: legacy.CardThemeData(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

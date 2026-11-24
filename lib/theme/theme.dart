@@ -20,6 +20,10 @@ class AppTheme {
   /// D-pad navigation show it, so a stronger value costs touch users nothing.
   static Color get focusColor => accentBlue.withValues(alpha: 0.35);
 
+  // Long explanations stay readable on wide windows and clear of the edge.
+  static const tooltipConstraints = BoxConstraints(maxWidth: 360);
+  static const tooltipMargin = EdgeInsets.all(16);
+
   // Mirrored for legacy-Material packages in LegacyMaterialBridge.
   static ThemeData get light => ThemeData(
     useMaterial3: true,
@@ -27,6 +31,10 @@ class AppTheme {
     brightness: Brightness.light,
     focusColor: focusColor,
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
+    tooltipTheme: const TooltipThemeData(
+      constraints: tooltipConstraints,
+      margin: tooltipMargin,
+    ),
     cardTheme: CardThemeData(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -39,6 +47,10 @@ class AppTheme {
     brightness: Brightness.dark,
     focusColor: focusColor,
     appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
+    tooltipTheme: const TooltipThemeData(
+      constraints: tooltipConstraints,
+      margin: tooltipMargin,
+    ),
     cardTheme: CardThemeData(
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
