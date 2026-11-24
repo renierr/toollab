@@ -16,7 +16,6 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "de.renier.tool_lab"
     compileSdk = 37
-    compileSdkExtension = 19
     ndkVersion = "29.0.13113456"
 
     compileOptions {
