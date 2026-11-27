@@ -120,7 +120,7 @@ class DepotWishlistDetailDialog extends StatelessWidget {
                   ),
                 ),
               ),
-            if (history != null) ...[
+            if (history != null && history.points.length >= 2) ...[
               Text(l10n.depotWishlistChart, style: theme.textTheme.labelMedium),
               Text(
                 '${l10n.depotWishlistNativeHistory} (${history.currency})',
@@ -146,7 +146,9 @@ class DepotWishlistDetailDialog extends StatelessWidget {
                 child: Text(l10n.depotWishlistHistoryUnavailable),
               ),
             for (final (label, value) in [
-              (l10n.depotDetailSymbol, item.symbol),
+              // A bond is listed under its ISIN.
+              if (item.symbol != item.isin)
+                (l10n.depotDetailSymbol, item.symbol),
               (l10n.depotDetailExchange, item.exchange),
               if (item.isin != null) (l10n.depotDetailIsin, item.isin!),
               if (quote != null && quote.currency != 'EUR' && euroRate != null)

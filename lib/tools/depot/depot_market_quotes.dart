@@ -13,8 +13,4 @@ class DepotMarketQuotes {
   static Future<MarketQuote> intraday(String symbol) => isBondSymbol(symbol)
       ? OnvistaApi.bondQuote(symbol)
       : YahooFinanceApi.intradayQuote(symbol);
-
-  static Future<MarketQuote> yearDaily(String symbol) => isBondSymbol(symbol)
-      ? OnvistaApi.bondQuote(symbol)
-      : YahooFinanceApi.yearDailyQuote(symbol);
 }

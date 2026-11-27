@@ -23,7 +23,7 @@ class DepotWishlistState extends ChangeNotifier {
        _searchLoader = searchLoader ?? DepotMarketSearch.search,
        _fxLoader = fxLoader ?? YahooFinanceApi.fxRate,
        _logoLoader = logoLoader ?? _downloadLogo,
-       _historyLoader = historyLoader ?? DepotMarketQuotes.yearDaily {
+       _historyLoader = historyLoader ?? YahooFinanceApi.yearDailyQuote {
     _wishlistSubscription = _store.wishlistChanges.listen((_) {
       unawaited(_reloadWishlist());
     });
@@ -167,7 +167,12 @@ class DepotWishlistState extends ChangeNotifier {
   Future<void> reloadFromStore() => _reloadWishlist();
 
   Future<void> ensureHistory(String symbol) {
-    if (_disposed || !contains(symbol)) return Future.value();
+    // No source offers a bond's price history.
+    if (_disposed ||
+        !contains(symbol) ||
+        DepotMarketQuotes.isBondSymbol(symbol)) {
+      return Future.value();
+    }
     final cached = _histories[symbol];
     if (cached != null &&
         DateTime.now().difference(cached.fetchedAt) <

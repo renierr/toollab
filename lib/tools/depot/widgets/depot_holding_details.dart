@@ -81,7 +81,6 @@ class DepotHoldingDetails extends StatelessWidget {
       (state) => h.kind == DepotHoldingKind.etc ? state?.etcOf(h) : null,
     );
     final issuer = bond?.issuer ?? etc?.issuer;
-    final issuerCountry = bond?.country;
     final etcMaturity = etc?.maturity;
     final spread = etc?.spreadPercent;
     final linkKind = DepotDetailsLinkKind.of(h.kind);
@@ -179,11 +178,8 @@ class DepotHoldingDetails extends StatelessWidget {
             plan.day,
           ),
         ),
-      if (issuer != null)
-        (
-          l10n.depotDetailIssuer,
-          issuerCountry == null ? issuer : '$issuer ($issuerCountry)',
-        ),
+      // The issuer's country is the profile's "Country" row.
+      if (issuer != null) (l10n.depotDetailIssuer, issuer),
       if (etc?.underlying case final underlying?)
         (l10n.depotDetailUnderlying, underlying),
       if (etc?.settlement case final settlement?)
