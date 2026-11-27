@@ -18163,4 +18163,177 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get depotSimDividendsHint =>
       'Keeps saving and reinvesting until net dividends pay spending minus pension, without selling a share. Uses the dividend yield above.';
+
+  @override
+  String get toolNameTrimz => 'Trimz';
+
+  @override
+  String get toolDescTrimz => 'Browse and watch AI-made series from trimz.tv';
+
+  @override
+  String get trimzRefresh => 'Refresh';
+
+  @override
+  String get trimzSearchHint => 'Search series';
+
+  @override
+  String get trimzSearchPrompt => 'Search by title or creator.';
+
+  @override
+  String trimzNoResults(String query) {
+    return 'No series found for “$query”.';
+  }
+
+  @override
+  String get trimzAllGenres => 'All';
+
+  @override
+  String get trimzContinueWatching => 'Continue watching';
+
+  @override
+  String get trimzMyList => 'My list';
+
+  @override
+  String get trimzLoadFailed =>
+      'Could not load trimz.tv. Check your connection.';
+
+  @override
+  String get trimzEmpty => 'Nothing here yet.';
+
+  @override
+  String trimzEpisodeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '1 episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String trimzViews(String views) {
+    return '$views views';
+  }
+
+  @override
+  String trimzEpisode(int number) {
+    return 'Episode $number';
+  }
+
+  @override
+  String trimzEpisodeOf(int number, int count) {
+    return 'Episode $number of $count';
+  }
+
+  @override
+  String trimzEpisodeTitle(String series, int number, int count) {
+    return '$series · Episode $number/$count';
+  }
+
+  @override
+  String trimzRuntimeHours(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String trimzRuntimeMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String trimzBy(String name) {
+    return 'by $name';
+  }
+
+  @override
+  String get trimzPlay => 'Play';
+
+  @override
+  String trimzContinueEpisode(int number) {
+    return 'Continue episode $number';
+  }
+
+  @override
+  String get trimzStartOver => 'Start over';
+
+  @override
+  String get trimzAddToList => 'Add to my list';
+
+  @override
+  String get trimzOnList => 'On my list';
+
+  @override
+  String get trimzWatched => 'Watched';
+
+  @override
+  String get trimzNoEpisodes => 'This series has no playable episodes.';
+
+  @override
+  String get trimzOpenOnWeb => 'Open on trimz.tv';
+
+  @override
+  String get trimzOpenFailed => 'Could not open the link';
+
+  @override
+  String get trimzRemoveFromContinue => 'Remove from Continue watching?';
+
+  @override
+  String get trimzSettingsPlayback => 'Playback';
+
+  @override
+  String get trimzAdaptiveStream => 'Adaptive streaming';
+
+  @override
+  String get trimzAdaptiveStreamSubtitle =>
+      'Adjusts the quality to your connection. Off plays the original file in full quality, about 60 MB per minute.';
+
+  @override
+  String get trimzAutoplayNext => 'Play next episode automatically';
+
+  @override
+  String get trimzAutoplayNextSubtitle =>
+      'Episodes run one after another like one long show';
+
+  @override
+  String get trimzPlayerSettings => 'Player settings';
+
+  @override
+  String get trimzPlayerSettingsSubtitle => 'Gestures, speed, resume and more';
+
+  @override
+  String get trimzSettingsCatalog => 'Catalog';
+
+  @override
+  String get trimzTranslatedTitles => 'Translated titles';
+
+  @override
+  String get trimzTranslatedTitlesSubtitle =>
+      'Rows and titles in the app language where trimz.tv offers them';
+
+  @override
+  String get trimzSettingsData => 'Stored data';
+
+  @override
+  String get trimzClearHistory => 'Clear watch history';
+
+  @override
+  String get trimzClearHistorySubtitle => 'Forget where you left each series';
+
+  @override
+  String get trimzClearHistoryBody =>
+      'Continue watching will be empty and every series starts at episode 1 again.';
+
+  @override
+  String get trimzClearList => 'Clear my list';
+
+  @override
+  String get trimzClearListBody => 'Removes every series from your list.';
+
+  @override
+  String get trimzCleared => 'Cleared';
+
+  @override
+  String get trimzAbout =>
+      'The series come from trimz.tv, where its users make them with AI.';
 }

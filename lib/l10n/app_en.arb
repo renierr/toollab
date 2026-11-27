@@ -8444,5 +8444,106 @@
   "depotSimDividendsCoverage": "Share of the spending gap",
   "depotSimDividendsAgeMedian": "Cover the gap from (median)",
   "depotSimDividendsAgeLate": "Cover the gap from (9 in 10 runs)",
-  "depotSimDividendsHint": "Keeps saving and reinvesting until net dividends pay spending minus pension, without selling a share. Uses the dividend yield above."
+  "depotSimDividendsHint": "Keeps saving and reinvesting until net dividends pay spending minus pension, without selling a share. Uses the dividend yield above.",
+  "toolNameTrimz": "Trimz",
+  "toolDescTrimz": "Browse and watch AI-made series from trimz.tv",
+  "trimzRefresh": "Refresh",
+  "trimzSearchHint": "Search series",
+  "trimzSearchPrompt": "Search by title or creator.",
+  "trimzNoResults": "No series found for “{query}”.",
+  "@trimzNoResults": {
+    "placeholders": {
+      "query": { "type": "String" }
+    }
+  },
+  "trimzAllGenres": "All",
+  "trimzContinueWatching": "Continue watching",
+  "trimzMyList": "My list",
+  "trimzLoadFailed": "Could not load trimz.tv. Check your connection.",
+  "trimzEmpty": "Nothing here yet.",
+  "trimzEpisodeCount": "{count, plural, =1{1 episode} other{{count} episodes}}",
+  "@trimzEpisodeCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "trimzViews": "{views} views",
+  "@trimzViews": {
+    "placeholders": {
+      "views": { "type": "String" }
+    }
+  },
+  "trimzEpisode": "Episode {number}",
+  "@trimzEpisode": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "trimzEpisodeOf": "Episode {number} of {count}",
+  "@trimzEpisodeOf": {
+    "placeholders": {
+      "number": { "type": "int" },
+      "count": { "type": "int" }
+    }
+  },
+  "trimzEpisodeTitle": "{series} · Episode {number}/{count}",
+  "@trimzEpisodeTitle": {
+    "placeholders": {
+      "series": { "type": "String" },
+      "number": { "type": "int" },
+      "count": { "type": "int" }
+    }
+  },
+  "trimzRuntimeHours": "{hours} h {minutes} min",
+  "@trimzRuntimeHours": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "trimzRuntimeMinutes": "{minutes} min",
+  "@trimzRuntimeMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "trimzBy": "by {name}",
+  "@trimzBy": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "trimzPlay": "Play",
+  "trimzContinueEpisode": "Continue episode {number}",
+  "@trimzContinueEpisode": {
+    "placeholders": {
+      "number": { "type": "int" }
+    }
+  },
+  "trimzStartOver": "Start over",
+  "trimzAddToList": "Add to my list",
+  "trimzOnList": "On my list",
+  "trimzWatched": "Watched",
+  "trimzNoEpisodes": "This series has no playable episodes.",
+  "trimzOpenOnWeb": "Open on trimz.tv",
+  "trimzOpenFailed": "Could not open the link",
+  "trimzRemoveFromContinue": "Remove from Continue watching?",
+  "trimzSettingsPlayback": "Playback",
+  "trimzAdaptiveStream": "Adaptive streaming",
+  "trimzAdaptiveStreamSubtitle": "Adjusts the quality to your connection. Off plays the original file in full quality, about 60 MB per minute.",
+  "trimzAutoplayNext": "Play next episode automatically",
+  "trimzAutoplayNextSubtitle": "Episodes run one after another like one long show",
+  "trimzPlayerSettings": "Player settings",
+  "trimzPlayerSettingsSubtitle": "Gestures, speed, resume and more",
+  "trimzSettingsCatalog": "Catalog",
+  "trimzTranslatedTitles": "Translated titles",
+  "trimzTranslatedTitlesSubtitle": "Rows and titles in the app language where trimz.tv offers them",
+  "trimzSettingsData": "Stored data",
+  "trimzClearHistory": "Clear watch history",
+  "trimzClearHistorySubtitle": "Forget where you left each series",
+  "trimzClearHistoryBody": "Continue watching will be empty and every series starts at episode 1 again.",
+  "trimzClearList": "Clear my list",
+  "trimzClearListBody": "Removes every series from your list.",
+  "trimzCleared": "Cleared",
+  "trimzAbout": "The series come from trimz.tv, where its users make them with AI."
 }

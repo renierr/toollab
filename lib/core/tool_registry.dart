@@ -49,6 +49,7 @@ import 'package:tool_lab/tools/totp_auth/config.dart';
 import 'package:tool_lab/tools/wifi_heatmap/config.dart';
 import 'package:tool_lab/tools/sudoku/config.dart';
 import 'package:tool_lab/tools/news/config.dart';
+import 'package:tool_lab/tools/trimz/config.dart';
 import 'package:tool_lab/tools/x_feed/config.dart';
 import 'package:tool_lab/tools/translator/config.dart';
 import 'package:tool_lab/tools/video_player/config.dart';
@@ -128,5 +129,6 @@ class ToolRegistry {
     NewsTool.config,
     XFeedTool.config,
     TranslatorTool.config,
+    TrimzTool.config,
   ];
 }

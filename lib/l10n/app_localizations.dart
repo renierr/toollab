@@ -31893,6 +31893,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keeps saving and reinvesting until net dividends pay spending minus pension, without selling a share. Uses the dividend yield above.'**
   String get depotSimDividendsHint;
+
+  /// No description provided for @toolNameTrimz.
+  ///
+  /// In en, this message translates to:
+  /// **'Trimz'**
+  String get toolNameTrimz;
+
+  /// No description provided for @toolDescTrimz.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse and watch AI-made series from trimz.tv'**
+  String get toolDescTrimz;
+
+  /// No description provided for @trimzRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get trimzRefresh;
+
+  /// No description provided for @trimzSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search series'**
+  String get trimzSearchHint;
+
+  /// No description provided for @trimzSearchPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by title or creator.'**
+  String get trimzSearchPrompt;
+
+  /// No description provided for @trimzNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No series found for “{query}”.'**
+  String trimzNoResults(String query);
+
+  /// No description provided for @trimzAllGenres.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get trimzAllGenres;
+
+  /// No description provided for @trimzContinueWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue watching'**
+  String get trimzContinueWatching;
+
+  /// No description provided for @trimzMyList.
+  ///
+  /// In en, this message translates to:
+  /// **'My list'**
+  String get trimzMyList;
+
+  /// No description provided for @trimzLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load trimz.tv. Check your connection.'**
+  String get trimzLoadFailed;
+
+  /// No description provided for @trimzEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet.'**
+  String get trimzEmpty;
+
+  /// No description provided for @trimzEpisodeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 episode} other{{count} episodes}}'**
+  String trimzEpisodeCount(int count);
+
+  /// No description provided for @trimzViews.
+  ///
+  /// In en, this message translates to:
+  /// **'{views} views'**
+  String trimzViews(String views);
+
+  /// No description provided for @trimzEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode {number}'**
+  String trimzEpisode(int number);
+
+  /// No description provided for @trimzEpisodeOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Episode {number} of {count}'**
+  String trimzEpisodeOf(int number, int count);
+
+  /// No description provided for @trimzEpisodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{series} · Episode {number}/{count}'**
+  String trimzEpisodeTitle(String series, int number, int count);
+
+  /// No description provided for @trimzRuntimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String trimzRuntimeHours(int hours, int minutes);
+
+  /// No description provided for @trimzRuntimeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String trimzRuntimeMinutes(int minutes);
+
+  /// No description provided for @trimzBy.
+  ///
+  /// In en, this message translates to:
+  /// **'by {name}'**
+  String trimzBy(String name);
+
+  /// No description provided for @trimzPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get trimzPlay;
+
+  /// No description provided for @trimzContinueEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue episode {number}'**
+  String trimzContinueEpisode(int number);
+
+  /// No description provided for @trimzStartOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get trimzStartOver;
+
+  /// No description provided for @trimzAddToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to my list'**
+  String get trimzAddToList;
+
+  /// No description provided for @trimzOnList.
+  ///
+  /// In en, this message translates to:
+  /// **'On my list'**
+  String get trimzOnList;
+
+  /// No description provided for @trimzWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Watched'**
+  String get trimzWatched;
+
+  /// No description provided for @trimzNoEpisodes.
+  ///
+  /// In en, this message translates to:
+  /// **'This series has no playable episodes.'**
+  String get trimzNoEpisodes;
+
+  /// No description provided for @trimzOpenOnWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on trimz.tv'**
+  String get trimzOpenOnWeb;
+
+  /// No description provided for @trimzOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link'**
+  String get trimzOpenFailed;
+
+  /// No description provided for @trimzRemoveFromContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Continue watching?'**
+  String get trimzRemoveFromContinue;
+
+  /// No description provided for @trimzSettingsPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get trimzSettingsPlayback;
+
+  /// No description provided for @trimzAdaptiveStream.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive streaming'**
+  String get trimzAdaptiveStream;
+
+  /// No description provided for @trimzAdaptiveStreamSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjusts the quality to your connection. Off plays the original file in full quality, about 60 MB per minute.'**
+  String get trimzAdaptiveStreamSubtitle;
+
+  /// No description provided for @trimzAutoplayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Play next episode automatically'**
+  String get trimzAutoplayNext;
+
+  /// No description provided for @trimzAutoplayNextSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes run one after another like one long show'**
+  String get trimzAutoplayNextSubtitle;
+
+  /// No description provided for @trimzPlayerSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Player settings'**
+  String get trimzPlayerSettings;
+
+  /// No description provided for @trimzPlayerSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gestures, speed, resume and more'**
+  String get trimzPlayerSettingsSubtitle;
+
+  /// No description provided for @trimzSettingsCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog'**
+  String get trimzSettingsCatalog;
+
+  /// No description provided for @trimzTranslatedTitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated titles'**
+  String get trimzTranslatedTitles;
+
+  /// No description provided for @trimzTranslatedTitlesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows and titles in the app language where trimz.tv offers them'**
+  String get trimzTranslatedTitlesSubtitle;
+
+  /// No description provided for @trimzSettingsData.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored data'**
+  String get trimzSettingsData;
+
+  /// No description provided for @trimzClearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear watch history'**
+  String get trimzClearHistory;
+
+  /// No description provided for @trimzClearHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget where you left each series'**
+  String get trimzClearHistorySubtitle;
+
+  /// No description provided for @trimzClearHistoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue watching will be empty and every series starts at episode 1 again.'**
+  String get trimzClearHistoryBody;
+
+  /// No description provided for @trimzClearList.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear my list'**
+  String get trimzClearList;
+
+  /// No description provided for @trimzClearListBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes every series from your list.'**
+  String get trimzClearListBody;
+
+  /// No description provided for @trimzCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared'**
+  String get trimzCleared;
+
+  /// No description provided for @trimzAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'The series come from trimz.tv, where its users make them with AI.'**
+  String get trimzAbout;
 }
 
 class _AppLocalizationsDelegate

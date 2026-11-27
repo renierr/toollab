@@ -61,6 +61,9 @@ class VideoPlayerPage extends StatefulWidget {
   /// Offers previous / next over these; [source] should be one of them.
   final List<VideoPlaylistItem> playlist;
 
+  /// Starts the next playlist item when one ends.
+  final bool autoAdvance;
+
   /// Every playback state change, with the source it belongs to.
   final VideoProgressCallback? onProgress;
 
@@ -76,6 +79,7 @@ class VideoPlayerPage extends StatefulWidget {
     this.resumeStore,
     this.browseFolder = false,
     this.playlist = const [],
+    this.autoAdvance = false,
     this.onProgress,
   });
 
@@ -91,6 +95,7 @@ class VideoPlayerPage extends StatefulWidget {
     VideoResumeStore? resumeStore,
     bool browseFolder = false,
     List<VideoPlaylistItem> playlist = const [],
+    bool autoAdvance = false,
     VideoProgressCallback? onProgress,
   }) async {
     final settings = await SettingsService.videoPlayerSettings();
@@ -108,6 +113,7 @@ class VideoPlayerPage extends StatefulWidget {
           resumeStore: resumeStore,
           browseFolder: browseFolder,
           playlist: playlist,
+          autoAdvance: autoAdvance,
           onProgress: onProgress,
         ),
       ),
@@ -129,6 +135,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
   late List<VideoPlayerAction> _actions = widget.actions;
   List<VideoPlaylistItem> _playlist = const [];
   int _playlistIndex = -1;
+  int? _advancedFrom;
   late final VideoProgressSaver? _saver =
       widget.resumeStore == null || widget.live
       ? null
@@ -242,6 +249,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
     if (!mounted) return;
     setState(() {
       _playlistIndex = index;
+      _advancedFrom = null;
       _title = item.title;
       _loop = item.loop;
       _actions = item.actions ?? widget.actions;
@@ -382,9 +390,24 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> with DisposeCleanup {
       capture: () =>
           captureVideoThumbnail(backend: _backend, frameKey: _frameKey),
     );
+    if (state.completed && _advanceFromEnd()) return;
     if ((state.completed || state.error != null) && !_controlsVisible) {
       _showControls();
     }
+  }
+
+  /// A completed state can repeat; only the first one per item advances.
+  bool _advanceFromEnd() {
+    final next = _playlistIndex + 1;
+    if (!widget.autoAdvance ||
+        _playlistIndex < 0 ||
+        next >= _playlist.length ||
+        _advancedFrom == _playlistIndex) {
+      return false;
+    }
+    _advancedFrom = _playlistIndex;
+    unawaited(_playAt(next));
+    return true;
   }
 
   void _fallBack() {
