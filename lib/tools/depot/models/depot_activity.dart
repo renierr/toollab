@@ -51,6 +51,9 @@ class DepotActivity {
   /// gross amount against the booked total — never exported to Parqet.
   final double? bookedTotal;
 
+  /// Shares are nominal / 100 and the price is per 100 nominal.
+  final bool isBond;
+
   const DepotActivity({
     required this.type,
     required this.date,
@@ -65,9 +68,17 @@ class DepotActivity {
     this.sourceCurrency = 'EUR',
     this.fxRate,
     this.bookedTotal,
+    this.isBond = false,
   });
 
   bool get isForeignCurrency => sourceCurrency != 'EUR';
+
+  /// Parqet rejects a bond booked in any currency but its own.
+  String get parqetCurrency =>
+      isBond && isForeignCurrency && fxRate != null ? sourceCurrency : 'EUR';
+
+  /// Converts the stored EUR values into [parqetCurrency].
+  double get parqetRate => parqetCurrency == 'EUR' ? 1 : fxRate!;
 
   DepotActivity copyWith({
     DepotActivityType? type,
@@ -83,6 +94,7 @@ class DepotActivity {
     String? sourceCurrency,
     double? fxRate,
     double? bookedTotal,
+    bool? isBond,
   }) {
     return DepotActivity(
       type: type ?? this.type,
@@ -98,6 +110,7 @@ class DepotActivity {
       sourceCurrency: sourceCurrency ?? this.sourceCurrency,
       fxRate: fxRate ?? this.fxRate,
       bookedTotal: bookedTotal ?? this.bookedTotal,
+      isBond: isBond ?? this.isBond,
     );
   }
 }

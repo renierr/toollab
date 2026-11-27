@@ -21,8 +21,8 @@ class ParqetActivityUpload {
     DepotBank.dkb => 'dkb',
     DepotBank.ing => 'ing',
     DepotBank.postbank => 'postbank',
-    // Parqet's broker id for Trade Republic is unverified.
-    DepotBank.tradeRepublic || DepotBank.unknown => null,
+    DepotBank.tradeRepublic => 'trade_republic',
+    DepotBank.unknown => null,
   };
 
   /// Stable per booking, so Parqet drops a second upload of the same PDF.
@@ -39,6 +39,7 @@ class ParqetActivityUpload {
     // A dividend may come without a share count; Parqet still wants both.
     final shares = a.shares > 0 ? a.shares : 1.0;
     final price = a.price > 0 ? a.price : a.amount / shares;
+    final rate = a.parqetRate;
     // Only ISIN securities are uploaded; insurance/P2P holdings need their
     // dedicated create endpoints and amount-based activities.
     return {
@@ -53,10 +54,10 @@ class ParqetActivityUpload {
         12,
       ).toIso8601String(),
       'shares': shares,
-      'price': price,
-      'tax': a.tax.abs(),
-      'fee': a.fee.abs(),
-      'currency': 'EUR',
+      'price': price * rate,
+      'tax': a.tax.abs() * rate,
+      'fee': a.fee.abs() * rate,
+      'currency': a.parqetCurrency,
       'broker': ?_broker(statement.bank),
       'description': statement.fileName,
       'externalId': externalId(a),

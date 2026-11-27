@@ -89,6 +89,8 @@ class TradeRepublicParser {
     double? rowPrice;
     double? rowAmount;
     var rowCurrency = 'EUR';
+    String? quantityUnit;
+    var pricedInPercent = false;
     // Some payout advices print the ISIN between amount and quantity.
     var nameText =
         (isin.isEmpty ? block.body : block.body.replaceAll(isin, ' '))
@@ -105,9 +107,12 @@ class TradeRepublicParser {
         rowAmount = numbers.parse(row, 1);
         rowCurrency = row.group(3)!;
         quantity = numbers.parse(row, 4);
+        quantityUnit = row.group(6);
       } else {
         quantity = numbers.parse(row, 1);
+        quantityUnit = row.group(3);
         rowPrice = numbers.parse(row, 4);
+        pricedInPercent = row.group(6) == '%';
         rowAmount = numbers.parse(row, 7);
         rowCurrency = row.group(9)!;
       }
@@ -156,6 +161,27 @@ class TradeRepublicParser {
         ? amount / shares
         : null;
 
+    // A bond is listed in the currency of its nominal. A trade prints no
+    // rate, but nominal times price against the EUR amount implies it.
+    final nominalCurrency =
+        quantityUnit != null && RegExp(r'^[A-Z]{3}$').hasMatch(quantityUnit)
+        ? quantityUnit
+        : rowCurrency;
+    final sourceCurrency = isBond ? nominalCurrency : rowCurrency;
+    double? fxRate;
+    if (sourceCurrency != 'EUR') {
+      fxRate = billing.fx[sourceCurrency];
+      if (fxRate == null &&
+          pricedInPercent &&
+          rowCurrency == 'EUR' &&
+          quantity != null &&
+          rowPrice != null &&
+          rowAmount != null &&
+          rowAmount != 0) {
+        fxRate = quantity * rowPrice / 100 / rowAmount;
+      }
+    }
+
     final activity = DepotActivity(
       type: type,
       date: _date(kind, lines, booking.date),
@@ -170,9 +196,10 @@ class TradeRepublicParser {
       amount: amount ?? 0,
       tax: tax,
       fee: fee,
-      sourceCurrency: rowCurrency,
-      fxRate: rowCurrency == 'EUR' ? null : billing.fx[rowCurrency],
+      sourceCurrency: sourceCurrency,
+      fxRate: fxRate,
       bookedTotal: total,
+      isBond: isBond,
     );
 
     return ParsedStatement(

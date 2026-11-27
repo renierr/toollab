@@ -420,14 +420,19 @@ one document to the next. It reads German statements only: buys, sales, savings 
 dividends and distributions, bond coupons (`ZINSZAHLUNG`) and redemptions (`TILGUNG`).
 Tax corrections and cash-account interest are flagged as unknown, and a sale whose taxes
 come back as a refund shows a total mismatch, because a Parqet activity cannot carry a
-negative tax. Sent activities carry no broker, because Parqet's broker id for Trade Republic
-has not been confirmed.
+negative tax. Sent activities carry the broker `trade_republic`.
 
 **Bonds** follow Parqet's convention: shares are the nominal divided by 100, and the price is
 EUR per 100 nominal, so a coupon's price is its rate in percent. Coupons are sent as
 dividends; Parqet shows them as "Kupon / Zins". Accrued interest (Stückzinsen) goes into the
-amount: paid interest raises it on a buy, received interest raises it on a sale. Bonds
-quoted in a foreign currency get their price from the EUR amount.
+amount: paid interest raises it on a buy, received interest raises it on a sale.
+
+Parqet rejects a bond booked in any currency but its own, and its create-activity body
+has no exchange-rate field. A bond with a foreign-currency nominal is therefore sent (and
+written to the CSV's `currency` column) in that currency: price, tax and fee are converted
+from the stored EUR values. Coupons use the rate printed on the statement. A trade prints
+none, so the rate comes from nominal times price against the EUR amount. Every other
+activity is sent in EUR.
 
 Every sent activity carries an `externalId` derived from the statement, so sending the
 same PDF twice does not create duplicates. The sync after sending picks the new bookings

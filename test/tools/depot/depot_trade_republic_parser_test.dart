@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'offline_test_support.dart';
 import 'package:tool_lab/tools/depot/models/depot_activity.dart';
+import 'package:tool_lab/tools/depot/parqet/parqet_activity_upload.dart';
+import 'package:tool_lab/tools/depot/parqet_csv.dart';
 import 'package:tool_lab/tools/depot/parsing/statement_parser.dart';
 
 // Synthetic Trade Republic statements in their layout, with invented figures.
@@ -121,6 +123,60 @@ Kapitalertragsteuer -1,25 EUR
 Solidaritätszuschlag -0,07 EUR
 ''';
 
+/// A USD bond in the current layout: name, ISIN and figures on separate
+/// lines, no printed rate. 2.000 USD at 80,00 % = 1.600 USD = 1.454,55 EUR,
+/// so the rate is 1,1000 USD per EUR.
+const _usdBondBuy = '''
+TRADE REPUBLIC BANK GMBH BRUNNENSTRASSE 19-21 10119 BERLIN
+DATUM 01.10.2026
+Trade Republic Bank GmbH
+www.traderepublic.com Sitz der Gesellschaft: Berlin
+SEITE 1 von 2
+WERTPAPIERABRECHNUNG
+ÜBERSICHT
+Market-Order BUY am 01.10.2026 um 11:54 (Europe/Berlin).
+POSITION NOMINALE PREIS BETRAG
+Mai 2045
+ISIN: US037833BH21
+2.000 USD 80,00 % 1.454,55 EUR
+GESAMT 1.454,55 EUR
+ABRECHNUNG
+POSITION BETRAG
+Abwicklungspauschale -1,00 EUR
+Stückzinsen -9,09 EUR
+Kapitalertragsteuer 0,00 EUR
+Solidaritätszuschlag 0,00 EUR
+GESAMT -1.464,64 EUR
+BUCHUNG
+VERRECHNUNGSKONTO WERTSTELLUNG BETRAG
+DE00100000000000000000 2026-10-05 -1.464,64 EUR
+''';
+
+/// 2000.00 USD at 2.5000 % = 50.00 USD = 40.00 EUR at 1.2500.
+const _usdCoupon = '''
+TRADE REPUBLIC BANK GMBH BRUNNENSTRASSE 19-21 10119 BERLIN
+DATUM 13.11.2026
+Trade Republic Bank GmbH
+www.traderepublic.com Sitz der Gesellschaft: Berlin
+ZINSZAHLUNG
+ÜBERSICHT
+Zinszahlung mit Ex-Datum 13.11.2026.
+POSITION NOMINALE COUPON BETRAG
+Mai 2045
+US037833BH21 2000.00 USD 2.5000 % 50.00 USD
+GESAMT 50.00 USD
+ABRECHNUNG
+POSITION BETRAG
+Zwischensumme 50.00 USD
+Zwischensumme 1.2500 USD/EUR 40.00 EUR
+Kapitalertragsteuer 1.2500 USD/EUR -10.00 EUR
+Solidaritätszuschlag 1.2500 USD/EUR -0.55 EUR
+GESAMT 29.45 EUR
+BUCHUNG
+VERRECHNUNGSKONTO DATUM DER ZAHLUNG BETRAG
+DE00100000000000000000 13.11.2026 29.45 EUR
+''';
+
 const _taxCorrection = '''
 TRADE REPUBLIC BANK GMBH  BRUNNENSTRASSE 19-21  10119 BERLIN
 DEPOT 1234567890
@@ -215,6 +271,58 @@ void main() {
       expect(a.sourceCurrency, 'USD');
       expect(a.fxRate, closeTo(1.25, 1e-9));
       expect(DepotStatementParser.revalidate(a), isEmpty);
+    });
+  });
+
+  group('Trade Republic USD bond', () {
+    ParsedStatement parse(String text) =>
+        DepotStatementParser.parse(id: 'x', fileName: 'tr.pdf', rawText: text);
+
+    test('implies the rate of a buy from nominal, price and EUR amount', () {
+      final a = _parse(_usdBondBuy);
+
+      expect(a.isBond, isTrue);
+      expect(a.shares, closeTo(20, 1e-9));
+      expect(a.amount, closeTo(1463.64, 0.005));
+      expect(a.sourceCurrency, 'USD');
+      expect(a.fxRate, closeTo(1.1, 1e-5));
+      expect(DepotStatementParser.revalidate(a), isEmpty);
+    });
+
+    test('sends the buy to Parqet in USD per 100 nominal', () {
+      final body = ParqetActivityUpload.body(parse(_usdBondBuy));
+
+      expect(body['currency'], 'USD');
+      expect(body['broker'], 'trade_republic');
+      expect(body['shares'], closeTo(20, 1e-9));
+      expect(body['price'] as double, closeTo(80.50, 0.001));
+      expect(body['fee'] as double, closeTo(1.10, 0.0001));
+    });
+
+    test('sends the coupon in USD at its rate in percent', () {
+      final statement = parse(_usdCoupon);
+      final body = ParqetActivityUpload.body(statement);
+
+      expect(statement.activity!.type, DepotActivityType.dividend);
+      expect(statement.issues, isEmpty);
+      expect(body['currency'], 'USD');
+      expect(body['shares'], closeTo(20, 1e-9));
+      expect(body['price'] as double, closeTo(2.5, 1e-9));
+      expect(body['tax'] as double, closeTo(13.1875, 1e-9));
+    });
+
+    test('writes the bond in USD and other rows in EUR to the CSV', () {
+      final csv = ParqetCsv.build([
+        _parse(_usdBondBuy),
+        _parse(_savingsPlan),
+      ]).trim().split('\n');
+
+      expect(csv[1], endsWith(';US037833BH21;USD'));
+      final row = csv[1].split(';');
+      expect(double.parse(row[1]), closeTo(80.50, 0.001));
+      expect(row[2], '20');
+      expect(double.parse(row[3]), closeTo(1610, 0.01));
+      expect(csv[2], endsWith(';EUR'));
     });
   });
 
