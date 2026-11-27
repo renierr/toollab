@@ -572,47 +572,68 @@ class TreadmillControlState extends ChangeNotifier {
     notifyListeners();
     if (stopScanning) await stopScan();
 
-    const int maxAttempts = 4;
-    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-      // Stop retrying if the user cancelled, switched target, or the OS
-      // already reported a real connection via _onConnectionChange.
-      if (_treadmillConnectAbort ||
-          treadmillDeviceId != deviceId ||
-          treadmillConnection == BleConnectionState.connected) {
-        return;
+    bool wanted() => !_treadmillConnectAbort && treadmillDeviceId == deviceId;
+    if (await _connectWithRetry(deviceId, wanted) || !wanted()) return;
+    treadmillConnection = BleConnectionState.disconnected;
+    treadmillDeviceId = null;
+    treadmillName = null;
+    notifyListeners();
+  }
+
+  static const _connectAttempts = 3;
+  static const _connectTimeout = Duration(seconds: 15);
+
+  // One in-flight connect per device: a second native connect while the first
+  // is pending replaces its GATT client without closing it.
+  final Map<String, Future<bool>> _connectInFlight = {};
+
+  /// Connects [deviceId] while [wanted] holds. Its disconnect events are not
+  /// seen as a drop: the caller keeps the device in the connecting state.
+  Future<bool> _connectWithRetry(
+    String deviceId,
+    bool Function() wanted,
+  ) async {
+    for (var attempt = 1; attempt <= _connectAttempts; attempt++) {
+      if (!wanted()) return false;
+      if (await _tryConnect(deviceId)) {
+        if (wanted()) return true;
+        await _releaseLink(deviceId);
+        return false;
       }
-      try {
-        await UniversalBle.connect(deviceId);
-        // A successful return only means the request was accepted; the green
-        // "connected" state is set by _onConnectionChange when the link is up.
-        return;
-      } catch (e) {
-        errorLog(
-          '[TreadmillControl] Connect attempt $attempt/$maxAttempts failed: $e',
-        );
-        // The link can still come up via the callback shortly after a throw.
-        if (treadmillConnection == BleConnectionState.connected ||
-            _treadmillConnectAbort ||
-            treadmillDeviceId != deviceId) {
-          return;
-        }
-        if (attempt < maxAttempts) {
-          await Future.delayed(Duration(milliseconds: 600 * attempt));
-        }
+      errorLog(
+        '[TreadmillControl] Connect $deviceId attempt '
+        '$attempt/$_connectAttempts failed',
+      );
+      if (attempt < _connectAttempts) {
+        await Future<void>.delayed(Duration(milliseconds: 600 * attempt));
       }
     }
+    return false;
+  }
 
-    // Exhausted retries — only downgrade if no real connection arrived.
-    if (treadmillConnection != BleConnectionState.connected &&
-        treadmillDeviceId == deviceId &&
-        !_treadmillConnectAbort) {
-      treadmillConnection = BleConnectionState.disconnected;
-      treadmillDeviceId = null;
-      treadmillName = null;
-      notifyListeners();
-      errorLog(
-        '[TreadmillControl] Connection failed after $maxAttempts attempts',
-      );
+  Future<bool> _tryConnect(String deviceId) =>
+      _connectInFlight[deviceId] ??= _connectOnce(
+        deviceId,
+      ).whenComplete(() => _connectInFlight.remove(deviceId));
+
+  Future<bool> _connectOnce(String deviceId) async {
+    try {
+      await UniversalBle.connect(deviceId, timeout: _connectTimeout);
+      return true;
+    } catch (e) {
+      debugLog('[TreadmillControl] Connect $deviceId failed: $e');
+      // A pending client left behind can connect later unseen and hold the
+      // device until the app is killed.
+      await _releaseLink(deviceId);
+      return false;
+    }
+  }
+
+  Future<void> _releaseLink(String deviceId) async {
+    try {
+      await UniversalBle.disconnect(deviceId);
+    } catch (e) {
+      debugLog('[TreadmillControl] Release $deviceId failed: $e');
     }
   }
 
@@ -667,13 +688,13 @@ class TreadmillControlState extends ChangeNotifier {
     _hrmReconnecting = false;
     notifyListeners();
     if (stopScanning) await stopScan();
-    try {
-      await UniversalBle.connect(deviceId);
-    } catch (e) {
-      hrmConnection = BleConnectionState.disconnected;
-      notifyListeners();
-      errorLog('[TreadmillControl] HRM Connection failed: $e');
-    }
+
+    bool wanted() => hrmDeviceId == deviceId;
+    if (await _connectWithRetry(deviceId, wanted) || !wanted()) return;
+    hrmConnection = BleConnectionState.disconnected;
+    hrmDeviceId = null;
+    hrmName = null;
+    notifyListeners();
   }
 
   Future<void> disconnectHrm({bool notify = true}) async {
@@ -704,6 +725,11 @@ class TreadmillControlState extends ChangeNotifier {
         ? BleConnectionState.connected
         : BleConnectionState.disconnected;
     if (deviceId == treadmillDeviceId) {
+      // A failed attempt; the connect or reconnect loop decides what follows.
+      if (state == BleConnectionState.disconnected &&
+          treadmillConnection == BleConnectionState.connecting) {
+        return;
+      }
       if (state == BleConnectionState.disconnected &&
           _shouldReconnect(_treadmillReconnecting)) {
         _treadmillReconnecting = true;
@@ -829,6 +855,10 @@ class TreadmillControlState extends ChangeNotifier {
       notifyListeners();
     } else if (deviceId == hrmDeviceId) {
       if (state == BleConnectionState.disconnected &&
+          hrmConnection == BleConnectionState.connecting) {
+        return;
+      }
+      if (state == BleConnectionState.disconnected &&
           _shouldReconnect(_hrmReconnecting)) {
         _hrmReconnecting = true;
         hrmConnection = BleConnectionState.connecting;
@@ -904,18 +934,13 @@ class TreadmillControlState extends ChangeNotifier {
       if (!wanted() || !hasActiveSession) break;
       attempt++;
       debugLog('[TreadmillControl] Reconnect $deviceId attempt $attempt');
-      try {
-        await UniversalBle.connect(deviceId);
-      } catch (e) {
-        debugLog('[TreadmillControl] Reconnect attempt $attempt failed: $e');
-      }
+      final connected = await _tryConnect(deviceId);
       // The user disconnected or picked another device while connecting.
       if (treadmill ? treadmillDeviceId != deviceId : hrmDeviceId != deviceId) {
-        try {
-          await UniversalBle.disconnect(deviceId);
-        } catch (_) {}
+        if (connected) await _releaseLink(deviceId);
         return;
       }
+      if (connected) return;
     }
     if (!wanted()) return;
     errorLog('[TreadmillControl] Reconnect to $deviceId gave up');
