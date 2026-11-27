@@ -27,6 +27,7 @@ class DepotPortfolioLabels {
         DepotHoldingKind.fund => l10n.depotKindFunds,
         DepotHoldingKind.fundDistributing => l10n.depotKindFundDistributing,
         DepotHoldingKind.fundAccumulating => l10n.depotKindFundAccumulating,
+        DepotHoldingKind.bond => l10n.depotKindBonds,
         DepotHoldingKind.crypto => l10n.depotAssetCrypto,
         DepotHoldingKind.commodity => l10n.depotAssetCommodity,
         DepotHoldingKind.cash => l10n.depotAssetCash,
@@ -50,6 +51,7 @@ class DepotPortfolioLabels {
         DepotHoldingKind.etf => l10n.depotKindEtf,
         DepotHoldingKind.etc => l10n.depotKindEtc,
         DepotHoldingKind.fund => l10n.depotKindFund,
+        DepotHoldingKind.bond => l10n.depotKindBond,
         _ => kinds(l10n, kind),
       };
 

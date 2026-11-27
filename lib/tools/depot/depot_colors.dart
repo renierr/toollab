@@ -9,6 +9,7 @@ class DepotColors {
   DepotColors._();
 
   static const Color etc = Color(0xFFB8860B);
+  static const Color bond = Color(0xFF7986CB);
 
   // The two funds of an overlap pair, far apart in hue.
   static const Color overlapFirst = AppTheme.accentBlue;
@@ -31,6 +32,7 @@ class DepotColors {
     DepotHoldingKind.fund ||
     DepotHoldingKind.fundDistributing ||
     DepotHoldingKind.fundAccumulating => AppTheme.accentTeal,
+    DepotHoldingKind.bond => bond,
     DepotHoldingKind.crypto => AppTheme.accentAmber,
     DepotHoldingKind.commodity => AppTheme.accentAmberLight,
     DepotHoldingKind.cash => AppTheme.statusOrange,

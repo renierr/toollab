@@ -21509,6 +21509,54 @@ abstract class AppLocalizations {
   /// **'Funds'**
   String get depotKindFunds;
 
+  /// No description provided for @depotKindBond.
+  ///
+  /// In en, this message translates to:
+  /// **'Bond'**
+  String get depotKindBond;
+
+  /// No description provided for @depotKindBonds.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonds'**
+  String get depotKindBonds;
+
+  /// No description provided for @depotDetailNominal.
+  ///
+  /// In en, this message translates to:
+  /// **'Nominal'**
+  String get depotDetailNominal;
+
+  /// No description provided for @depotDetailBondPurchasePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Ø purchase price per 100 nominal'**
+  String get depotDetailBondPurchasePrice;
+
+  /// No description provided for @depotDetailBondPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per 100 nominal'**
+  String get depotDetailBondPrice;
+
+  /// No description provided for @depotDetailCoupon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon'**
+  String get depotDetailCoupon;
+
+  /// No description provided for @depotDetailMaturity.
+  ///
+  /// In en, this message translates to:
+  /// **'Maturity'**
+  String get depotDetailMaturity;
+
+  /// No description provided for @depotDetailCoupons.
+  ///
+  /// In en, this message translates to:
+  /// **'Coupons (total)'**
+  String get depotDetailCoupons;
+
   /// No description provided for @depotDetailType.
   ///
   /// In en, this message translates to:

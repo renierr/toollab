@@ -12175,6 +12175,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotKindFunds => 'Fonds';
 
   @override
+  String get depotKindBond => 'Anleihe';
+
+  @override
+  String get depotKindBonds => 'Anleihen';
+
+  @override
+  String get depotDetailNominal => 'Nominale';
+
+  @override
+  String get depotDetailBondPurchasePrice => 'Ø Kaufkurs je 100 Nominale';
+
+  @override
+  String get depotDetailBondPrice => 'Kurs je 100 Nominale';
+
+  @override
+  String get depotDetailCoupon => 'Kupon';
+
+  @override
+  String get depotDetailMaturity => 'Fälligkeit';
+
+  @override
+  String get depotDetailCoupons => 'Kupons (gesamt)';
+
+  @override
   String get depotDetailType => 'Typ';
 
   @override

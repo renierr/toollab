@@ -129,7 +129,8 @@ class DepotRisk {
 
       for (final h in open) {
         if (h.assetType != DepotAssetType.security ||
-            h.kind == DepotHoldingKind.etc) {
+            h.kind == DepotHoldingKind.etc ||
+            h.kind == DepotHoldingKind.bond) {
           other.add(
             DepotRiskContribution(
               holding: h,

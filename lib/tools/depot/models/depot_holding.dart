@@ -22,7 +22,7 @@ enum DepotAssetType {
 }
 
 /// What a holding is, with securities split further. Parqet only reports
-/// "security", so stock, ETF, ETC and fund are told apart by the name.
+/// "security", so stock, ETF, ETC, fund and bond are told apart by the name.
 enum DepotHoldingKind {
   stock,
   stockDividend,
@@ -37,6 +37,7 @@ enum DepotHoldingKind {
   fund,
   fundDistributing,
   fundAccumulating,
+  bond,
   crypto,
   commodity,
   cash,
@@ -62,6 +63,13 @@ enum DepotHoldingKind {
   );
   static final _accumulating = RegExp(
     r'\b(ACC|ACCUMULATING|THESAURIEREND)\b|\(C\)|\b\d+C\b',
+    caseSensitive: false,
+  );
+
+  static final _bond = RegExp(
+    r'^\s*\d{1,2}(?:[.,]\d{1,4})?\s?%|\bAnl\.'
+    r'|\b(Anleihen?|Bonds?|Notes?|MTN|FLR|Schuldverschreibung(en)?'
+    r'|Pfandbriefe?|Obligation(en)?|Schatzanweisung(en)?|Treasury)\b',
     caseSensitive: false,
   );
 
@@ -94,6 +102,8 @@ enum DepotHoldingKind {
               ? etf
               : _fund.hasMatch(name)
               ? fund
+              : _bond.hasMatch(name)
+              ? bond
               : stock,
         DepotAssetType.crypto => crypto,
         DepotAssetType.commodity => commodity,
@@ -163,6 +173,25 @@ class DepotHolding {
   double get totalGain => unrealizedGain + realizedGain + dividends;
 
   DepotHoldingKind get kind => DepotHoldingKind.of(assetType, name);
+
+  static final _coupon = RegExp(r'^\s*(\d{1,2}(?:[.,]\d{1,4})?)\s?%');
+  static final _maturity = RegExp(r'\((?:(\d{4})|\d{2}/(\d{2}))\)\s*$');
+
+  /// Coupon rate in percent, as the name prints it ("4,375% ...").
+  double? get couponRate {
+    final match = _coupon.firstMatch(name);
+    return match == null
+        ? null
+        : double.tryParse(match.group(1)!.replaceAll(',', '.'));
+  }
+
+  /// From "(2045)" or the "(15/45)" term of a WM-style bond name.
+  int? get maturityYear {
+    final match = _maturity.firstMatch(name);
+    if (match == null) return null;
+    final full = match.group(1);
+    return full != null ? int.parse(full) : 2000 + int.parse(match.group(2)!);
+  }
 
   /// ISIN or crypto symbol, whichever identifies the asset.
   String? get identifier => isin ?? symbol;

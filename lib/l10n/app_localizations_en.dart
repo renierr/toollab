@@ -12090,6 +12090,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotKindFunds => 'Funds';
 
   @override
+  String get depotKindBond => 'Bond';
+
+  @override
+  String get depotKindBonds => 'Bonds';
+
+  @override
+  String get depotDetailNominal => 'Nominal';
+
+  @override
+  String get depotDetailBondPurchasePrice => 'Ø purchase price per 100 nominal';
+
+  @override
+  String get depotDetailBondPrice => 'Price per 100 nominal';
+
+  @override
+  String get depotDetailCoupon => 'Coupon';
+
+  @override
+  String get depotDetailMaturity => 'Maturity';
+
+  @override
+  String get depotDetailCoupons => 'Coupons (total)';
+
+  @override
   String get depotDetailType => 'Type';
 
   @override

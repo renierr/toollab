@@ -79,11 +79,12 @@ class DepotAllocationState extends ChangeNotifier {
 
   /// The reported instrument type wins over the name heuristic, which files
   /// every security without "ETF" or "Fonds" in its name as a stock. An ETC
-  /// name wins back, as Yahoo reports most ETCs as "ETF".
+  /// name wins back, as Yahoo reports most ETCs as "ETF"; so does a bond.
   DepotHoldingKind kindOf(DepotHolding holding) {
     final named = holding.kind;
     if (holding.assetType != DepotAssetType.security ||
-        named == DepotHoldingKind.etc) {
+        named == DepotHoldingKind.etc ||
+        named == DepotHoldingKind.bond) {
       return named;
     }
     return profileOf(holding)?.kind ?? named;
@@ -120,7 +121,8 @@ class DepotAllocationState extends ChangeNotifier {
     for (final holding in holdings) {
       if (holding.isSold ||
           holding.currentValue <= 0 ||
-          holding.assetType != DepotAssetType.security) {
+          holding.assetType != DepotAssetType.security ||
+          holding.kind == DepotHoldingKind.bond) {
         continue;
       }
       final key = _keyOf(holding);
@@ -234,8 +236,11 @@ class DepotAllocationState extends ChangeNotifier {
   /// How long after the last attempt [holding] is looked up again; null when
   /// its profile needs nothing.
   Duration? _refetchAfter(DepotHolding holding, DepotAssetProfile? profile) {
-    // An ETC has no sector, country or holdings to look up.
-    if (holding.kind == DepotHoldingKind.etc) return null;
+    // An ETC or bond has no sector, country or holdings to look up.
+    if (holding.kind == DepotHoldingKind.etc ||
+        holding.kind == DepotHoldingKind.bond) {
+      return null;
+    }
     if (profile == null) return retryAfter;
     final kind = profile.kind ?? holding.kind;
     if (_isFund(kind)) {

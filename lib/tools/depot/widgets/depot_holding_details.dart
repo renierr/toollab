@@ -53,6 +53,10 @@ class DepotHoldingDetails extends StatelessWidget {
     final startPrice = performance?.startPrice;
     final earliest = h.earliestActivity;
     final isin = h.assetType == DepotAssetType.security ? h.isin : null;
+    // Parqet books a bond as nominal / 100 shares priced per 100 nominal.
+    final isBond = h.kind == DepotHoldingKind.bond;
+    final coupon = isBond ? h.couponRate : null;
+    final maturity = isBond ? h.maturityYear : null;
     final linkKind = DepotDetailsLinkKind.of(h.kind);
     final hasSales = context.select<DepotPortfolioState?, bool>(
       (state) => state?.hasSalesFor(h) ?? false,
@@ -148,11 +152,25 @@ class DepotHoldingDetails extends StatelessWidget {
             plan.day,
           ),
         ),
-      if (h.shares != 0) (l10n.depotDetailShares, format.shares(h.shares)),
+      if (coupon != null)
+        (l10n.depotDetailCoupon, '${format.shares(coupon)} %'),
+      if (maturity != null) (l10n.depotDetailMaturity, '$maturity'),
+      if (h.shares != 0)
+        isBond
+            ? (l10n.depotDetailNominal, format.shares(h.shares * 100))
+            : (l10n.depotDetailShares, format.shares(h.shares)),
       if (h.purchasePrice != 0)
-        (l10n.depotDetailPurchasePrice, format.money(h.purchasePrice)),
+        (
+          isBond
+              ? l10n.depotDetailBondPurchasePrice
+              : l10n.depotDetailPurchasePrice,
+          format.money(h.purchasePrice),
+        ),
       if (h.currentPrice != 0)
-        (l10n.depotDetailCurrentPrice, format.money(h.currentPrice)),
+        (
+          isBond ? l10n.depotDetailBondPrice : l10n.depotDetailCurrentPrice,
+          format.money(h.currentPrice),
+        ),
       if (startPrice != null && startPrice != 0)
         (
           period == DepotPeriod.today
@@ -186,7 +204,10 @@ class DepotHoldingDetails extends StatelessWidget {
             '(${format.percent(h.unrealizedReturn)})',
       ),
       (l10n.depotDetailRealized, format.money(h.realizedGain, signed: true)),
-      (l10n.depotDetailDividends, format.money(h.dividends)),
+      (
+        isBond ? l10n.depotDetailCoupons : l10n.depotDetailDividends,
+        format.money(h.dividends),
+      ),
       if (dividendYield != null)
         (
           l10n.depotDetailDividendYield,
