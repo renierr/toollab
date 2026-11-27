@@ -5,7 +5,8 @@ enum DepotDetailsLinkKind {
   etf('https://www.finanzfluss.de/informer/etf/{isin}/'),
   etc('https://www.finanzfluss.de/informer/etf/{isin}/'),
   fund('https://www.finanzfluss.de/informer/fonds/{isin}/'),
-  stock('https://app.parqet.com/aktie/{isin}');
+  stock('https://app.parqet.com/aktie/{isin}'),
+  bond('https://www.onvista.de/anleihen/{isin}');
 
   final String defaultTemplate;
 
@@ -16,6 +17,7 @@ enum DepotDetailsLinkKind {
     DepotHoldingKind.etc => etc,
     DepotHoldingKind.fund => fund,
     DepotHoldingKind.stock => stock,
+    DepotHoldingKind.bond => bond,
     _ => null,
   };
 }

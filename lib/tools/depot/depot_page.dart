@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -109,6 +111,20 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
       wishlist.reloadFromStore();
       wishlist.requestSync();
     });
+
+    // New holdings after a load or sync: onvista details and opted-in logos.
+    var holdings = portfolioState.holdings;
+    void onHoldings() {
+      final current = portfolioState.holdings;
+      if (identical(current, holdings)) return;
+      holdings = current;
+      unawaited(allocation.ensureDetails(current));
+      unawaited(logos.downloadNew());
+    }
+
+    portfolioState.addListener(onHoldings);
+    onDispose(() => portfolioState.removeListener(onHoldings));
+    if (holdings.isNotEmpty) unawaited(allocation.ensureDetails(holdings));
 
     final sharingSub = SharingService.instance.onSharedFile.listen(
       _loadSharedFile,

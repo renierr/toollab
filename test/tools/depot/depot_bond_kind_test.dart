@@ -2,7 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tool_lab/tools/depot/dividends/depot_dividend_calendar.dart';
 import 'package:tool_lab/tools/depot/market_data/onvista_api.dart';
 import 'package:tool_lab/tools/depot/models/depot_dividend.dart';
+import 'package:tool_lab/tools/depot/models/depot_etc_profile.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
+import 'package:tool_lab/tools/depot/widgets/depot_holding_avatar.dart';
 
 DepotHolding _holding(String name, {double shares = 0}) => DepotHolding(
   id: name,
@@ -79,6 +81,40 @@ void main() {
       DepotHoldingKind.etf,
     );
     expect(_holding('Apple Inc.').kind, DepotHoldingKind.stock);
+  });
+
+  test('a bond avatar skips the coupon in its initials', () {
+    expect(DepotHoldingAvatar.initials('4,375% Apple Anleihe (2045)'), 'AA');
+    expect(DepotHoldingAvatar.initials('EUWAX Gold II'), 'EG');
+    expect(DepotHoldingAvatar.initials('3M'), '3');
+  });
+
+  test('onvista derivative snapshot describes an ETC', () {
+    final etc = OnvistaApi.parseEtc({
+      'derivativesDetails': {
+        'nameProductIssuer': 'Boerse Stuttgart ETC',
+        'nameTypeSettlement': 'Physisch',
+        'openEnded': true,
+      },
+      'derivativesFigure': {'spreadAskPct': 1.01},
+      'derivativesUnderlyingList': {
+        'list': [
+          {
+            'instrument': {'name': '100 GRAMM GOLD'},
+            'quote': null,
+          },
+          {
+            'instrument': {'name': 'Goldpreis'},
+            'quote': {'last': 3653.9},
+          },
+        ],
+      },
+    }, DateTime(2026, 11, 28))!;
+    expect(etc.issuer, 'Boerse Stuttgart ETC');
+    expect(etc.underlying, 'Goldpreis');
+    expect(etc.settlement, DepotEtcSettlement.physical);
+    expect(etc.openEnded, isTrue);
+    expect(etc.spreadPercent, 1.01);
   });
 
   test('coupon and maturity come from the name', () {

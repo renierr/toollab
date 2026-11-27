@@ -20564,7 +20564,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotLogosDescription.
   ///
   /// In en, this message translates to:
-  /// **'Download Parqet logos once for offline use. Only this button downloads images; normal sync and scrolling never fetch them.'**
+  /// **'Download Parqet logos for offline use. Scrolling never fetches images; sync does so only with automatic download on.'**
   String get depotLogosDescription;
 
   /// No description provided for @depotLogosDownload.
@@ -20572,6 +20572,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download missing logos'**
   String get depotLogosDownload;
+
+  /// No description provided for @depotLogosAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Download new logos automatically'**
+  String get depotLogosAuto;
+
+  /// No description provided for @depotLogosAutoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'After each sync, fetch the logos of positions that have none yet.'**
+  String get depotLogosAutoDescription;
 
   /// No description provided for @depotLogosCached.
   ///
@@ -21563,6 +21575,48 @@ abstract class AppLocalizations {
   /// **'Issuer'**
   String get depotDetailIssuer;
 
+  /// No description provided for @depotDetailUnderlying.
+  ///
+  /// In en, this message translates to:
+  /// **'Underlying'**
+  String get depotDetailUnderlying;
+
+  /// No description provided for @depotDetailSettlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement'**
+  String get depotDetailSettlement;
+
+  /// No description provided for @depotDetailSettlementPhysical.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical'**
+  String get depotDetailSettlementPhysical;
+
+  /// No description provided for @depotDetailSettlementCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get depotDetailSettlementCash;
+
+  /// No description provided for @depotDetailTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Term'**
+  String get depotDetailTerm;
+
+  /// No description provided for @depotDetailOpenEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-ended'**
+  String get depotDetailOpenEnded;
+
+  /// No description provided for @depotDetailSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Spread'**
+  String get depotDetailSpread;
+
   /// No description provided for @depotDetailNextCoupon.
   ///
   /// In en, this message translates to:
@@ -21808,6 +21862,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stock URL'**
   String get depotDetailsLinkStock;
+
+  /// No description provided for @depotDetailsLinkBond.
+  ///
+  /// In en, this message translates to:
+  /// **'Bond URL'**
+  String get depotDetailsLinkBond;
 
   /// No description provided for @depotSalesTitle.
   ///

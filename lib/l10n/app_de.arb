@@ -4487,8 +4487,10 @@
   "depotReportDisclaimer": "Werte von Parqet zum Stand der letzten Synchronisierung, in Depotwährung. Gewinn und Rendite je Position gelten für den gewählten Zeitraum; die Gesamtwerte-Tabelle umfasst die gesamte Historie. Keine Anlageberatung.",
   "depotReportPage": "Seite {page} von {pages}",
   "depotLogosTitle": "Logos der Positionen",
-  "depotLogosDescription": "Parqet-Logos einmalig zur Offline-Nutzung herunterladen. Nur diese Schaltfläche lädt Bilder herunter; normale Synchronisierung und Scrollen tun dies nie.",
+  "depotLogosDescription": "Parqet-Logos zur Offline-Nutzung herunterladen. Scrollen lädt nie Bilder; die Synchronisierung nur mit automatischem Laden.",
   "depotLogosDownload": "Fehlende Logos herunterladen",
+  "depotLogosAuto": "Neue Logos automatisch laden",
+  "depotLogosAutoDescription": "Lädt nach jeder Synchronisierung die Logos von Positionen, die noch keins haben.",
   "depotLogosCached": "{count, plural, =1{1 Logo auf diesem Gerät gespeichert} other{{count} Logos auf diesem Gerät gespeichert}}",
   "@depotLogosCached": {
     "placeholders": { "count": { "type": "int" } }
@@ -4728,6 +4730,13 @@
   "depotDetailMaturity": "Fälligkeit",
   "depotDetailCoupons": "Kupons (gesamt)",
   "depotDetailIssuer": "Emittent",
+  "depotDetailUnderlying": "Basiswert",
+  "depotDetailSettlement": "Lieferung",
+  "depotDetailSettlementPhysical": "Physisch",
+  "depotDetailSettlementCash": "Barausgleich",
+  "depotDetailTerm": "Laufzeit",
+  "depotDetailOpenEnded": "Unbefristet",
+  "depotDetailSpread": "Spread",
   "depotDetailNextCoupon": "Nächster Kupon",
   "depotDetailMaturityCallable": "{date} (kündbar)",
   "@depotDetailMaturityCallable": {
@@ -4797,6 +4806,7 @@
   "depotDetailsLinkEtc": "ETC-URL",
   "depotDetailsLinkFund": "Fonds-URL",
   "depotDetailsLinkStock": "Aktien-URL",
+  "depotDetailsLinkBond": "Anleihen-URL",
   "depotSalesTitle": "Verkäufe im Detail",
   "depotSalesProceeds": "Netto-Verkaufserlös",
   "depotSalesKnownGain": "Bekannte realisierte Gewinne",

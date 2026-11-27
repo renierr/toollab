@@ -11610,10 +11610,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotLogosDescription =>
-      'Parqet-Logos einmalig zur Offline-Nutzung herunterladen. Nur diese Schaltfläche lädt Bilder herunter; normale Synchronisierung und Scrollen tun dies nie.';
+      'Parqet-Logos zur Offline-Nutzung herunterladen. Scrollen lädt nie Bilder; die Synchronisierung nur mit automatischem Laden.';
 
   @override
   String get depotLogosDownload => 'Fehlende Logos herunterladen';
+
+  @override
+  String get depotLogosAuto => 'Neue Logos automatisch laden';
+
+  @override
+  String get depotLogosAutoDescription =>
+      'Lädt nach jeder Synchronisierung die Logos von Positionen, die noch keins haben.';
 
   @override
   String depotLogosCached(int count) {
@@ -12202,6 +12209,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDetailIssuer => 'Emittent';
 
   @override
+  String get depotDetailUnderlying => 'Basiswert';
+
+  @override
+  String get depotDetailSettlement => 'Lieferung';
+
+  @override
+  String get depotDetailSettlementPhysical => 'Physisch';
+
+  @override
+  String get depotDetailSettlementCash => 'Barausgleich';
+
+  @override
+  String get depotDetailTerm => 'Laufzeit';
+
+  @override
+  String get depotDetailOpenEnded => 'Unbefristet';
+
+  @override
+  String get depotDetailSpread => 'Spread';
+
+  @override
   String get depotDetailNextCoupon => 'Nächster Kupon';
 
   @override
@@ -12334,6 +12362,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotDetailsLinkStock => 'Aktien-URL';
+
+  @override
+  String get depotDetailsLinkBond => 'Anleihen-URL';
 
   @override
   String get depotSalesTitle => 'Verkäufe im Detail';

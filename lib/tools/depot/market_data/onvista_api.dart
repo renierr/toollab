@@ -7,6 +7,7 @@ import 'package:tool_lab/services/app_http_client.dart';
 import '../models/depot_asset_profile.dart';
 import '../models/depot_bond_profile.dart';
 import '../models/depot_dividend.dart';
+import '../models/depot_etc_profile.dart';
 import '../models/depot_fund_constituent.dart';
 import '../models/market_quote.dart';
 
@@ -88,6 +89,51 @@ class OnvistaApi {
       yearLow: _number(quote['lowPrice1Year']),
       quoteAt: DateTime.tryParse('${quote['datetimeLast']}')?.toLocal(),
     );
+  }
+
+  static Future<DepotEtcProfile?> etc(String isin) async {
+    final json = await _getJson(
+      '/api/v1/derivatives/ISIN:$isin/snapshot',
+      isin,
+    );
+    return json == null ? null : parseEtc(json, DateTime.now());
+  }
+
+  @visibleForTesting
+  static DepotEtcProfile? parseEtc(Map<String, dynamic> json, DateTime now) {
+    final details = json['derivativesDetails'] as Map? ?? const {};
+    final figures = json['derivativesFigure'] as Map? ?? const {};
+    final underlyings = [
+      for (final item
+          in (json['derivativesUnderlyingList'] as Map?)?['list'] as List? ??
+              const [])
+        if (item is Map) item,
+    ];
+    // The priced underlying names the market ("Goldpreis"), not the unit.
+    final underlying =
+        underlyings
+            .where((u) => (u['quote'] as Map?)?['last'] != null)
+            .firstOrNull ??
+        underlyings.firstOrNull;
+    final settlement = '${details['nameTypeSettlement'] ?? ''}'.toLowerCase();
+    final profile = DepotEtcProfile(
+      issuer:
+          _text(details['nameProductIssuer']) ??
+          _text((json['derivativesIssuer'] as Map?)?['name']),
+      underlying: _text((underlying?['instrument'] as Map?)?['name']),
+      settlement: settlement.contains('phys')
+          ? DepotEtcSettlement.physical
+          : settlement.contains('bar') || settlement.contains('cash')
+          ? DepotEtcSettlement.cash
+          : null,
+      openEnded: details['openEnded'] == true,
+      maturity: _day(details['datetimeMaturity']),
+      spreadPercent: _number(figures['spreadAskPct']),
+      fetchedAt: now,
+    );
+    return profile.issuer == null && profile.underlying == null
+        ? null
+        : profile;
   }
 
   /// Bonds matching an ISIN, WKN or name.

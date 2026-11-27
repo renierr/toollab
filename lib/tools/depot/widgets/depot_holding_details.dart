@@ -17,6 +17,7 @@ import '../dividends/depot_dividend_calendar.dart';
 import '../models/depot_asset_profile.dart';
 import '../models/depot_bond_profile.dart';
 import '../models/depot_dividend.dart';
+import '../models/depot_etc_profile.dart';
 import '../models/depot_filters.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_holding_trend.dart';
@@ -76,6 +77,13 @@ class DepotHoldingDetails extends StatelessWidget {
     final duration = bond?.duration;
     final pricePercent = bond?.pricePercent;
     final nextCoupon = bond?.nextCoupon;
+    final etc = context.select<DepotAllocationState?, DepotEtcProfile?>(
+      (state) => h.kind == DepotHoldingKind.etc ? state?.etcOf(h) : null,
+    );
+    final issuer = bond?.issuer ?? etc?.issuer;
+    final issuerCountry = bond?.country;
+    final etcMaturity = etc?.maturity;
+    final spread = etc?.spreadPercent;
     final linkKind = DepotDetailsLinkKind.of(h.kind);
     final hasSales = context.select<DepotPortfolioState?, bool>(
       (state) => state?.hasSalesFor(h) ?? false,
@@ -171,13 +179,28 @@ class DepotHoldingDetails extends StatelessWidget {
             plan.day,
           ),
         ),
-      if (bond?.issuer != null)
+      if (issuer != null)
         (
           l10n.depotDetailIssuer,
-          bond?.country == null
-              ? bond!.issuer!
-              : '${bond!.issuer} (${bond.country})',
+          issuerCountry == null ? issuer : '$issuer ($issuerCountry)',
         ),
+      if (etc?.underlying case final underlying?)
+        (l10n.depotDetailUnderlying, underlying),
+      if (etc?.settlement case final settlement?)
+        (
+          l10n.depotDetailSettlement,
+          switch (settlement) {
+            DepotEtcSettlement.physical => l10n.depotDetailSettlementPhysical,
+            DepotEtcSettlement.cash => l10n.depotDetailSettlementCash,
+          },
+        ),
+      if (etc != null && (etc.openEnded || etcMaturity != null))
+        (
+          l10n.depotDetailTerm,
+          etcMaturity == null ? l10n.depotDetailOpenEnded : day(etcMaturity),
+        ),
+      if (spread != null)
+        (l10n.depotDetailSpread, format.percent(spread, signed: false)),
       if (coupon != null)
         (
           l10n.depotDetailCoupon,

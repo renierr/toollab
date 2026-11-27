@@ -10,6 +10,7 @@ import 'market_data/onvista_api.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_asset_profile.dart';
 import 'models/depot_bond_profile.dart';
+import 'models/depot_etc_profile.dart';
 import 'models/depot_fund_constituent.dart';
 import 'models/depot_holding.dart';
 
@@ -25,9 +26,11 @@ class DepotAllocationState extends ChangeNotifier {
     Future<String?> Function(String isin)? stockCountryLoader,
     Future<double?> Function(String isin)? expenseRatioLoader,
     Future<OnvistaBond?> Function(String isin)? bondLoader,
+    Future<DepotEtcProfile?> Function(String isin)? etcLoader,
     DateTime Function()? clock,
   }) : _profileLoader = profileLoader ?? _loadProfile,
        _bondLoader = bondLoader ?? OnvistaApi.bond,
+       _etcLoader = etcLoader ?? OnvistaApi.etc,
        _sessionLoader = sessionLoader ?? YahooFinanceApi.session,
        _confirmedSymbolsLoader =
            confirmedSymbolsLoader ?? DepotMarketSearch.holdingSymbols,
@@ -58,10 +61,12 @@ class DepotAllocationState extends ChangeNotifier {
   final Future<String?> Function(String) _stockCountryLoader;
   final Future<double?> Function(String) _expenseRatioLoader;
   final Future<OnvistaBond?> Function(String) _bondLoader;
+  final Future<DepotEtcProfile?> Function(String) _etcLoader;
   final DateTime Function() _clock;
 
   Map<String, DepotAssetProfile> _profiles = const {};
   Map<String, DepotBondProfile> _bonds = const {};
+  Map<String, DepotEtcProfile> _etcs = const {};
   Map<String, DateTime> _attempts = {};
   final Set<String> _pending = {};
   final Set<String> _unsavedProfiles = {};
@@ -80,6 +85,8 @@ class DepotAllocationState extends ChangeNotifier {
       _profiles[_keyOf(holding)];
 
   DepotBondProfile? bondOf(DepotHolding holding) => _bonds[_keyOf(holding)];
+
+  DepotEtcProfile? etcOf(DepotHolding holding) => _etcs[_keyOf(holding)];
 
   DepotAssetProfile? constituentProfileOf(DepotFundConstituent constituent) =>
       _profiles[constituent.key];
@@ -196,6 +203,55 @@ class DepotAllocationState extends ChangeNotifier {
         await ensureProfiles(holdings);
       });
 
+  /// Loads bond and ETC details from onvista without waiting for an
+  /// allocation refresh: the holding details need them, and it costs one
+  /// request per position a day.
+  Future<void> ensureDetails(Iterable<DepotHolding> holdings) async {
+    if (_disposed) return;
+    await ensureLoaded();
+    final generation = _generation;
+    bool stale() => _disposed || generation != _generation;
+    var changed = false;
+    for (final holding in holdings) {
+      if (stale()) return;
+      final kind = holding.kind;
+      final key = _keyOf(holding);
+      final isin = holding.isin?.trim();
+      final fetchedAt = kind == DepotHoldingKind.bond
+          ? _bonds[key]?.fetchedAt
+          : _etcs[key]?.fetchedAt;
+      if (holding.isSold ||
+          (kind != DepotHoldingKind.bond && kind != DepotHoldingKind.etc) ||
+          key == null ||
+          isin == null ||
+          _pending.contains(key) ||
+          (fetchedAt != null && _clock().difference(fetchedAt) < retryAfter) ||
+          !_isDue(key, null)) {
+        continue;
+      }
+      _pending.add(key);
+      _markAttempt(key);
+      try {
+        changed =
+            await (kind == DepotHoldingKind.bond
+                ? _fetchBond(key, isin, stale)
+                : _fetchEtc(key, isin, stale)) ||
+            changed;
+      } catch (e) {
+        errorLog('[DepotAllocationState] Bond failed for $key: $e');
+      } finally {
+        _pending.remove(key);
+      }
+    }
+    if (stale()) return;
+    try {
+      await _persist();
+    } catch (e) {
+      errorLog('[DepotAllocationState] Saving profiles failed: $e');
+    }
+    if (changed) _notify();
+  }
+
   /// Fetches every position again; cached values stay until replaced.
   Future<void> reloadAll(Iterable<DepotHolding> holdings) =>
       DepotWorkLease.hold(DepotWorkLease.allocationText, () async {
@@ -272,9 +328,11 @@ class DepotAllocationState extends ChangeNotifier {
       final cached = await _store.assetProfiles();
       final attempts = await _store.assetProfileAttempts();
       final bonds = await _store.bondProfiles();
+      final etcs = await _store.etcProfiles();
       if (_disposed) return;
       _profiles = {...cached, ..._profiles};
       _bonds = {...bonds, ..._bonds};
+      _etcs = {...etcs, ..._etcs};
       _attempts = {...attempts, ..._attempts};
     } catch (e) {
       errorLog('[DepotAllocationState] Loading cached profiles failed: $e');
@@ -398,6 +456,15 @@ class DepotAllocationState extends ChangeNotifier {
         fetchedAt: bond.profile.fetchedAt,
       ),
     );
+    return true;
+  }
+
+  Future<bool> _fetchEtc(String key, String isin, bool Function() stale) async {
+    final etc = await _etcLoader(isin);
+    if (stale() || etc == null) return false;
+    await _store.saveEtcProfile(key, etc);
+    if (stale()) return false;
+    _etcs = {..._etcs, key: etc};
     return true;
   }
 
@@ -644,6 +711,7 @@ class DepotAllocationState extends ChangeNotifier {
     _pending.clear();
     _profiles = const {};
     _bonds = const {};
+    _etcs = const {};
     _attempts = {};
     _unsavedProfiles.clear();
     _unsavedAttempts.clear();

@@ -10,6 +10,7 @@ import 'depot_details_link.dart';
 import 'models/depot_asset_profile.dart';
 import 'models/depot_bond_profile.dart';
 import 'models/depot_dividend.dart';
+import 'models/depot_etc_profile.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_fund_constituent.dart';
 import 'models/depot_holding.dart';
@@ -84,6 +85,7 @@ class DepotStore {
   static const _assetShares = 'asset_shares';
   static const _fundConstituents = 'fund_constituents';
   static const _bondProfiles = 'bond_profiles';
+  static const _etcProfiles = 'etc_profiles';
   static const _sectorDimension = 'sector';
   static const _countryDimension = 'country';
 
@@ -103,6 +105,7 @@ class DepotStore {
   static const _syncLeaseKey = 'parqet_sync_lease';
   static const _holdingSortKey = 'holding_sort';
   static const _wishlistEuroKey = 'wishlist_euro_display';
+  static const _autoLogosKey = 'auto_logos';
   static const _taxAllowanceKey = 'tax_allowance';
   static const _baseRateKey = 'base_rate_';
   static const _detailsUrlKey = 'details_url_';
@@ -125,7 +128,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 14,
+        currentVersion: 15,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -425,6 +428,20 @@ class DepotStore {
               )
             ''');
           }
+          if (oldVersion < 15) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_etcProfiles)} (
+                asset_key TEXT PRIMARY KEY,
+                issuer TEXT,
+                underlying TEXT,
+                settlement TEXT,
+                open_ended INTEGER NOT NULL DEFAULT 0,
+                maturity INTEGER,
+                spread_percent REAL,
+                fetched_at INTEGER NOT NULL
+              )
+            ''');
+          }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {
             await txn.executor.delete(
@@ -598,6 +615,16 @@ class DepotStore {
   Future<void> setWishlistEuroDisplay(bool value) => DatabaseService.instance
       .setSetting(_toolId, _wishlistEuroKey, value.toString());
 
+  Future<bool> autoLogos() async =>
+      (await DatabaseService.instance.getSetting(_toolId, _autoLogosKey)) ==
+      'true';
+
+  Future<void> setAutoLogos(bool value) => DatabaseService.instance.setSetting(
+    _toolId,
+    _autoLogosKey,
+    value.toString(),
+  );
+
   Future<double> taxAllowance() async =>
       double.tryParse(
         await DatabaseService.instance.getSetting(_toolId, _taxAllowanceKey) ??
@@ -708,6 +735,23 @@ class DepotStore {
   Future<void> saveBondProfile(String key, DepotBondProfile profile) async {
     final db = await _getDb();
     await db.insert(_bondProfiles, {
+      'asset_key': key,
+      ...profile.toMap(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  /// ETC issuer, underlying and delivery cached per ISIN.
+  Future<Map<String, DepotEtcProfile>> etcProfiles() async {
+    final db = await _getDb();
+    return {
+      for (final row in await db.query(_etcProfiles))
+        row['asset_key'] as String: DepotEtcProfile.fromMap(row),
+    };
+  }
+
+  Future<void> saveEtcProfile(String key, DepotEtcProfile profile) async {
+    final db = await _getDb();
+    await db.insert(_etcProfiles, {
       'asset_key': key,
       ...profile.toMap(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -1365,6 +1409,7 @@ class DepotStore {
       _assetShares,
       _fundConstituents,
       _bondProfiles,
+      _etcProfiles,
     ]) {
       final stored = db.nameTable(table);
       final info = await db.rawQuery('PRAGMA table_info($stored)');
@@ -1410,6 +1455,7 @@ class DepotStore {
         _assetShares,
         _fundConstituents,
         _bondProfiles,
+        _etcProfiles,
       ]) {
         await txn.delete(table);
       }

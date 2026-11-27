@@ -473,6 +473,7 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 | `GET https://api.onvista.de/api/v1/funds/ISIN:{isin}/snapshot` | A fund's ongoing charges (TER) when Yahoo has none |
 | `GET https://api.onvista.de/api/v1/stocks/ISIN:{isin}/snapshot` | Country fallback for a stock when Yahoo has none |
 | `GET https://api.onvista.de/api/v1/bonds/ISIN:{isin}/snapshot` | A bond's terms, coupon schedule, issuer, yields and quote in percent; Yahoo lists no bonds |
+| `GET https://api.onvista.de/api/v1/derivatives/ISIN:{isin}/snapshot` | An ETC's issuer, underlying, settlement, term and spread |
 | `GET https://api.onvista.de/api/v1/instruments/query?searchValue=…` | Bond search, for an ISIN or when Yahoo finds nothing |
 
 Yahoo stays the primary quote source: it has intraday points, global listings, FX rates
@@ -600,8 +601,9 @@ ones; cached values stay until replaced. Portfolio sync remains independent.
 
 Tables in the tool database (`DepotStore`): portfolios, holdings, holding performance per
 period, summaries and chart points per scope and period, transactions, activity counts per
-holding, dividend data from Yahoo Finance, holding logos (downloaded only on request from
-the settings), custom holding order (`holding_order`), the wishlist, and allocation
+holding, dividend data from Yahoo Finance, holding logos (downloaded on request from the
+settings, or after each sync once **Download new logos automatically** is on; the initials
+badge skips a bond's leading coupon), custom holding order (`holding_order`), the wishlist, and allocation
 metadata. Summaries and charts exist per portfolio and for all portfolios combined (scope
 `_all`).
 
@@ -614,6 +616,10 @@ listings:
 | `asset_shares` | A fund's sector and country weights, one row per `dimension` (`sector` / `country`) and name |
 | `fund_constituents` | A fund's top holdings by `rank`, with name, ISIN or symbol and weight |
 | `bond_profiles` | A bond's issuer and country, nominal currency, coupon and period, next coupon, maturity, callable flag, yield to maturity, current yield, modified duration and onvista price in percent |
+| `etc_profiles` | An ETC's issuer, underlying, settlement (physical or cash), open-ended flag or maturity, and spread in percent |
+
+Bond and ETC details load after every holdings load or sync, without waiting for an
+allocation refresh, at most once a day per position.
 
 These tables are part of the data export, are kept on **Disconnect** and are emptied by
 **Delete local data**. Older versions kept this cache as JSON in tool settings; the schema

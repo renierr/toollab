@@ -90,6 +90,7 @@ class _TemplateFieldState extends State<_TemplateField> with DisposeCleanup {
             DepotDetailsLinkKind.etc => l10n.depotDetailsLinkEtc,
             DepotDetailsLinkKind.fund => l10n.depotDetailsLinkFund,
             DepotDetailsLinkKind.stock => l10n.depotDetailsLinkStock,
+            DepotDetailsLinkKind.bond => l10n.depotDetailsLinkBond,
           },
           hintText: _kind.defaultTemplate,
           border: const OutlineInputBorder(),

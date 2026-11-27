@@ -41,6 +41,14 @@ class DepotLogoSettings extends StatelessWidget {
               ? null
               : () => context.read<DepotLogoState>().downloadMissing(),
         ),
+        SwitchListTile(
+          secondary: const Icon(Icons.sync_outlined),
+          title: Text(l10n.depotLogosAuto),
+          subtitle: Text(l10n.depotLogosAutoDescription),
+          value: state.autoDownload,
+          onChanged: (value) =>
+              context.read<DepotLogoState>().setAutoDownload(value),
+        ),
       ],
     );
   }

@@ -11526,10 +11526,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotLogosDescription =>
-      'Download Parqet logos once for offline use. Only this button downloads images; normal sync and scrolling never fetch them.';
+      'Download Parqet logos for offline use. Scrolling never fetches images; sync does so only with automatic download on.';
 
   @override
   String get depotLogosDownload => 'Download missing logos';
+
+  @override
+  String get depotLogosAuto => 'Download new logos automatically';
+
+  @override
+  String get depotLogosAutoDescription =>
+      'After each sync, fetch the logos of positions that have none yet.';
 
   @override
   String depotLogosCached(int count) {
@@ -12117,6 +12124,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotDetailIssuer => 'Issuer';
 
   @override
+  String get depotDetailUnderlying => 'Underlying';
+
+  @override
+  String get depotDetailSettlement => 'Settlement';
+
+  @override
+  String get depotDetailSettlementPhysical => 'Physical';
+
+  @override
+  String get depotDetailSettlementCash => 'Cash';
+
+  @override
+  String get depotDetailTerm => 'Term';
+
+  @override
+  String get depotDetailOpenEnded => 'Open-ended';
+
+  @override
+  String get depotDetailSpread => 'Spread';
+
+  @override
   String get depotDetailNextCoupon => 'Next coupon';
 
   @override
@@ -12248,6 +12276,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotDetailsLinkStock => 'Stock URL';
+
+  @override
+  String get depotDetailsLinkBond => 'Bond URL';
 
   @override
   String get depotSalesTitle => 'Sales details';

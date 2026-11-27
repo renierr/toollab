@@ -10,6 +10,9 @@ import 'package:tool_lab/tools/depot/depot_store.dart';
 import 'package:tool_lab/tools/depot/market_data/onvista_api.dart';
 import 'package:tool_lab/tools/depot/market_data/yahoo_finance_api.dart';
 import 'package:tool_lab/tools/depot/models/depot_asset_profile.dart';
+import 'package:tool_lab/tools/depot/models/depot_bond_profile.dart';
+import 'package:tool_lab/tools/depot/models/depot_dividend.dart';
+import 'package:tool_lab/tools/depot/models/depot_etc_profile.dart';
 import 'package:tool_lab/tools/depot/models/depot_fund_constituent.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 
@@ -234,6 +237,53 @@ void main() {
       expect(tables['asset_profiles']!.rows, hasLength(2));
       expect(tables['asset_shares']!.rows, hasLength(3));
       expect(tables['fund_constituents']!.rows, hasLength(2));
+    });
+
+    test('loads bond and ETC details once a day, without Yahoo', () async {
+      var now = DateTime(2026, 11, 28, 9);
+      final requested = <String>[];
+      final state = DepotAllocationState(
+        profileLoader: (query, _) async => throw StateError('Yahoo: $query'),
+        sessionLoader: () async => null,
+        fundLoader: _noFund,
+        stockCountryLoader: _noCountry,
+        bondLoader: (isin) async {
+          requested.add(isin);
+          return (
+            profile: DepotBondProfile(
+              country: 'USA',
+              coupon: 4.375,
+              fetchedAt: now,
+            ),
+            coupons: const <DepotDividendEvent>[],
+          );
+        },
+        etcLoader: (isin) async {
+          requested.add(isin);
+          return DepotEtcProfile(underlying: 'Goldpreis', fetchedAt: now);
+        },
+        clock: () => now,
+      );
+      addTearDown(state.dispose);
+      final bond = _holding(
+        '4,375% Apple Anleihe (2045)',
+        isin: 'US037833BH21',
+      );
+      final etc = _holding('EUWAX Gold II', isin: 'DE000EWG2LD7');
+      final stock = _holding('Apple', isin: 'US0378331005');
+
+      await state.ensureDetails([bond, etc, stock]);
+      expect(requested, ['US037833BH21', 'DE000EWG2LD7']);
+      expect(state.bondOf(bond)?.coupon, 4.375);
+      expect(state.etcOf(etc)?.underlying, 'Goldpreis');
+      expect(state.profileOf(bond)?.country, 'USA');
+
+      now = now.add(const Duration(hours: 2));
+      await state.ensureDetails([bond, etc]);
+      expect(requested, hasLength(2));
+      now = now.add(const Duration(days: 1));
+      await state.ensureDetails([bond, etc]);
+      expect(requested, hasLength(4));
     });
 
     test(

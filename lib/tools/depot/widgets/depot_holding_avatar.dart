@@ -21,10 +21,15 @@ class DepotHoldingAvatar extends StatelessWidget {
   });
 
   static String initials(String name) {
-    final words = name
+    final all = name
         .split(RegExp(r'[\s\-&.,/]+'))
         .where((w) => w.isNotEmpty)
         .toList();
+    // A bond name starts with its coupon ("4,375% Apple …").
+    final named = all.where(
+      (w) => RegExp(r'^\p{L}', unicode: true).hasMatch(w),
+    );
+    final words = named.isEmpty ? all : named.toList();
     if (words.isEmpty) return '?';
     final first = words.first.characters.first;
     if (words.length == 1) return first.toUpperCase();

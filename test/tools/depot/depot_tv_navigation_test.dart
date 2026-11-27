@@ -129,8 +129,8 @@ void main() {
     );
 
     final fields = find.byType(TextField);
-    expect(fields, findsNWidgets(7));
-    for (var i = 0; i < 7; i++) {
+    expect(fields, findsNWidgets(8));
+    for (var i = 0; i < 8; i++) {
       final field = tester.widget<TextField>(fields.at(i));
       expect(field.readOnly, isTrue, reason: 'field $i');
     }

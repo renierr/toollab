@@ -17,6 +17,7 @@ class DepotLogoState extends ChangeNotifier {
   bool _isFetching = false;
   bool _disposed = false;
   bool _loadFailed = false;
+  bool _autoDownload = false;
   int _generation = 0;
   int _completed = 0;
   int _total = 0;
@@ -24,6 +25,7 @@ class DepotLogoState extends ChangeNotifier {
 
   bool get isFetching => _isFetching;
   bool get loadFailed => _loadFailed;
+  bool get autoDownload => _autoDownload;
   int get cachedCount => _logos.length;
   int get completed => _completed;
   int get total => _total;
@@ -36,8 +38,10 @@ class DepotLogoState extends ChangeNotifier {
     final generation = _generation;
     try {
       final logos = await _store.holdingLogos();
+      final auto = await _store.autoLogos();
       if (_disposed || generation != _generation) return;
       _logos.addEntries(logos.map((logo) => MapEntry(logo.key, logo)));
+      _autoDownload = auto;
       _loadFailed = false;
     } catch (e) {
       _loadFailed = true;
@@ -46,7 +50,21 @@ class DepotLogoState extends ChangeNotifier {
     _notify();
   }
 
-  // Called only by the explicit settings action, never by sync or avatars.
+  Future<void> setAutoDownload(bool value) async {
+    _autoDownload = value;
+    _notify();
+    await _store.setAutoLogos(value);
+    if (value) await downloadMissing();
+  }
+
+  /// After a sync: fetches logos of new holdings only when the user opted in.
+  Future<void> downloadNew() async {
+    await ensureLoaded();
+    if (_autoDownload) await downloadMissing();
+  }
+
+  // Called by the settings action, or after a sync once the user opted in;
+  // never by avatars.
   Future<void> downloadMissing() async {
     if (_isFetching || _disposed) return;
     _isFetching = true;
