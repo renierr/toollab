@@ -129,7 +129,11 @@ class SharingService {
   }
 
   Future<void> clearSharedData() async {
-    if (!Platform.isAndroid) return;
+    if (!Platform.isAndroid) {
+      // Startup args are re-read on every resume; consume them once.
+      startupArgs = [];
+      return;
+    }
     try {
       await _channel.invokeMethod('clearSharedFiles');
     } catch (e) {
