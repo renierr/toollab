@@ -9,6 +9,16 @@ enum DepotDividendFrequency {
 
   const DepotDividendFrequency(this.days);
 
+  /// A bond's coupon period.
+  static DepotDividendFrequency? ofMonths(int? months) => switch (months) {
+    1 => monthly,
+    3 => quarterly,
+    6 => semiannual,
+    12 => annual,
+    null => null,
+    _ => irregular,
+  };
+
   /// Guessed from the gaps between the most recent ex-dates.
   static DepotDividendFrequency? of(List<DepotDividendEvent> events) {
     if (events.isEmpty) return null;

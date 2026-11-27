@@ -130,7 +130,8 @@ class DepotRisk {
       for (final h in open) {
         if (h.assetType != DepotAssetType.security ||
             h.kind == DepotHoldingKind.etc ||
-            h.kind == DepotHoldingKind.bond) {
+            // A bond has an issuer country but no sector.
+            (h.kind == DepotHoldingKind.bond && !country)) {
           other.add(
             DepotRiskContribution(
               holding: h,

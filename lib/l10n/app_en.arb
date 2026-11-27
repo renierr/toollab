@@ -5979,6 +5979,20 @@
   "depotDetailCoupon": "Coupon",
   "depotDetailMaturity": "Maturity",
   "depotDetailCoupons": "Coupons (total)",
+  "depotDetailIssuer": "Issuer",
+  "depotDetailNextCoupon": "Next coupon",
+  "depotDetailMaturityCallable": "{date} (callable)",
+  "@depotDetailMaturityCallable": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDetailYieldToMaturity": "Yield to maturity p.a.",
+  "depotDetailCurrentYield": "Current yield",
+  "depotDetailDuration": "Modified duration",
+  "depotDetailBondQuote": "Price in % (onvista)",
   "depotDetailType": "Type",
   "depotDetailIsin": "ISIN",
   "depotDetailSymbol": "Symbol",

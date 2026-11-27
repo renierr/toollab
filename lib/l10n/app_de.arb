@@ -4727,6 +4727,20 @@
   "depotDetailCoupon": "Kupon",
   "depotDetailMaturity": "Fälligkeit",
   "depotDetailCoupons": "Kupons (gesamt)",
+  "depotDetailIssuer": "Emittent",
+  "depotDetailNextCoupon": "Nächster Kupon",
+  "depotDetailMaturityCallable": "{date} (kündbar)",
+  "@depotDetailMaturityCallable": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDetailYieldToMaturity": "Rendite p. a. bis Fälligkeit",
+  "depotDetailCurrentYield": "Laufende Verzinsung",
+  "depotDetailDuration": "Modified Duration",
+  "depotDetailBondQuote": "Kurs in % (onvista)",
   "depotDetailType": "Typ",
   "depotDetailIsin": "ISIN",
   "depotDetailSymbol": "Symbol",

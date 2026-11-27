@@ -5,6 +5,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
 import 'depot_logo_downloader.dart';
+import 'depot_market_quotes.dart';
 import 'depot_market_search.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_holding_logo.dart';
@@ -18,11 +19,11 @@ class DepotWishlistState extends ChangeNotifier {
     Future<double> Function(String, String)? fxLoader,
     Future<Uint8List> Function(String)? logoLoader,
     Future<DepotWishlistQuote> Function(String)? historyLoader,
-  }) : _quoteLoader = quoteLoader ?? YahooFinanceApi.intradayQuote,
+  }) : _quoteLoader = quoteLoader ?? DepotMarketQuotes.intraday,
        _searchLoader = searchLoader ?? DepotMarketSearch.search,
        _fxLoader = fxLoader ?? YahooFinanceApi.fxRate,
        _logoLoader = logoLoader ?? _downloadLogo,
-       _historyLoader = historyLoader ?? YahooFinanceApi.yearDailyQuote {
+       _historyLoader = historyLoader ?? DepotMarketQuotes.yearDaily {
     _wishlistSubscription = _store.wishlistChanges.listen((_) {
       unawaited(_reloadWishlist());
     });

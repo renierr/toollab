@@ -8,6 +8,7 @@ import 'package:tool_lab/services/database_service.dart';
 import 'config.dart';
 import 'depot_details_link.dart';
 import 'models/depot_asset_profile.dart';
+import 'models/depot_bond_profile.dart';
 import 'models/depot_dividend.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_fund_constituent.dart';
@@ -82,6 +83,7 @@ class DepotStore {
   static const _assetProfiles = 'asset_profiles';
   static const _assetShares = 'asset_shares';
   static const _fundConstituents = 'fund_constituents';
+  static const _bondProfiles = 'bond_profiles';
   static const _sectorDimension = 'sector';
   static const _countryDimension = 'country';
 
@@ -123,7 +125,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 13,
+        currentVersion: 14,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -401,6 +403,28 @@ class DepotStore {
               'ADD COLUMN expense_ratio REAL',
             );
           }
+          if (oldVersion < 14) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_bondProfiles)} (
+                asset_key TEXT PRIMARY KEY,
+                issuer TEXT,
+                country TEXT,
+                currency TEXT,
+                coupon REAL,
+                coupon_months INTEGER,
+                next_coupon INTEGER,
+                maturity INTEGER,
+                callable INTEGER NOT NULL DEFAULT 0,
+                yield_to_maturity REAL,
+                current_yield REAL,
+                duration REAL,
+                price_percent REAL,
+                previous_price_percent REAL,
+                price_at INTEGER,
+                fetched_at INTEGER NOT NULL
+              )
+            ''');
+          }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {
             await txn.executor.delete(
@@ -670,6 +694,23 @@ class DepotStore {
         await _writeAssetProfile(txn, entry.key, entry.value);
       }
     });
+  }
+
+  /// Bond terms and yields cached per ISIN.
+  Future<Map<String, DepotBondProfile>> bondProfiles() async {
+    final db = await _getDb();
+    return {
+      for (final row in await db.query(_bondProfiles))
+        row['asset_key'] as String: DepotBondProfile.fromMap(row),
+    };
+  }
+
+  Future<void> saveBondProfile(String key, DepotBondProfile profile) async {
+    final db = await _getDb();
+    await db.insert(_bondProfiles, {
+      'asset_key': key,
+      ...profile.toMap(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<Map<String, DateTime>> assetProfileAttempts() async {
@@ -1323,6 +1364,7 @@ class DepotStore {
       _assetProfiles,
       _assetShares,
       _fundConstituents,
+      _bondProfiles,
     ]) {
       final stored = db.nameTable(table);
       final info = await db.rawQuery('PRAGMA table_info($stored)');
@@ -1367,6 +1409,7 @@ class DepotStore {
         _assetProfiles,
         _assetShares,
         _fundConstituents,
+        _bondProfiles,
       ]) {
         await txn.delete(table);
       }

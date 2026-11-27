@@ -12114,6 +12114,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotDetailCoupons => 'Coupons (total)';
 
   @override
+  String get depotDetailIssuer => 'Issuer';
+
+  @override
+  String get depotDetailNextCoupon => 'Next coupon';
+
+  @override
+  String depotDetailMaturityCallable(String date) {
+    return '$date (callable)';
+  }
+
+  @override
+  String get depotDetailYieldToMaturity => 'Yield to maturity p.a.';
+
+  @override
+  String get depotDetailCurrentYield => 'Current yield';
+
+  @override
+  String get depotDetailDuration => 'Modified duration';
+
+  @override
+  String get depotDetailBondQuote => 'Price in % (onvista)';
+
+  @override
   String get depotDetailType => 'Type';
 
   @override

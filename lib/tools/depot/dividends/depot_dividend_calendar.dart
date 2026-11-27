@@ -333,7 +333,11 @@ class DepotDividendCalendar {
           if (!e.value.datetime.isBefore(e.key.exDate))
             e.value.datetime.difference(e.key.exDate).inDays,
       ];
-      final payOffset = Duration(days: _median(offsets) ?? globalOffset);
+      // A bond's schedule holds payment dates, and it is complete.
+      final isBond = h.kind == DepotHoldingKind.bond;
+      final payOffset = isBond
+          ? Duration.zero
+          : Duration(days: _median(offsets) ?? globalOffset);
 
       final moves = [
         for (final t in txs)
@@ -434,6 +438,7 @@ class DepotDividendCalendar {
 
       // No projection once the rhythm has clearly been broken.
       if (open &&
+          !isBond &&
           last != null &&
           lastExDate != null &&
           frequency != null &&
@@ -484,7 +489,10 @@ class DepotDividendCalendar {
         DepotDividendPosition(
           holding: h,
           frequency: frequency,
-          lastEvent: last,
+          // A bond's schedule runs ahead of today.
+          lastEvent: events.reversed
+              .where((e) => !e.exDate.isAfter(today))
+              .firstOrNull,
           currency: asset?.currency,
           next: next,
           receivedNet12m: received,

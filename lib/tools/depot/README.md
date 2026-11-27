@@ -139,6 +139,11 @@ Value drawdowns and daily changes use the selected period's chart and include de
 and withdrawals, so they are not cash-flow-adjusted investment returns. Drawdown needs
 at least two valid chart points; daily changes need consecutive calendar days.
 
+A bond's coupons come from onvista's schedule instead of Yahoo's dividend history: one
+payment per 100 nominal (the coupon rate times the period), converted at the Yahoo FX
+rate, on the payment date itself. The schedule is complete, so nothing is projected past
+it or past maturity; a past coupon without a booking shows as missing like a dividend.
+
 The movers card switches between period return and absolute net gain contribution.
 Both use the visible holdings filter; gains include realized gains and dividends and
 are not a complete reconciliation of the portfolio. Expanded holding details add
@@ -333,7 +338,7 @@ Expanded details (German UI labels in brackets), on **Today**:
 
 | Row | Example | Meaning |
 |---|---|---|
-| Type (Typ) | Stock | Stock, ETF, ETC, fund or bond is guessed from the name; Parqet only says "security". ETC covers exchange-traded commodities and notes (ETC, ETN, ETP, physical gold or silver, Xetra-Gold, EUWAX Gold). A bond is a name with a leading coupon ("4,375% …") or a word like Anleihe, Anl., Bond, Notes or Pfandbrief, once ETF and fund are ruled out. A bond shows its coupon and maturity year (both from the name), its nominal (shares × 100) instead of shares, its prices per 100 nominal, and coupons instead of dividends. |
+| Type (Typ) | Stock | Stock, ETF, ETC, fund or bond is guessed from the name; Parqet only says "security". ETC covers exchange-traded commodities and notes (ETC, ETN, ETP, physical gold or silver, Xetra-Gold, EUWAX Gold). A bond is a name with a leading coupon ("4,375% …") or a word like Anleihe, Anl., Bond, Notes or Pfandbrief, once ETF and fund are ruled out. A bond shows its nominal (shares × 100) instead of shares, its prices per 100 nominal and coupons instead of dividends; with onvista data also issuer, nominal currency, coupon and period, next coupon, maturity date (and whether callable), yield to maturity, current yield, modified duration and onvista's price in percent. Until that data is loaded, coupon and maturity year come from the name. |
 | ISIN / Symbol | DE000EXAMPLE | ISIN for securities, symbol for crypto. |
 | Shares (Anteile) | 100 | Shares held now. |
 | Avg. buy price (Ø Kaufkurs) | 50.00 € | Average price paid per share still held. |
@@ -467,6 +472,14 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 | `GET https://api.onvista.de/api/v1/funds/ISIN:{isin}/breakdowns` | A fund's full country and sector split and its ten largest holdings (with ISIN) |
 | `GET https://api.onvista.de/api/v1/funds/ISIN:{isin}/snapshot` | A fund's ongoing charges (TER) when Yahoo has none |
 | `GET https://api.onvista.de/api/v1/stocks/ISIN:{isin}/snapshot` | Country fallback for a stock when Yahoo has none |
+| `GET https://api.onvista.de/api/v1/bonds/ISIN:{isin}/snapshot` | A bond's terms, coupon schedule, issuer, yields and quote in percent; Yahoo lists no bonds |
+| `GET https://api.onvista.de/api/v1/instruments/query?searchValue=…` | Bond search, for an ISIN or when Yahoo finds nothing |
+
+Yahoo stays the primary quote source: it has intraday points, global listings, FX rates
+and dividend history. Onvista only fills in for bonds. A wishlist bond is keyed by its
+ISIN, quoted in percent of the nominal in the nominal's currency (so it converts like a
+price per 100 nominal), and has no chart: onvista refuses its chart endpoint to automated
+clients with a reference to its terms of use.
 
 Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
 The latest quote is Yahoo's `fulldayPrice`, which includes pre- and post-market trades,
@@ -532,8 +545,10 @@ asked: its `topHoldings` sector weights, and a region split approximated from th
 of up to ten largest constituents. Yahoo's `quoteType` also overrides the name heuristic,
 so a fund without "ETF" or "Fonds" in its name is no longer counted as a stock. An ETC
 name wins over that, since Yahoo reports most ETCs as "ETF"; ETCs are not looked up and
-count as other assets, not as missing data, in the sector and country risk split. Bonds
-are treated the same way.
+count as other assets, not as missing data, in the sector and country risk split. A bond
+name wins as well; a bond is looked up on onvista's bond snapshot once a day (its yield
+moves with the price), places its issuer country in the region and country splits, and
+counts as other assets in the sector split.
 Stocks use Yahoo for sector, industry and country, then onvista's stock snapshot for a
 missing country, then Nasdaq region data and up to three US-format listings confirmed by
 Parqet for the same ISIN.
@@ -598,6 +613,7 @@ listings:
 | `asset_profiles` | Kind, sector, industry, country, region, a fund's `expense_ratio` (TER as a fraction), cache version, `fetched_at` and the last lookup `attempted_at`. A row without `fetched_at` only records a failed lookup |
 | `asset_shares` | A fund's sector and country weights, one row per `dimension` (`sector` / `country`) and name |
 | `fund_constituents` | A fund's top holdings by `rank`, with name, ISIN or symbol and weight |
+| `bond_profiles` | A bond's issuer and country, nominal currency, coupon and period, next coupon, maturity, callable flag, yield to maturity, current yield, modified duration and onvista price in percent |
 
 These tables are part of the data export, are kept on **Disconnect** and are emptied by
 **Delete local data**. Older versions kept this cache as JSON in tool settings; the schema

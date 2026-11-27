@@ -28,9 +28,13 @@ DepotHoldingKind marketKind(String quoteType, String name) => switch (quoteType
         ? DepotHoldingKind.etc
         : DepotHoldingKind.etf,
   'MUTUALFUND' => DepotHoldingKind.fund,
+  bondQuoteType => DepotHoldingKind.bond,
   'CRYPTOCURRENCY' => DepotHoldingKind.crypto,
   _ => DepotHoldingKind.other,
 };
+
+/// Not a Yahoo type: a bond found on onvista.
+const bondQuoteType = 'BOND';
 
 const marketQuoteTypes = {
   'EQUITY',

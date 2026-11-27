@@ -21557,6 +21557,48 @@ abstract class AppLocalizations {
   /// **'Coupons (total)'**
   String get depotDetailCoupons;
 
+  /// No description provided for @depotDetailIssuer.
+  ///
+  /// In en, this message translates to:
+  /// **'Issuer'**
+  String get depotDetailIssuer;
+
+  /// No description provided for @depotDetailNextCoupon.
+  ///
+  /// In en, this message translates to:
+  /// **'Next coupon'**
+  String get depotDetailNextCoupon;
+
+  /// No description provided for @depotDetailMaturityCallable.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} (callable)'**
+  String depotDetailMaturityCallable(String date);
+
+  /// No description provided for @depotDetailYieldToMaturity.
+  ///
+  /// In en, this message translates to:
+  /// **'Yield to maturity p.a.'**
+  String get depotDetailYieldToMaturity;
+
+  /// No description provided for @depotDetailCurrentYield.
+  ///
+  /// In en, this message translates to:
+  /// **'Current yield'**
+  String get depotDetailCurrentYield;
+
+  /// No description provided for @depotDetailDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified duration'**
+  String get depotDetailDuration;
+
+  /// No description provided for @depotDetailBondQuote.
+  ///
+  /// In en, this message translates to:
+  /// **'Price in % (onvista)'**
+  String get depotDetailBondQuote;
+
   /// No description provided for @depotDetailType.
   ///
   /// In en, this message translates to:

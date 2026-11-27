@@ -446,6 +446,7 @@ void main() {
     final results = await DepotMarketSearch.search(
       'US02079K3059',
       assets: ParqetAssetLookup(client: client),
+      searchBonds: (_) async => [],
       searchListings: (query) async {
         queries.add(query);
         if (query != 'GOOGL') return [];
@@ -468,6 +469,22 @@ void main() {
     expect(queries, ['US02079K3059', 'GOOGL']);
     expect(results.single.symbol, 'GOOGL');
     expect(results.single.isin, 'US02079K3059');
+  });
+
+  test('ISIN search finds a bond Yahoo does not list', () async {
+    final client = MockClient((_) async => http.Response('{}', 404));
+    addTearDown(client.close);
+    final results = await DepotMarketSearch.search(
+      'US037833BH21',
+      assets: ParqetAssetLookup(client: client),
+      searchListings: (_) async => [],
+      searchBonds: (query) async => [
+        (isin: query, name: 'Apple Inc. DL-Notes 2015(15/45)'),
+      ],
+    );
+    expect(results.single.symbol, 'US037833BH21');
+    expect(results.single.isin, 'US037833BH21');
+    expect(results.single.kind, DepotHoldingKind.bond);
   });
 
   test('tries another confirmed listing when a chart is unavailable', () async {

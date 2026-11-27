@@ -3,6 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
 import 'dividends/depot_dividend_calendar.dart';
+import 'market_data/onvista_api.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_dividend.dart';
 import 'models/depot_holding.dart';
@@ -15,7 +16,11 @@ class DepotDividendState extends ChangeNotifier {
     DepotHoldingKind.stock,
     DepotHoldingKind.etf,
     DepotHoldingKind.fund,
+    DepotHoldingKind.bond,
   };
+
+  /// Coupons beyond this lie outside every view and are not cached.
+  static const _couponHorizon = Duration(days: 400);
 
   final DepotStore _store = DepotStore.instance;
 
@@ -199,6 +204,10 @@ class DepotDividendState extends ChangeNotifier {
     Map<String, Future<double>> rates,
   ) async {
     try {
+      if (holding.kind == DepotHoldingKind.bond) {
+        await _save(key, await _bondCoupons(key, currency, rates));
+        return;
+      }
       final symbol =
           await YahooFinanceApi.symbolFor(key) ??
           (holding.symbol == null || holding.symbol == key
@@ -241,14 +250,47 @@ class DepotDividendState extends ChangeNotifier {
           events: dividends.events,
         );
       }
-      await _store.saveDividendAsset(asset);
-      if (!_disposed && !_releaseWhenFinished) {
-        _assets = {..._assets, key: asset};
-      }
+      await _save(key, asset);
     } catch (e) {
       errorLog('[DepotDividendState] Fetching $key failed: $e');
       _failedCount++;
     }
+  }
+
+  Future<void> _save(String key, DepotDividendAsset asset) async {
+    await _store.saveDividendAsset(asset);
+    if (!_disposed && !_releaseWhenFinished) {
+      _assets = {..._assets, key: asset};
+    }
+  }
+
+  /// The coupon schedule from onvista, per 100 nominal, which is one Parqet
+  /// share of a bond.
+  Future<DepotDividendAsset> _bondCoupons(
+    String isin,
+    String currency,
+    Map<String, Future<double>> rates,
+  ) async {
+    final now = DateTime.now();
+    final bond = await OnvistaApi.bond(isin);
+    final bondCurrency = bond?.profile.currency ?? currency;
+    final rate = await rates.putIfAbsent(
+      bondCurrency,
+      () => YahooFinanceApi.fxRate(bondCurrency, currency),
+    );
+    final horizon = now.add(_couponHorizon);
+    return DepotDividendAsset(
+      key: isin,
+      symbol: bond == null ? null : isin,
+      currency: bondCurrency,
+      fxCurrency: currency,
+      fxRate: rate,
+      fetchedAt: now,
+      events: [
+        for (final coupon in bond?.coupons ?? const <DepotDividendEvent>[])
+          if (coupon.exDate.isBefore(horizon)) coupon,
+      ],
+    );
   }
 
   void _notify() {

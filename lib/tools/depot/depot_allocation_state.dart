@@ -9,6 +9,7 @@ import 'depot_work_lease.dart';
 import 'market_data/onvista_api.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_asset_profile.dart';
+import 'models/depot_bond_profile.dart';
 import 'models/depot_fund_constituent.dart';
 import 'models/depot_holding.dart';
 
@@ -23,8 +24,10 @@ class DepotAllocationState extends ChangeNotifier {
     Future<OnvistaFundBreakdown?> Function(String isin)? fundLoader,
     Future<String?> Function(String isin)? stockCountryLoader,
     Future<double?> Function(String isin)? expenseRatioLoader,
+    Future<OnvistaBond?> Function(String isin)? bondLoader,
     DateTime Function()? clock,
   }) : _profileLoader = profileLoader ?? _loadProfile,
+       _bondLoader = bondLoader ?? OnvistaApi.bond,
        _sessionLoader = sessionLoader ?? YahooFinanceApi.session,
        _confirmedSymbolsLoader =
            confirmedSymbolsLoader ?? DepotMarketSearch.holdingSymbols,
@@ -54,9 +57,11 @@ class DepotAllocationState extends ChangeNotifier {
   final Future<OnvistaFundBreakdown?> Function(String) _fundLoader;
   final Future<String?> Function(String) _stockCountryLoader;
   final Future<double?> Function(String) _expenseRatioLoader;
+  final Future<OnvistaBond?> Function(String) _bondLoader;
   final DateTime Function() _clock;
 
   Map<String, DepotAssetProfile> _profiles = const {};
+  Map<String, DepotBondProfile> _bonds = const {};
   Map<String, DateTime> _attempts = {};
   final Set<String> _pending = {};
   final Set<String> _unsavedProfiles = {};
@@ -73,6 +78,8 @@ class DepotAllocationState extends ChangeNotifier {
 
   DepotAssetProfile? profileOf(DepotHolding holding) =>
       _profiles[_keyOf(holding)];
+
+  DepotBondProfile? bondOf(DepotHolding holding) => _bonds[_keyOf(holding)];
 
   DepotAssetProfile? constituentProfileOf(DepotFundConstituent constituent) =>
       _profiles[constituent.key];
@@ -121,8 +128,7 @@ class DepotAllocationState extends ChangeNotifier {
     for (final holding in holdings) {
       if (holding.isSold ||
           holding.currentValue <= 0 ||
-          holding.assetType != DepotAssetType.security ||
-          holding.kind == DepotHoldingKind.bond) {
+          holding.assetType != DepotAssetType.security) {
         continue;
       }
       final key = _keyOf(holding);
@@ -236,11 +242,10 @@ class DepotAllocationState extends ChangeNotifier {
   /// How long after the last attempt [holding] is looked up again; null when
   /// its profile needs nothing.
   Duration? _refetchAfter(DepotHolding holding, DepotAssetProfile? profile) {
-    // An ETC or bond has no sector, country or holdings to look up.
-    if (holding.kind == DepotHoldingKind.etc ||
-        holding.kind == DepotHoldingKind.bond) {
-      return null;
-    }
+    // An ETC has no sector, country or holdings to look up.
+    if (holding.kind == DepotHoldingKind.etc) return null;
+    // A bond's yield moves with its price.
+    if (holding.kind == DepotHoldingKind.bond) return retryAfter;
     if (profile == null) return retryAfter;
     final kind = profile.kind ?? holding.kind;
     if (_isFund(kind)) {
@@ -266,8 +271,10 @@ class DepotAllocationState extends ChangeNotifier {
     try {
       final cached = await _store.assetProfiles();
       final attempts = await _store.assetProfileAttempts();
+      final bonds = await _store.bondProfiles();
       if (_disposed) return;
       _profiles = {...cached, ..._profiles};
+      _bonds = {...bonds, ..._bonds};
       _attempts = {...attempts, ..._attempts};
     } catch (e) {
       errorLog('[DepotAllocationState] Loading cached profiles failed: $e');
@@ -288,6 +295,9 @@ class DepotAllocationState extends ChangeNotifier {
     try {
       final isin = holding.isin?.trim();
       var kind = holding.kind;
+      if (kind == DepotHoldingKind.bond) {
+        return isin != null && await _fetchBond(key, isin, stale);
+      }
       OnvistaFundBreakdown? fund;
       if (_isFund(kind) && isin != null && isin.isNotEmpty) {
         fund = await _fundLoader(isin);
@@ -367,6 +377,28 @@ class DepotAllocationState extends ChangeNotifier {
     } finally {
       _pending.remove(key);
     }
+  }
+
+  /// The issuer's country places a bond in the region split.
+  Future<bool> _fetchBond(
+    String key,
+    String isin,
+    bool Function() stale,
+  ) async {
+    final bond = await _bondLoader(isin);
+    if (stale() || bond == null) return false;
+    await _store.saveBondProfile(key, bond.profile);
+    if (stale()) return false;
+    _bonds = {..._bonds, key: bond.profile};
+    _setProfile(
+      key,
+      DepotAssetProfile(
+        country: bond.profile.country,
+        kind: DepotHoldingKind.bond,
+        fetchedAt: bond.profile.fetchedAt,
+      ),
+    );
+    return true;
   }
 
   Future<DepotAssetProfile?> _completeStock(
@@ -611,6 +643,7 @@ class DepotAllocationState extends ChangeNotifier {
     _isFetching = false;
     _pending.clear();
     _profiles = const {};
+    _bonds = const {};
     _attempts = {};
     _unsavedProfiles.clear();
     _unsavedAttempts.clear();

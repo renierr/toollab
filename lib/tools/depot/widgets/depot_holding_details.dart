@@ -15,6 +15,8 @@ import '../depot_savings_plans.dart';
 import '../depot_state.dart';
 import '../dividends/depot_dividend_calendar.dart';
 import '../models/depot_asset_profile.dart';
+import '../models/depot_bond_profile.dart';
+import '../models/depot_dividend.dart';
 import '../models/depot_filters.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_holding_trend.dart';
@@ -22,6 +24,8 @@ import '../models/depot_period.dart';
 import '../models/depot_transaction.dart';
 import 'depot_details_link_button.dart';
 import 'depot_wishlist_holding_button.dart';
+
+double _round2(double value) => (value * 100).roundToDouble() / 100;
 
 /// Every figure of one holding, shown when its row is expanded.
 class DepotHoldingDetails extends StatelessWidget {
@@ -55,8 +59,23 @@ class DepotHoldingDetails extends StatelessWidget {
     final isin = h.assetType == DepotAssetType.security ? h.isin : null;
     // Parqet books a bond as nominal / 100 shares priced per 100 nominal.
     final isBond = h.kind == DepotHoldingKind.bond;
-    final coupon = isBond ? h.couponRate : null;
-    final maturity = isBond ? h.maturityYear : null;
+    final bond = context.select<DepotAllocationState?, DepotBondProfile?>(
+      (state) => isBond ? state?.bondOf(h) : null,
+    );
+    final coupon = isBond ? bond?.coupon ?? h.couponRate : null;
+    final couponMonths = bond?.couponMonths;
+    final maturityDate = bond?.maturity;
+    final maturity = maturityDate != null
+        ? FormatHelper.dateTime(maturityDate, style: DateStyle.dateOnly)
+        : isBond && bond == null
+        ? h.maturityYear?.toString()
+        : null;
+    final bondCurrency = bond?.currency;
+    final ytm = bond?.yieldToMaturity;
+    final currentYield = bond?.currentYield;
+    final duration = bond?.duration;
+    final pricePercent = bond?.pricePercent;
+    final nextCoupon = bond?.nextCoupon;
     final linkKind = DepotDetailsLinkKind.of(h.kind);
     final hasSales = context.select<DepotPortfolioState?, bool>(
       (state) => state?.hasSalesFor(h) ?? false,
@@ -152,13 +171,54 @@ class DepotHoldingDetails extends StatelessWidget {
             plan.day,
           ),
         ),
+      if (bond?.issuer != null)
+        (
+          l10n.depotDetailIssuer,
+          bond?.country == null
+              ? bond!.issuer!
+              : '${bond!.issuer} (${bond.country})',
+        ),
       if (coupon != null)
-        (l10n.depotDetailCoupon, '${format.shares(coupon)} %'),
-      if (maturity != null) (l10n.depotDetailMaturity, '$maturity'),
+        (
+          l10n.depotDetailCoupon,
+          [
+            '${format.shares(coupon)} %',
+            if (DepotDividendFrequency.ofMonths(couponMonths) case final f?)
+              DepotPortfolioLabels.frequency(l10n, f),
+          ].join(' · '),
+        ),
+      if (nextCoupon != null) (l10n.depotDetailNextCoupon, day(nextCoupon)),
+      if (maturity != null)
+        (
+          l10n.depotDetailMaturity,
+          bond?.callable ?? false
+              ? l10n.depotDetailMaturityCallable(maturity)
+              : maturity,
+        ),
+      if (ytm != null)
+        (l10n.depotDetailYieldToMaturity, format.percent(ytm, signed: false)),
+      if (currentYield != null)
+        (
+          l10n.depotDetailCurrentYield,
+          format.percent(currentYield, signed: false),
+        ),
+      if (duration != null)
+        (l10n.depotDetailDuration, format.shares(_round2(duration))),
       if (h.shares != 0)
         isBond
-            ? (l10n.depotDetailNominal, format.shares(h.shares * 100))
+            ? (
+                l10n.depotDetailNominal,
+                [
+                  format.shares(_round2(h.shares * 100)),
+                  ?bondCurrency,
+                ].join(' '),
+              )
             : (l10n.depotDetailShares, format.shares(h.shares)),
+      if (pricePercent != null)
+        (
+          l10n.depotDetailBondQuote,
+          format.percent(pricePercent, signed: false),
+        ),
       if (h.purchasePrice != 0)
         (
           isBond

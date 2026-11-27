@@ -12199,6 +12199,29 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDetailCoupons => 'Kupons (gesamt)';
 
   @override
+  String get depotDetailIssuer => 'Emittent';
+
+  @override
+  String get depotDetailNextCoupon => 'Nächster Kupon';
+
+  @override
+  String depotDetailMaturityCallable(String date) {
+    return '$date (kündbar)';
+  }
+
+  @override
+  String get depotDetailYieldToMaturity => 'Rendite p. a. bis Fälligkeit';
+
+  @override
+  String get depotDetailCurrentYield => 'Laufende Verzinsung';
+
+  @override
+  String get depotDetailDuration => 'Modified Duration';
+
+  @override
+  String get depotDetailBondQuote => 'Kurs in % (onvista)';
+
+  @override
   String get depotDetailType => 'Typ';
 
   @override

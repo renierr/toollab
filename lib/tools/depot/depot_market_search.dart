@@ -1,5 +1,6 @@
 import 'package:tool_lab/helpers/debug_log.dart';
 
+import 'market_data/onvista_api.dart';
 import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_market_search_result.dart';
@@ -14,15 +15,30 @@ class DepotMarketSearch {
     String query, {
     ParqetAssetLookup? assets,
     Future<List<MarketSearchResult>> Function(String)? searchListings,
+    Future<List<({String isin, String name})>> Function(String)? searchBonds,
   }) async {
     final isin = query.trim().toUpperCase();
+    final isIsin = SecurityParser.isValidIsin(isin);
     final lookup = searchListings ?? YahooFinanceApi.searchListings;
-    final matchingSymbols = SecurityParser.isValidIsin(isin)
+    final bondLookup = searchBonds ?? OnvistaApi.searchBonds;
+    final matchingSymbols = isIsin
         ? (assets ?? const ParqetAssetLookup())
               .symbolsForIsin(isin)
               .catchError((_) => <String>{})
         : Future.value(<String>{});
     final listings = [...await lookup(query)];
+    final yahooFound = listings.any(
+      (result) => marketQuoteTypes.contains(result.quoteType.toUpperCase()),
+    );
+    // Yahoo lists no bonds; onvista does, under their ISIN.
+    var bonds = const <({String isin, String name})>[];
+    if (isIsin || !yahooFound) {
+      try {
+        bonds = await bondLookup(isIsin ? isin : query);
+      } catch (e) {
+        debugLog('[DepotMarketSearch] Bond lookup failed for $query: $e');
+      }
+    }
     final symbols = await matchingSymbols;
     if (symbols.isNotEmpty &&
         !listings.any(
@@ -53,6 +69,14 @@ class DepotMarketSearch {
             exchange: result.exchange,
             isin: symbols.contains(result.symbol.toUpperCase()) ? isin : null,
           ),
+      for (final bond in bonds)
+        DepotMarketSearchResult(
+          symbol: bond.isin,
+          name: bond.name,
+          quoteType: bondQuoteType,
+          exchange: 'onvista',
+          isin: bond.isin,
+        ),
     ];
   }
 

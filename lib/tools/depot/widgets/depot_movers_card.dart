@@ -9,6 +9,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../depot_format.dart';
 import '../depot_portfolio_state.dart';
+import '../models/depot_holding.dart';
 import 'depot_holding_avatar.dart';
 import 'depot_mode_chips.dart';
 
@@ -173,9 +174,15 @@ class _MoverRow extends StatelessWidget {
         '${l10n.depotDetailIsin}: ${holding.isin}'
       else if (holding.symbol != null && holding.symbol!.isNotEmpty)
         '${l10n.depotDetailSymbol}: ${holding.symbol}',
-      '${l10n.depotDetailShares}: ${format.shares(holding.shares)}',
-      if (holding.currentPrice != 0)
-        '${l10n.depotDetailCurrentPrice}: ${format.money(holding.currentPrice)}',
+      if (holding.kind == DepotHoldingKind.bond) ...[
+        '${l10n.depotDetailNominal}: ${format.shares(holding.shares * 100)}',
+        if (holding.currentPrice != 0)
+          '${l10n.depotDetailBondPrice}: ${format.money(holding.currentPrice)}',
+      ] else ...[
+        '${l10n.depotDetailShares}: ${format.shares(holding.shares)}',
+        if (holding.currentPrice != 0)
+          '${l10n.depotDetailCurrentPrice}: ${format.money(holding.currentPrice)}',
+      ],
       '${l10n.depotDetailCurrentValue}: ${format.money(holding.currentValue)}',
       byGain
           ? '${l10n.depotDetailPeriodGain(periodLabel)}: ${format.money(returnPercent, signed: true)}'
