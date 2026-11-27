@@ -34,6 +34,7 @@ class DepotLabels {
     DepotBank.dkb => 'DKB',
     DepotBank.ing => 'ING',
     DepotBank.postbank => 'Postbank',
+    DepotBank.tradeRepublic => 'Trade Republic',
     DepotBank.unknown => l10n.depotImportBankUnknown,
   };
 

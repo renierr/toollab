@@ -6493,7 +6493,7 @@
   },
   "depotImportTypeLabel": "PDF statements",
   "depotImportOpenTitle": "Add depot PDFs",
-  "depotImportDropSubtitle": "Drop DKB, ING or Postbank buy, sell and dividend statements here",
+  "depotImportDropSubtitle": "Drop DKB, ING, Postbank or Trade Republic buy, sell, dividend and coupon statements here",
   "depotImportAdd": "Add PDFs",
   "depotImportClear": "Clear",
   "depotImportExport": "Export CSV",

@@ -27,7 +27,16 @@ class BankDetector {
     'postbank - eine niederlassung',
   ];
 
+  static const _tradeRepublicMarkers = [
+    'trade republic bank',
+    'traderepublic.com',
+    'traderepublic.at',
+  ];
+
   static DepotBank detect(StatementText text) {
+    if (text.containsAny(_tradeRepublicMarkers)) {
+      return DepotBank.tradeRepublic;
+    }
     if (text.containsAny(_dkbMarkers)) return DepotBank.dkb;
     if (text.containsAny(_ingMarkers)) return DepotBank.ing;
     if (text.containsAny(_postbankMarkers)) return DepotBank.postbank;

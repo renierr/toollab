@@ -13204,7 +13204,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotImportDropSubtitle =>
-      'Drop DKB, ING or Postbank buy, sell and dividend statements here';
+      'Drop DKB, ING, Postbank or Trade Republic buy, sell, dividend and coupon statements here';
 
   @override
   String get depotImportAdd => 'Add PDFs';

@@ -13295,7 +13295,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotImportDropSubtitle =>
-      'Kauf-, Verkaufs- und Dividendenabrechnungen von DKB, ING oder Postbank hier ablegen';
+      'Kauf-, Verkaufs-, Dividenden- und Zinsabrechnungen von DKB, ING, Postbank oder Trade Republic hier ablegen';
 
   @override
   String get depotImportAdd => 'PDFs hinzufügen';

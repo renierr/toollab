@@ -23,7 +23,7 @@ Only imported statements and the local wishlist are edited here.
 | Retirement | Monte Carlo early-retirement simulation: success rate, earliest retirement age, value fan by age, fixed vs. guardrail withdrawals, when dividends alone cover spending. See [Retirement simulation](#retirement-simulation) | Depot figures, Yahoo Finance index history (MSCI World / S&P 500 price index, monthly since 1985) |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
 | Wishlist | Stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database, optional backend sync and Yahoo Finance |
-| Import | Parse DKB / ING / Postbank PDF statements, export as Parqet CSV or send to Parqet | `POST /portfolios/{id}/activities` |
+| Import | Parse DKB / ING / Postbank / Trade Republic PDF statements, export as Parqet CSV or send to Parqet | `POST /portfolios/{id}/activities` |
 
 ## Creating a connection
 
@@ -408,11 +408,26 @@ are in `depot_pdf_style.dart`.
 
 ## Importing statements
 
-1. Add DKB, ING or Postbank PDF statements (file picker or Android share sheet). They are parsed
-   locally; nothing leaves the device at this step.
+1. Add DKB, ING, Postbank or Trade Republic PDF statements (file picker or Android share
+   sheet). They are parsed locally; nothing leaves the device at this step.
 2. Review and edit the parsed activities.
 3. Either export a Parqet CSV, or **Send to Parqet**: the app asks `GET /user` which
    portfolios it may write to, offers only those, and creates the activities.
+
+**Trade Republic** has its own parser (`parsing/trade_republic_parser.dart`): TR prints
+each position as one table row and switches between decimal comma and decimal point from
+one document to the next. It reads German statements only: buys, sales, savings plans,
+dividends and distributions, bond coupons (`ZINSZAHLUNG`) and redemptions (`TILGUNG`).
+Tax corrections and cash-account interest are flagged as unknown, and a sale whose taxes
+come back as a refund shows a total mismatch, because a Parqet activity cannot carry a
+negative tax. Sent activities carry no broker, because Parqet's broker id for Trade Republic
+has not been confirmed.
+
+**Bonds** follow Parqet's convention: shares are the nominal divided by 100, and the price is
+EUR per 100 nominal, so a coupon's price is its rate in percent. Coupons are sent as
+dividends; Parqet shows them as "Kupon / Zins". Accrued interest (Stückzinsen) goes into the
+amount: paid interest raises it on a buy, received interest raises it on a sale. Bonds
+quoted in a foreign currency get their price from the EUR amount.
 
 Every sent activity carries an `externalId` derived from the statement, so sending the
 same PDF twice does not create duplicates. The sync after sending picks the new bookings

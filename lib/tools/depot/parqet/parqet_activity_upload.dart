@@ -21,7 +21,8 @@ class ParqetActivityUpload {
     DepotBank.dkb => 'dkb',
     DepotBank.ing => 'ing',
     DepotBank.postbank => 'postbank',
-    DepotBank.unknown => null,
+    // Parqet's broker id for Trade Republic is unverified.
+    DepotBank.tradeRepublic || DepotBank.unknown => null,
   };
 
   /// Stable per booking, so Parqet drops a second upload of the same PDF.

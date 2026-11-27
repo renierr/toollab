@@ -10,6 +10,7 @@ import 'quantity_parser.dart';
 import 'security_parser.dart';
 import 'statement_date_parser.dart';
 import 'statement_text.dart';
+import 'trade_republic_parser.dart';
 
 /// Runs the field parsers over one statement and reconciles what they found
 /// into a single EUR activity, recording anything that stayed unresolved.
@@ -23,6 +24,13 @@ class DepotStatementParser {
   }) {
     final text = StatementText(rawText);
     final bank = BankDetector.detect(text);
+    if (bank == DepotBank.tradeRepublic) {
+      return TradeRepublicParser.parse(
+        id: id,
+        fileName: fileName,
+        rawText: rawText,
+      );
+    }
 
     if (text.lines.isEmpty) {
       return ParsedStatement(
