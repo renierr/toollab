@@ -43,6 +43,11 @@ put on their list: the episode they are in, the position inside it, and
 `TrimzPlayback` is the player's `VideoResumeStore`, so playback writes go
 straight into that row and "continue" resumes there.
 
+Watched is not stored per episode: everything before `episode_index` counts as
+watched, plus that episode once played to its end. Marking an episode watched
+therefore finishes it (and every earlier one), unmarking it moves the position to
+its start (unmarking every later one).
+
 ## Sync
 
 `TrimzSyncDelegate` syncs the `series` table with the backend, one record per

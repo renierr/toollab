@@ -16,6 +16,7 @@ class TrimzEpisodeTile extends StatelessWidget {
   /// Set on the episode the viewer left off in.
   final TrimzSavedSeries? progress;
   final VoidCallback onTap;
+  final VoidCallback onToggleWatched;
 
   const TrimzEpisodeTile({
     super.key,
@@ -23,6 +24,7 @@ class TrimzEpisodeTile extends StatelessWidget {
     required this.number,
     required this.watched,
     required this.onTap,
+    required this.onToggleWatched,
     this.progress,
   });
 
@@ -107,13 +109,15 @@ class TrimzEpisodeTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              watched
-                  ? Icons.check_circle_outline
-                  : current != null
-                  ? Icons.play_circle_fill
-                  : Icons.play_circle_outline,
-              color: current != null ? scheme.primary : scheme.onSurfaceVariant,
+            IconButton(
+              onPressed: onToggleWatched,
+              tooltip: watched
+                  ? l10n.trimzMarkUnwatched
+                  : l10n.trimzMarkWatched,
+              icon: Icon(
+                watched ? Icons.check_circle : Icons.check_circle_outline,
+                color: watched ? scheme.primary : scheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

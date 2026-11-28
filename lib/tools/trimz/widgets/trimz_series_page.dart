@@ -48,6 +48,27 @@ class _TrimzSeriesPageState extends State<TrimzSeriesPage> {
     ),
   );
 
+  /// Watched runs up to an episode: marking one marks every earlier one too,
+  /// unmarking one unmarks every later one.
+  void _setWatched(TrimzSeriesDetail detail, int index, bool watched) {
+    final state = context.read<TrimzState>();
+    final count = detail.episodes.length;
+    unawaited(
+      watched
+          ? state.markWatchedThrough(
+              widget.series,
+              index: index,
+              episodeCount: count,
+              duration: detail.episodes[index].duration,
+            )
+          : state.markUnwatchedFrom(
+              widget.series,
+              index: index,
+              episodeCount: count,
+            ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -78,7 +99,6 @@ class _TrimzSeriesPageState extends State<TrimzSeriesPage> {
           final detail = snapshot.data;
           final failed = snapshot.hasError;
           final episodes = detail?.episodes ?? const [];
-          final watched = saved != null && saved.watched;
           return ReadableScrollPadding(
             padding: const EdgeInsets.only(bottom: 32),
             builder: (context, padding) => CustomScrollView(
@@ -94,6 +114,13 @@ class _TrimzSeriesPageState extends State<TrimzSeriesPage> {
                           ? null
                           : (index) => _play(detail, index),
                       onToggleList: () => unawaited(state.toggleList(series)),
+                      onSetWatched: detail == null || episodes.isEmpty
+                          ? null
+                          : (watched) => _setWatched(
+                              detail,
+                              watched ? episodes.length - 1 : 0,
+                              watched,
+                            ),
                     ),
                   ),
                 ),
@@ -124,15 +151,22 @@ class _TrimzSeriesPageState extends State<TrimzSeriesPage> {
                     padding: padding.copyWith(top: 8),
                     sliver: SliverList.builder(
                       itemCount: episodes.length,
-                      itemBuilder: (context, index) => TrimzEpisodeTile(
-                        episode: episodes[index],
-                        number: index + 1,
-                        watched: watched && index < saved.episodeIndex,
-                        progress: watched && index == saved.episodeIndex
-                            ? saved
-                            : null,
-                        onTap: () => _play(detail!, index),
-                      ),
+                      itemBuilder: (context, index) {
+                        final watched = saved?.watchedEpisode(index) ?? false;
+                        final current =
+                            saved != null &&
+                            saved.watched &&
+                            index == saved.episodeIndex;
+                        return TrimzEpisodeTile(
+                          episode: episodes[index],
+                          number: index + 1,
+                          watched: watched,
+                          progress: current && !watched ? saved : null,
+                          onTap: () => _play(detail!, index),
+                          onToggleWatched: () =>
+                              _setWatched(detail!, index, !watched),
+                        );
+                      },
                     ),
                   ),
               ],

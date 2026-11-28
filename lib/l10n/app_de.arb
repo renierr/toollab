@@ -6725,6 +6725,8 @@
   "trimzAddToList": "Zu meiner Liste",
   "trimzOnList": "Auf meiner Liste",
   "trimzWatched": "Gesehen",
+  "trimzMarkWatched": "Als gesehen markieren",
+  "trimzMarkUnwatched": "Als ungesehen markieren",
   "trimzNoEpisodes": "Diese Serie hat keine abspielbaren Episoden.",
   "trimzOpenOnWeb": "Auf trimz.tv öffnen",
   "trimzOpenFailed": "Link konnte nicht geöffnet werden",

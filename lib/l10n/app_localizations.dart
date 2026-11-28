@@ -32044,6 +32044,18 @@ abstract class AppLocalizations {
   /// **'Watched'**
   String get trimzWatched;
 
+  /// No description provided for @trimzMarkWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as watched'**
+  String get trimzMarkWatched;
+
+  /// No description provided for @trimzMarkUnwatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as unwatched'**
+  String get trimzMarkUnwatched;
+
   /// No description provided for @trimzNoEpisodes.
   ///
   /// In en, this message translates to:

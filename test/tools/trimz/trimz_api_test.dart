@@ -151,5 +151,15 @@ void main() {
       expect(finished.resumeAt(2), isNull);
       expect(finished.copyWith(episodeIndex: 4).nextIndex(5), 4);
     });
+
+    test('counts earlier episodes and a finished current one as watched', () {
+      expect(saved.watchedEpisode(1), isTrue);
+      expect(saved.watchedEpisode(2), isFalse);
+      final finished = saved.copyWith(positionMs: 60000);
+      expect(finished.watchedEpisode(2), isTrue);
+      expect(finished.watchedEpisode(3), isFalse);
+      expect(finished.copyWith(episodeIndex: 4).watchedAll(5), isTrue);
+      expect(saved.copyWith(watchedAt: () => null).watchedEpisode(0), isFalse);
+    });
   });
 }

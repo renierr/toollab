@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -313,6 +314,57 @@ class TrimzState extends ChangeNotifier {
     required int episodeCount,
     required Duration position,
     required Duration duration,
+  }) => _setProgress(
+    series,
+    episodeIndex: episodeIndex,
+    episodeCount: episodeCount,
+    positionMs: position.inMilliseconds,
+    durationMs: duration.inMilliseconds,
+    syncDelay: _playbackSyncDelay,
+  );
+
+  /// Episodes up to and including [index] count as watched afterwards.
+  Future<void> markWatchedThrough(
+    TrimzSeries series, {
+    required int index,
+    required int episodeCount,
+    required Duration duration,
+  }) {
+    final ms = max(duration.inMilliseconds, 1);
+    return _setProgress(
+      series,
+      episodeIndex: index,
+      episodeCount: episodeCount,
+      positionMs: ms,
+      durationMs: ms,
+      syncDelay: _actionSyncDelay,
+    );
+  }
+
+  /// Episodes from [index] on count as unwatched afterwards.
+  Future<void> markUnwatchedFrom(
+    TrimzSeries series, {
+    required int index,
+    required int episodeCount,
+  }) {
+    if (index <= 0) return forgetProgress(series.id);
+    return _setProgress(
+      series,
+      episodeIndex: index,
+      episodeCount: episodeCount,
+      positionMs: 0,
+      durationMs: 0,
+      syncDelay: _actionSyncDelay,
+    );
+  }
+
+  Future<void> _setProgress(
+    TrimzSeries series, {
+    required int episodeIndex,
+    required int episodeCount,
+    required int positionMs,
+    required int durationMs,
+    required Duration syncDelay,
   }) async {
     final current = _saved[series.id] ?? TrimzSavedSeries.of(series);
     await _store(
@@ -321,11 +373,11 @@ class TrimzState extends ChangeNotifier {
         posterUrl: series.posterUrl,
         episodeCount: episodeCount,
         episodeIndex: episodeIndex,
-        positionMs: position.inMilliseconds,
-        durationMs: duration.inMilliseconds,
+        positionMs: positionMs,
+        durationMs: durationMs,
         watchedAt: () => DateTime.now().millisecondsSinceEpoch,
       ),
-      _playbackSyncDelay,
+      syncDelay,
     );
   }
 

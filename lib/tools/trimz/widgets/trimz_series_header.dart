@@ -19,6 +19,9 @@ class TrimzSeriesHeader extends StatelessWidget {
   final void Function(int index)? onPlay;
   final VoidCallback onToggleList;
 
+  /// Marks the whole series watched or unwatched; null until episodes load.
+  final void Function(bool watched)? onSetWatched;
+
   const TrimzSeriesHeader({
     super.key,
     required this.series,
@@ -26,6 +29,7 @@ class TrimzSeriesHeader extends StatelessWidget {
     required this.saved,
     required this.onPlay,
     required this.onToggleList,
+    required this.onSetWatched,
   });
 
   @override
@@ -41,7 +45,9 @@ class TrimzSeriesHeader extends StatelessWidget {
     final resuming = saved != null && saved!.watched && episodes > 0;
     final resumeIndex = resuming ? saved!.nextIndex(episodes) : 0;
     final onList = saved?.onList ?? false;
+    final watchedAll = saved?.watchedAll(episodes) ?? false;
     final play = onPlay;
+    final setWatched = onSetWatched;
 
     final facts = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,6 +118,15 @@ class TrimzSeriesHeader extends StatelessWidget {
               onPressed: onToggleList,
               icon: Icon(onList ? Icons.bookmark : Icons.bookmark_border),
               label: Text(onList ? l10n.trimzOnList : l10n.trimzAddToList),
+            ),
+            OutlinedButton.icon(
+              onPressed: setWatched == null
+                  ? null
+                  : () => setWatched(!watchedAll),
+              icon: Icon(watchedAll ? Icons.remove_done : Icons.done_all),
+              label: Text(
+                watchedAll ? l10n.trimzMarkUnwatched : l10n.trimzMarkWatched,
+              ),
             ),
           ],
         ),

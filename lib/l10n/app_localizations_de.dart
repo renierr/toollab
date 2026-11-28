@@ -18403,6 +18403,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get trimzWatched => 'Gesehen';
 
   @override
+  String get trimzMarkWatched => 'Als gesehen markieren';
+
+  @override
+  String get trimzMarkUnwatched => 'Als ungesehen markieren';
+
+  @override
   String get trimzNoEpisodes => 'Diese Serie hat keine abspielbaren Episoden.';
 
   @override

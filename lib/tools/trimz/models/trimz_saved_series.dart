@@ -104,6 +104,14 @@ class TrimzSavedSeries {
       durationMs > 0 &&
       Duration(milliseconds: durationMs - positionMs) <= _endSlack;
 
+  /// Episodes before the current one count as watched, the current one once
+  /// it was played to its end.
+  bool watchedEpisode(int index) =>
+      watched &&
+      (index < episodeIndex || (index == episodeIndex && episodeFinished));
+
+  bool watchedAll(int count) => count > 0 && watchedEpisode(count - 1);
+
   /// Where "continue" starts: the next episode once this one is finished.
   int nextIndex(int count) {
     final next = episodeFinished ? episodeIndex + 1 : episodeIndex;

@@ -8524,6 +8524,8 @@
   "trimzAddToList": "Add to my list",
   "trimzOnList": "On my list",
   "trimzWatched": "Watched",
+  "trimzMarkWatched": "Mark as watched",
+  "trimzMarkUnwatched": "Mark as unwatched",
   "trimzNoEpisodes": "This series has no playable episodes.",
   "trimzOpenOnWeb": "Open on trimz.tv",
   "trimzOpenFailed": "Could not open the link",
