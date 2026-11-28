@@ -39,6 +39,22 @@ first; the parsing lives in `models/` and `trimz_api.dart`.
 
 One table, `series` (tool database), holds every series the viewer watched or
 put on their list: the episode they are in, the position inside it, and
-`watched_at` / `saved_at`. A row with neither is deleted. `TrimzPlayback` is the
-player's `VideoResumeStore`, so playback writes go straight into that row and
-"continue" resumes there.
+`watched_at` / `saved_at`. A row with neither is soft-deleted (`deleted = 1`).
+`TrimzPlayback` is the player's `VideoResumeStore`, so playback writes go
+straight into that row and "continue" resumes there.
+
+## Sync
+
+`TrimzSyncDelegate` syncs the `series` table with the backend, one record per
+series keyed by the trimz project id, so every device shares the history, the
+list and where to continue.
+
+- Every write bumps `updated_at` above its previous value; the newer row wins
+  as a whole (last writer wins, no field merge).
+- A deletion stays as a tombstone until it was pushed, or until a server
+  tombstone at least as new removes the row.
+- The page syncs on open and after changes: about 2 s after a list or history
+  action, and at most every 30 s while progress is being saved during playback.
+  Closing the tool runs a sync that was still waiting.
+- Rows written by sync fire `TrimzDbHelper.remoteChanges`, which reloads the
+  open tool's history and list.

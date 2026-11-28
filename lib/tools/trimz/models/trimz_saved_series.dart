@@ -46,6 +46,20 @@ class TrimzSavedSeries {
         savedAt: map['saved_at'] as int?,
       );
 
+  factory TrimzSavedSeries.fromSyncData(String id, Map<String, dynamic> data) =>
+      TrimzSavedSeries(
+        id: id,
+        slug: data['slug'] as String,
+        title: data['title'] as String,
+        posterUrl: data['posterUrl'] as String?,
+        episodeCount: (data['episodeCount'] as num?)?.toInt() ?? 0,
+        episodeIndex: (data['episodeIndex'] as num?)?.toInt() ?? 0,
+        positionMs: (data['positionMs'] as num?)?.toInt() ?? 0,
+        durationMs: (data['durationMs'] as num?)?.toInt() ?? 0,
+        watchedAt: (data['watchedAt'] as num?)?.toInt(),
+        savedAt: (data['savedAt'] as num?)?.toInt(),
+      );
+
   factory TrimzSavedSeries.of(TrimzSeries series) => TrimzSavedSeries(
     id: series.id,
     slug: series.slug,
@@ -65,6 +79,19 @@ class TrimzSavedSeries {
     'duration_ms': durationMs,
     'watched_at': watchedAt,
     'saved_at': savedAt,
+  };
+
+  Map<String, dynamic> toSyncData() => {
+    'shortId': id,
+    'slug': slug,
+    'title': title,
+    'posterUrl': posterUrl,
+    'episodeCount': episodeCount,
+    'episodeIndex': episodeIndex,
+    'positionMs': positionMs,
+    'durationMs': durationMs,
+    'watchedAt': watchedAt,
+    'savedAt': savedAt,
   };
 
   bool get watched => watchedAt != null;

@@ -16,6 +16,8 @@ class TrimzState extends ChangeNotifier {
   static const String _adaptiveKey = 'adaptive_stream';
   static const String _autoplayKey = 'autoplay_next';
   static const String _translatedKey = 'translated_titles';
+  static const Duration _actionSyncDelay = Duration(seconds: 2);
+  static const Duration _playbackSyncDelay = Duration(seconds: 30);
 
   final TrimzApi _api;
   final TrimzDbHelper _db;
@@ -47,6 +49,11 @@ class TrimzState extends ChangeNotifier {
   bool _searching = false;
   bool _searchFailed = false;
   int _searchGeneration = 0;
+
+  StreamSubscription<void>? _remoteChanges;
+  Future<bool> Function()? _sync;
+  Timer? _syncTimer;
+  DateTime _syncDue = DateTime(0);
 
   bool get adaptiveStream => _adaptiveStream;
   bool get autoplayNext => _autoplayNext;
@@ -91,14 +98,48 @@ class TrimzState extends ChangeNotifier {
       return;
     }
     _initialized = true;
+    _remoteChanges ??= _db.remoteChanges.listen((_) {
+      if (_initialized) unawaited(_loadSaved());
+    });
     await _loadSettings();
     await _loadSaved();
     await refresh();
   }
 
+  /// A null [callback] (the tool closing) still runs a sync that was waiting,
+  /// so the last progress is not left unsynced.
+  void setSyncCallback(Future<bool> Function()? callback) {
+    final previous = _sync;
+    final pending = _syncTimer?.isActive ?? false;
+    _sync = callback;
+    if (callback != null) return;
+    _syncTimer?.cancel();
+    if (pending && previous != null) unawaited(previous());
+  }
+
+  void requestSync() => _scheduleSync(Duration.zero);
+
+  /// An earlier due time wins, so progress saved every few seconds while
+  /// playing does not keep pushing the sync back.
+  void _scheduleSync(Duration delay) {
+    if (_sync == null) return;
+    final due = DateTime.now().add(delay);
+    if ((_syncTimer?.isActive ?? false) && !due.isBefore(_syncDue)) return;
+    _syncTimer?.cancel();
+    _syncDue = due;
+    _syncTimer = Timer(delay, () async {
+      final sync = _sync;
+      if (sync != null && !await sync() && identical(sync, _sync)) {
+        _scheduleSync(_actionSyncDelay);
+      }
+    });
+  }
+
   /// Frees the catalog after the tool closes; history and list stay stored.
   void release() {
     _initialized = false;
+    unawaited(_remoteChanges?.cancel());
+    _remoteChanges = null;
     _generation++;
     _searchGeneration++;
     _genres = const [];
@@ -259,7 +300,10 @@ class TrimzState extends ChangeNotifier {
   Future<void> toggleList(TrimzSeries series) async {
     final current = _saved[series.id] ?? TrimzSavedSeries.of(series);
     final now = DateTime.now().millisecondsSinceEpoch;
-    await _store(current.copyWith(savedAt: () => current.onList ? null : now));
+    await _store(
+      current.copyWith(savedAt: () => current.onList ? null : now),
+      _actionSyncDelay,
+    );
   }
 
   /// Where the viewer is in [series]; the player calls it while it plays.
@@ -281,6 +325,7 @@ class TrimzState extends ChangeNotifier {
         durationMs: duration.inMilliseconds,
         watchedAt: () => DateTime.now().millisecondsSinceEpoch,
       ),
+      _playbackSyncDelay,
     );
   }
 
@@ -294,10 +339,11 @@ class TrimzState extends ChangeNotifier {
         durationMs: 0,
         watchedAt: () => null,
       ),
+      _actionSyncDelay,
     );
   }
 
-  Future<void> _store(TrimzSavedSeries series) async {
+  Future<void> _store(TrimzSavedSeries series, Duration syncDelay) async {
     final keep = series.watched || series.onList;
     _saved = {..._saved}..remove(series.id);
     if (keep) _saved[series.id] = series;
@@ -311,6 +357,7 @@ class TrimzState extends ChangeNotifier {
     } catch (e) {
       errorLog('[TrimzState] Saving ${series.id} failed: $e');
     }
+    _scheduleSync(syncDelay);
   }
 
   Future<void> clearHistory() async {
@@ -320,6 +367,7 @@ class TrimzState extends ChangeNotifier {
       errorLog('[TrimzState] Clearing history failed: $e');
     }
     await _loadSaved();
+    _scheduleSync(_actionSyncDelay);
   }
 
   Future<void> clearList() async {
@@ -329,6 +377,14 @@ class TrimzState extends ChangeNotifier {
       errorLog('[TrimzState] Clearing list failed: $e');
     }
     await _loadSaved();
+    _scheduleSync(_actionSyncDelay);
+  }
+
+  @override
+  void dispose() {
+    _syncTimer?.cancel();
+    unawaited(_remoteChanges?.cancel());
+    super.dispose();
   }
 
   Future<void> setAdaptiveStream(bool value) async {

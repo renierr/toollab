@@ -5,6 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 
 import 'trimz_page.dart';
 import 'trimz_state.dart';
+import 'trimz_sync_delegate.dart';
 
 class TrimzTool {
   TrimzTool._();
@@ -21,6 +22,7 @@ class TrimzTool {
     descriptionL10n: (l10n) => l10n.toolDescTrimz,
     createPage: (_) => const TrimzPage(),
     onClose: (context) => context.read<TrimzState>().release(),
+    syncDelegateFactory: TrimzSyncDelegate.new,
     stateProviders: () => [
       ChangeNotifierProvider<TrimzState>(create: (_) => TrimzState()),
     ],
